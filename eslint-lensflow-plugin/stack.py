@@ -284,8 +284,10 @@ def phase_branch(
         print("Nothing to do — all items already branched and have PRs.")
         return
 
+    pending_branches = {i.branch for i in pending}
+
     for item_idx, item in enumerate(items):
-        if item not in pending:
+        if item.branch not in pending_branches:
             continue
 
         prev_branch = items[item_idx - 1].branch if item_idx > 0 else MAIN_BRANCH
