@@ -557,7 +557,37 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = parse_args()
-    print(f"[stack.py] phase={args.phase} limit={args.limit} dry_run={args.dry_run}")
+    runner = Runner(dry_run=args.dry_run, verbose=args.verbose)
+
+    items = build_work_list()
+
+    branches_result = subprocess.run(
+        ["git", "branch", "-r"],
+        cwd=TARGET_REPO, capture_output=True, text=True
+    )
+    prs_result = subprocess.run(
+        ["gh", "pr", "list",
+         "--state", "all",
+         "--limit", "400",
+         "--json", "number,headRefName,state",
+         "--repo", GITHUB_REPO],
+        cwd=TARGET_REPO, capture_output=True, text=True
+    )
+
+    raw_branches = branches_result.stdout if branches_result.returncode == 0 else ""
+    raw_prs = prs_result.stdout if prs_result.returncode == 0 else ""
+
+    state = derive_state(items, raw_branches, raw_prs)
+    print_status(items, state, args.phase)
+
+    if args.phase == "branch":
+        phase_branch(items, state, runner, args.limit)
+    elif args.phase == "review":
+        phase_review(items, state, runner, args.limit)
+    elif args.phase == "restack":
+        phase_restack(items, runner)
+    elif args.phase == "merge":
+        phase_merge(items, state, runner, args.limit)
 
 
 if __name__ == "__main__":
