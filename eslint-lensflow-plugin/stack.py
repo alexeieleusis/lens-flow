@@ -174,6 +174,66 @@ const plugin: {{
 export default plugin;
 """
 
+# ── Phase: branch — file operations ───────────────────────────────────────────
+
+def copy_utils(runner: Runner) -> None:
+    src_utils = SOURCE_REPO / "src" / "utils"
+    dst_utils = TARGET_REPO / "src" / "utils"
+    dst_utils.mkdir(parents=True, exist_ok=True)
+    for f in src_utils.iterdir():
+        if f.name not in UTILS_SKIP:
+            shutil.copy2(f, dst_utils / f.name)
+            print(f"  copied {f.name}")
+
+
+def copy_rule(rule_name: str, runner: Runner) -> None:
+    src_rule = SOURCE_REPO / "src" / "rules" / f"{rule_name}.ts"
+    dst_rule = TARGET_REPO / "src" / "rules" / f"{rule_name}.ts"
+    dst_rule.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(src_rule, dst_rule)
+
+    src_test = SOURCE_REPO / "tests" / "rules" / f"{rule_name}.test.ts"
+    dst_test = TARGET_REPO / "tests" / "rules" / f"{rule_name}.test.ts"
+    dst_test.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(src_test, dst_test)
+    print(f"  copied rule + test: {rule_name}")
+
+
+def run_checks(rule_name: str, runner: Runner) -> bool:
+    """Run npm test + typecheck. On failure, invoke opencode once and retry.
+    Returns True on success, False if still failing after retry."""
+    result = subprocess.run(
+        "npm test && npm run typecheck",
+        shell=True, cwd=TARGET_REPO, capture_output=True, text=True
+    )
+    if result.returncode == 0:
+        return True
+
+    error_output = result.stdout + result.stderr
+    prompt = (
+        f"You are working in the eslint-lensflow-plugin project. "
+        f"After copying rule '{rule_name}', the build/tests failed with:\n\n"
+        f"{error_output}\n\nPlease fix the issue."
+    )
+    print(f"  [!] checks failed — invoking opencode to fix...")
+    if not runner.dry_run:
+        subprocess.run(["opencode", "run", prompt], cwd=TARGET_REPO, check=False)
+
+    retry = subprocess.run(
+        "npm test && npm run typecheck",
+        shell=True, cwd=TARGET_REPO, capture_output=True, text=True
+    )
+    return retry.returncode == 0
+
+
+def write_register_rules(runner: Runner) -> None:
+    rules_dir = TARGET_REPO / "src" / "rules"
+    rule_names = sorted(f.stem for f in rules_dir.iterdir() if f.suffix == ".ts")
+    content = generate_index(rule_names)
+    index_path = TARGET_REPO / "src" / "index.ts"
+    index_path.write_text(content, encoding="utf-8")
+    print(f"  wrote src/index.ts with {len(rule_names)} rules")
+
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 def parse_args() -> argparse.Namespace:
