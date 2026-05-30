@@ -1,0 +1,123 @@
+import ts from "typescript";
+import { ESLintUtils, type TSESTree, TSESLint } from "@typescript-eslint/utils";
+import { createRule } from "../utils/rule-creator.js";
+
+const URL =
+  "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T18-conversions-coercions.md";
+
+const untrustedCallNames = new Set([
+  "JSON.parse",
+  "fetch",
+  "XMLHttpRequest",
+  "readFileSync",
+  "readFile",
+  "prompt",
+]);
+
+function getUntrustedCallName(
+  node: TSESTree.Node,
+): string | null {
+  if (node.type !== "CallExpression") return null;
+
+  const callee = node.callee;
+  if (callee.type === "Identifier") {
+    if (untrustedCallNames.has(callee.name)) return callee.name;
+    return null;
+  }
+  if (
+    callee.type === "MemberExpression" &&
+    callee.object.type === "Identifier" &&
+    callee.property.type === "Identifier"
+  ) {
+    const fullName = `${callee.object.name}.${callee.property.name}`;
+    if (untrustedCallNames.has(fullName)) return fullName;
+    return null;
+  }
+  return null;
+}
+
+export default createRule({
+  name: "no-blind-as-cast",
+  meta: {
+    type: "problem",
+    docs: {
+      description:
+        "Disallow blind `as T` casts on untrusted data (unknown, any, JSON.parse, fetch results) without runtime validation.",
+    },
+    messages: {
+      blindCast:
+        "Blind `as {{targetType}}` cast on a value of type `{{sourceType}}`. Use a runtime type guard or schema validator instead of a bare cast. See: {{url}}",
+      blindCastUntrusted:
+        "Blind `as {{targetType}}` cast on untrusted data from `{{callName}}`. Use a runtime type guard or schema validator instead. See: {{url}}",
+    },
+    schema: [],
+    fixable: undefined,
+  },
+  defaultOptions: [],
+  create(context: TSESLint.RuleContext<"blindCastUntrusted" | "blindCast", []>) {
+    const parserServices = ESLintUtils.getParserServices(context);
+    const program = parserServices.program;
+    if (!program) return {};
+
+    const checker = program.getTypeChecker();
+
+    return {
+      TSAsExpression(node) {
+        const exprTs =
+          parserServices.esTreeNodeToTSNodeMap.get(node.expression);
+        if (!exprTs) return;
+
+        const exprType = checker.getTypeAtLocation(
+          exprTs as ts.Expression,
+        );
+        const sourceTypeStr = checker.typeToString(exprType);
+
+        const typeNodeTs =
+          parserServices.esTreeNodeToTSNodeMap.get(node.typeAnnotation);
+        if (!typeNodeTs) return;
+
+        const targetType = checker.getTypeFromTypeNode(
+          typeNodeTs as ts.TypeNode,
+        );
+        const targetTypeStr = checker.typeToString(targetType);
+
+        if (["unknown", "any", "never"].includes(targetTypeStr)) return;
+
+        if (["unknown", "any"].includes(sourceTypeStr)) {
+          const callName = getUntrustedCallName(node.expression);
+          if (callName) {
+            context.report({
+              node,
+              messageId: "blindCastUntrusted",
+              data: { targetType: targetTypeStr, callName, url: URL },
+            });
+          } else {
+            context.report({
+              node,
+              messageId: "blindCast",
+              data: {
+                targetType: targetTypeStr,
+                sourceType: sourceTypeStr,
+                url: URL,
+              },
+            });
+          }
+          return;
+        }
+
+        const untrustedCall = getUntrustedCallName(node.expression);
+        if (untrustedCall) {
+          context.report({
+            node,
+            messageId: "blindCastUntrusted",
+            data: {
+              targetType: targetTypeStr,
+              callName: untrustedCall,
+              url: URL,
+            },
+          });
+        }
+      },
+    };
+  },
+});
