@@ -12,6 +12,7 @@ Usage:
 
 import argparse
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -21,8 +22,8 @@ from typing import Literal
 
 # ── Config ────────────────────────────────────────────────────────────────────
 
-SOURCE_REPO  = Path("/home/alexeieleusis/development/vibe-types/eslint-plugin")
-TARGET_REPO  = Path("/home/alexeieleusis/second_ssd/development/lensflow/eslint-lensflow-plugin")
+TARGET_REPO  = Path(__file__).resolve().parent
+SOURCE_REPO  = Path(os.environ.get("SOURCE_REPO_PATH", "/home/alexeieleusis/development/vibe-types/eslint-plugin"))
 GITHUB_REPO  = "alexeieleusis/lens-flow"
 MAIN_BRANCH  = "main"
 
@@ -78,6 +79,10 @@ UTILS_SKIP = {"rule-creator.ts"}   # already in target with correct URL
 
 def build_work_list() -> list[WorkItem]:
     rules_dir = SOURCE_REPO / "src" / "rules"
+    if not rules_dir.is_dir():
+        print(f"Error: source rules directory not found: {rules_dir}", file=sys.stderr)
+        print("Set the SOURCE_REPO_PATH environment variable to the correct path.", file=sys.stderr)
+        sys.exit(1)
     rule_files = sorted((f.stem for f in rules_dir.iterdir() if f.suffix == ".ts"))
 
     items: list[WorkItem] = []
@@ -447,13 +452,11 @@ def phase_review(
             runner.git("add", "-A")
             runner.git("commit", "-m", "review: address copilot comments")
             runner.git("push", "--force-with-lease")
+            for thread in threads:
+                resolve_thread(thread["id"], runner)
+                print(f"  resolved thread {thread['id'][:20]}…")
         else:
             print("  (opencode made no changes)")
-
-        # Resolve threads after successful push
-        for thread in threads:
-            resolve_thread(thread["id"], runner)
-            print(f"  resolved thread {thread['id'][:20]}…")
 
 # ── Phase: restack ────────────────────────────────────────────────────────────
 

@@ -8,7 +8,8 @@ from unittest.mock import patch, call
 SCRIPT = Path(__file__).parent / "stack.py"
 
 sys.path.insert(0, str(Path(__file__).parent))
-from stack import Runner, build_work_list, WorkItem, derive_state, ItemState, to_camel_case, generate_index, build_review_prompt, make_rebase_onto_cmd
+import stack
+from stack import Runner, build_work_list, copy_utils, WorkItem, derive_state, ItemState, to_camel_case, generate_index, build_review_prompt, make_rebase_onto_cmd
 
 
 def run(args: list[str]) -> subprocess.CompletedProcess:
@@ -63,47 +64,69 @@ def test_runner_gh_prefixes_gh(capsys):
 
 # ── work_list tests ───────────────────────────────────────────────────────────
 
-def test_work_list_starts_with_utils():
+@pytest.fixture
+def synthetic_source_repo(tmp_path, monkeypatch):
+    src_rules = tmp_path / "src" / "rules"
+    src_rules.mkdir(parents=True)
+    src_utils = tmp_path / "src" / "utils"
+    src_utils.mkdir(parents=True)
+    for name in ["alpha-rule", "beta-rule", "gamma-rule"]:
+        (src_rules / f"{name}.ts").write_text(f"// {name}")
+    (src_utils / "ast-helpers.ts").write_text("// ast-helpers")
+    (src_utils / "rule-creator.ts").write_text("// rule-creator")
+    monkeypatch.setattr(stack, "SOURCE_REPO", tmp_path)
+    return tmp_path
+
+
+def test_work_list_starts_with_utils(synthetic_source_repo):
     items = build_work_list()
     assert items[0].kind == "utils"
     assert items[0].branch == "utils"
 
 
-def test_work_list_ends_with_register_rules():
+def test_work_list_ends_with_register_rules(synthetic_source_repo):
     items = build_work_list()
     assert items[-1].kind == "register-rules"
     assert items[-1].branch == "register-rules"
 
 
-def test_work_list_rules_are_alphabetical():
+def test_work_list_rules_are_alphabetical(synthetic_source_repo):
     items = build_work_list()
     rules = [i for i in items if i.kind == "rule"]
     names = [i.rule_name for i in rules]
     assert names == sorted(names)
 
 
-def test_work_list_rules_total():
+def test_work_list_rules_total(synthetic_source_repo):
     items = build_work_list()
     rules = [i for i in items if i.kind == "rule"]
-    assert len(rules) == 297
+    assert len(rules) == 3  # alpha-rule, beta-rule, gamma-rule
 
 
-def test_work_list_total_length():
+def test_work_list_total_length(synthetic_source_repo):
     items = build_work_list()
-    assert len(items) == 299   # 1 utils + 297 rules + 1 register-rules
+    assert len(items) == 5  # 1 utils + 3 rules + 1 register-rules
 
 
-def test_work_list_rule_branch_naming():
+def test_work_list_rule_branch_naming(synthetic_source_repo):
     items = build_work_list()
     first_rule = next(i for i in items if i.kind == "rule")
     assert first_rule.branch == f"rule/{first_rule.rule_name}"
 
 
-def test_work_list_excludes_rule_creator_from_utils():
-    items = build_work_list()
-    utils_item = items[0]
-    # rule-creator.ts is already in target, must not be in utils src_files
-    assert "rule-creator" not in utils_item.rule_name
+def test_work_list_excludes_rule_creator_from_utils(tmp_path, monkeypatch):
+    src = tmp_path / "src"
+    dst = tmp_path / "dst"
+    src_utils = src / "src" / "utils"
+    src_utils.mkdir(parents=True)
+    (src_utils / "ast-helpers.ts").write_text("// ast-helpers")
+    (src_utils / "rule-creator.ts").write_text("// rule-creator")
+    monkeypatch.setattr(stack, "SOURCE_REPO", src)
+    monkeypatch.setattr(stack, "TARGET_REPO", dst)
+    copy_utils(Runner(dry_run=False))
+    dst_utils = dst / "src" / "utils"
+    assert (dst_utils / "ast-helpers.ts").exists()
+    assert not (dst_utils / "rule-creator.ts").exists()
 
 
 # ── derive_state tests ────────────────────────────────────────────────────────
