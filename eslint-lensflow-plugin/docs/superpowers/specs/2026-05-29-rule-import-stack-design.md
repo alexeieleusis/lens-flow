@@ -147,14 +147,17 @@ For each PR in order:
   1. gh pr view <number> --json state,mergeable,statusCheckRollup
   2. if state == MERGED → skip
   3. if not mergeable or CI failing → print warning, skip
-  4. gh pr merge <number> --squash --delete-branch
-  5. git fetch origin && git pull origin main
-  6. if not the last PR:
+  4. tip_sha = git rev-parse <current-branch>   # capture before deletion
+  5. gh pr merge <number> --squash --delete-branch
+  6. git fetch origin && git pull origin main
+  7. if not the last PR:
      a. git checkout <next-branch>
-     b. git rebase main
+     b. git rebase --onto main <tip_sha> <next-branch>
      c. gh pr edit <next-number> --base main
      d. git push --force-with-lease origin <next-branch>
 ```
+
+`git rebase --onto main <tip_sha> <next-branch>` means: replay only the commits in `<next-branch>` that come *after* `<tip_sha>`, dropping everything that belonged to the just-merged branch. The SHA is captured before deletion because the branch label is removed by `--delete-branch`, but the git object remains valid.
 
 The script does not wait for CI between merges — it skips unready PRs. Re-running `--phase merge` is safe and will pick up where it left off.
 
