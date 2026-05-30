@@ -249,6 +249,13 @@ def write_register_rules(runner: Runner) -> None:
 
 # ── Phase: branch ─────────────────────────────────────────────────────────────
 
+def local_branch_exists(branch: str) -> bool:
+    result = subprocess.run(
+        ["git", "branch", "--list", branch],
+        cwd=TARGET_REPO, capture_output=True, text=True
+    )
+    return bool(result.stdout.strip())
+
 def pr_title(item: WorkItem) -> str:
     if item.kind == "utils":
         return "feat: add shared utility files"
@@ -300,36 +307,42 @@ def phase_branch(
 
         # Steps 1-5: only needed if branch not yet pushed
         if not item_state.branched:
-            # 1. Checkout new branch
-            runner.git("checkout", "-b", item.branch, prev_branch)
+            branch_local = local_branch_exists(item.branch) if not runner.dry_run else False
 
-            # 2. Copy files
-            if item.kind == "utils":
-                copy_utils(runner)
-            elif item.kind == "rule":
-                copy_rule(item.rule_name, runner)
-            elif item.kind == "register-rules":
-                write_register_rules(runner)
+            if not branch_local:
+                # 1. Checkout new branch
+                runner.git("checkout", "-b", item.branch, prev_branch)
 
-            # 3. Check build
-            if not runner.dry_run:
-                ok = run_checks(item.rule_name or item.kind, runner)
-                if not ok:
-                    print(f"  [!!] still failing after opencode retry — stopping.")
-                    print(f"  Branch '{item.branch}' left in place for inspection.")
-                    sys.exit(1)
+                # 2. Copy files
+                if item.kind == "utils":
+                    copy_utils(runner)
+                elif item.kind == "rule":
+                    copy_rule(item.rule_name, runner)
+                elif item.kind == "register-rules":
+                    write_register_rules(runner)
 
-            # 4. Commit
-            has_changes = subprocess.run(
-                ["git", "status", "--porcelain"],
-                cwd=TARGET_REPO, capture_output=True, text=True
-            ).stdout.strip()
+                # 3. Check build
+                if not runner.dry_run:
+                    ok = run_checks(item.rule_name or item.kind, runner)
+                    if not ok:
+                        print(f"  [!!] still failing after opencode retry — stopping.")
+                        print(f"  Branch '{item.branch}' left in place for inspection.")
+                        sys.exit(1)
 
-            if has_changes or runner.dry_run:
-                runner.git("add", "-A")
-                runner.git("commit", "-m", pr_title(item))
+                # 4. Commit
+                has_changes = subprocess.run(
+                    ["git", "status", "--porcelain"],
+                    cwd=TARGET_REPO, capture_output=True, text=True
+                ).stdout.strip()
+
+                if has_changes or runner.dry_run:
+                    runner.git("add", "-A")
+                    runner.git("commit", "-m", pr_title(item))
+                else:
+                    print("  (nothing to commit — skipping)")
             else:
-                print("  (nothing to commit — skipping)")
+                print("  branch exists locally — skipping setup, will push")
+                runner.git("checkout", item.branch)
 
             # 5. Push + track
             runner.git("push", "-u", "origin", item.branch)
@@ -345,6 +358,7 @@ def phase_branch(
                 "--base", prev_branch,
                 "--title", pr_title(item),
                 "--body", pr_body(item),
+                "--reviewer", "@copilot",
                 "--repo", GITHUB_REPO,
                 capture=True,
             )
