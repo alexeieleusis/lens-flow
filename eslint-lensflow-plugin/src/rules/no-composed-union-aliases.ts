@@ -1,0 +1,79 @@
+import ts from "typescript";
+import { ESLintUtils, type TSESTree, TSESLint } from "@typescript-eslint/utils";
+import { createRule } from "../utils/rule-creator.js";
+
+const URL =
+  "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T02-union-intersection.md";
+
+export default createRule({
+  name: "no-composed-union-aliases",
+  meta: {
+    type: "suggestion",
+    docs: {
+      description:
+        "Disallow type aliases that are unions of other union type aliases, which create nested union structure obscuring the full set of variants.",
+     },
+    messages: {
+      composed:
+        "Type alias '{{name}}' is a union of other union aliases, creating nested union structure that obscures the full set of variants. Flatten into a single union instead. See: {{url}}",
+    },
+    schema: [],
+    fixable: undefined,
+  },
+  defaultOptions: [],
+  create(context: TSESLint.RuleContext<"composed", []>) {
+    const parserServices = ESLintUtils.getParserServices(context);
+    const program = parserServices.program;
+    if (!program) return {};
+
+    const checker = program.getTypeChecker();
+
+    function analyzeUnionMember(member: TSESTree.TypeElement | TSESTree.TypeNode): { isUnion: boolean; refName: string } {
+      if (member.type !== "TSTypeReference") return { isUnion: false, refName: "" };
+
+      const tsNode = parserServices.esTreeNodeToTSNodeMap.get(member);
+      if (!tsNode) return { isUnion: false, refName: "" };
+
+      const memberTsType = checker.getTypeFromTypeNode(tsNode as ts.TypeNode);
+      const isUnion = (memberTsType.flags & ts.TypeFlags.Union) !== 0;
+
+      if (!isUnion) return { isUnion: false, refName: "" };
+
+      const refName =
+        member.typeName.type === "Identifier"
+          ? member.typeName.name
+          : "";
+
+      return { isUnion: true, refName };
+    }
+
+    return {
+      TSTypeAliasDeclaration(node) {
+        if (node.typeAnnotation.type !== "TSUnionType") return;
+
+        const unionNode = node.typeAnnotation;
+        const members = unionNode.types;
+
+        if (members.length < 2) return;
+
+        const composedAliases: string[] = [];
+
+        for (const member of members) {
+          const { isUnion, refName } = analyzeUnionMember(member);
+          if (isUnion && refName) composedAliases.push(refName);
+        }
+
+        if (composedAliases.length > 0) {
+          context.report({
+            node,
+            messageId: "composed",
+            data: {
+              name: node.id.name,
+              url: URL,
+            },
+          });
+        }
+      },
+    };
+  },
+});
