@@ -8,7 +8,7 @@ from unittest.mock import patch, call
 SCRIPT = Path(__file__).parent / "stack.py"
 
 sys.path.insert(0, str(Path(__file__).parent))
-from stack import Runner, build_work_list, WorkItem, derive_state, ItemState
+from stack import Runner, build_work_list, WorkItem, derive_state, ItemState, to_camel_case, generate_index
 
 
 def run(args: list[str]) -> subprocess.CompletedProcess:
@@ -163,3 +163,38 @@ def test_derive_state_no_pr_for_unbranched():
     state = derive_state(items, FAKE_BRANCHES, FAKE_PRS)
     assert state["rule/no-any-parameter"].pr_number is None
     assert state["rule/no-any-parameter"].pr_state is None
+
+
+# ── index generator tests ─────────────────────────────────────────────────────
+
+def test_to_camel_case_basic():
+    assert to_camel_case("no-any-parameter") == "noAnyParameter"
+
+
+def test_to_camel_case_single_word():
+    assert to_camel_case("utils") == "utils"
+
+
+def test_to_camel_case_uc_suffix():
+    assert to_camel_case("no-abstract-class-overkill-uc14") == "noAbstractClassOverkillUc14"
+
+
+def test_generate_index_imports():
+    src = generate_index(["no-any-parameter", "no-any-array-return"])
+    assert 'import noAnyParameter from "./rules/no-any-parameter"' in src
+    assert 'import noAnyArrayReturn from "./rules/no-any-array-return"' in src
+
+
+def test_generate_index_rules_object():
+    src = generate_index(["no-any-parameter"])
+    assert '"no-any-parameter": noAnyParameter' in src
+
+
+def test_generate_index_exports_default():
+    src = generate_index(["no-any-parameter"])
+    assert "export default plugin" in src
+
+
+def test_generate_index_empty_rules():
+    src = generate_index([])
+    assert "rules: {}" in src

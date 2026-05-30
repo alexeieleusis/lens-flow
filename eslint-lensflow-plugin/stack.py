@@ -138,6 +138,42 @@ def print_status(items: list[WorkItem], state: dict[str, ItemState], phase: str)
     print(f"Merged:   {merged}")
     print(f"Next:     {next_item}\n")
 
+# ── Index generator ───────────────────────────────────────────────────────────
+
+def to_camel_case(kebab: str) -> str:
+    parts = kebab.split("-")
+    return parts[0] + "".join(p.capitalize() for p in parts[1:])
+
+
+def generate_index(rule_names: list[str]) -> str:
+    imports = "\n".join(
+        f'import {to_camel_case(name)} from "./rules/{name}";'
+        for name in rule_names
+    )
+    if rule_names:
+        rules_body = "\n".join(
+            f'    "{name}": {to_camel_case(name)},'
+            for name in rule_names
+        )
+        rules_obj = f"{{\n{rules_body}\n  }}"
+    else:
+        rules_obj = "{}"
+
+    return f"""\
+{imports}
+import type {{ TSESLint }} from "@typescript-eslint/utils";
+
+const plugin: {{
+  rules: Record<string, TSESLint.RuleModule<string, unknown[]>>;
+  configs: Record<string, unknown>;
+}} = {{
+  rules: {rules_obj},
+  configs: {{}},
+}};
+
+export default plugin;
+"""
+
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 def parse_args() -> argparse.Namespace:
