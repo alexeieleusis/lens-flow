@@ -1,0 +1,63 @@
+import path from "node:path";
+import { RuleTester } from "@typescript-eslint/rule-tester";
+import { afterAll, describe, it } from "vitest";
+import * as tsParser from "@typescript-eslint/parser";
+import rule from "../../src/rules/no-literal-widening-on-construct.js";
+
+RuleTester.afterAll = afterAll;
+RuleTester.describe = describe;
+RuleTester.it = it;
+
+const TEST_FILENAME = "file.ts";
+const TS_CONFIG_DIR = path.resolve(__dirname, "../..");
+const TS_CONFIG = path.join(TS_CONFIG_DIR, "tsconfig.test.json");
+
+const ruleTester = new RuleTester({
+  languageOptions: {
+    parser: tsParser,
+    parserOptions: {
+      ecmaVersion: 2022,
+      sourceType: "module",
+      project: TS_CONFIG,
+      tsconfigRootDir: TS_CONFIG_DIR,
+    },
+  },
+});
+
+ruleTester.run("no-literal-widening-on-construct", rule, {
+  valid: [
+    {
+      filename: TEST_FILENAME,
+      code: `import { PaymentStatus } from "./tests/fixtures/types.js";
+const good: PaymentStatus = { kind: "pending", amount: 100 };`,
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `import { PaymentStatus } from "./tests/fixtures/types.js";
+const good = { kind: "pending" as const, amount: 100 };`,
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `import { PaymentStatus } from "./tests/fixtures/types.js";
+const good = { kind: "pending", amount: 100 } satisfies PaymentStatus;`,
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `const fine = { isPending: true, isDone: true };`,
+    },
+  ],
+  invalid: [
+    {
+      filename: TEST_FILENAME,
+      code: `import { PaymentStatus } from "./tests/fixtures/types.js";
+const bad = { kind: "pending", amount: 100 };`,
+      errors: [{ messageId: "widen" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `import { PaymentStatus } from "./tests/fixtures/types.js";
+const bad = { kind: "complete", amount: 200 };`,
+      errors: [{ messageId: "widen" }],
+    },
+  ],
+});
