@@ -1,0 +1,149 @@
+import { createRule } from "../utils/rule-creator.js";
+import type { TSESLint } from "@typescript-eslint/utils";
+
+function getBaseIdentifier(node: any): string | null {
+  if (node.type === "Identifier") return node.name ?? null;
+  if (node.type === "MemberExpression" && node.object) {
+    return getBaseIdentifier(node.object);
+  }
+  return null;
+}
+
+function collectAnyParams(params: any[]): Array<{ name: string; anyNode: any }> {
+  const anyParams: Array<{ name: string; anyNode: any }> = [];
+
+  for (const param of params) {
+    const typeAnn = param.typeAnnotation?.typeAnnotation;
+    if (typeAnn?.type === "TSAnyKeyword") {
+      const paramName =
+        param.type === "Identifier" ? param.name : "(unknown)";
+      anyParams.push({ name: paramName, anyNode: typeAnn });
+    }
+  }
+
+  return anyParams;
+}
+
+function isNode(value: any): boolean {
+  return value != null && typeof value === "object" && "type" in value;
+}
+
+function isTypeguardNode(
+  node: any,
+): { paramName: string; kind: string } | null {
+  if (node.type === "UnaryExpression" && node.operator === "typeof") {
+    const id = getBaseIdentifier(node.argument);
+    return id ? { paramName: id, kind: "typeof" } : null;
+  }
+  if (
+    node.type === "BinaryExpression" &&
+    node.operator === "instanceof"
+  ) {
+    const id = getBaseIdentifier(node.left);
+    return id ? { paramName: id, kind: "instanceof" } : null;
+  }
+  return null;
+}
+
+function extractChildren(node: any): any[] {
+  const children: any[] = [];
+  for (const key of Object.keys(node)) {
+    if (key === "parent" || key === "scope") continue;
+    const child = node[key];
+    if (Array.isArray(child)) {
+      children.push(...child.filter((item) => isNode(item)));
+    } else if (isNode(child)) {
+      children.push(child);
+    }
+  }
+  return children;
+}
+
+function collectTypeguardTargets(
+  body: any,
+): Array<{ paramName: string; kind: string }> {
+  const results: Array<{ paramName: string; kind: string }> = [];
+  const stack: any[] = [body];
+
+  while (stack.length > 0) {
+    const n = stack.pop();
+    if (!isNode(n)) continue;
+
+    const tg = isTypeguardNode(n);
+    if (tg) results.push(tg);
+
+    stack.push(...extractChildren(n));
+  }
+
+  return results;
+}
+
+export default createRule({
+  name: "no-any-parameter-with-typeguard",
+  meta: {
+    type: "problem",
+    docs: {
+      description:
+        "Disallow `any`-typed function parameters that are narrowed with typeof or instanceof checks",
+    },
+    messages: {
+      anyParamWithTypeguard:
+        "Parameter `{{name}}` is typed as `any` but narrowed with {{checkKind}} inside the function body. Use an explicit union type instead of `any`. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T02-union-intersection.md",
+    },
+    schema: [],
+    fixable: undefined,
+  },
+  defaultOptions: [],
+  create(context: TSESLint.RuleContext<"anyParamWithTypeguard", []>) {
+    function reportAnyParamTypeguards(
+      anyParams: Array<{ name: string; anyNode: any }>,
+      typeguards: Array<{ paramName: string; kind: string }>,
+    ) {
+      const anyParamNames = new Set(anyParams.map((p) => p.name));
+      const reported = new Set<string>();
+
+      for (const tg of typeguards) {
+        if (anyParamNames.has(tg.paramName) && !reported.has(tg.paramName)) {
+          reported.add(tg.paramName);
+          const paramInfo = anyParams.find(
+            (p) => p.name === tg.paramName,
+          );
+          if (paramInfo) {
+            context.report({
+              node: paramInfo.anyNode,
+              messageId: "anyParamWithTypeguard",
+              data: {
+                name: tg.paramName,
+                checkKind: tg.kind,
+              },
+            });
+          }
+        }
+      }
+    }
+
+    function visitFunction(node: {
+      params: any[];
+      body?: any;
+      expression?: boolean;
+    }) {
+      const anyParams = collectAnyParams(node.params);
+
+      if (anyParams.length === 0 || !node.body) return;
+
+      const bodyToCheck =
+        node.body.type === "BlockStatement"
+          ? node.body
+          : { type: "BlockStatement", body: node.body };
+      const typeguards = collectTypeguardTargets(bodyToCheck);
+
+      reportAnyParamTypeguards(anyParams, typeguards);
+    }
+
+    return {
+      FunctionDeclaration: visitFunction,
+      FunctionExpression: visitFunction,
+      ArrowFunctionExpression: visitFunction,
+    };
+  },
+});
