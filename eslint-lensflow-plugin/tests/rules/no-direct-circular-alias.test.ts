@@ -1,0 +1,31 @@
+import { ruleTester } from "../helpers/rule-tester.js";
+import rule from "../../src/rules/no-direct-circular-alias.js";
+
+ruleTester.run("no-direct-circular-alias", rule, {
+  valid: [
+    `type Good = { next: Good }[];`,
+    `type AlsoGood = { tag: string; value: AlsoGood };`,
+    `type Tree = { left: Tree; right: Tree };`,
+    `type Nested = { data: { inner: Nested } };`,
+    `type Simple = string | number;`,
+    `type Dependent = { ref: Other }; type Other = { ref: Dependent };`,
+  ],
+  invalid: [
+    {
+      code: `type Bad = Bad[];`,
+      errors: [{ messageId: "directCircularReference" }],
+    },
+    {
+      code: `type AlsoBad = string | AlsoBad;`,
+      errors: [{ messageId: "directCircularReference" }],
+    },
+    {
+      code: `type Circular = Circular & { x: number };`,
+      errors: [{ messageId: "directCircularReference" }],
+    },
+    {
+      code: `type Self = Self[] | null;`,
+      errors: [{ messageId: "directCircularReference" }],
+    },
+  ],
+});
