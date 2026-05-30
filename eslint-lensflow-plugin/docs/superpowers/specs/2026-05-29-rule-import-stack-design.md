@@ -110,9 +110,10 @@ For each PR in work-list order:
        In file <path>, the reviewer left this comment: '<body>'.
        Please address it."
    b. opencode run "$PROMPT"
-   c. gh api graphql — resolveReviewThread(threadId: <id>)
-6. git add -A && git commit -m "review: address copilot comments"
+6. if git has staged changes: git add -A && git commit -m "review: address copilot comments"
 7. git push
+8. for each thread addressed in step 5:
+   gh api graphql — resolveReviewThread(threadId: <id>)
 ```
 
 One `opencode run` per comment thread — smaller tasks yield better results and are faster with a local model.
@@ -164,7 +165,7 @@ The script does not wait for CI between merges — it skips unready PRs. Re-runn
 | Situation | Behaviour |
 |-----------|-----------|
 | Build/test failure on branch | opencode retry once; on second failure: leave branch, exit |
-| opencode produces no change | commit empty (git reports nothing to commit) — move on |
+| opencode produces no change | check `git status` before committing; skip commit if nothing staged |
 | PR already exists for branch | skip PR creation, continue |
 | Review comment already resolved | skip that thread |
 | PR not mergeable / CI failing | print warning, skip, re-run later |
