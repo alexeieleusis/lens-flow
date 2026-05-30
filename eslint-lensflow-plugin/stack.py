@@ -252,9 +252,10 @@ def patch_rule_file(path: Path) -> None:
                     )
                 text = patched
 
+            opts_type = _infer_options_type(text)
             text = re.sub(
                 r'\bcreate\(context\)\s*\{',
-                f'create(context: TSESLint.RuleContext<{msg_union}, []>) {{',
+                f'create(context: TSESLint.RuleContext<{msg_union}, {opts_type}>) {{',
                 text, count=1,
             )
 
