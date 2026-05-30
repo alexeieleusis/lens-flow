@@ -244,6 +244,117 @@ def write_register_rules(runner: Runner) -> None:
         index_path.write_text(content, encoding="utf-8")
         print(f"  wrote src/index.ts with {len(rule_names)} rules")
 
+# ── Phase: branch ─────────────────────────────────────────────────────────────
+
+def pr_title(item: WorkItem) -> str:
+    if item.kind == "utils":
+        return "feat: add shared utility files"
+    if item.kind == "register-rules":
+        return "feat: register all rules in plugin index"
+    return f"feat: add rule {item.rule_name}"
+
+
+def pr_body(item: WorkItem) -> str:
+    if item.kind == "utils":
+        return "Adds the shared utility files used by all rules."
+    if item.kind == "register-rules":
+        return "Registers all imported rules in `src/index.ts`."
+    return (
+        f"Adds ESLint rule `{item.rule_name}`.\n\n"
+        f"Imported from [vibe-types/eslint-plugin](https://github.com/jpablo/vibe-types)."
+    )
+
+
+def phase_branch(
+    items: list[WorkItem],
+    state: dict[str, ItemState],
+    runner: Runner,
+    limit: int | None,
+) -> None:
+    # Process items that are missing either the branch or the PR
+    def needs_work(i: WorkItem) -> bool:
+        s = state[i.branch]
+        return not s.branched or s.pr_number is None
+
+    pending = [i for i in items if needs_work(i)]
+    if limit is not None:
+        pending = pending[:limit]
+
+    if not pending:
+        print("Nothing to do — all items already branched and have PRs.")
+        return
+
+    for item_idx, item in enumerate(items):
+        if item not in pending:
+            continue
+
+        prev_branch = items[item_idx - 1].branch if item_idx > 0 else MAIN_BRANCH
+        item_state = state[item.branch]
+
+        print(f"\n[{item_idx+1}/{len(items)}] {item.branch}")
+
+        # Steps 1-5: only needed if branch not yet pushed
+        if not item_state.branched:
+            # 1. Checkout new branch
+            runner.git("checkout", "-b", item.branch, prev_branch)
+
+            # 2. Copy files
+            if item.kind == "utils":
+                copy_utils(runner)
+            elif item.kind == "rule":
+                copy_rule(item.rule_name, runner)
+            elif item.kind == "register-rules":
+                write_register_rules(runner)
+
+            # 3. Check build
+            if not runner.dry_run:
+                ok = run_checks(item.rule_name or item.kind, runner)
+                if not ok:
+                    print(f"  [!!] still failing after opencode retry — stopping.")
+                    print(f"  Branch '{item.branch}' left in place for inspection.")
+                    sys.exit(1)
+
+            # 4. Commit
+            has_changes = subprocess.run(
+                ["git", "status", "--porcelain"],
+                cwd=TARGET_REPO, capture_output=True, text=True
+            ).stdout.strip()
+
+            if has_changes or runner.dry_run:
+                runner.git("add", "-A")
+                runner.git("commit", "-m", pr_title(item))
+            else:
+                print("  (nothing to commit — skipping)")
+
+            # 5. Push + track
+            runner.git("push", "-u", "origin", item.branch)
+            runner.run(["git-spice", "btr"], cwd=TARGET_REPO)
+        else:
+            print("  branch already pushed — skipping to PR creation")
+            runner.git("checkout", item.branch)
+
+        # 6. Create PR (only if it doesn't exist yet)
+        if item_state.pr_number is None:
+            result = runner.gh(
+                "pr", "create",
+                "--base", prev_branch,
+                "--title", pr_title(item),
+                "--body", pr_body(item),
+                "--repo", GITHUB_REPO,
+                capture=True,
+            )
+            pr_url = result.stdout.strip() if result.stdout else ""
+            print(f"  PR: {pr_url}")
+
+            # 7. Request Copilot review
+            runner.gh(
+                "pr", "edit", pr_url,
+                "--add-reviewer", "copilot",
+                "--repo", GITHUB_REPO,
+            )
+        else:
+            print(f"  PR #{item_state.pr_number} already exists — skipping creation")
+
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 def parse_args() -> argparse.Namespace:
