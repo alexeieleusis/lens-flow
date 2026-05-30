@@ -1,0 +1,126 @@
+import ts from "typescript";
+import { ESLintUtils, TSESTree, TSESLint } from "@typescript-eslint/utils";
+import type { Definition } from "@typescript-eslint/scope-manager";
+import { createRule } from "../utils/rule-creator.js";
+import {
+  ASYNC_ITERATION_URL,
+  hasAsyncIteratorSignature,
+  findVariableInScopeChain,
+} from "../utils/async-iteration.js";
+
+const ARRAY_TRANSFORM_METHODS = new Set([
+  "map",
+  "filter",
+  "reduce",
+  "flatMap",
+  "some",
+  "every",
+  "find",
+  "findIndex",
+  "sort",
+  "slice",
+  "splice",
+  "concat",
+  "join",
+  "flat",
+  "toSorted",
+  "toReversed",
+  "toSpliced",
+  "with",
+  "findLast",
+  "findLastIndex",
+  "filter",
+  "reduceRight",
+]);
+
+function isArrayType(type: ts.Type): boolean {
+  const props = type.getProperties();
+  const hasLength = props.some((p) => p.name === "length");
+  const hasMap = props.some((p) => p.name === "map");
+  const hasFilter = props.some((p) => p.name === "filter");
+  return hasLength && (hasMap || hasFilter);
+}
+
+export default createRule({
+  name: "no-collect-then-transform",
+  meta: {
+    type: "problem",
+    docs: {
+      description:
+        "Disallow collecting an AsyncIterable into an array with await then applying .map() or similar array transformation",
+     },
+    messages: {
+      collectThenTransform:
+        `Collecting an AsyncIterable into an array then applying "{{method}}" consumes O(n) memory instead of streaming. Use an async generator pipeline with for await...of instead. See: ${ASYNC_ITERATION_URL}`,
+    },
+    schema: [],
+    fixable: undefined,
+  },
+  defaultOptions: [],
+  create(context: TSESLint.RuleContext<"collectThenTransform", []>) {
+    const parserServices = ESLintUtils.getParserServices(context);
+    const program = parserServices.program;
+    if (!program) return {};
+
+    const checker = program.getTypeChecker();
+
+    function isAsyncIterableCall(awaitedExpr: TSESTree.Node): boolean {
+      if (awaitedExpr.type !== "CallExpression") return false;
+
+      const firstArg = awaitedExpr.arguments[0];
+      if (!firstArg) return false;
+
+      const tsFirstArg =
+        parserServices.esTreeNodeToTSNodeMap.get(firstArg);
+      if (!tsFirstArg) return false;
+
+      const argType = checker.getTypeAtLocation(
+        tsFirstArg as ts.Expression,
+      );
+
+      return hasAsyncIteratorSignature(argType);
+    }
+
+    return {
+      CallExpression(node) {
+        const callee = node.callee;
+        if (callee.type !== "MemberExpression") return;
+        if (callee.object.type !== "Identifier") return;
+        if (callee.property.type !== "Identifier") return;
+
+        const methodName = callee.property.name;
+        if (!ARRAY_TRANSFORM_METHODS.has(methodName)) return;
+
+        const varName = callee.object.name;
+        const scope = context.sourceCode.getScope(callee.object);
+        const variable = findVariableInScopeChain(scope, varName);
+        if (!variable || variable.defs.length === 0) return;
+
+        const def = variable.defs.find(
+          (d: Definition) => d.node.type === "VariableDeclarator",
+        );
+        if (def?.node.type !== "VariableDeclarator") return;
+
+        const declarator = def.node as TSESTree.VariableDeclarator;
+        const init = declarator.init;
+        if (init?.type !== "AwaitExpression") return;
+
+        const awaitedExpr = init.argument;
+        if (!isAsyncIterableCall(awaitedExpr)) return;
+
+        const tsVarIdent =
+          parserServices.esTreeNodeToTSNodeMap.get(callee.object);
+        if (!tsVarIdent) return;
+
+        const varType = checker.getTypeAtLocation(tsVarIdent as ts.Expression);
+        if (!isArrayType(varType)) return;
+
+        context.report({
+          node: init,
+          messageId: "collectThenTransform",
+          data: { method: methodName },
+        });
+      },
+    };
+  },
+});
