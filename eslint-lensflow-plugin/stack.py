@@ -357,6 +357,102 @@ def phase_branch(
         else:
             print(f"  PR #{item_state.pr_number} already exists — skipping creation")
 
+# ── Phase: review ─────────────────────────────────────────────────────────────
+
+def build_review_prompt(
+    rule_name: str,
+    file_path: str,
+    line: int | None,
+    comment_body: str,
+) -> str:
+    location = file_path + (f" line {line}" if line else "")
+    return (
+        f"You are working in the eslint-lensflow-plugin project on rule '{rule_name}'. "
+        f"A code reviewer left the following comment at {location}:\n\n"
+        f"\"{comment_body}\"\n\nPlease address this comment by modifying the relevant file(s)."
+    )
+
+
+def resolve_thread(thread_id: str, runner: Runner) -> None:
+    mutation = (
+        'mutation { resolveReviewThread(input: {threadId: "'
+        + thread_id
+        + '"}) { thread { id isResolved } } }'
+    )
+    runner.gh("api", "graphql", "-f", f"query={mutation}")
+
+
+def phase_review(
+    items: list[WorkItem],
+    state: dict[str, ItemState],
+    runner: Runner,
+    limit: int | None,
+) -> None:
+    candidates = [
+        i for i in items
+        if state[i.branch].pr_number is not None
+        and state[i.branch].pr_state == "OPEN"
+    ]
+    if limit is not None:
+        candidates = candidates[:limit]
+
+    if not candidates:
+        print("No open PRs to review.")
+        return
+
+    for item in candidates:
+        pr_number = state[item.branch].pr_number
+        print(f"\n[review] {item.branch} (PR #{pr_number})")
+
+        # Fetch review threads
+        result = runner.gh(
+            "pr", "view", str(pr_number),
+            "--json", "reviewThreads",
+            "--repo", GITHUB_REPO,
+            capture=True,
+        )
+        if runner.dry_run:
+            print("  (dry-run: skipping thread processing)")
+            continue
+
+        data = json.loads(result.stdout)
+        threads = [t for t in data.get("reviewThreads", []) if not t.get("isResolved", True)]
+
+        if not threads:
+            print("  no unresolved threads — skipping")
+            continue
+
+        runner.git("checkout", item.branch)
+
+        for thread in threads:
+            first_comment = thread["comments"]["nodes"][0]
+            prompt = build_review_prompt(
+                rule_name=item.rule_name or item.kind,
+                file_path=first_comment.get("path", ""),
+                line=first_comment.get("line"),
+                comment_body=first_comment.get("body", ""),
+            )
+            print(f"  opencode: {first_comment.get('path', '')} — {first_comment.get('body', '')[:60]}…")
+            subprocess.run(["opencode", "run", prompt], cwd=TARGET_REPO, check=False)
+
+        # Commit if there are changes
+        changed = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=TARGET_REPO, capture_output=True, text=True
+        ).stdout.strip()
+
+        if changed:
+            runner.git("add", "-A")
+            runner.git("commit", "-m", "review: address copilot comments")
+            runner.git("push")
+        else:
+            print("  (opencode made no changes)")
+
+        # Resolve threads after successful push
+        for thread in threads:
+            resolve_thread(thread["id"], runner)
+            print(f"  resolved thread {thread['id'][:20]}…")
+
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 def parse_args() -> argparse.Namespace:

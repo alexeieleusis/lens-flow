@@ -8,7 +8,7 @@ from unittest.mock import patch, call
 SCRIPT = Path(__file__).parent / "stack.py"
 
 sys.path.insert(0, str(Path(__file__).parent))
-from stack import Runner, build_work_list, WorkItem, derive_state, ItemState, to_camel_case, generate_index
+from stack import Runner, build_work_list, WorkItem, derive_state, ItemState, to_camel_case, generate_index, build_review_prompt
 
 
 def run(args: list[str]) -> subprocess.CompletedProcess:
@@ -198,3 +198,29 @@ def test_generate_index_exports_default():
 def test_generate_index_empty_rules():
     src = generate_index([])
     assert "rules: {}" in src
+
+
+# ── build_review_prompt tests ─────────────────────────────────────────────────
+
+def test_build_review_prompt_includes_file_and_comment():
+    prompt = build_review_prompt(
+        rule_name="no-any-parameter",
+        file_path="src/rules/no-any-parameter.ts",
+        line=42,
+        comment_body="This could be simplified using a utility function.",
+    )
+    assert "no-any-parameter" in prompt
+    assert "src/rules/no-any-parameter.ts" in prompt
+    assert "This could be simplified" in prompt
+    assert "eslint-lensflow-plugin" in prompt
+
+
+def test_build_review_prompt_no_line():
+    prompt = build_review_prompt(
+        rule_name="no-any-parameter",
+        file_path="src/rules/no-any-parameter.ts",
+        line=None,
+        comment_body="General comment.",
+    )
+    assert "General comment." in prompt
+    assert "no-any-parameter" in prompt
