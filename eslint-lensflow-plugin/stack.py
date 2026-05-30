@@ -42,6 +42,38 @@ class ItemState:
     pr_number: int | None = None
     pr_state: str | None = None              # "OPEN" | "MERGED" | "CLOSED"
 
+# ── Shell runner ──────────────────────────────────────────────────────────────
+
+class Runner:
+    def __init__(self, dry_run: bool = False, verbose: bool = False):
+        self.dry_run = dry_run
+        self.verbose = verbose
+
+    def run(self, cmd: list[str], cwd: Path | None = None,
+            capture: bool = False) -> subprocess.CompletedProcess:
+        if self.verbose or self.dry_run:
+            loc = f"  [in {cwd}]" if cwd else ""
+            print(f"  $ {' '.join(str(c) for c in cmd)}{loc}")
+        if self.dry_run:
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+        result = subprocess.run(
+            cmd,
+            cwd=cwd or TARGET_REPO,
+            capture_output=capture,
+            text=True,
+        )
+        if result.returncode != 0 and not capture:
+            print(result.stderr, file=sys.stderr)
+            sys.exit(result.returncode)
+        return result
+
+    def git(self, *args: str, cwd: Path | None = None,
+            capture: bool = False) -> subprocess.CompletedProcess:
+        return self.run(["git", *args], cwd=cwd, capture=capture)
+
+    def gh(self, *args: str, capture: bool = False) -> subprocess.CompletedProcess:
+        return self.run(["gh", *args], cwd=TARGET_REPO, capture=capture)
+
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 def parse_args() -> argparse.Namespace:
