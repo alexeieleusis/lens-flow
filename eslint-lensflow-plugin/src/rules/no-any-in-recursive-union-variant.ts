@@ -1,0 +1,169 @@
+import { TSESTree, TSESLint } from "@typescript-eslint/utils";
+import { createRule } from "../utils/rule-creator.js";
+import { getChildren } from "../utils/ast-helpers.js";
+
+const URL = "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T61-recursive-types.md";
+
+function collectTypeRefNames(node: TSESTree.Node, refs: Set<string>): void {
+  if (node.type === "TSTypeReference") {
+    const ref = node;
+    if (ref.typeName.type === "Identifier") {
+      refs.add(ref.typeName.name);
+    }
+  }
+  for (const child of getChildren(node)) {
+    collectTypeRefNames(child, refs);
+  }
+}
+
+function hasTypeRefToName(
+  member: TSESTree.TypeNode,
+  name: string,
+  typeAliases: Map<string, TSESTree.TypeNode>,
+): boolean {
+  const refs = new Set<string>();
+  collectTypeRefNames(member, refs);
+  if (refs.has(name)) return true;
+
+  if (member.type === "TSTypeReference") {
+    const ref = member;
+    const refName = ref.typeName.type === "Identifier" ? ref.typeName.name : null;
+    if (refName && typeAliases.has(refName)) {
+      const resolved = typeAliases.get(refName)!;
+      return hasTypeRefToName(resolved, name, typeAliases);
+    }
+  }
+  return false;
+}
+
+function findKeyword(node: TSESTree.TypeNode): "any" | "unknown" | null {
+  if (node.type === "TSAnyKeyword") return "any";
+  if (node.type === "TSUnknownKeyword") return "unknown";
+  if (node.type === "TSUnionType") {
+    for (const t of node.types) {
+      const found = findKeyword(t);
+      if (found === "any") return "any";
+      if (found === "unknown") return "unknown";
+    }
+  }
+  return null;
+}
+
+function collectAnyPropsFromLiteral(
+  literal: TSESTree.TSTypeLiteral,
+  anyProps: TSESTree.TSPropertySignature[],
+  unknownProps: TSESTree.TSPropertySignature[],
+): void {
+  for (const m of literal.members) {
+    if (m.type === "TSPropertySignature") {
+      const prop = m as TSESTree.TSPropertySignature;
+      if (prop.typeAnnotation) {
+        const kw = findKeyword(prop.typeAnnotation.typeAnnotation);
+        if (kw === "any") anyProps.push(prop);
+        else if (kw === "unknown") unknownProps.push(prop);
+      }
+    }
+  }
+}
+
+function collectAnyProps(
+  member: TSESTree.TypeNode,
+  anyProps: TSESTree.TSPropertySignature[],
+  unknownProps: TSESTree.TSPropertySignature[],
+  typeAliases: Map<string, TSESTree.TypeNode>,
+): void {
+  if (member.type === "TSTypeLiteral") {
+    collectAnyPropsFromLiteral(member, anyProps, unknownProps);
+  } else if (member.type === "TSTypeReference") {
+    const ref = member;
+    const refName = ref.typeName.type === "Identifier" ? ref.typeName.name : null;
+    if (refName && typeAliases.has(refName)) {
+      const resolved = typeAliases.get(refName)!;
+      if (resolved.type === "TSTypeLiteral") {
+        collectAnyPropsFromLiteral(resolved, anyProps, unknownProps);
+      } else if (resolved.type === "TSUnionType") {
+        for (const innerMember of resolved.types) {
+          collectAnyProps(innerMember, anyProps, unknownProps, typeAliases);
+        }
+      }
+    }
+  }
+}
+
+function resolveUnionAliasName(node: TSESTree.Node): string | null {
+  let current: TSESTree.Node | undefined =
+    (node as TSESTree.Node & { parent?: TSESTree.Node }).parent;
+  while (current) {
+    if (current.type === "TSTypeAliasDeclaration") {
+      return current.id.name;
+    }
+    current = (current as TSESTree.Node & { parent?: TSESTree.Node }).parent;
+  }
+  return null;
+}
+
+export default createRule({
+  name: "no-any-in-recursive-union-variant",
+  meta: {
+    type: "problem",
+    docs: {
+      description:
+        "Disallow `any` or `unknown` in data fields of recursive discriminated union variants",
+    },
+    messages: {
+      anyOrUnknownInRecursiveVariant:
+        "Variant uses `{{keyword}}` in a recursive discriminated union. Use a concrete type for type safety over the entire structure. See: {{url}}",
+    },
+    schema: [],
+  },
+  defaultOptions: [],
+  create(context: TSESLint.RuleContext<"anyOrUnknownInRecursiveVariant", []>) {
+    const typeAliases = new Map<string, TSESTree.TypeNode>();
+    const unionsToCheck: TSESTree.TSUnionType[] = [];
+
+    return {
+      TSTypeAliasDeclaration(node) {
+        typeAliases.set(node.id.name, node.typeAnnotation);
+      },
+
+      TSUnionType(node) {
+        unionsToCheck.push(node);
+      },
+
+      "Program:exit"() {
+        for (const unionNode of unionsToCheck) {
+          const unionName = resolveUnionAliasName(unionNode);
+          if (!unionName) continue;
+
+          const anyProps: TSESTree.TSPropertySignature[] = [];
+          const unknownProps: TSESTree.TSPropertySignature[] = [];
+
+          for (const member of unionNode.types) {
+            collectAnyProps(member, anyProps, unknownProps, typeAliases);
+          }
+
+          const isRecursive = unionNode.types.some((member) =>
+            hasTypeRefToName(member, unionName, typeAliases),
+          );
+
+          if (!isRecursive) continue;
+
+          for (const prop of anyProps) {
+            context.report({
+              node: prop,
+              messageId: "anyOrUnknownInRecursiveVariant",
+              data: { keyword: "any", url: URL },
+            });
+          }
+          for (const prop of unknownProps) {
+            context.report({
+              node: prop,
+              messageId: "anyOrUnknownInRecursiveVariant",
+              data: { keyword: "unknown", url: URL },
+            });
+          }
+        }
+      },
+    };
+  },
+});
