@@ -4,10 +4,11 @@ export default defineConfig({
   test: {
     globals: false,
     passWithNoTests: true,
-    pool: "forks",
+    testTimeout: 15000,
     poolOptions: {
-      forks: {
-        singleFork: true,
+      threads: {
+        maxThreads: 2,
+        minThreads: 1,
       },
     },
   },
