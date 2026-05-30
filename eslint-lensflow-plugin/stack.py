@@ -74,6 +74,32 @@ class Runner:
     def gh(self, *args: str, capture: bool = False) -> subprocess.CompletedProcess:
         return self.run(["gh", *args], cwd=TARGET_REPO, capture=capture)
 
+# ── Work list ─────────────────────────────────────────────────────────────────
+
+UTILS_SKIP = {"rule-creator.ts"}   # already in target with correct URL
+
+def build_work_list() -> list[WorkItem]:
+    rules_dir = SOURCE_REPO / "src" / "rules"
+    rule_files = sorted((f.stem for f in rules_dir.iterdir() if f.suffix == ".ts"))
+
+    items: list[WorkItem] = []
+
+    # 1. utils
+    items.append(WorkItem(branch="utils", kind="utils"))
+
+    # 2. rules (alphabetical)
+    for rule_name in rule_files:
+        items.append(WorkItem(
+            branch=f"rule/{rule_name}",
+            kind="rule",
+            rule_name=rule_name,
+        ))
+
+    # 3. register-rules
+    items.append(WorkItem(branch="register-rules", kind="register-rules"))
+
+    return items
+
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 def parse_args() -> argparse.Namespace:
