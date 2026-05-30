@@ -182,21 +182,28 @@ def copy_utils(runner: Runner) -> None:
     dst_utils.mkdir(parents=True, exist_ok=True)
     for f in src_utils.iterdir():
         if f.name not in UTILS_SKIP:
-            shutil.copy2(f, dst_utils / f.name)
-            print(f"  copied {f.name}")
+            if runner.dry_run:
+                print(f"  [dry-run] would copy {f.name}")
+            else:
+                shutil.copy2(f, dst_utils / f.name)
+                print(f"  copied {f.name}")
 
 
 def copy_rule(rule_name: str, runner: Runner) -> None:
     src_rule = SOURCE_REPO / "src" / "rules" / f"{rule_name}.ts"
     dst_rule = TARGET_REPO / "src" / "rules" / f"{rule_name}.ts"
     dst_rule.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(src_rule, dst_rule)
 
     src_test = SOURCE_REPO / "tests" / "rules" / f"{rule_name}.test.ts"
     dst_test = TARGET_REPO / "tests" / "rules" / f"{rule_name}.test.ts"
     dst_test.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(src_test, dst_test)
-    print(f"  copied rule + test: {rule_name}")
+
+    if runner.dry_run:
+        print(f"  [dry-run] would copy rule + test: {rule_name}")
+    else:
+        shutil.copy2(src_rule, dst_rule)
+        shutil.copy2(src_test, dst_test)
+        print(f"  copied rule + test: {rule_name}")
 
 
 def run_checks(rule_name: str, runner: Runner) -> bool:
@@ -231,8 +238,11 @@ def write_register_rules(runner: Runner) -> None:
     rule_names = sorted(f.stem for f in rules_dir.iterdir() if f.suffix == ".ts")
     content = generate_index(rule_names)
     index_path = TARGET_REPO / "src" / "index.ts"
-    index_path.write_text(content, encoding="utf-8")
-    print(f"  wrote src/index.ts with {len(rule_names)} rules")
+    if runner.dry_run:
+        print(f"  [dry-run] would write src/index.ts with {len(rule_names)} rules")
+    else:
+        index_path.write_text(content, encoding="utf-8")
+        print(f"  wrote src/index.ts with {len(rule_names)} rules")
 
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
