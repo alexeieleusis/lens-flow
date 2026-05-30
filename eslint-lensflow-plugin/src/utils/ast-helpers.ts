@@ -157,22 +157,21 @@ export function getComparisonInfo(
       ? varNode.name
       : getMemberName(varNode as TSESTree.MemberExpression);
 
+  if (!varName) return null;
+
   return { varName, tsVarNode, value };
 }
 
-function getMemberName(node: TSESTree.MemberExpression): string {
-  if (node.property.type === "Identifier") {
-    let objName: string;
-    if (node.object.type === "Identifier") {
-      objName = node.object.name;
-    } else if (node.object.type === "MemberExpression") {
-      objName = getMemberName(node.object);
-    } else {
-      objName = "";
-    }
-    return `${objName}.${node.property.name}`;
+function getMemberName(node: TSESTree.MemberExpression): string | null {
+  if (node.computed || node.property.type !== "Identifier") return null;
+  if (node.object.type === "Identifier") {
+    return `${node.object.name}.${node.property.name}`;
   }
-  return "";
+  if (node.object.type === "MemberExpression") {
+    const objName = getMemberName(node.object);
+    return objName ? `${objName}.${node.property.name}` : null;
+  }
+  return null;
 }
 
 export function collectComparisonValues(

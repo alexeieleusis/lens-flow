@@ -20,7 +20,7 @@ export function createBivariantMethodVisitor(
       .map((p) => {
         if (p.type === "Identifier") return p.name;
         if (p.type === "AssignmentPattern")
-          return `${p.left.type === "Identifier" ? (p.left as any).name : "?"} = ...`;
+          return `${p.left.type === "Identifier" ? (p.left as TSESTree.Identifier).name : "?"} = ...`;
         return "...";
       })
       .join(", ");

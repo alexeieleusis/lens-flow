@@ -7,27 +7,22 @@ type ParamsNode = TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | T
  * Skips TSParameterProperty nodes (handled separately).
  */
 export function checkAnyParams(
-  params: readonly unknown[],
+  params: readonly TSESTree.Parameter[],
   context: TSESLint.RuleContext<string, unknown[]>,
   messageId: string
 ) {
   for (const param of params) {
-    if ((param as { type: string }).type === "TSParameterProperty") continue;
+    if (param.type === "TSParameterProperty") continue;
 
-    const base =
-      (param as { type: string }).type === "AssignmentPattern"
-        ? (param as { left: { name?: string; typeAnnotation?: { typeAnnotation?: { type: string } } } }).left
-        : param;
+    const base = param.type === "AssignmentPattern" ? param.left : param;
+    const typeAnnotation =
+      "typeAnnotation" in base ? base.typeAnnotation : undefined;
 
-    if (
-      (base as { typeAnnotation?: { typeAnnotation?: { type: string } } })?.typeAnnotation?.typeAnnotation?.type === "TSAnyKeyword"
-    ) {
+    if (typeAnnotation?.typeAnnotation.type === "TSAnyKeyword") {
       const paramName =
-        (base as { name?: string }).name && typeof (base as { name?: string }).name === "string"
-          ? (base as { name: string }).name
-          : "unnamed";
+        "name" in base && typeof base.name === "string" ? base.name : "unnamed";
       context.report({
-        node: param as never,
+        node: param,
         messageId,
         data: { name: paramName },
       });

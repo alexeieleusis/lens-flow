@@ -49,6 +49,12 @@ export function createOverloadGroupVisitor(
 
         const impl = allFns[implIdx];
         const implName = impl.id?.name;
+
+        if (implName === undefined) {
+          i = implIdx + 1;
+          continue;
+        }
+
         const group = allFns
           .slice(i, implIdx + 1)
           .filter((n) => n.id?.name === implName);
