@@ -8,7 +8,7 @@ from unittest.mock import patch, call
 SCRIPT = Path(__file__).parent / "stack.py"
 
 sys.path.insert(0, str(Path(__file__).parent))
-from stack import Runner, build_work_list, WorkItem, derive_state, ItemState, to_camel_case, generate_index, build_review_prompt
+from stack import Runner, build_work_list, WorkItem, derive_state, ItemState, to_camel_case, generate_index, build_review_prompt, make_rebase_onto_cmd
 
 
 def run(args: list[str]) -> subprocess.CompletedProcess:
@@ -224,3 +224,10 @@ def test_build_review_prompt_no_line():
     )
     assert "General comment." in prompt
     assert "no-any-parameter" in prompt
+
+
+# ── make_rebase_onto_cmd tests ────────────────────────────────────────────────
+
+def test_make_rebase_onto_cmd():
+    cmd = make_rebase_onto_cmd(tip_sha="abc123", next_branch="rule/no-any-parameter")
+    assert cmd == ["git", "rebase", "--onto", "main", "abc123", "rule/no-any-parameter"]

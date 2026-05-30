@@ -453,6 +453,93 @@ def phase_review(
             resolve_thread(thread["id"], runner)
             print(f"  resolved thread {thread['id'][:20]}…")
 
+# ── Phase: restack ────────────────────────────────────────────────────────────
+
+def phase_restack(items: list[WorkItem], runner: Runner) -> None:
+    print(f"Checking out base branch: utils")
+    runner.git("checkout", "utils")
+    runner.run(["git-spice", "upstack", "restack"], cwd=TARGET_REPO)
+
+    remaining = [i for i in items if i.branch != MAIN_BRANCH]
+    for item in remaining:
+        runner.git("push", "--force-with-lease", "origin", item.branch)
+        print(f"  force-pushed {item.branch}")
+
+
+# ── Phase: merge ──────────────────────────────────────────────────────────────
+
+def make_rebase_onto_cmd(tip_sha: str, next_branch: str) -> list[str]:
+    return ["git", "rebase", "--onto", MAIN_BRANCH, tip_sha, next_branch]
+
+
+def phase_merge(
+    items: list[WorkItem],
+    state: dict[str, ItemState],
+    runner: Runner,
+    limit: int | None,
+) -> None:
+    pending = [
+        i for i in items
+        if state[i.branch].pr_state not in ("MERGED", None)
+    ]
+    if limit is not None:
+        pending = pending[:limit]
+
+    if not pending:
+        print("Nothing to merge.")
+        return
+
+    for item in pending:
+        pr_number = state[item.branch].pr_number
+        print(f"\n[merge] {item.branch} (PR #{pr_number})")
+
+        # Re-check mergeability
+        result = runner.gh(
+            "pr", "view", str(pr_number),
+            "--json", "state,mergeable,statusCheckRollup",
+            "--repo", GITHUB_REPO,
+            capture=True,
+        )
+        if not runner.dry_run:
+            info = json.loads(result.stdout)
+            if info["state"] == "MERGED":
+                print("  already merged — skipping")
+                continue
+            if info.get("mergeable") != "MERGEABLE":
+                print(f"  not mergeable ({info.get('mergeable')}) — skipping")
+                continue
+
+        # Capture tip SHA before merge deletes the branch label
+        tip_result = runner.git("rev-parse", item.branch, capture=True)
+        tip_sha = tip_result.stdout.strip() if not runner.dry_run else "dry-run-sha"
+
+        # Squash merge
+        runner.gh(
+            "pr", "merge", str(pr_number),
+            "--squash", "--delete-branch",
+            "--repo", GITHUB_REPO,
+        )
+        runner.git("fetch", "origin")
+        runner.git("pull", "origin", MAIN_BRANCH)
+
+        # Rebase next branch onto main
+        item_idx = items.index(item)
+        next_items = items[item_idx + 1:]
+        if next_items:
+            next_item = next_items[0]
+            runner.git("checkout", next_item.branch)
+            runner.run(
+                make_rebase_onto_cmd(tip_sha, next_item.branch),
+                cwd=TARGET_REPO,
+            )
+            runner.gh(
+                "pr", "edit", str(state[next_item.branch].pr_number),
+                "--base", MAIN_BRANCH,
+                "--repo", GITHUB_REPO,
+            )
+            runner.git("push", "--force-with-lease", "origin", next_item.branch)
+
+
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 def parse_args() -> argparse.Namespace:
