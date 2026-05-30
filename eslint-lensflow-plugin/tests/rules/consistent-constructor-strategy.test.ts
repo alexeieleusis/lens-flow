@@ -1,5 +1,5 @@
-import { ruleTester } from "../helpers/rule-tester";
-import rule from "../../src/rules/consistent-constructor-strategy";
+import { ruleTester } from "../helpers/rule-tester.js";
+import rule from "../../src/rules/consistent-constructor-strategy.js";
 
 ruleTester.run("consistent-constructor-strategy", rule, {
   valid: [
