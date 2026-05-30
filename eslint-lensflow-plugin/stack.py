@@ -100,6 +100,44 @@ def build_work_list() -> list[WorkItem]:
 
     return items
 
+# ── State ─────────────────────────────────────────────────────────────────────
+
+def derive_state(
+    items: list[WorkItem],
+    raw_branches: str,        # stdout of: git branch -r
+    raw_prs: str,             # stdout of: gh pr list --state all --json ...
+) -> dict[str, ItemState]:
+    remote_branches = {line.strip().removeprefix("origin/") for line in raw_branches.splitlines()}
+    prs: list[dict] = json.loads(raw_prs) if raw_prs.strip() else []
+    pr_by_branch = {pr["headRefName"]: pr for pr in prs}
+
+    state: dict[str, ItemState] = {}
+    for item in items:
+        pr = pr_by_branch.get(item.branch)
+        state[item.branch] = ItemState(
+            branched=item.branch in remote_branches,
+            pr_number=pr["number"] if pr else None,
+            pr_state=pr["state"] if pr else None,
+        )
+    return state
+
+
+def print_status(items: list[WorkItem], state: dict[str, ItemState], phase: str) -> None:
+    total   = len(items)
+    branched = sum(1 for i in items if state[i.branch].branched)
+    open_prs = sum(1 for i in items if state[i.branch].pr_state == "OPEN")
+    merged   = sum(1 for i in items if state[i.branch].pr_state == "MERGED")
+
+    pending = [i for i in items if not state[i.branch].branched]
+    next_item = pending[0].branch if pending else "(all branched)"
+
+    print(f"\nPhase:    {phase}")
+    print(f"Total:    {total}  (1 utils + {total-2} rules + 1 register-rules)")
+    print(f"Branched: {branched}")
+    print(f"PRs open: {open_prs}")
+    print(f"Merged:   {merged}")
+    print(f"Next:     {next_item}\n")
+
 # ── CLI ───────────────────────────────────────────────────────────────────────
 
 def parse_args() -> argparse.Namespace:

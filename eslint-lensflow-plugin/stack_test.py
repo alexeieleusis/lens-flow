@@ -2,12 +2,13 @@ import subprocess
 import sys
 from pathlib import Path
 import pytest
+import json
 from unittest.mock import patch, call
 
 SCRIPT = Path(__file__).parent / "stack.py"
 
 sys.path.insert(0, str(Path(__file__).parent))
-from stack import Runner, build_work_list, WorkItem
+from stack import Runner, build_work_list, WorkItem, derive_state, ItemState
 
 
 def run(args: list[str]) -> subprocess.CompletedProcess:
@@ -103,3 +104,62 @@ def test_work_list_excludes_rule_creator_from_utils():
     utils_item = items[0]
     # rule-creator.ts is already in target, must not be in utils src_files
     assert "rule-creator" not in utils_item.rule_name
+
+
+# ── derive_state tests ────────────────────────────────────────────────────────
+
+FAKE_BRANCHES = """
+  origin/main
+  origin/utils
+  origin/rule/consistent-constructor-strategy
+"""
+
+FAKE_PRS = json.dumps([
+    {"number": 1, "headRefName": "utils",   "state": "OPEN"},
+    {"number": 2, "headRefName": "rule/consistent-constructor-strategy", "state": "MERGED"},
+])
+
+
+def test_derive_state_detects_branched():
+    items = [
+        WorkItem(branch="utils", kind="utils"),
+        WorkItem(branch="rule/consistent-constructor-strategy", kind="rule",
+                 rule_name="consistent-constructor-strategy"),
+        WorkItem(branch="rule/no-any-parameter", kind="rule",
+                 rule_name="no-any-parameter"),
+    ]
+    state = derive_state(items, FAKE_BRANCHES, FAKE_PRS)
+    assert state["utils"].branched is True
+    assert state["rule/consistent-constructor-strategy"].branched is True
+    assert state["rule/no-any-parameter"].branched is False
+
+
+def test_derive_state_pr_numbers():
+    items = [
+        WorkItem(branch="utils", kind="utils"),
+        WorkItem(branch="rule/consistent-constructor-strategy", kind="rule",
+                 rule_name="consistent-constructor-strategy"),
+    ]
+    state = derive_state(items, FAKE_BRANCHES, FAKE_PRS)
+    assert state["utils"].pr_number == 1
+    assert state["rule/consistent-constructor-strategy"].pr_number == 2
+
+
+def test_derive_state_pr_states():
+    items = [
+        WorkItem(branch="utils", kind="utils"),
+        WorkItem(branch="rule/consistent-constructor-strategy", kind="rule",
+                 rule_name="consistent-constructor-strategy"),
+    ]
+    state = derive_state(items, FAKE_BRANCHES, FAKE_PRS)
+    assert state["utils"].pr_state == "OPEN"
+    assert state["rule/consistent-constructor-strategy"].pr_state == "MERGED"
+
+
+def test_derive_state_no_pr_for_unbranched():
+    items = [
+        WorkItem(branch="rule/no-any-parameter", kind="rule", rule_name="no-any-parameter"),
+    ]
+    state = derive_state(items, FAKE_BRANCHES, FAKE_PRS)
+    assert state["rule/no-any-parameter"].pr_number is None
+    assert state["rule/no-any-parameter"].pr_state is None
