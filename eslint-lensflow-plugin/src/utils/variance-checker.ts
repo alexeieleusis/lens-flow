@@ -1,5 +1,4 @@
-import { AST_NODE_TYPES } from "@typescript-eslint/types";
-import type { TSESTree } from "@typescript-eslint/types";
+import { AST_NODE_TYPES, type TSESTree } from "@typescript-eslint/utils";
 
 export function isTypeRefTo(node: TSESTree.Node, paramName: string): boolean {
   return (
@@ -40,9 +39,10 @@ export function containsTypeRef(
     }
     case AST_NODE_TYPES.TSConditionalType: {
       return (
-        (node.extendsType ? containsTypeRef(node.extendsType, paramName) : false) ||
-        (node.trueType ? containsTypeRef(node.trueType, paramName) : false) ||
-        (node.falseType ? containsTypeRef(node.falseType, paramName) : false)
+        containsTypeRef(node.checkType, paramName) ||
+        containsTypeRef(node.extendsType, paramName) ||
+        containsTypeRef(node.trueType, paramName) ||
+        containsTypeRef(node.falseType, paramName)
       );
     }
     case AST_NODE_TYPES.TSIndexedAccessType: {
@@ -66,6 +66,18 @@ export function containsTypeRef(
     case AST_NODE_TYPES.TSTypeOperator: {
       const to = node;
       return containsTypeRef(to.typeAnnotation!, paramName);
+    }
+    case AST_NODE_TYPES.TSFunctionType:
+    case AST_NODE_TYPES.TSConstructorType: {
+      return (
+        node.params.some((p) => {
+          const tp = paramTypeAnnotation(p);
+          return tp ? containsTypeRef(tp, paramName) : false;
+        }) ||
+        (node.returnType?.typeAnnotation
+          ? containsTypeRef(node.returnType.typeAnnotation, paramName)
+          : false)
+      );
     }
     case AST_NODE_TYPES.TSTypeLiteral:
       return node.members.some((m) =>

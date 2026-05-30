@@ -47,8 +47,11 @@ export function createOverloadGroupVisitor(
           break;
         }
 
-        const group = allFns.slice(i, implIdx + 1);
         const impl = allFns[implIdx];
+        const implName = impl.id?.name;
+        const group = allFns
+          .slice(i, implIdx + 1)
+          .filter((n) => n.id?.name === implName);
         const overloads = group.filter((n) => !isImpl(n));
 
         onGroup({ all: group, impl, overloads });
