@@ -1,5 +1,5 @@
 {
-  "name": "eslint-plugin-eslint-lensflow",
+  "name": "eslint-plugin-lensflow",
   "version": "0.0.0",
   "description": "Leverage the type system for better software design and implementation",
   "keywords": [
@@ -8,29 +8,27 @@
     "eslint-plugin"
   ],
   "author": "Alexei Diaz",
-  "main": "./lib/index.js",
-  "exports": "./lib/index.js",
+  "main": "./dist/index.js",
+  "exports": "./dist/index.js",
   "files": [
-    "lib"
+    "dist"
   ],
   "scripts": {
-    "lint": "npm-run-all \"lint:*\"",
-    "lint:eslint-docs": "npm-run-all \"update:eslint-docs -- --check\"",
-    "lint:js": "eslint .",
-    "test": "mocha tests --recursive",
-    "update:eslint-docs": "eslint-doc-generator"
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/ tests/"
   },
   "dependencies": {
-    "requireindex": "^1.2.0"
+    "@typescript-eslint/utils": "^8.0.0"
   },
   "devDependencies": {
+    "@typescript-eslint/parser": "^8.0.0",
+    "@typescript-eslint/rule-tester": "^8.0.0",
     "eslint": "^9.0.0",
-    "@eslint/js": "^9.0.0",
-    "eslint-doc-generator": "^2.0.0",
-    "eslint-plugin-eslint-plugin": "^7.3.2",
-    "eslint-plugin-n": "^17.0.0",
-    "mocha": "^11.0.0",
-    "npm-run-all2": "^6.1.2"
+    "typescript": "^5.0.0",
+    "vitest": "^3.0.0"
   },
   "engines": {
     "node": "^20.19.0 || ^22.13.0 || >=24"
