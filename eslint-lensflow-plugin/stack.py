@@ -350,14 +350,6 @@ def phase_branch(
             )
             pr_url = result.stdout.strip() if result.stdout else ""
             print(f"  PR: {pr_url}")
-
-            # 7. Request Copilot review
-            if pr_url or runner.dry_run:
-                runner.gh(
-                    "pr", "edit", pr_url,
-                    "--add-reviewer", "copilot",
-                    "--repo", GITHUB_REPO,
-                )
         else:
             print(f"  PR #{item_state.pr_number} already exists — skipping creation")
 
