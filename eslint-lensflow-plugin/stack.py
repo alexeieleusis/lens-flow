@@ -12,12 +12,10 @@ Usage:
 
 import argparse
 import json
-import os
-import re
 import shutil
 import subprocess
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
@@ -349,11 +347,12 @@ def phase_branch(
             print(f"  PR: {pr_url}")
 
             # 7. Request Copilot review
-            runner.gh(
-                "pr", "edit", pr_url,
-                "--add-reviewer", "copilot",
-                "--repo", GITHUB_REPO,
-            )
+            if pr_url or runner.dry_run:
+                runner.gh(
+                    "pr", "edit", pr_url,
+                    "--add-reviewer", "copilot",
+                    "--repo", GITHUB_REPO,
+                )
         else:
             print(f"  PR #{item_state.pr_number} already exists — skipping creation")
 
@@ -425,7 +424,10 @@ def phase_review(
         runner.git("checkout", item.branch)
 
         for thread in threads:
-            first_comment = thread["comments"]["nodes"][0]
+            nodes = thread["comments"].get("nodes", [])
+            if not nodes:
+                continue
+            first_comment = nodes[0]
             prompt = build_review_prompt(
                 rule_name=item.rule_name or item.kind,
                 file_path=first_comment.get("path", ""),
@@ -444,7 +446,7 @@ def phase_review(
         if changed:
             runner.git("add", "-A")
             runner.git("commit", "-m", "review: address copilot comments")
-            runner.git("push")
+            runner.git("push", "--force-with-lease")
         else:
             print("  (opencode made no changes)")
 
@@ -480,7 +482,7 @@ def phase_merge(
 ) -> None:
     pending = [
         i for i in items
-        if state[i.branch].pr_state not in ("MERGED", None)
+        if state[i.branch].pr_state not in ("MERGED", "CLOSED", None)
     ]
     if limit is not None:
         pending = pending[:limit]
@@ -532,11 +534,12 @@ def phase_merge(
                 make_rebase_onto_cmd(tip_sha, next_item.branch),
                 cwd=TARGET_REPO,
             )
-            runner.gh(
-                "pr", "edit", str(state[next_item.branch].pr_number),
-                "--base", MAIN_BRANCH,
-                "--repo", GITHUB_REPO,
-            )
+            if state[next_item.branch].pr_number is not None:
+                runner.gh(
+                    "pr", "edit", str(state[next_item.branch].pr_number),
+                    "--base", MAIN_BRANCH,
+                    "--repo", GITHUB_REPO,
+                )
             runner.git("push", "--force-with-lease", "origin", next_item.branch)
 
 
