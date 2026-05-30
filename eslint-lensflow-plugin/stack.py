@@ -180,6 +180,27 @@ export default plugin;
 
 # ── Phase: branch — file operations ───────────────────────────────────────────
 
+def _infer_options_type(text: str) -> str:
+    """Return a TS tuple type string for the rule's options, derived from defaultOptions."""
+    m = re.search(r'defaultOptions:\s*\[\s*(\{[^}]*\})\s*\]', text)
+    if not m:
+        return '[]'
+    pairs = re.findall(r'(\w+)\s*:\s*([^,}]+)', m.group(1))
+    props = []
+    for key, val in pairs:
+        val = val.strip()
+        if val in ('true', 'false'):
+            ts_type = 'boolean'
+        elif re.match(r'^-?\d+(\.\d+)?$', val):
+            ts_type = 'number'
+        elif val.startswith(('"', "'")):
+            ts_type = 'string'
+        else:
+            ts_type = 'unknown'
+        props.append(f'{key}: {ts_type}')
+    return '[{ ' + ', '.join(props) + ' }]' if props else '[]'
+
+
 def patch_rule_file(path: Path) -> None:
     """Fix Node16/ESM compatibility issues in a copied rule or test file.
 
