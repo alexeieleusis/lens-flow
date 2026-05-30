@@ -1,0 +1,45 @@
+import { createRule } from "../utils/rule-creator.js";
+import type { TSESLint } from "@typescript-eslint/utils";
+
+export default createRule({
+  name: "no-as-any-bypass",
+  meta: {
+    type: "problem",
+    docs: {
+      description:
+        "Disallow casting to `any` as an intermediate step to bypass type validation",
+    },
+    messages: {
+      anyCast:
+        "Casting to `any` defeats type safety. Avoid using `as any`. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC01-invalid-states.md",
+      doubleCastBypass:
+        "Double-cast through `any` bypasses validation, defeating branded types and illegal-state prevention. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC01-invalid-states.md",
+    },
+    schema: [],
+    fixable: undefined,
+  },
+  defaultOptions: [],
+  create(context: TSESLint.RuleContext<"doubleCastBypass" | "anyCast", []>) {
+    return {
+      TSAsExpression(node) {
+        if (node.typeAnnotation.type === "TSAnyKeyword") {
+          const innerIsAnyCast =
+            node.expression.type === "TSAsExpression" &&
+            node.expression.typeAnnotation.type === "TSAnyKeyword";
+
+          if (innerIsAnyCast) {
+            context.report({
+              node,
+              messageId: "doubleCastBypass",
+            });
+          } else {
+            context.report({
+              node,
+              messageId: "anyCast",
+            });
+          }
+        }
+      },
+    };
+  },
+});
