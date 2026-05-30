@@ -1,0 +1,63 @@
+import { createRule } from "../utils/rule-creator.js";
+import type { TSESLint } from "@typescript-eslint/utils";
+
+export default createRule({
+  name: "no-kitchen-sink-variant",
+  meta: {
+    type: "suggestion",
+    docs: {
+      description:
+        "Flag discriminated-union variants with too many top-level fields",
+    },
+    messages: {
+      tooManyFields:
+        "Union variant has {{count}} fields (max {{max}}). Extract into a nested type. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T01-algebraic-data-types.md",
+    },
+    schema: [
+      {
+        type: "object",
+        properties: {
+          maxFields: {
+            type: "number",
+            minimum: 1,
+          },
+        },
+        additionalProperties: false,
+      },
+    ],
+    fixable: undefined,
+  },
+  defaultOptions: [{ maxFields: 6 }],
+  create(context: TSESLint.RuleContext<"tooManyFields", [{ maxFields: number }]>) {
+    const opts = context.options[0] ?? {};
+    const maxFields = opts.maxFields ?? 6;
+
+    return {
+      TSTypeLiteral(node) {
+        const parent = node.parent;
+        if (parent?.type !== "TSUnionType") return;
+
+        const properties = node.members.filter(
+          (member) => member.type === "TSPropertySignature",
+        );
+
+        const hasDataProperty = properties.some(
+          (p) =>
+            p.key.type === "Identifier" &&
+            p.key.name === "data",
+        );
+
+        if (properties.length >= maxFields && !hasDataProperty) {
+          context.report({
+            node,
+            messageId: "tooManyFields",
+            data: {
+              count: String(properties.length),
+              max: String(maxFields),
+            },
+          });
+        }
+      },
+    };
+  },
+});
