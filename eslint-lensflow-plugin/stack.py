@@ -413,16 +413,23 @@ def phase_review(
         if state[i.branch].pr_number is not None
         and state[i.branch].pr_state == "OPEN"
     ]
-    if limit is not None:
-        candidates = candidates[:limit]
 
     if not candidates:
         print("No open PRs to review.")
         return
 
-    for item in candidates:
+    for idx, item in enumerate(candidates):
+        if limit is not None and idx >= limit:
+            break
         pr_number = state[item.branch].pr_number
         print(f"\n[review] {item.branch} (PR #{pr_number})")
+
+        # Re-request Copilot review for the PR 32 slots ahead
+        lookahead_idx = idx + 32
+        if lookahead_idx < len(candidates):
+            lookahead_pr = state[candidates[lookahead_idx].branch].pr_number
+            if lookahead_pr is not None:
+                rerequest_review(lookahead_pr, runner)
 
         # Fetch review threads
         result = runner.gh(

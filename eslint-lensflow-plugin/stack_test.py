@@ -260,6 +260,42 @@ def test_rerequest_review_calls_gh_pr_edit(capsys):
     assert "copilot" in out
 
 
+def test_phase_review_rerequests_lookahead(monkeypatch, capsys):
+    """When processing candidate idx=0, it re-requests review for candidate idx=32."""
+    import stack as s
+
+    # Build 35 fake candidates so there is a lookahead target at idx=32
+    candidates = [
+        WorkItem(branch=f"rule/rule-{i:02d}", kind="rule", rule_name=f"rule-{i:02d}")
+        for i in range(35)
+    ]
+    state = {
+        c.branch: ItemState(branched=True, pr_number=i + 10, pr_state="OPEN")
+        for i, c in enumerate(candidates)
+    }
+
+    # Patch gh to return no review threads so the loop skips quickly
+    def fake_gh(self, *args, **kwargs):
+        import subprocess
+        return subprocess.CompletedProcess(list(args), 0,
+            stdout='{"reviewThreads": []}', stderr="")
+
+    monkeypatch.setattr(s.Runner, "gh", fake_gh)
+
+    calls: list[int] = []
+
+    def fake_rerequest(pr_number: int, runner) -> None:
+        calls.append(pr_number)
+
+    monkeypatch.setattr(s, "rerequest_review", fake_rerequest)
+
+    runner = s.Runner(dry_run=False)
+    s.phase_review(candidates, state, runner, limit=1)
+
+    # candidates[0 + 32] has pr_number = 32 + 10 = 42
+    assert 42 in calls
+
+
 # ── make_rebase_onto_cmd tests ────────────────────────────────────────────────
 
 def test_make_rebase_onto_cmd():
