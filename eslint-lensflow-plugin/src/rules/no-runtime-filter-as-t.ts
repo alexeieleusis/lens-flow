@@ -1,0 +1,76 @@
+import { TSESTree, TSESLint } from "@typescript-eslint/utils";
+import { createRule } from "../utils/rule-creator.js";
+
+function findParentFunction(node: TSESTree.Node): TSESTree.FunctionLike | null {
+  let current: TSESTree.Node | undefined = node;
+  while (current) {
+    if (
+      current.type === "FunctionDeclaration" ||
+      current.type === "FunctionExpression" ||
+      current.type === "ArrowFunctionExpression"
+    )
+      return current as unknown as TSESTree.FunctionLike;
+    current = (current as any).parent;
+  }
+  return null;
+}
+
+export default createRule({
+  name: "no-runtime-filter-as-t",
+  meta: {
+    type: "problem",
+    docs: {
+      description:
+        "Disallow casting a runtime .filter() result back to a generic type parameter",
+    },
+    messages: {
+      runtimeFilterCastGeneric:
+        "Casting a runtime .filter() result to a generic type parameter falsely claims type-level precision. Use a concrete return type instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T45-paramspec-variadic.md",
+    },
+    schema: [],
+    fixable: undefined,
+  },
+  defaultOptions: [],
+  create(context: TSESLint.RuleContext<"runtimeFilterCastGeneric", []>) {
+    function checkAsExpression(asNode: TSESTree.TSAsExpression): void {
+      if (asNode.typeAnnotation.type !== "TSTypeReference") return;
+
+      const typeRef = asNode.typeAnnotation;
+      if (typeRef.typeName.type !== "Identifier") return;
+
+      const func = findParentFunction(asNode);
+      if (!func?.typeParameters) return;
+
+      const typeParamNames = new Set(
+        func.typeParameters.params.map((p) => p.name.name),
+      );
+      const castTarget = typeRef.typeName.name;
+      if (!typeParamNames.has(castTarget)) return;
+
+      const innerExpr = asNode.expression;
+      if (innerExpr.type !== "CallExpression") return;
+      if ((innerExpr.callee as TSESTree.MemberExpression).type !== "MemberExpression")
+        return;
+      const callee = innerExpr.callee as TSESTree.MemberExpression;
+      if (callee.property.type !== "Identifier" || callee.property.name !== "filter")
+        return;
+
+      context.report({
+        node: asNode,
+        messageId: "runtimeFilterCastGeneric",
+      });
+    }
+
+    return {
+      "ReturnStatement > TSAsExpression"(node: TSESTree.TSAsExpression) {
+        checkAsExpression(node);
+      },
+
+      "ArrowFunctionExpression[expression=true] > TSAsExpression"(
+        node: TSESTree.TSAsExpression,
+      ) {
+        checkAsExpression(node);
+      },
+    };
+  },
+});
