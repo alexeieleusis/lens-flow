@@ -104,9 +104,9 @@ export function createFunctionBodyVisitor(
   checkBody: FunctionBodyVisitorCheckFn,
 ): (context: TSESLint.RuleContext<string, unknown[]>) => Record<string, (node: TSESTree.Node) => void> {
   return (context): Record<string, (node: TSESTree.Node) => void> => {
-    const parserServices = ESLintUtils.getParserServices(context);
+    const parserServices = ESLintUtils.getParserServices(context, true);
+    if (!parserServices.program) return {};
     const program = parserServices.program;
-    if (!program) return {};
 
     const checker = program.getTypeChecker();
     const esTreeNodeToTSNodeMap = parserServices.esTreeNodeToTSNodeMap;

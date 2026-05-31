@@ -15,10 +15,8 @@ export function checkAnyParams(
     if (param.type === "TSParameterProperty") continue;
 
     const base = param.type === "AssignmentPattern" ? param.left : param;
-    const typeAnnotation =
-      "typeAnnotation" in base ? base.typeAnnotation : undefined;
 
-    if (typeAnnotation?.typeAnnotation.type === "TSAnyKeyword") {
+    if (base.typeAnnotation?.typeAnnotation.type === "TSAnyKeyword") {
       const paramName =
         "name" in base && typeof base.name === "string" ? base.name : "unnamed";
       context.report({

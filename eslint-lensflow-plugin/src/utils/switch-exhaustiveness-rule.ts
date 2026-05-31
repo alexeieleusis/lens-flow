@@ -26,7 +26,7 @@ export function createSwitchExhaustivenessRule(options: SwitchExhaustivenessRule
     },
     defaultOptions: [],
     create(context: TSESLint.RuleContext<string, readonly unknown[]>) {
-      const parserServices = ESLintUtils.getParserServices(context);
+      const parserServices = ESLintUtils.getParserServices(context, true);
       const program = parserServices.program;
       if (!program) return {};
 

@@ -145,32 +145,37 @@ export function getComparisonInfo(
 
   if (!varNode || value === undefined) return null;
 
-  const isIdentifier =
-    varNode.type === "Identifier" || varNode.type === "MemberExpression";
-  if (!isIdentifier) return null;
+  if (varNode.type === "Identifier") {
+    const tsVarNode = esTreeNodeToTSNodeMap.get(varNode);
+    if (!tsVarNode) return null;
+    return { varName: varNode.name, tsVarNode, value };
+  }
+
+  if (varNode.type !== "MemberExpression") return null;
+  if (varNode.computed || varNode.property.type !== "Identifier") return null;
+
+  const memberName = getMemberName(varNode);
+  if (!memberName) return null;
 
   const tsVarNode = esTreeNodeToTSNodeMap.get(varNode);
   if (!tsVarNode) return null;
 
-  const varName =
-    varNode.type === "Identifier"
-      ? varNode.name
-      : getMemberName(varNode as TSESTree.MemberExpression);
-
-  if (!varName) return null;
-
-  return { varName, tsVarNode, value };
+  return { varName: memberName, tsVarNode, value };
 }
 
 function getMemberName(node: TSESTree.MemberExpression): string | null {
   if (node.computed || node.property.type !== "Identifier") return null;
+
   if (node.object.type === "Identifier") {
     return `${node.object.name}.${node.property.name}`;
   }
   if (node.object.type === "MemberExpression") {
     const objName = getMemberName(node.object);
-    return objName ? `${objName}.${node.property.name}` : null;
+    if (!objName) return null;
+    return `${objName}.${node.property.name}`;
   }
+
+  // Reject `this.foo`, `super.foo`, and any other non-Identifier root objects.
   return null;
 }
 
@@ -189,8 +194,6 @@ export function collectComparisonValues(
 
   return handled;
 }
-
-export { getMemberName };
 
 /**
  * Context passed to the handler for each if-chain start found by

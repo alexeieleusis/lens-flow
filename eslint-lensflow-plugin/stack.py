@@ -251,10 +251,10 @@ def write_register_rules(runner: Runner) -> None:
 
 def local_branch_exists(branch: str) -> bool:
     result = subprocess.run(
-        ["git", "branch", "--list", branch],
+        ["git", "rev-parse", "--verify", f"refs/heads/{branch}"],
         cwd=TARGET_REPO, capture_output=True, text=True
     )
-    return bool(result.stdout.strip())
+    return result.returncode == 0
 
 def pr_title(item: WorkItem) -> str:
     if item.kind == "utils":
@@ -358,7 +358,7 @@ def phase_branch(
                 "--base", prev_branch,
                 "--title", pr_title(item),
                 "--body", pr_body(item),
-                "--reviewer", "@copilot",
+                "--reviewer", "copilot",
                 "--repo", GITHUB_REPO,
                 capture=True,
             )
