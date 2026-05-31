@@ -1,5 +1,5 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 type Options = [{ maxAbstractMethods?: number }];
 type MessageIds = "abstractOverkill";
@@ -34,43 +34,53 @@ export default createRule<Options, MessageIds>({
   create(context: TSESLint.RuleContext<MessageIds, Options>) {
     const [{ maxAbstractMethods = 2 } = {}] = context.options ?? [];
 
+    const checkAbstractClass = (
+      node: TSESTree.ClassDeclaration | TSESTree.ClassExpression,
+    ): void => {
+      if (!node.abstract) return;
+
+      const members = node.body.body;
+
+      const abstractMethods = members.filter(
+        (m): m is TSESTree.TSAbstractMethodDefinition =>
+          m.type === "TSAbstractMethodDefinition",
+      );
+      const instanceFields = members.filter(
+        (m): m is TSESTree.PropertyDefinition =>
+          m.type === "PropertyDefinition" && !m.static,
+      );
+      const concreteMethods = members.filter(
+        (m): m is TSESTree.MethodDefinition =>
+          m.type === "MethodDefinition" && m.value.body !== null,
+      );
+
+      const abstractCount = abstractMethods.length;
+
+      if (
+        abstractCount >= 1 &&
+        abstractCount <= maxAbstractMethods &&
+        instanceFields.length === 0 &&
+        concreteMethods.length === 0
+      ) {
+        const className =
+          node.id?.type === "Identifier" ? node.id.name : "unknown";
+        context.report({
+          node,
+          messageId: "abstractOverkill",
+          data: {
+            name: className,
+            count: String(abstractCount),
+          },
+        });
+      }
+    };
+
     return {
       ClassDeclaration(node) {
-        if (!node.abstract) return;
-
-        const body = node.body;
-        const members = body.body;
-
-        const abstractMethods = members.filter(
-          (m) => m.type === "TSAbstractMethodDefinition",
-        );
-        const instanceFields = members.filter(
-          (m) => m.type === "PropertyDefinition",
-        );
-        const concreteMethods = members.filter(
-          (m) =>
-            m.type === "MethodDefinition" && m.value.body !== null,
-        );
-
-        const abstractCount = abstractMethods.length;
-
-        if (
-          abstractCount >= 1 &&
-          abstractCount <= maxAbstractMethods &&
-          instanceFields.length === 0 &&
-          concreteMethods.length === 0
-        ) {
-          const className =
-            node.id?.type === "Identifier" ? node.id.name : "unknown";
-          context.report({
-            node,
-            messageId: "abstractOverkill",
-            data: {
-              name: className,
-              count: String(abstractCount),
-            },
-          });
-        }
+        checkAbstractClass(node);
+      },
+      ClassExpression(node) {
+        checkAbstractClass(node);
       },
     };
   },
