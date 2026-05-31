@@ -1,0 +1,108 @@
+import { createRule } from "../utils/rule-creator.js";
+import type { TSESLint } from "@typescript-eslint/utils";
+
+const PRIMITIVE_TYPE_NODES = new Set([
+  "TSStringKeyword",
+  "TSNumberKeyword",
+  "TSBooleanKeyword",
+  "TSBigIntKeyword",
+  "TSSymbolKeyword",
+]);
+
+function isPrimitiveLiteralType(node: unknown): boolean {
+  if (
+    node &&
+    typeof node === "object" &&
+    "type" in node &&
+    node.type === "TSLiteralType"
+  ) {
+    const { literal } = node as unknown as { literal: { type: string } };
+    return (
+      literal.type === "Literal" &&
+      typeof (literal as { value?: unknown }).value !== "object"
+    );
+  }
+  return false;
+}
+
+export default createRule({
+  name: "no-readonly-on-primitives",
+  meta: {
+    type: "suggestion",
+    docs: {
+      description:
+        "Disallow `readonly` on properties typed as primitive types, since primitives are already immutable by value.",
+    },
+    messages: {
+      redundantReadonly:
+        "`readonly` on `{{name}}` is redundant because `{{type}}` is a primitive and already immutable by value. Remove the `readonly` modifier. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T32-immutability-markers.md",
+    },
+    schema: [],
+    fixable: "code",
+  },
+  defaultOptions: [],
+  create(context: TSESLint.RuleContext<"redundantReadonly", []>) {
+    function checkNode(
+      node:
+        | import("@typescript-eslint/types").TSESTree.TSPropertySignature
+        | import("@typescript-eslint/types").TSESTree.PropertyDefinition,
+    ) {
+      if (!node.readonly) return;
+
+      const typeAnn = node.typeAnnotation?.typeAnnotation;
+      if (!typeAnn) return;
+
+      if (typeAnn.type === "TSTypeReference") return;
+
+      if (
+        !PRIMITIVE_TYPE_NODES.has(typeAnn.type) &&
+        !isPrimitiveLiteralType(typeAnn)
+      )
+        return;
+
+      let propName: string;
+      if (node.key.type === "Identifier") {
+        propName = node.key.name;
+      } else if (node.key.type === "Literal") {
+        propName = String((node.key as { value: unknown }).value);
+      } else {
+        propName = "this property";
+      }
+
+      let typeName: string = typeAnn.type;
+      if (typeAnn.type === "TSLiteralType") {
+        const lit = typeAnn as unknown as { literal: { value?: unknown } };
+        typeName = typeof lit.literal.value === "number" ? "number" : "string";
+      }
+
+      context.report({
+        node,
+        messageId: "redundantReadonly",
+        data: { name: propName, type: typeName },
+        fix(fixer) {
+          const source = context.sourceCode;
+          const readonlyToken = source.getTokenBefore(
+            node.key,
+            (token) => token.value === "readonly",
+          );
+          if (!readonlyToken) return null;
+          const nextToken = source.getTokenAfter(readonlyToken);
+          if (!nextToken) return null;
+          return fixer.removeRange([
+            readonlyToken.range[0],
+            nextToken.range[0],
+          ]);
+        },
+      });
+    }
+
+    return {
+      TSPropertySignature(node) {
+        checkNode(node);
+      },
+      PropertyDefinition(node) {
+        checkNode(node);
+      },
+    };
+  },
+});
