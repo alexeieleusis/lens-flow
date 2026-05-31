@@ -18,7 +18,7 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"anyArrayChildren", []>) {
-    const nestedPattern = /^(children|nodes|items|elements|subs?ubs?)/i;
+    const nestedPattern = /^(children|nodes|items|elements|subs?)/i;
 
     return {
       TSPropertySignature(node) {
@@ -31,11 +31,15 @@ export default createRule({
         if (typeAnn?.type !== "TSArrayType") return;
         if (typeAnn.elementType.type !== "TSAnyKeyword") return;
 
-        const parent = node.parent;
-        const parentName =
-          parent.type === "TSTypeLiteral" || parent.type === "TSInterfaceBody"
-            ? (context.sourceCode.getText(parent).split(/[{}:]/)[0] || "the containing type")
-            : "the containing type";
+        let parentName = "the containing type";
+        if (node.parent?.type === "TSTypeLiteral" || node.parent?.type === "TSInterfaceBody") {
+          const grandParent = node.parent.parent;
+          if (grandParent?.type === "TSTypeAliasDeclaration" && grandParent.id.type === "Identifier") {
+            parentName = grandParent.id.name;
+          } else if (grandParent?.type === "TSInterfaceDeclaration" && grandParent.id.type === "Identifier") {
+            parentName = grandParent.id.name;
+          }
+        }
 
         context.report({
           node,
