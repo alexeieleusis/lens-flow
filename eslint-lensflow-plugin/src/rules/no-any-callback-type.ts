@@ -1,5 +1,21 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+type CallableNode = TSESTree.TSFunctionType | TSESTree.TSMethodSignature | TSESTree.TSCallSignatureDeclaration;
+
+function isAnyCallback(node: CallableNode): boolean {
+  if (node.params.length !== 1) return false;
+
+  const param = node.params[0];
+  if (param.type !== "RestElement") return false;
+
+  const typeAnn = param.typeAnnotation?.typeAnnotation;
+  if (typeAnn?.type !== "TSArrayType") return false;
+
+  if (typeAnn.elementType.type !== "TSAnyKeyword") return false;
+
+  return node.returnType?.typeAnnotation.type === "TSAnyKeyword";
+}
 
 export default createRule({
   name: "no-any-callback-type",
@@ -18,25 +34,16 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"anyCallbackType", []>) {
+    const reportIfAnyCallback = (node: CallableNode) => {
+      if (isAnyCallback(node)) {
+        context.report({ node, messageId: "anyCallbackType" });
+      }
+    };
+
     return {
-      TSFunctionType(node) {
-        if (node.params.length !== 1) return;
-
-        const param = node.params[0];
-        if (param.type !== "RestElement") return;
-
-        const typeAnn = param.typeAnnotation?.typeAnnotation;
-        if (typeAnn?.type !== "TSArrayType") return;
-
-        if (typeAnn.elementType.type !== "TSAnyKeyword") return;
-
-        if (node.returnType?.typeAnnotation.type !== "TSAnyKeyword") return;
-
-        context.report({
-          node,
-          messageId: "anyCallbackType",
-        });
-      },
+      TSFunctionType: reportIfAnyCallback,
+      TSMethodSignature: reportIfAnyCallback,
+      TSCallSignatureDeclaration: reportIfAnyCallback,
     };
   },
 });
