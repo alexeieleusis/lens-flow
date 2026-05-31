@@ -1,8 +1,16 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
+function normalizeParam(node: unknown): unknown {
+  const n = node as { type?: string; left?: unknown; parameter?: unknown };
+  if (n.type === "AssignmentPattern" && n.left) return n.left;
+  if (n.type === "TSParameterProperty" && n.parameter) return n.parameter;
+  return node;
+}
+
 function isAnyType(node: unknown): boolean {
-  const n = node as { typeAnnotation?: { typeAnnotation?: { type: string } } };
+  const normalized = normalizeParam(node);
+  const n = normalized as { typeAnnotation?: { typeAnnotation?: { type: string } } };
   return n.typeAnnotation?.typeAnnotation?.type === "TSAnyKeyword";
 }
 
@@ -41,16 +49,11 @@ export default createRule({
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"anyParam" | "anyReturn", []>) {
     function checkFunction(
-      node:
-        | {
-            params: readonly unknown[];
-            returnType?: { typeAnnotation?: { type: string } } | null;
-            declare?: boolean;
-          }
-        | {
-            params: readonly unknown[];
-            returnType?: { typeAnnotation?: { type: string } } | null;
-          },
+      node: {
+        params: readonly unknown[];
+        returnType?: { typeAnnotation?: { type: string } } | null;
+        declare?: boolean;
+      },
     ) {
       if ((node as { declare?: boolean }).declare) {
         return;
@@ -88,6 +91,12 @@ export default createRule({
         checkFunction(node);
       },
       TSFunctionType(node) {
+        checkFunction(node);
+      },
+      TSConstructorType(node) {
+        checkFunction(node);
+      },
+      TSMethodSignature(node) {
         checkFunction(node);
       },
     };
