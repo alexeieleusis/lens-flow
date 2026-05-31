@@ -1,16 +1,25 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
+function unwrapReadonly(node: any): any {
+  if (node?.type === "TSTypeOperator" && node.operator === "readonly") {
+    return node.typeAnnotation;
+  }
+  return node;
+}
+
 function isAnyArray(node: any): node is any {
-  if (node.type === "TSArrayType" && node.elementType.type === "TSAnyKeyword") {
+  node = unwrapReadonly(node);
+
+  if (node?.type === "TSArrayType" && node.elementType?.type === "TSAnyKeyword") {
     return true;
   }
   if (
-    node.type === "TSTypeReference" &&
-    node.typeName.type === "Identifier" &&
+    node?.type === "TSTypeReference" &&
+    node.typeName?.type === "Identifier" &&
     node.typeName.name === "Array" &&
-    node.typeArguments?.params.length === 1 &&
-    node.typeArguments.params[0].type === "TSAnyKeyword"
+    node.typeArguments?.params?.length === 1 &&
+    node.typeArguments.params[0]?.type === "TSAnyKeyword"
   ) {
     return true;
   }
@@ -49,6 +58,7 @@ export default createRule({
       TSMethodSignature: checkReturn,
       TSFunctionType: checkReturn,
       TSDeclareFunction: checkReturn,
+      FunctionExpression: checkReturn,
       ArrowFunctionExpression: checkReturn,
     };
   },
