@@ -1,0 +1,106 @@
+import { AST_NODE_TYPES, TSESLint } from "@typescript-eslint/utils";
+import type { TSESTree } from "@typescript-eslint/utils";
+import { createRule } from "../utils/rule-creator.js";
+
+function containsInferInArray(arr: unknown[]): boolean {
+  for (const item of arr) {
+    if (item != null && typeof item === "object" && "type" in item) {
+      if (containsInfer(item as TSESTree.Node)) return true;
+    }
+  }
+  return false;
+}
+
+function containsInferInObject(node: TSESTree.Node): boolean {
+  const skipProps = new Set(["parent", "loc", "range", "leadingComments", "trailingComments", "innerComments"]);
+  const entries = Object.entries(node as unknown as Record<string, unknown>);
+  for (const [key, value] of entries) {
+    if (skipProps.has(key)) continue;
+    if (value == null || typeof value !== "object") continue;
+    if (Array.isArray(value)) {
+      if (containsInferInArray(value)) return true;
+    }
+    if ("type" in value) {
+      if (containsInfer(value as TSESTree.Node)) return true;
+    }
+  }
+  return false;
+}
+
+function containsInfer(node: TSESTree.Node): boolean {
+  if (node.type === AST_NODE_TYPES.TSInferType) return true;
+  return containsInferInObject(node);
+}
+
+function typeReferenceToString(
+  node: TSESTree.TSTypeReference,
+): string | null {
+  if (node.typeArguments) return null;
+  if (node.typeName.type === AST_NODE_TYPES.Identifier) {
+    return node.typeName.name;
+  }
+  if (node.typeName.type === AST_NODE_TYPES.TSQualifiedName) {
+    const parts: string[] = [];
+    let current: TSESTree.EntityName = node.typeName;
+    while (current.type === AST_NODE_TYPES.TSQualifiedName) {
+      parts.unshift(current.right.name);
+      current = current.left;
+    }
+    if (current.type === AST_NODE_TYPES.Identifier) {
+      parts.unshift(current.name);
+    }
+    return parts.join(".");
+  }
+  return null;
+}
+
+export default createRule({
+  name: "no-redundant-infer-conditional",
+  meta: {
+    type: "suggestion",
+    docs: {
+      description:
+        "Disallow conditional types that are redundant identity passthrough with never",
+    },
+    messages: {
+      redundantConditional:
+        "This conditional type is a redundant identity distribution. Use a simple type alias instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T49-associated-types.md",
+    },
+    schema: [],
+    fixable: undefined,
+  },
+  defaultOptions: [],
+  create(context: TSESLint.RuleContext<"redundantConditional", []>) {
+    return {
+      TSConditionalType(node) {
+        const { checkType, extendsType, trueType, falseType } = node;
+
+        // Condition 3: false branch is TSNeverKeyword
+        if (falseType.type !== AST_NODE_TYPES.TSNeverKeyword) return;
+
+        // No infer keyword anywhere in the conditional
+        if (containsInfer(node)) return;
+
+        // Condition 1: check type is a TSTypeReference
+        if (checkType.type !== AST_NODE_TYPES.TSTypeReference) return;
+
+        const checkName = typeReferenceToString(checkType);
+        if (!checkName) return;
+
+        // Condition 2: true branch is the same TSTypeReference (identity passthrough)
+        if (trueType.type !== AST_NODE_TYPES.TSTypeReference) return;
+
+        const trueName = typeReferenceToString(trueType);
+        if (trueName !== checkName) return;
+
+        // extendsType must be a TSUnionType
+        if (extendsType.type !== AST_NODE_TYPES.TSUnionType) return;
+
+        context.report({
+          node,
+          messageId: "redundantConditional",
+        });
+      },
+    };
+  },
+});
