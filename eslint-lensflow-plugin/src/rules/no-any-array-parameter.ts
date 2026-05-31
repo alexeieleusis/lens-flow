@@ -23,12 +23,24 @@ function isTupleWithAny(node: {
   );
 }
 
-function hasAnyType(typeAnnotation: { type: string; elementType?: { type: string }; elementTypes?: Array<{ type: string }>; typeAnnotation?: { type: string; elementType?: { type: string }; elementTypes?: Array<{ type: string }> } } | undefined): boolean {
+function isAnyTypeReference(node: {
+  type: string;
+  typeName?: { type: string; name?: string };
+  typeArguments?: { params?: Array<{ type: string }> };
+}): boolean {
+  if (node.type !== "TSTypeReference") return false;
+  const name = node.typeName?.type === "Identifier" ? node.typeName.name : undefined;
+  if (name !== "Array" && name !== "ReadonlyArray") return false;
+  return node.typeArguments?.params?.some((p) => isAnyType(p)) ?? false;
+}
+
+function hasAnyType(typeAnnotation: { type: string; elementType?: { type: string }; elementTypes?: Array<{ type: string }>; typeAnnotation?: { type: string; elementType?: { type: string }; elementTypes?: Array<{ type: string }> }; typeName?: { type: string; name?: string }; typeArguments?: { params?: Array<{ type: string }> } } | undefined): boolean {
   if (!typeAnnotation) return false;
   if (
     isAnyType(typeAnnotation) ||
     isAnyArrayType(typeAnnotation) ||
-    isTupleWithAny(typeAnnotation)
+    isTupleWithAny(typeAnnotation) ||
+    isAnyTypeReference(typeAnnotation)
   )
     return true;
   if (
@@ -36,6 +48,14 @@ function hasAnyType(typeAnnotation: { type: string; elementType?: { type: string
     typeAnnotation.typeAnnotation
   ) {
     return hasAnyType(typeAnnotation.typeAnnotation);
+  }
+  if (
+    typeAnnotation.type === "TSTypeReference" &&
+    typeAnnotation.typeArguments?.params
+  ) {
+    return typeAnnotation.typeArguments.params.some(
+      (p) => p && hasAnyType(p as Parameters<typeof hasAnyType>[0])
+    );
   }
   return false;
 }
@@ -46,11 +66,11 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow `any[]` parameters and `any` return types in non-generic functions.",
+        "Disallow `any`, `any[]`, `Array<any>`, `ReadonlyArray<any>`, `readonly any[]`, and tuple parameters containing `any` in non-generic functions, as well as `any` return types. Applies to function declarations, expressions, arrow functions, function types, and declare functions.",
     },
     messages: {
       anyParam:
-        "Parameter `{{name}}` uses `any`, `any[]`, or a tuple containing `any`. Use a generic with constraints instead. See: {{url}}",
+        "Parameter `{{name}}` uses `any`, `any[]` (equivalent to `Array<any>`), `ReadonlyArray<any>` (equivalent to `readonly any[]`), or a tuple containing `any`. Use a generic with constraints instead. See: {{url}}",
       anyReturn:
         "Function returns `any`. Use a generic return type instead. See: {{url}}",
     },
@@ -86,6 +106,8 @@ export default createRule({
           type: string;
           elementType?: { type: string };
           elementTypes?: Array<{ type: string }>;
+          typeName?: { type: string; name?: string };
+          typeArguments?: { params?: Array<{ type: string }> };
         } | undefined;
 
         if (hasAnyType(typeAnn)) {

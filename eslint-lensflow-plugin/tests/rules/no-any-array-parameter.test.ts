@@ -35,6 +35,14 @@ ruleTester.run("no-any-array-parameter", rule, {
     `function noAnnotations(x) {
   return x;
 }`,
+    // Array<string> is fine
+    `function join(items: Array<string>): string {
+  return items.join(",");
+}`,
+    // ReadonlyArray<number> is fine
+    `function sum(arr: ReadonlyArray<number>): number {
+  return arr.reduce((a, b) => a + b, 0);
+}`,
   ],
   invalid: [
     // Antipattern from spec: any[] param and any return
@@ -109,6 +117,64 @@ ruleTester.run("no-any-array-parameter", rule, {
         { messageId: "anyParam" },
         { messageId: "anyReturn" },
       ],
+    },
+    // Array<any> should be flagged
+    {
+      code: `function process(items: Array<any>): void {}`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    // ReadonlyArray<any> should be flagged
+    {
+      code: `function safe(arr: ReadonlyArray<any>): void {}`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    // Array<any> in arrow function
+    {
+      code: `const fn = (x: Array<any>) => x;`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    // Array<any> in function type
+    {
+      code: `type Handler = (data: ReadonlyArray<any>) => void;`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    // Plain `any` parameter should be flagged
+    {
+      code: `function handle(data: any): void {}`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    // Plain `any` in arrow function
+    {
+      code: `const fn = (x: any) => x;`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    // Plain `any` in function type
+    {
+      code: `type Callback = (arg: any) => void;`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    // Multiple plain `any` params
+    {
+      code: `function merge(a: any, b: any): void {}`,
+      errors: [
+        { messageId: "anyParam" },
+        { messageId: "anyParam" },
+      ],
+    },
+    // Mixed: plain `any` alongside typed param
+    {
+      code: `function process(label: string, value: any): void {}`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    // Readonly<ReadonlyArray<any>> — nested typeArguments should be checked
+    {
+      code: `function deep(x: Readonly<ReadonlyArray<any>>): void {}`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    // readonly Array<any> — typeOperator wrapping Array<any>
+    {
+      code: `function wrap(x: readonly Array<any>): void {}`,
+      errors: [{ messageId: "anyParam" }],
     },
   ],
 });
