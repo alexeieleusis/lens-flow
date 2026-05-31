@@ -53,7 +53,7 @@ ruleTester.run("no-any-array-for-children", rule, {
     },
     {
       code: `type Tree = {
-        sububs: any[];
+        subs: any[];
       }`,
       errors: [{ messageId: "anyArrayChildren" }],
     },
