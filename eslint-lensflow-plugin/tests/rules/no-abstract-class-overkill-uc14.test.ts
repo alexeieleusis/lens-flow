@@ -21,6 +21,17 @@ ruleTester.run("no-abstract-class-overkill-uc14", rule, {
       private id = 0;
       abstract handle(x: number): string;
     }`,
+    // Regression pair: instance fields DO suppress the rule (unlike static fields above)
+    `abstract class InstanceFieldSuppresses {
+      private id = 0;
+      abstract handle(x: number): string;
+    }`,
+    // Static-only fields don't count as instance state — combined with instance field, should not trigger
+    `abstract class HandlerWithBothFields {
+      static readonly KIND = "handler";
+      private id = 0;
+      abstract handle(x: number): string;
+    }`,
     // Regular (non-abstract) class — should not trigger
     `class ConcreteHandler {
       handle(x: number): string { return String(x); }
@@ -43,6 +54,22 @@ ruleTester.run("no-abstract-class-overkill-uc14", rule, {
     {
       code: `abstract class SingleMethod {
   abstract run(): void;
+}`,
+      errors: [{ messageId: "abstractOverkill" }],
+    },
+    {
+      code: `abstract class WithOnlyStatic {
+  static readonly KIND = "handler";
+  abstract handle(x: number): string;
+}`,
+      errors: [{ messageId: "abstractOverkill" }],
+    },
+    // Regression: static fields must NOT suppress the rule — only instance fields do.
+    {
+      code: `abstract class StaticOnlyRegression {
+  static counter = 0;
+  static readonly TAG = "reg";
+  abstract handle(x: number): string;
 }`,
       errors: [{ messageId: "abstractOverkill" }],
     },
