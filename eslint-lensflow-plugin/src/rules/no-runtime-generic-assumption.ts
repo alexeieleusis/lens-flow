@@ -1,0 +1,229 @@
+import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
+import { createRule } from "../utils/rule-creator.js";
+
+const runtimeMetadataProps = new Set([
+  "constructor",
+  "__typename",
+  "__proto__",
+  "prototype",
+]);
+
+function getTypeText(node: unknown): string {
+  const n = node as { type: string; typeName?: { type: string; name?: string } };
+  switch (n.type) {
+    case "TSStringKeyword":
+      return "string";
+    case "TSNumberKeyword":
+      return "number";
+    case "TSBooleanKeyword":
+      return "boolean";
+    case "TSNullKeyword":
+      return "null";
+    case "TSUndefinedKeyword":
+      return "undefined";
+    case "TSObjectKeyword":
+      return "object";
+    case "TSAnyKeyword":
+      return "any";
+    case "TSUnknownKeyword":
+      return "unknown";
+    case "TSTypeReference":
+      if (n.typeName?.type === "Identifier") {
+        return n.typeName.name ?? "specific type";
+      }
+      return "specific type";
+    default:
+      return "specific type";
+  }
+}
+
+function typeArgsContainTypeParam(
+  typeArguments: unknown[],
+  typeParamNames: Set<string>,
+): boolean {
+  for (const arg of typeArguments) {
+    const argN = arg as { type?: string; typeName?: { name?: string } };
+    if (
+      argN.type === "TSTypeReference" &&
+      argN.typeName?.name &&
+      typeParamNames.has(argN.typeName.name)
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function getGenericParamNames(node: unknown): string[] {
+  const n = node as {
+    params?: Array<{
+      type: string;
+      name?: string;
+      typeAnnotation?: {
+        typeAnnotation?: {
+          type: string;
+          typeName?: { name?: string };
+          typeArguments?: { params?: unknown[] };
+        };
+      };
+    }>;
+    typeParameters?: { params: Array<{ name: { name: string } }> };
+  };
+  if (!n.params || !n.typeParameters) return [];
+  const typeParamNames = new Set(
+    n.typeParameters.params.map((tp) => tp.name.name),
+  );
+  const result: string[] = [];
+  for (const p of n.params) {
+    if (p.type !== "Identifier" || !p.name) continue;
+    const ta = p.typeAnnotation?.typeAnnotation;
+    if (!ta) continue;
+    if (
+      ta.type === "TSTypeReference" &&
+      (
+        (ta.typeName?.name && typeParamNames.has(ta.typeName.name)) ||
+        (ta.typeArguments?.params &&
+          typeArgsContainTypeParam(ta.typeArguments.params, typeParamNames))
+      )
+    ) {
+      result.push(p.name);
+    }
+  }
+  return result;
+}
+
+export default createRule({
+  name: "no-runtime-generic-assumption",
+  meta: {
+    type: "problem",
+    docs: {
+      description:
+        "Disallows accessing runtime type-metadata properties on generic parameters",
+    },
+    messages: {
+      runtimeMetadataAccess:
+        "Accessing {{property}} on generic parameter {{paramName}} which has no runtime type information. Use instanceof or type guards instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+      unsafeCastOnGeneric:
+        "Casting generic parameter {{paramName}} to a specific type {{castType}} assumes runtime type information that does not exist. Use type guards instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+      runtimeMetadataOnCall:
+        "Accessing {{property}} on the result of generic function {{funcName}}. Generic type T is erased at runtime. Use instanceof or type guards instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+    },
+    schema: [],
+    fixable: undefined,
+  },
+  defaultOptions: [],
+  create(context: TSESLint.RuleContext<"runtimeMetadataAccess" | "runtimeMetadataOnCall" | "unsafeCastOnGeneric", []>) {
+    const genericFns = new Set<string>();
+    const paramStack: Set<string>[] = [];
+
+    function pushParams(paramNames: string[]) {
+      paramStack.push(new Set(paramNames));
+    }
+
+    function popParams() {
+      paramStack.pop();
+    }
+
+    function isGenericParam(name: string): boolean {
+      for (let i = paramStack.length - 1; i >= 0; i--) {
+        if (paramStack[i].has(name)) return true;
+      }
+      return false;
+    }
+
+    function enterFn(node: unknown) {
+      const n = node as {
+        id?: { name: string };
+        typeParameters?: { params: unknown[] };
+      };
+      const hasTypeParams =
+        n.typeParameters && n.typeParameters.params.length > 0;
+      if (hasTypeParams && n.id) {
+        genericFns.add(n.id.name);
+      }
+      const paramNames = getGenericParamNames(node);
+      pushParams(paramNames);
+    }
+
+    function exitFn() {
+      popParams();
+    }
+
+    return {
+      FunctionDeclaration: enterFn,
+      "FunctionDeclaration:exit": exitFn,
+
+      FunctionExpression: enterFn,
+      "FunctionExpression:exit": exitFn,
+
+      ArrowFunctionExpression: enterFn,
+      "ArrowFunctionExpression:exit": exitFn,
+
+      MemberExpression(node: TSESTree.MemberExpression) {
+        const mn = node as {
+          object: { type: string; name?: string; callee?: { type: string; name?: string } };
+          property: { type: string; name: string };
+        };
+        const property = mn.property;
+        if (
+          property.type !== "Identifier" ||
+          !runtimeMetadataProps.has(property.name)
+        ) {
+          return;
+        }
+
+        const obj = mn.object;
+
+        if (obj.type === "Identifier" && obj.name) {
+          if (isGenericParam(obj.name)) {
+            context.report({
+              node,
+              messageId: "runtimeMetadataAccess",
+              data: {
+                property: property.name,
+                paramName: obj.name,
+              },
+            });
+            return;
+          }
+        }
+
+        if (obj.type === "CallExpression") {
+          const callObj = obj as { callee?: { type: string; name?: string } };
+          const callee = callObj.callee;
+          if (callee?.type === "Identifier" && callee.name && genericFns.has(callee.name)) {
+            context.report({
+              node,
+              messageId: "runtimeMetadataOnCall",
+              data: {
+                property: property.name,
+                funcName: callee.name,
+              },
+            });
+            return;
+          }
+        }
+      },
+
+      TSAsExpression(node: TSESTree.TSAsExpression) {
+        const an = node as {
+          expression: { type: string; name?: string };
+          typeAnnotation: unknown;
+        };
+        const expression = an.expression;
+        if (expression.type !== "Identifier" || !expression.name) return;
+
+        if (isGenericParam(expression.name)) {
+          context.report({
+            node,
+            messageId: "unsafeCastOnGeneric",
+            data: {
+              paramName: expression.name,
+              castType: getTypeText(an.typeAnnotation),
+            },
+          });
+        }
+      },
+    };
+  },
+});
