@@ -17,6 +17,18 @@ ruleTester.run("no-any-callback-type", rule, {
     `type Handler = () => any;`,
     // Rest parameter with tuple
     `type Handler = (...args: [string, number]) => any;`,
+    // Method signature with typed params
+    `interface X { onEvent(event: MouseEvent): void; }`,
+    // Method signature with rest but typed array
+    `interface X { onEvent(...args: string[]): any; }`,
+    // Method signature with rest any[] but typed return
+    `interface X { onEvent(...args: any[]): string; }`,
+    // Call signature with typed params
+    `interface X { (event: MouseEvent): void; }`,
+    // Call signature with rest but typed array
+    `interface X { (...args: string[]): any; }`,
+    // Call signature with rest any[] but typed return
+    `interface X { (...args: any[]): string; }`,
   ],
   invalid: [
     {
@@ -33,6 +45,35 @@ ruleTester.run("no-any-callback-type", rule, {
     },
     {
       code: `type Fn = (...x: any[]) => any;`,
+      errors: [{ messageId: "anyCallbackType" }],
+    },
+    // Interface method signature: `onEvent(...args: any[]): any;`
+    {
+      code: `interface X { onEvent(...args: any[]): any; }`,
+      errors: [{ messageId: "anyCallbackType" }],
+    },
+    // Interface call signature: `(...args: any[]): any;`
+    {
+      code: `interface X { (...args: any[]): any; }`,
+      errors: [{ messageId: "anyCallbackType" }],
+    },
+    // Type literal method signature
+    {
+      code: `type X = { onEvent(...args: any[]): any; };`,
+      errors: [{ messageId: "anyCallbackType" }],
+    },
+    // Type literal call signature
+    {
+      code: `type X = { (...args: any[]): any; };`,
+      errors: [{ messageId: "anyCallbackType" }],
+    },
+    {
+      code: `
+        type Handler = {
+          (event: string): void;
+          onInit(...args: any[]): any;
+        };
+      `,
       errors: [{ messageId: "anyCallbackType" }],
     },
   ],
