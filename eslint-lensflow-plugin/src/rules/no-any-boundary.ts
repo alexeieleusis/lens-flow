@@ -5,9 +5,11 @@ const FUNCTION_TYPE_NODES = new Set([
   "FunctionDeclaration",
   "FunctionExpression",
   "ArrowFunctionExpression",
+  "TSFunctionType",
+  "TSDeclareFunction",
 ]);
 
-const PARAM_TYPE_NODES = new Set(["Identifier", "RestElement", "TSParameterProperty"]);
+const PARAM_TYPE_NODES = new Set(["Identifier", "RestElement", "TSParameterProperty", "ObjectPattern", "ArrayPattern"]);
 
 function isAnyInAsExpression(
   node: TSESTree.TSAnyKeyword,
@@ -18,8 +20,13 @@ function isAnyInAsExpression(
 
 function isAnyInVarAnnotation(parent: TSESTree.Node): boolean {
   if (parent.type !== "TSTypeAnnotation") return false;
-  const idNode = parent.parent;
-  return idNode?.type === "Identifier" && idNode.parent?.type === "VariableDeclarator";
+  const annotatedNode = parent.parent;
+  const PATTERN_TYPES = new Set(["Identifier", "ObjectPattern", "ArrayPattern"]);
+  return (
+    annotatedNode &&
+    PATTERN_TYPES.has(annotatedNode.type) &&
+    annotatedNode.parent?.type === "VariableDeclarator"
+  );
 }
 
 function isAnyInFunctionReturnType(
@@ -28,15 +35,22 @@ function isAnyInFunctionReturnType(
 ): boolean {
   if (parent.type !== "TSTypeAnnotation") return false;
   if (!grandparent || !FUNCTION_TYPE_NODES.has(grandparent.type)) return false;
-  return (grandparent as TSESTree.FunctionDeclaration).returnType === parent;
+  return (
+    (grandparent as TSESTree.FunctionDeclaration | TSESTree.TSFunctionType | TSESTree.TSDeclareFunction)
+      .returnType === parent
+  );
 }
 
 function isAnyInParameterType(
   grandparent: TSESTree.Node | undefined
 ): boolean {
   if (!grandparent || !PARAM_TYPE_NODES.has(grandparent.type)) return false;
-  const greatGrandparent = grandparent.parent;
-  return !!(greatGrandparent && FUNCTION_TYPE_NODES.has(greatGrandparent.type));
+  let candidate: TSESTree.Node | undefined = grandparent.parent;
+  // Walk through AssignmentPattern wrappers (e.g., default params like `x: any = 1`)
+  while (candidate && candidate.type === "AssignmentPattern") {
+    candidate = candidate.parent;
+  }
+  return !!candidate && FUNCTION_TYPE_NODES.has(candidate.type);
 }
 
 export default createRule({

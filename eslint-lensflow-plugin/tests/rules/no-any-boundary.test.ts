@@ -40,5 +40,87 @@ ruleTester.run("no-any-boundary", rule, {
         { messageId: "anyInAsExpression" },
       ],
     },
+    {
+      code: `const { a }: any = value;`,
+      errors: [{ messageId: "anyInVarAnnotation" }],
+    },
+    {
+      code: `const [ a ]: any = value;`,
+      errors: [{ messageId: "anyInVarAnnotation" }],
+    },
+    {
+      code: `let { x, y }: any = obj;`,
+      errors: [{ messageId: "anyInVarAnnotation" }],
+    },
+    {
+      code: `const handler = (payload: any = {}) => payload.value;`,
+      errors: [{ messageId: "anyInFunctionType" }],
+    },
+    {
+      code: `function handle({ x }: any) { return x; }`,
+      errors: [{ messageId: "anyInFunctionType" }],
+    },
+    {
+      code: `const fn = ([ x ]: any) => x;`,
+      errors: [{ messageId: "anyInFunctionType" }],
+    },
+    {
+      code: `function handle({ x }: any = {}) { return x; }`,
+      errors: [{ messageId: "anyInFunctionType" }],
+    },
+    {
+      code: `type Fn = (x: any) => void;`,
+      errors: [{ messageId: "anyInFunctionType" }],
+    },
+    {
+      code: `type Fn = (x: string) => any;`,
+      errors: [{ messageId: "anyInFunctionType" }],
+    },
+    {
+      code: `type Fn = (x: any) => any;`,
+      errors: [
+        { messageId: "anyInFunctionType" },
+        { messageId: "anyInFunctionType" },
+      ],
+    },
+    {
+      code: `declare function f(x: any): void;`,
+      errors: [{ messageId: "anyInFunctionType" }],
+    },
+    {
+      code: `declare function f(x: string): any;`,
+      errors: [{ messageId: "anyInFunctionType" }],
+    },
+    {
+      code: `declare function f(x: any): any;`,
+      errors: [
+        { messageId: "anyInFunctionType" },
+        { messageId: "anyInFunctionType" },
+      ],
+    },
+    {
+      code: `const handler = (x: any = 1) => x;`,
+      errors: [{ messageId: "anyInFunctionType" }],
+    },
+    {
+      code: `function handler(x: any = 1) { return x; }`,
+      errors: [{ messageId: "anyInFunctionType" }],
+    },
+    {
+      code: `const { x }: any = obj;`,
+      errors: [{ messageId: "anyInVarAnnotation" }],
+    },
+    {
+      code: `const [ x ]: any = arr;`,
+      errors: [{ messageId: "anyInVarAnnotation" }],
+    },
+    {
+      code: `let { a, b }: any = obj;`,
+      errors: [{ messageId: "anyInVarAnnotation" }],
+    },
+    {
+      code: `const { a: { b } }: any = obj;`,
+      errors: [{ messageId: "anyInVarAnnotation" }],
+    },
   ],
 });
