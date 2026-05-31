@@ -1,0 +1,84 @@
+import path from "node:path";   
+import { RuleTester } from "@typescript-eslint/rule-tester";
+import { afterAll, describe, it } from "vitest";
+import * as tsParser from "@typescript-eslint/parser";
+import rule from "../../src/rules/no-revalidate-branded-param.js";
+
+RuleTester.afterAll = afterAll;
+RuleTester.describe = describe;
+RuleTester.it = it;
+
+const TEST_FILENAME = "file.ts";
+const TS_CONFIG_DIR = path.resolve(__dirname, "../..");
+const TS_CONFIG = path.join(TS_CONFIG_DIR, "tsconfig.test.json");
+
+const ruleTester = new RuleTester({
+  languageOptions: {
+    parser: tsParser,
+    parserOptions: {
+      ecmaVersion: 2022,
+      sourceType: "module",
+      project: TS_CONFIG,
+      tsconfigRootDir: TS_CONFIG_DIR,
+    },
+  },
+});
+
+ruleTester.run("no-revalidate-branded-param", rule, {
+  valid: [
+    {
+      filename: TEST_FILENAME,
+      code: `declare const emailBrand: unique symbol;
+type Email = string & { readonly [emailBrand]: unique symbol };
+
+function sendEmail(to: Email) {
+  console.log(\`Sending to \${to}\`);
+}`,
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `declare const phoneBrand: unique symbol;
+type Phone = string & { readonly [phoneBrand]: unique symbol };
+
+function callNumber(phone: Phone) {
+  console.log(\`Calling \${phone}\`);
+  return true;
+}`,
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `function logMessage(msg: string) {
+  if (!/^[a-z]+$/.test(msg)) {
+    throw new Error("Invalid");
+  }
+}`,
+    },
+  ],
+  invalid: [
+    {
+      filename: TEST_FILENAME,
+      code: `declare const emailBrand: unique symbol;
+type Email = string & { readonly [emailBrand]: unique symbol };
+
+function sendEmail(to: Email) {
+  if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(to)) {
+    throw new Error("never happens");
+  }
+  console.log(\`Sending to \${to}\`);
+}`,
+      errors: [{ messageId: "regexTest" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `declare const phoneBrand: unique symbol;
+type Phone = string & { readonly [phoneBrand]: unique symbol };
+
+const handler = (phone: Phone) => {
+  if (phone.length > 0) {
+    console.log(phone);
+  }
+};`,
+      errors: [{ messageId: "lengthCheck" }],
+    },
+  ],
+});
