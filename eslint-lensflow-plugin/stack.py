@@ -392,14 +392,43 @@ def resolve_thread(thread_id: str, runner: Runner) -> None:
     runner.gh("api", "graphql", "-f", f"query={mutation}")
 
 
-def rerequest_review(pr_number: int, runner: Runner) -> None:
-    print(f"  re-requesting Copilot review for PR #{pr_number}")
-    runner.gh(
-        "pr", "edit", str(pr_number),
-        "--add-reviewer", "copilot",
-        "--repo", GITHUB_REPO,
+_REVIEW_THREADS_QUERY = """
+query($owner: String!, $name: String!, $number: Int!) {
+  repository(owner: $owner, name: $name) {
+    pullRequest(number: $number) {
+      reviewThreads(first: 100) {
+        nodes {
+          id
+          isResolved
+          comments(first: 10) {
+            nodes { body path line }
+          }
+        }
+      }
+    }
+  }
+}
+""".strip()
+
+
+def fetch_unresolved_threads(pr_number: int, runner: Runner) -> list[dict]:
+    owner, repo = GITHUB_REPO.split("/")
+    result = runner.gh(
+        "api", "graphql",
+        "-f", f"query={_REVIEW_THREADS_QUERY}",
+        "-f", f"owner={owner}",
+        "-f", f"name={repo}",
+        "-F", f"number={pr_number}",
         capture=True,
     )
+    if runner.dry_run:
+        return []
+    if result.returncode != 0 or not result.stdout.strip():
+        print(f"  warning: failed to fetch review threads: {result.stderr.strip()}")
+        return []
+    data = json.loads(result.stdout)
+    nodes = data["data"]["repository"]["pullRequest"]["reviewThreads"]["nodes"]
+    return [t for t in nodes if not t.get("isResolved", True)]
 
 
 def phase_review(
@@ -424,26 +453,11 @@ def phase_review(
         pr_number = state[item.branch].pr_number
         print(f"\n[review] {item.branch} (PR #{pr_number})")
 
-        # Re-request Copilot review for the PR 32 slots ahead
-        lookahead_idx = idx + 32
-        if lookahead_idx < len(candidates):
-            lookahead_pr = state[candidates[lookahead_idx].branch].pr_number
-            if lookahead_pr is not None:
-                rerequest_review(lookahead_pr, runner)
-
-        # Fetch review threads
-        result = runner.gh(
-            "pr", "view", str(pr_number),
-            "--json", "reviewThreads",
-            "--repo", GITHUB_REPO,
-            capture=True,
-        )
+        # Fetch review threads via GraphQL
+        threads = fetch_unresolved_threads(pr_number, runner)
         if runner.dry_run:
             print("  (dry-run: skipping thread processing)")
             continue
-
-        data = json.loads(result.stdout)
-        threads = [t for t in data.get("reviewThreads", []) if not t.get("isResolved", True)]
 
         if not threads:
             print("  no unresolved threads — skipping")
