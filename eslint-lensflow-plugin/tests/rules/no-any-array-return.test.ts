@@ -45,5 +45,23 @@ ruleTester.run("no-any-array-return", rule, {
       code: `declare function legacyTransform(): Array<any>;`,
       errors: [{ messageId: "anyArrayReturn" }],
     },
+    {
+      code: `const f = function (): any[] { return []; };`,
+      errors: [{ messageId: "anyArrayReturn" }],
+    },
+    {
+      code: `[].map(function (): any[] { return []; })`,
+      errors: [{ messageId: "anyArrayReturn" }],
+    },
+    {
+      code: `function getReadonly(): readonly any[] {
+  return [];
+}`,
+      errors: [{ messageId: "anyArrayReturn" }],
+    },
+    {
+      code: `type ReadonlyMapper = () => readonly any[];`,
+      errors: [{ messageId: "anyArrayReturn" }],
+    },
   ],
 });
