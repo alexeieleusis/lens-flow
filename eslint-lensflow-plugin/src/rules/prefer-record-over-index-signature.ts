@@ -1,0 +1,54 @@
+import { TSESTree, TSESLint } from "@typescript-eslint/utils";
+import { createRule } from "../utils/rule-creator.js";
+
+export default createRule({
+  name: "prefer-record-over-index-signature",
+  meta: {
+    type: "suggestion",
+    docs: {
+      description:
+        "Prefer Record<K, V> over inline index signature in interface or type literal",
+    },
+    messages: {
+      preferRecord:
+        "Use Record<K, V> instead of an inline index signature. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T31-record-types.md",
+    },
+    schema: [],
+    fixable: undefined,
+  },
+  defaultOptions: [],
+  create(context: TSESLint.RuleContext<"preferRecord", []>) {
+    function checkSingleIndexSignature(members: unknown[], reportNode: TSESTree.Node) {
+      if (members.length !== 1) return;
+      const member = members[0] as { type: string; parameters?: unknown[] };
+      if (member.type !== "TSIndexSignature") return;
+      if (!member.parameters || member.parameters.length === 0) return;
+      const param = member.parameters[0] as {
+        typeAnnotation?: { typeAnnotation?: { type: string } };
+      };
+      const typeAnn = param.typeAnnotation?.typeAnnotation;
+      if (
+        typeAnn &&
+        (typeAnn.type === "TSStringKeyword" || typeAnn.type === "TSNumberKeyword")
+      ) {
+        context.report({
+          node: reportNode,
+          messageId: "preferRecord",
+        });
+      }
+    }
+
+    return {
+      TSInterfaceBody(node) {
+        const parent = node.parent;
+        if (parent?.type === "TSInterfaceDeclaration") {
+          checkSingleIndexSignature(node.body, parent);
+        }
+      },
+
+      TSTypeLiteral(node) {
+        checkSingleIndexSignature(node.members, node);
+      },
+    };
+  },
+});
