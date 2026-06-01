@@ -11,8 +11,7 @@ function hasBrandProperty(type: ts.Type): boolean {
   const props = type.getProperties();
   return props.some((p) => {
     const name = p.escapedName as string;
-    const nameLower = name.toLowerCase();
-    return nameLower.includes("_brand") || nameLower.endsWith("brand");
+    return name === "_brand" || name === "__brand" || /Brand$/.test(name);
   });
 }
 
