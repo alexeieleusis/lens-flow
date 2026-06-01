@@ -1,7 +1,26 @@
-import { ruleTester } from "../helpers/rule-tester.js";
+import { RuleTester } from "@typescript-eslint/rule-tester";
+import { afterAll, describe, it } from "vitest";
+import * as tsParser from "@typescript-eslint/parser";
+import path from "path";
 import rule from "../../src/rules/no-as-any-capability-check-t59.js";
 
-ruleTester.run("no-as-any-capability-check-t59", rule, {
+RuleTester.afterAll = afterAll;
+RuleTester.describe = describe;
+RuleTester.it = it;
+
+const typeAwareTester = new RuleTester({
+  languageOptions: {
+    parser: tsParser,
+    parserOptions: {
+      ecmaVersion: 2022,
+      sourceType: "module",
+      project: path.join(__dirname, "../tsconfig.json"),
+      tsconfigRootDir: path.join(__dirname, ".."),
+    },
+  },
+});
+
+typeAwareTester.run("no-as-any-capability-check-t59", rule, {
   valid: [
     `interface Handler {
       onEvent(e: Event): void;
@@ -19,6 +38,12 @@ ruleTester.run("no-as-any-capability-check-t59", rule, {
     `function foo(x: unknown) {
       const s = x as string;
       return s.length;
+    }`,
+    `function foo(x: { a: string; b: number }) {
+      if ((x as any).c) console.log(x.c);
+    }`,
+    `function f(x: { foo: string }) {
+      if ((x as any).foo) {}
     }`,
   ],
   invalid: [
