@@ -97,6 +97,7 @@ export default createRule({
     messages: {
       anyInRecursive: "Found `{{keyword}}` inside a self-referential recursive type. Replace with a concrete type to preserve type safety. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T61-recursive-types.md",
     },
+    fixable: undefined,
     schema: [],
   },
   defaultOptions: [],
