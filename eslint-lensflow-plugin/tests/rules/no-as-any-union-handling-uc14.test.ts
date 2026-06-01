@@ -4,8 +4,7 @@ import rule from "../../src/rules/no-as-any-union-handling-uc14.js";
 ruleTester.run("no-as-any-union-handling-uc14", rule, {
   valid: [
     // Proper type narrowing instead of `as any`
-    `type Shape = { kind: "circle"; radius: number } | { kind: "rect"; width: number; height: number };
-function area(s: Shape) {
+    `function area(s: { kind: "circle"; radius: number } | { kind: "rect"; width: number; height: number }) {
   if (s.kind === "circle") return Math.PI * s.radius ** 2;
   throw new Error("not a circle");
 }`,
@@ -15,21 +14,29 @@ function area(s: Shape) {
 }`,
     // No enclosing function (module-level code)
     `const x = (globalThis as any).someProp;`,
+    // Non-union type alias — rule should NOT apply
+    `type User = { name: string; age: number };
+function greet(u: User) {
+  const n = (u as any).name;
+  return n;
+}`,
+    // Array parameter — rule should NOT apply
+    `function process(items: string[]) {
+  return (items as any).length;
+}`,
   ],
   invalid: [
-    // Direct `as any` on union-typed parameter
+    // Direct `as any` on inline union-typed parameter
     {
-      code: `type Shape = { kind: "circle"; radius: number } | { kind: "rect"; width: number };
-function handle(s: Shape) {
+      code: `function handle(s: { kind: "circle"; radius: number } | { kind: "rect"; width: number }) {
   const r = (s as any).radius;
   return Math.PI * r ** 2;
 }`,
       errors: [{ messageId: "asAnyBypassNarrowing" }],
     },
-    // Arrow function with union parameter
+    // Arrow function with inline union parameter
     {
-      code: `type State = { kind: "loading"; data?: never } | { kind: "done"; data: string };
-const getState = (s: State) => (s as any).data;`,
+      code: `const getState = (s: { kind: "loading"; data?: never } | { kind: "done"; data: string }) => (s as any).data;`,
       errors: [{ messageId: "asAnyBypassNarrowing" }],
     },
   ],
