@@ -1,17 +1,6 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const PRIMITIVE_KEYWORDS = new Set([
-  "TSStringKeyword",
-  "TSNumberKeyword",
-  "TSBooleanKeyword",
-  "TSUnknownKeyword",
-  "TSVoidKeyword",
-  "TSNeverKeyword",
-  "TSNullKeyword",
-  "TSUndefinedKeyword",
-]);
-
 const FUNCTION_NODES = new Set([
   "FunctionDeclaration",
   "FunctionExpression",
@@ -29,11 +18,11 @@ function unwrapTSTypeAnnotation(node: unknown): unknown {
   return node;
 }
 
-function isNonPrimitiveType(typeAnnotation: unknown): boolean {
+function isUnionType(typeAnnotation: unknown): boolean {
   const unwrapped = unwrapTSTypeAnnotation(typeAnnotation);
   if (!unwrapped || typeof unwrapped !== "object") return false;
   const { type } = unwrapped as { type?: string };
-  return !PRIMITIVE_KEYWORDS.has(type ?? "");
+  return type === "TSUnionType";
 }
 
 function findEnclosingFunction(
@@ -50,11 +39,14 @@ function findEnclosingFunction(
   return null;
 }
 
-function getFunctionParamNames(fnNode: unknown): Set<string> {
+function getUnionParamNames(fnNode: unknown): Set<string> {
   const params = (fnNode as { params?: unknown[] }).params ?? [];
   const names = new Set<string>();
   for (const param of params) {
     const obj = param as Record<string, unknown>;
+    const typeAnn = (obj as { typeAnnotation?: unknown }).typeAnnotation;
+    if (!isUnionType(typeAnn)) continue;
+
     if (obj.type === "Identifier") {
       names.add(obj.name as string);
     } else if (
@@ -115,19 +107,11 @@ export default createRule({
         const fnNode = findEnclosingFunction(node);
         if (!fnNode) return;
 
-        const params = (fnNode as { params?: unknown[] }).params ?? [];
-        const hasNonPrimitiveParam = params.some((p) => {
-          const obj = p as Record<string, unknown>;
-          const typeAnn = (obj as { typeAnnotation?: unknown })
-            .typeAnnotation;
-          return isNonPrimitiveType(typeAnn);
-        });
-        if (!hasNonPrimitiveParam) return;
-
-        const paramNames = getFunctionParamNames(fnNode);
+        const unionParamNames = getUnionParamNames(fnNode);
+        if (unionParamNames.size === 0) return;
         const expression = node.expression;
 
-        if (!isDerivedFromParam(expression, paramNames)) return;
+        if (!isDerivedFromParam(expression, unionParamNames)) return;
 
         const exprName =
           expression &&
