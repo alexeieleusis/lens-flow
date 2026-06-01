@@ -17,6 +17,12 @@ function isAstNode(value: unknown): value is TSESTree.Node {
   return value != null && typeof value === "object" && "type" in value;
 }
 
+const FUNCTION_TYPES = new Set([
+  "FunctionDeclaration",
+  "FunctionExpression",
+  "ArrowFunctionExpression",
+]);
+
 function childHasJsonParse(
   child: unknown,
   visited: Set<object>,
@@ -26,6 +32,9 @@ function childHasJsonParse(
       if (isAstNode(item) && findJsonParse(item, visited)) return true;
     }
   } else if (isAstNode(child)) {
+    // Stop at nested function boundaries — the rule's visitors will
+    // evaluate those functions separately.
+    if (FUNCTION_TYPES.has(child.type)) return false;
     if (findJsonParse(child, visited)) return true;
   }
   return false;
@@ -36,6 +45,10 @@ function findJsonParse(node: TSESTree.Node, visited = new Set<object>()): boolea
   visited.add(node);
 
   if (isJsonParseCall(node)) return true;
+
+  // Stop at nested function boundaries — the rule's visitors will
+  // evaluate those functions separately.
+  if (FUNCTION_TYPES.has(node.type)) return false;
 
   for (const key of Object.keys(node)) {
     if (key === "parent" || key === "loc" || key === "range") continue;
