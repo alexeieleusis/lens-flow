@@ -10,7 +10,8 @@ function getObjectLiteralProps(obj: TSESTree.ObjectExpression): string[] {
     .filter((p): p is TSESTree.Property => p.type === "Property")
     .filter(
       (p) =>
-        p.key.type === "Identifier" || p.key.type === "Literal",
+        !p.computed &&
+        (p.key.type === "Identifier" || p.key.type === "Literal"),
     )
     .map((p) => {
       if (p.key.type === "Identifier") return p.key.name;
@@ -83,6 +84,10 @@ export default createRule({
         const targetType = checker.getTypeFromTypeNode(
           typeNodeTs as ts.TypeNode,
         );
+
+        // Types with index signatures (e.g., { [key: string]: unknown }) allow
+        // arbitrary properties, so there's no excess property to report.
+        if (checker.getIndexInfosOfType(targetType).length > 0) return;
 
         const targetPropNames = new Set(
           checker.getPropertiesOfType(targetType).map(
