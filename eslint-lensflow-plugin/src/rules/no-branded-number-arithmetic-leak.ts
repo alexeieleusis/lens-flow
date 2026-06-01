@@ -11,60 +11,26 @@ function hasBrandProperty(type: ts.Type): boolean {
   const props = type.getProperties();
   return props.some((p) => {
     const name = p.escapedName as string;
-    // TypeScript escapes __ prefix by adding an underscore, so __brand -> ___brand
-    return (
-      name === "_brand" ||
-      name === "__brand" ||
-      name === "___brand" ||
-      /Brand$/.test(name) ||
-      /brand/i.test(name)
-    );
+    return name === "_brand" || name === "__brand" || /Brand$/.test(name);
   });
 }
 
-function isNumberLike(checker: ts.TypeChecker, t: ts.Type): boolean {
-  if ((t.flags & ts.TypeFlags.Number) !== 0) return true;
-  const str = checker.typeToString(t).toLowerCase();
-  return str === "number";
-}
+function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
+  const apparent = checker.getApparentType(tsType);
 
-function checkIntersectionForBrandedNumber(
-  checker: ts.TypeChecker,
-  intersection: ts.IntersectionType,
-): boolean {
-  const constituents = intersection.types;
+  const constituents = (apparent as ts.IntersectionType)?.types;
   if (!constituents || constituents.length <= 1) return false;
 
   let hasNumber = false;
   for (const constituent of constituents) {
-    if (isNumberLike(checker, constituent)) {
+    const typeStr = checker.typeToString(constituent).trim();
+    if (
+      (constituent.flags & ts.TypeFlags.Number) !== 0 ||
+      typeStr.toLowerCase() === "number"
+    ) {
       hasNumber = true;
     } else if (hasBrandProperty(constituent)) {
       return hasNumber;
-    }
-  }
-  return false;
-}
-
-function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
-  // Check the type directly first — its intersection constituents have the correct flags.
-  if (
-    (tsType.flags & ts.TypeFlags.Intersection) !== 0 &&
-    (tsType as ts.IntersectionType).types
-  ) {
-    if (checkIntersectionForBrandedNumber(checker, tsType as ts.IntersectionType)) {
-      return true;
-    }
-  }
-
-  // Fallback: check the apparent type (resolved type alias).
-  const apparent = checker.getApparentType(tsType);
-  if (
-    (apparent.flags & ts.TypeFlags.Intersection) !== 0 &&
-    (apparent as ts.IntersectionType).types
-  ) {
-    if (checkIntersectionForBrandedNumber(checker, apparent as ts.IntersectionType)) {
-      return true;
     }
   }
 
