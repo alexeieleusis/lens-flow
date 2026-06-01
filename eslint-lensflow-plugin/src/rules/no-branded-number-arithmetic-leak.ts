@@ -7,47 +7,30 @@ const URL =
 
 const ARITHMETIC_OPS = new Set(["+", "-", "*", "/", "%"]);
 
-function unescapePropertyName(name: string): string {
-  // TypeScript escapes $-prefixed identifiers by prepending _
-  // e.g., $__brand -> ___brand, _brand -> __brand in escaped form
-  // We need to check if removing one leading _ gives a valid identifier
-  if (name.length > 1 && name[0] === "_") {
-    const withoutPrefix = name.slice(1);
-    // If removing one _ gives a recognizable brand property name, use it
-    if (withoutPrefix === "_brand" || withoutPrefix === "__brand" || /Brand$/.test(withoutPrefix)) {
-      return withoutPrefix;
-    }
-  }
-  return name;
-}
-
 function hasBrandProperty(type: ts.Type): boolean {
   const props = type.getProperties();
   return props.some((p) => {
-    const name = unescapePropertyName(p.escapedName as string);
+    const name = p.escapedName as string;
     return name === "_brand" || name === "__brand" || /Brand$/.test(name);
   });
 }
 
 function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
-  // Check both the raw type and the apparent type for intersection structure
-  const typesToCheck = [tsType, checker.getApparentType(tsType)];
+  const apparent = checker.getApparentType(tsType);
 
-  for (const candidate of typesToCheck) {
-    const constituents = (candidate as ts.IntersectionType)?.types;
-    if (!constituents || constituents.length <= 1) continue;
+  const constituents = (apparent as ts.IntersectionType)?.types;
+  if (!constituents || constituents.length <= 1) return false;
 
-    let hasNumber = false;
-    for (const constituent of constituents) {
-      const typeStr = checker.typeToString(constituent).trim();
-      if (
-        (constituent.flags & ts.TypeFlags.Number) !== 0 ||
-        typeStr.toLowerCase() === "number"
-      ) {
-        hasNumber = true;
-      } else if (hasBrandProperty(constituent)) {
-        if (hasNumber) return true;
-      }
+  let hasNumber = false;
+  for (const constituent of constituents) {
+    const typeStr = checker.typeToString(constituent).trim();
+    if (
+      (constituent.flags & ts.TypeFlags.Number) !== 0 ||
+      typeStr.toLowerCase() === "number"
+    ) {
+      hasNumber = true;
+    } else if (hasBrandProperty(constituent)) {
+      return hasNumber;
     }
   }
 
