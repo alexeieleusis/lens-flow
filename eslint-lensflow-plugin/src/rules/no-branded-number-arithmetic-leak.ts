@@ -10,9 +10,8 @@ const ARITHMETIC_OPS = new Set(["+", "-", "*", "/", "%"]);
 function hasBrandProperty(type: ts.Type): boolean {
   const props = type.getProperties();
   return props.some((p) => {
-    const name = p.escapedName.toString();
-    const lower = name.toLowerCase();
-    return lower.includes("_brand") || name.endsWith("Brand");
+    const name = p.escapedName as string;
+    return name === "_brand" || name === "__brand" || /Brand$/.test(name);
   });
 }
 
@@ -23,8 +22,6 @@ function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
   if (!constituents || constituents.length <= 1) return false;
 
   let hasNumber = false;
-  let hasBrand = false;
-
   for (const constituent of constituents) {
     const typeStr = checker.typeToString(constituent).trim();
     if (
@@ -32,13 +29,12 @@ function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
       typeStr.toLowerCase() === "number"
     ) {
       hasNumber = true;
-    }
-    if (hasBrandProperty(constituent)) {
-      hasBrand = true;
+    } else if (hasBrandProperty(constituent)) {
+      return hasNumber;
     }
   }
 
-  return hasNumber && hasBrand;
+  return false;
 }
 
 export default createRule({
