@@ -2,14 +2,12 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
 function isAsConst(node: TSESTree.Node): boolean {
-  if (
+  return (
     node.type === "TSAsExpression" &&
     node.typeAnnotation.type === "TSTypeReference" &&
-    (node.typeAnnotation.typeName as TSESTree.Identifier).name === "const"
-  ) {
-    return true;
-  }
-  return false;
+    node.typeAnnotation.typeName.type === "Identifier" &&
+    node.typeAnnotation.typeName.name === "const"
+  );
 }
 
 function findAsConst(node: TSESTree.Node | null | undefined): TSESTree.Node | null {
@@ -37,7 +35,8 @@ function findAsConst(node: TSESTree.Node | null | undefined): TSESTree.Node | nu
     if (isAsConst(current)) return current;
     if (seen.has(current)) return null;
     seen.add(current);
-    for (const [, value] of Object.entries(current)) {
+    for (const [key, value] of Object.entries(current)) {
+      if (key === "parent" || key === "loc" || key === "range") continue;
       const found = walkChild(value);
       if (found) return found;
     }
