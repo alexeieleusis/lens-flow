@@ -15,6 +15,19 @@ ruleTester.run("no-any-json-parse-return", rule, {
       return JSON.parse(json);
     }`,
     `type Parser = (input: string) => unknown;`,
+    // Nested function with JSON.parse should not trigger the outer function
+    `function outer(): any {
+      const inner = (): string => JSON.parse("{}");
+      return inner();
+    }`,
+    `function outer(): any {
+      function inner() { return JSON.parse("[]"); }
+      return 42;
+    }`,
+    `const outer = (): any => {
+      const inner = () => JSON.parse("{}");
+      return {};
+    }`,
   ],
   invalid: [
     {
