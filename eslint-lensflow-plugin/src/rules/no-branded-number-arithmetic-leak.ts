@@ -7,43 +7,34 @@ const URL =
 
 const ARITHMETIC_OPS = new Set(["+", "-", "*", "/", "%"]);
 
+function hasBrandProperty(type: ts.Type): boolean {
+  const props = type.getProperties();
+  return props.some((p) => {
+    const name = p.escapedName as string;
+    return name === "_brand" || name === "__brand" || /Brand$/.test(name);
+  });
+}
+
 function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
   const apparent = checker.getApparentType(tsType);
 
   const constituents = (apparent as ts.IntersectionType)?.types;
-  if (!constituents || constituents.length < 2) return false;
-
-  const apparentStr = checker.typeToString(apparent).toLowerCase();
-  if (!apparentStr.includes("number")) return false;
+  if (!constituents || constituents.length <= 1) return false;
 
   let hasNumber = false;
-  let hasBrand = false;
-
   for (const constituent of constituents) {
-    const cStr = checker.typeToString(constituent);
-    const cStrLower = cStr.toLowerCase().replace(/^["']|["']$/g, "");
-    if (cStrLower === "number") {
-      hasNumber = true;
-    }
-
-    const props = (constituent as ts.ObjectType).getProperties();
+    const typeStr = checker.typeToString(constituent).trim();
     if (
-      props.some((p) => {
-        const name = p.escapedName as string;
-        // TypeScript escapes __ prefixed names (e.g. __brand -> ___brand)
-        return (
-          name === "_brand" ||
-          name === "__brand" ||
-          name === "___brand" ||
-          /Brand$/.test(name)
-        );
-      })
+      (constituent.flags & ts.TypeFlags.Number) !== 0 ||
+      typeStr.toLowerCase() === "number"
     ) {
-      hasBrand = true;
+      hasNumber = true;
+    } else if (hasBrandProperty(constituent)) {
+      return hasNumber;
     }
   }
 
-  return hasNumber && hasBrand;
+  return false;
 }
 
 export default createRule({
