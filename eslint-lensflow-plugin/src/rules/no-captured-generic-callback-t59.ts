@@ -45,23 +45,55 @@ function getParamTypeAnnotation(
   return param?.typeAnnotation?.typeAnnotation;
 }
 
+const SKIP_KEYS = new Set([
+  "parent",
+  "loc",
+  "range",
+  "start",
+  "end",
+  "tokens",
+  "comments",
+  "typeAnnotation",
+]);
+
+function hasVariableDeclaration(node: TSESTree.Node, name: string): boolean {
+  if (node.type === AST_NODE_TYPES.VariableDeclaration) {
+    if (
+      (node as TSESTree.VariableDeclaration).declarations.some(
+        (d) => d.id.type === AST_NODE_TYPES.Identifier && d.id.name === name,
+      )
+    ) {
+      return true;
+    }
+  }
+
+  for (const [key, value] of Object.entries(node)) {
+    if (SKIP_KEYS.has(key) || value === null || value === undefined) continue;
+    if (typeof value !== "object") continue;
+
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        if (item !== null && typeof item === "object" && "type" in item) {
+          if (hasVariableDeclaration(item as TSESTree.Node, name)) return true;
+        }
+      }
+    } else if ("type" in value && typeof value.type === "string") {
+      if (hasVariableDeclaration(value as TSESTree.Node, name)) return true;
+    }
+  }
+  return false;
+}
+
 function isDeclaredInsideFn(name: string, fn: FunctionNode): boolean {
   if (isParameterOf(name, fn)) return true;
 
-  const body = (fn.body as TSESTree.BlockStatement)?.body;
-  if (!Array.isArray(body)) return false;
+  const body = fn.body as TSESTree.BlockStatement | TSESTree.Node;
+  if (!body) return false;
 
-  for (const stmt of body) {
-    if (stmt.type === AST_NODE_TYPES.VariableDeclaration) {
-      for (const decl of stmt.declarations) {
-        if (
-          decl.id.type === AST_NODE_TYPES.Identifier &&
-          decl.id.name === name
-        ) {
-          return true;
-        }
-      }
-    }
+  // For block-bodied functions, scan all statements recursively.
+  // For arrow functions with expression bodies, there are no local declarations.
+  if (body.type === AST_NODE_TYPES.BlockStatement) {
+    return body.body.some((stmt) => hasVariableDeclaration(stmt, name));
   }
   return false;
 }
@@ -70,6 +102,7 @@ export default createRule({
   name: "no-captured-generic-callback-t59",
   meta: {
     type: "problem",
+    fixable: undefined,
     docs: {
       description:
         "Disallow capturing a function parameter with a generic callback type into an outer-scope variable",
@@ -124,9 +157,16 @@ export default createRule({
       if (!paramType || !isGenericCallbackType(paramType)) return;
 
       const targetName =
-       memberNode.object.type === AST_NODE_TYPES.Identifier
-           ? memberNode.object.name
+        memberNode.object.type === AST_NODE_TYPES.Identifier
+          ? memberNode.object.name
           : "<member>";
+
+      if (
+        memberNode.object.type === AST_NODE_TYPES.Identifier &&
+        isDeclaredInsideFn(memberNode.object.name, fn)
+      ) {
+        return;
+      }
 
       context.report({
         node: sourceNode,

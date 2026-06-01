@@ -30,6 +30,21 @@ function process(run: (x: string) => void) {
     `const fn = <Result>(run: <T>(s: T) => Result): Result => {
   return run("secret");
 }`,
+
+    // Capturing into a block-scoped local (declared in a nested block)
+    `function withSecret<Result>(run: <T>(s: T) => Result): Result {
+  if (true) {
+    const local = run;
+    return local("secret");
+  }
+}`,
+
+    // Assigning to a property on a local object declared inside the same function
+    `function withSecret<Result>(run: <T>(s: T) => Result): Result {
+  const box = { cb: null };
+  box.cb = run;
+  return box.cb("secret");
+}`,
   ],
   invalid: [
     // Assignment to module-level variable
