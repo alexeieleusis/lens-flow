@@ -19,6 +19,7 @@ function hasDynamicValue(node: TSESTree.Expression | null | undefined): boolean 
       if (prop.type === "SpreadElement") {
         return hasDynamicValue(prop.argument);
       }
+      if (prop.computed && hasDynamicValue(prop.key)) return true;
       return hasDynamicValue(prop.value as TSESTree.Expression | null);
     });
   }

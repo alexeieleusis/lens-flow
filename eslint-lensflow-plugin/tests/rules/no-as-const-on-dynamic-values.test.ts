@@ -18,6 +18,13 @@ ruleTester.run("no-as-const-on-dynamic-values", rule, {
       literal: 1,
       nested: { deep: [1, 2, 3] },
     } as const;`,
+    `const literalKey = { ["key"]: "value" } as const;`,
+    `const x = { ...{ a: 1, b: "hello" }, c: true } as const;`,
+    `const x = { a: 1, ...{ b: 2 } } as const;`,
+    `const x = [...["a", "b"], "c"] as const;`,
+    `const x = ["a", ...["b", "c"]] as const;`,
+    `const x = [...[1, 2], ...[3, 4]] as const;`,
+    `const x = [...[], "a"] as const;`,
   ],
   invalid: [
     {
@@ -64,6 +71,51 @@ ruleTester.run("no-as-const-on-dynamic-values", rule, {
     },
     {
       code: `const x = { a: tag\`template\` } as const;`,
+      errors: [{ messageId: "dynamicAsConst" }],
+    },
+    {
+      code: `const envKey = "environment";
+const config = { [envKey]: "prod" } as const;`,
+      errors: [{ messageId: "dynamicAsConst" }],
+    },
+    {
+      code: `const config = { [getDynamicKey()]: "static" } as const;`,
+      errors: [{ messageId: "dynamicAsConst" }],
+    },
+    {
+      code: `const x = { ...getDefaults(), a: 1 } as const;`,
+      errors: [{ messageId: "dynamicAsConst" }],
+    },
+    {
+      code: `const x = { a: 1, ...defaults } as const;`,
+      errors: [{ messageId: "dynamicAsConst" }],
+    },
+    {
+      code: `const x = { ...obj[key] } as const;`,
+      errors: [{ messageId: "dynamicAsConst" }],
+    },
+    {
+      code: `const merged = { ...staticA, ...staticB } as const;`,
+      errors: [{ messageId: "dynamicAsConst" }],
+    },
+    {
+      code: `const x = [...getItems(), "static"] as const;`,
+      errors: [{ messageId: "dynamicAsConst" }],
+    },
+    {
+      code: `const x = ["static", ...items] as const;`,
+      errors: [{ messageId: "dynamicAsConst" }],
+    },
+    {
+      code: `const x = [...a, ...b] as const;`,
+      errors: [{ messageId: "dynamicAsConst" }],
+    },
+    {
+      code: `const x = [...obj[key]] as const;`,
+      errors: [{ messageId: "dynamicAsConst" }],
+    },
+    {
+      code: `const x = [1, ...getItems(), 2] as const;`,
       errors: [{ messageId: "dynamicAsConst" }],
     },
   ],
