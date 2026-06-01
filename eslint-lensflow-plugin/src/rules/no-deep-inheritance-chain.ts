@@ -36,7 +36,7 @@ export default createRule({
 
     return {
       ClassDeclaration(node) {
-        if (node.superClass?.type === "Identifier" && node.id) {
+        if (node.parent?.type === "Program" && node.superClass?.type === "Identifier" && node.id) {
           classMap.set(node.id.name, node.superClass.name);
         }
       },
@@ -45,13 +45,16 @@ export default createRule({
         for (const [className, superClass] of classMap) {
           let depth = 1;
           let current = superClass;
-          while (classMap.has(current)) {
+          const visited = new Set<string>([className]);
+          while (classMap.has(current) && !visited.has(current)) {
+            visited.add(current);
             depth++;
             current = classMap.get(current)!;
           }
           if (depth >= maxDepth) {
-            const classNode = (context.sourceCode.ast.body as TSESTree.ClassDeclaration[]).find(
-              (n) => n.id !== null && n.id.name === className,
+            const classNode = context.sourceCode.ast.body.find(
+              (n): n is TSESTree.ClassDeclaration =>
+                n.type === "ClassDeclaration" && n.id !== null && n.id.name === className,
             );
             if (classNode) {
               context.report({

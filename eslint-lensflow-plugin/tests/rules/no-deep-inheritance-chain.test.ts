@@ -7,6 +7,8 @@ ruleTester.run("no-deep-inheritance-chain", rule, {
     `class Reader {}
 class FileReader extends Reader {}
 class BufferedReader extends FileReader {}`,
+    `class A extends B {}
+class B extends A {}`,
     `interface Reader { read(): string; }
 class ReaderImpl implements Reader { read() { return ""; } }
 class BufferedReaderImpl implements Reader {
