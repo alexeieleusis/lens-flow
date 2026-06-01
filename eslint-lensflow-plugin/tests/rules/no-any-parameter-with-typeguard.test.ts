@@ -25,6 +25,32 @@ ruleTester.run("no-any-parameter-with-typeguard", rule, {
       return x;
     }`,
     `const fn = (a: number, b: string) => a + b.length;`,
+    // Nested function shadows outer any param — should NOT report
+    `function outer(x: any) {
+      const inner = (x: string | number) => {
+        if (typeof x === "string") return x;
+        return String(x);
+      };
+      return inner(x);
+    }`,
+    // Arrow function shadowing with instanceof
+    `function outer(data: any) {
+      const fn = (data: Date | string) => {
+        if (data instanceof Date) return data;
+        return data;
+      };
+      return fn(data);
+    }`,
+    // Nested function declaration shadowing
+    `function outer(x: any) {
+      function inner(x: string | number) {
+        if (typeof x === "string") return x;
+        return x;
+      }
+      return inner(42);
+    }`,
+    // Expression-bodied arrow with no typeguard on any param
+    `const fn = (x: any) => x;`,
   ],
   invalid: [
     {
@@ -60,6 +86,11 @@ ruleTester.run("no-any-parameter-with-typeguard", rule, {
         }
         return obj;
       }`,
+      errors: [{ messageId: "anyParamWithTypeguard" }],
+    },
+    {
+      // Expression-bodied arrow with typeof inside a ternary
+      code: `const fn = (x: any) => typeof x === "string" ? x.toUpperCase() : String(x);`,
       errors: [{ messageId: "anyParamWithTypeguard" }],
     },
   ],

@@ -72,6 +72,16 @@ function collectTypeguardTargets(
     const tg = isTypeguardNode(n);
     if (tg) results.push(tg);
 
+    // Do not traverse into nested functions — their typeguards target
+    // their own parameters, not the outer function's parameters.
+    if (
+      n.type === "FunctionDeclaration" ||
+      n.type === "FunctionExpression" ||
+      n.type === "ArrowFunctionExpression"
+    ) {
+      continue;
+    }
+
     stack.push(...extractChildren(n));
   }
 
@@ -131,11 +141,7 @@ export default createRule({
 
       if (anyParams.length === 0 || !node.body) return;
 
-      const bodyToCheck =
-        node.body.type === "BlockStatement"
-          ? node.body
-          : { type: "BlockStatement", body: node.body };
-      const typeguards = collectTypeguardTargets(bodyToCheck);
+      const typeguards = collectTypeguardTargets(node.body);
 
       reportAnyParamTypeguards(anyParams, typeguards);
     }
