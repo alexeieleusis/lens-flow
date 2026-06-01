@@ -74,6 +74,9 @@ export default createRule({
         );
         if (def?.node.type !== "VariableDeclarator") return;
 
+        const parent = (def.parent as TSESTree.VariableDeclaration).kind;
+        if (parent !== "const") return;
+
         const declarator = def.node as TSESTree.VariableDeclarator;
         const init = declarator.init;
         if (init?.type !== "AwaitExpression") return;
