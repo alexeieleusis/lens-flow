@@ -19,13 +19,22 @@ export default createRule({
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"bypassExhaustiveness", []>) {
     return {
-      "SwitchCase[test=null] TSAsExpression > TSAnyKeyword"(
-        node: TSESTree.TSAnyKeyword,
-      ) {
-        context.report({
-          node: node.parent as TSESTree.TSAsExpression,
-          messageId: "bypassExhaustiveness",
-        });
+      TSAsExpression(node: TSESTree.TSAsExpression) {
+        if (node.typeAnnotation.type !== "TSAnyKeyword") return;
+
+        let current: TSESTree.Node | undefined = node.parent;
+        while (current) {
+          if (current.type === "SwitchCase") {
+            if (current.test === null) {
+              context.report({
+                node,
+                messageId: "bypassExhaustiveness",
+              });
+            }
+            return;
+          }
+          current = current.parent;
+        }
       },
     };
   },
