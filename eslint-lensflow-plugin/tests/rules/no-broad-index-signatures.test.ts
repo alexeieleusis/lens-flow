@@ -17,6 +17,12 @@ ruleTester.run("no-broad-index-signatures", rule, {
     `type Bounded = {
       [key: number]: boolean;
     };`,
+    `interface UnionSafe {
+      [key: string]: string | number | null;
+    }`,
+    `type UnionSafe = {
+      [key: string]: string | number;
+    };`,
   ],
   invalid: [
     {
@@ -36,6 +42,24 @@ ruleTester.run("no-broad-index-signatures", rule, {
         id: string;
         [key: string]: any;
       }`,
+      errors: [{ messageId: "broadIndexSignature" }],
+    },
+    {
+      code: `interface UnionAny {
+        [key: string]: string | any;
+      }`,
+      errors: [{ messageId: "broadIndexSignature" }],
+    },
+    {
+      code: `interface UnionUnknown {
+        [key: string]: string | unknown;
+      }`,
+      errors: [{ messageId: "broadIndexSignature" }],
+    },
+    {
+      code: `type UnionAny = {
+        [key: string]: number | null | any;
+      };`,
       errors: [{ messageId: "broadIndexSignature" }],
     },
   ],

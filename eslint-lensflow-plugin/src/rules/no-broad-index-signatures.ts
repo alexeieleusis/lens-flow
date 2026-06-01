@@ -1,5 +1,18 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+function findBroadType(node: TSESTree.TypeNode): { type: "TSAnyKeyword" | "TSUnknownKeyword" } | null {
+  if (node.type === "TSAnyKeyword" || node.type === "TSUnknownKeyword") {
+    return { type: node.type };
+  }
+  if (node.type === "TSUnionType") {
+    for (const type of node.types) {
+      const found = findBroadType(type);
+      if (found) return found;
+    }
+  }
+  return null;
+}
 
 export default createRule({
   name: "no-broad-index-signatures",
@@ -21,18 +34,17 @@ export default createRule({
     return {
       TSIndexSignature(node) {
         const typeAnnotation = node.typeAnnotation?.typeAnnotation;
-        if (
-          typeAnnotation &&
-          (typeAnnotation.type === "TSAnyKeyword" ||
-            typeAnnotation.type === "TSUnknownKeyword")
-        ) {
-          context.report({
-            node,
-            messageId: "broadIndexSignature",
-            data: {
-              type: typeAnnotation.type === "TSAnyKeyword" ? "any" : "unknown",
-            },
-          });
+        if (typeAnnotation) {
+          const found = findBroadType(typeAnnotation);
+          if (found) {
+            context.report({
+              node,
+              messageId: "broadIndexSignature",
+              data: {
+                type: found.type === "TSAnyKeyword" ? "any" : "unknown",
+              },
+            });
+          }
         }
       },
     };
