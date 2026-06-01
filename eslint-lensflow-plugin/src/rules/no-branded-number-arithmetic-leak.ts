@@ -8,17 +8,18 @@ const URL =
 const ARITHMETIC_OPS = new Set(["+", "-", "*", "/", "%"]);
 
 function hasBrandProperty(type: ts.Type): boolean {
-  if ((type.flags & ts.TypeFlags.Object) === 0) return false;
-  const props = (type as ts.ObjectType).getProperties();
+  const props = type.getProperties();
   return props.some((p) => {
     const name = p.escapedName as string;
-    return /^_+brand$/i.test(name) || /Brand$/.test(name);
+    return name === "_brand" || name === "__brand" || /Brand$/.test(name);
   });
 }
 
 function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
-  const constituents = (tsType as ts.IntersectionType)?.types;
-  if (!constituents || constituents.length < 2) return false;
+  const apparent = checker.getApparentType(tsType);
+
+  const constituents = (apparent as ts.IntersectionType)?.types;
+  if (!constituents || constituents.length <= 1) return false;
 
   let hasNumber = false;
   for (const constituent of constituents) {
