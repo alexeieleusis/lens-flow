@@ -1,5 +1,6 @@
-import { createRule } from "../utils/rule-creator.js";
+import { ESLintUtils } from "@typescript-eslint/utils";
 import type { TSESLint } from "@typescript-eslint/utils";
+import { createRule } from "../utils/rule-creator.js";
 
 export default createRule({
   name: "no-as-any-capability-check-t59",
@@ -18,41 +19,30 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"capabilityProbe", []>) {
+    const parserServices = ESLintUtils.getParserServices(context);
+    const program = parserServices.program;
+    if (!program) return {};
+
+    const checker = program.getTypeChecker();
+    const esTreeNodeToTSNodeMap = parserServices.esTreeNodeToTSNodeMap;
+
     return {
       TSAsExpression(node) {
         if (node.typeAnnotation.type !== "TSAnyKeyword") return;
 
         const parent = node.parent;
-
         if (
-          parent.type === "MemberExpression" &&
-          parent.object === node
+          parent.type !== "MemberExpression" ||
+          parent.object !== node
         ) {
-          context.report({ node, messageId: "capabilityProbe" });
           return;
         }
 
-        if (
-          parent.type === "IfStatement" &&
-          parent.test === node
-        ) {
-          context.report({ node, messageId: "capabilityProbe" });
-          return;
-        }
+        const tsNode = esTreeNodeToTSNodeMap.get(node.expression);
+        const exprType = checker.getTypeAtLocation(tsNode);
+        if (!exprType.isUnion()) return;
 
-        if (
-          parent.type === "ConditionalExpression" &&
-          parent.test === node
-        ) {
-          context.report({ node, messageId: "capabilityProbe" });
-        }
-
-        if (
-          parent.type === "LogicalExpression" &&
-          (parent.left === node || parent.right === node)
-        ) {
-          context.report({ node, messageId: "capabilityProbe" });
-        }
+        context.report({ node, messageId: "capabilityProbe" });
       },
     };
   },
