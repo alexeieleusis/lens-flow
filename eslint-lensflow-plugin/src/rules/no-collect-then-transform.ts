@@ -1,5 +1,5 @@
 import ts from "typescript";
-import { AST_NODE_TYPES, ESLintUtils, TSESTree, TSESLint } from "@typescript-eslint/utils";
+import { ESLintUtils, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import type { Definition } from "@typescript-eslint/scope-manager";
 import { createRule } from "../utils/rule-creator.js";
 import {
@@ -105,17 +105,19 @@ export default createRule({
     ): TSESTree.AwaitExpression | null {
       let current: TSESTree.Node = n;
       while (
-        current.type === AST_NODE_TYPES.TSAsExpression ||
-        current.type === AST_NODE_TYPES.TSTypeAssertion
+        current.type === "ParenthesizedExpression" ||
+        current.type === "TSAsExpression" ||
+        current.type === "TSTypeAssertion"
       ) {
-        const node = current as
-          | TSESTree.TSAsExpression
-          | TSESTree.TSTypeAssertion;
-        current = node.expression;
+        if (current.type === "ParenthesizedExpression") {
+          current = current.expression;
+        } else if (current.type === "TSAsExpression") {
+          current = current.expression;
+        } else {
+          current = current.expression;
+        }
       }
-      return current.type === AST_NODE_TYPES.AwaitExpression
-        ? (current as TSESTree.AwaitExpression)
-        : null;
+      return current.type === "AwaitExpression" ? current : null;
     }
 
     return {
@@ -148,7 +150,7 @@ export default createRule({
           const awaitedExpr = awaited.argument;
           if (!isAsyncIterableCall(awaitedExpr)) return;
 
-          if (hasBeenReassigned(variable, declarator, node)) return;
+          if (hasBeenReassigned(variable, declarator, callee)) return;
 
           const tsVarIdent =
             parserServices.esTreeNodeToTSNodeMap.get(callee.object);
