@@ -63,13 +63,9 @@ export default createRule({
         );
         if (!implementsClause) return;
 
-        const sourceInterSym = sourceType.getSymbol();
-        if (!sourceInterSym) return;
-
         const implementsInterface = implementsClause.types.some((expr) => {
           const implementedType = checker.getTypeAtLocation(expr);
-          const implementedSym = implementedType.getSymbol();
-          return implementedSym?.escapedName === sourceInterSym.escapedName;
+          return checker.isTypeAssignableTo(sourceType, implementedType);
         });
 
         if (!implementsInterface) return;
