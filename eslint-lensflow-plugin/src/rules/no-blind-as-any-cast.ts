@@ -18,6 +18,45 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"blindAsAnyCast", []>) {
+    function containsEarlyExitOrBlock(node: TSESTree.Node): boolean {
+      if (
+        node.type === "ThrowStatement" ||
+        node.type === "ReturnStatement" ||
+        node.type === "WhileStatement" ||
+        node.type === "ForStatement" ||
+        node.type === "DoWhileStatement"
+      ) {
+        return true;
+      }
+      if (node.type === "BlockStatement") {
+        return node.body.some(containsEarlyExitOrBlock);
+      }
+      if (node.type === "IfStatement") {
+        return (
+          containsEarlyExitOrBlock(node.consequent) ||
+          (node.alternate ? containsEarlyExitOrBlock(node.alternate) : false)
+        );
+      }
+      if (node.type === "LabeledStatement") {
+        return containsEarlyExitOrBlock(node.body);
+      }
+      if (node.type === "WithStatement") {
+        return containsEarlyExitOrBlock(node.body);
+      }
+      if (node.type === "SwitchStatement") {
+        return node.cases.some((c) =>
+          c.consequent.some(containsEarlyExitOrBlock),
+        );
+      }
+      return false;
+    }
+
+    function isGuardIf(node: TSESTree.Node): node is TSESTree.IfStatement {
+      return (
+        node.type === "IfStatement" && containsEarlyExitOrBlock(node.consequent)
+      );
+    }
+
     function checkFunctionBody(body: TSESTree.BlockStatement) {
       for (let i = 0; i < body.body.length; i++) {
         const stmt = body.body[i];
@@ -29,7 +68,7 @@ export default createRule({
           arg.typeAnnotation.type === "TSAnyKeyword"
         ) {
           const hasValidation = body.body.slice(0, i).some(
-            (s) => s.type === "IfStatement" || s.type === "ThrowStatement",
+            (s) => s.type === "ThrowStatement" || isGuardIf(s),
           );
           if (!hasValidation) {
             context.report({

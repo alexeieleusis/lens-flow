@@ -52,5 +52,19 @@ ruleTester.run("no-blind-as-any-cast", rule, {
 }`,
       errors: [{ messageId: "blindAsAnyCast" }],
     },
+    {
+      code: `function transition(obj: Obj<A>): Obj<B> {
+  if (debug) log();
+  return obj as any;
+}`,
+      errors: [{ messageId: "blindAsAnyCast" }],
+    },
+    {
+      code: `function transition(obj: Obj<A>): Obj<B> {
+  if (obj.kind === "A") console.log("ok");
+  return obj as any;
+}`,
+      errors: [{ messageId: "blindAsAnyCast" }],
+    },
   ],
 });
