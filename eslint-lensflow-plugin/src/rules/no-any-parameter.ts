@@ -8,7 +8,7 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow `any` as a function parameter type when a more specific type is known.",
+        "Disallow `any` as a parameter type in function declarations, expressions, function types, and method signatures.",
     },
     messages: {
       anyParam:
