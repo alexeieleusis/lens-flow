@@ -3,8 +3,20 @@ import { createRule } from "../utils/rule-creator.js";
 
 function containsAny(typeNode: TSESTree.TypeNode): boolean {
   if (typeNode.type === "TSAnyKeyword") return true;
-  if (typeNode.type === "TSUnionType") {
-    return typeNode.types.some((member) => member.type === "TSAnyKeyword");
+  if (typeNode.type === "TSUnionType" || typeNode.type === "TSIntersectionType") {
+    return typeNode.types.some(containsAny);
+  }
+  if (typeNode.type === "TSArrayType") {
+    return containsAny(typeNode.elementType);
+  }
+  if (typeNode.type === "TSTypeReference") {
+    return (typeNode.typeArguments?.params ?? []).some(containsAny);
+  }
+  if (typeNode.type === "TSTupleType") {
+    return typeNode.elementTypes.some(containsAny);
+  }
+  if (typeNode.type === "TSParenthesizedType") {
+    return containsAny(typeNode.typeAnnotation);
   }
   return false;
 }
