@@ -1,7 +1,5 @@
-import { AST_NODE_TYPES } from "@typescript-eslint/types";
-import type { TSESTree } from "@typescript-eslint/types";
+import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
 import {
   containsTypeRef,
   paramTypeAnnotation,
@@ -103,6 +101,7 @@ export default createRule({
         "Property '{{propName}}' is a function type that accepts covariant type parameter '{{paramName}}' as input. Mutation breaks covariance — use `in out` or split into separate read/write interfaces. See: {{url}}",
     },
     schema: [],
+    fixable: undefined,
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"mutationOnCovariant" | "propertyMutationOnCovariant", []>) {
