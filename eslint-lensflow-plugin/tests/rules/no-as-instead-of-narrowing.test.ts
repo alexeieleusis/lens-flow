@@ -8,7 +8,7 @@ RuleTester.afterAll = afterAll;
 RuleTester.describe = describe;
 RuleTester.it = it;
 
-const TS_CONFIG_DIR = path.resolve(__dirname, "../..");
+const TS_CONFIG_PATH = path.resolve(__dirname, "../../tsconfig.test.json");
 
 const ruleTester = new RuleTester({
   languageOptions: {
@@ -16,8 +16,8 @@ const ruleTester = new RuleTester({
     parserOptions: {
       ecmaVersion: 2022,
       sourceType: "module",
-      project: path.join(TS_CONFIG_DIR, "tsconfig.test.json"),
-      tsconfigRootDir: TS_CONFIG_DIR,
+      project: TS_CONFIG_PATH,
+      tsconfigRootDir: path.dirname(TS_CONFIG_PATH),
     },
   },
 });

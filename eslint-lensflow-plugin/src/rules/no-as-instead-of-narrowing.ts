@@ -7,10 +7,9 @@ const URL =
 
 function isAsConst(node: TSESTree.TSAsExpression): boolean {
   const ta = node.typeAnnotation;
-  if (ta.type !== "TSLiteralType") return false;
-  const lit = ta.literal as TSESTree.Literal | TSESTree.TemplateLiteral | TSESTree.UnaryExpression;
-  const ident = lit as unknown as TSESTree.Identifier;
-  return ident.type === "Identifier" && ident.name === "const";
+  if (ta.type !== "TSTypeReference") return false;
+  const tn = ta.typeName;
+  return tn.type === "Identifier" && tn.name === "const";
 }
 
 export default createRule({
@@ -30,7 +29,7 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"narrowViaAs", []>) {
-    const parserServices = ESLintUtils.getParserServices(context);
+    const parserServices = ESLintUtils.getParserServices(context, true);
     const program = parserServices.program;
     if (!program) return {};
 
@@ -66,6 +65,8 @@ export default createRule({
         );
 
         if (!isConstituent) return;
+
+        if (checker.isTypeAssignableTo(exprType, targetType)) return;
 
         context.report({
           node,
