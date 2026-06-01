@@ -7,6 +7,14 @@ const URL =
 
 const ARITHMETIC_OPS = new Set(["+", "-", "*", "/", "%"]);
 
+function hasBrandProperty(type: ts.Type): boolean {
+  const props = type.getProperties();
+  return props.some((p) => {
+    const name = p.escapedName as string;
+    return name === "_brand" || name === "__brand" || /Brand$/.test(name);
+  });
+}
+
 function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
   const apparent = checker.getApparentType(tsType);
 
@@ -15,19 +23,14 @@ function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
 
   let hasNumber = false;
   for (const constituent of constituents) {
-    const typeStr = checker.typeToString(constituent).trim().toLowerCase();
+    const typeStr = checker.typeToString(constituent).trim();
     if (
       (constituent.flags & ts.TypeFlags.Number) !== 0 ||
-      typeStr === "number"
+      typeStr.toLowerCase() === "number"
     ) {
       hasNumber = true;
-    } else {
-      const props = constituent.getProperties();
-      const hasBrand = props.some((p) => {
-        const name = String(p.escapedName);
-        return name.includes("brand");
-      });
-      if (hasBrand) return hasNumber;
+    } else if (hasBrandProperty(constituent)) {
+      return hasNumber;
     }
   }
 
