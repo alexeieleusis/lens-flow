@@ -29,9 +29,28 @@ const ARRAY_TRANSFORM_METHODS = new Set([
   "with",
   "findLast",
   "findLastIndex",
-  "filter",
   "reduceRight",
 ]);
+
+function hasBeenReassigned(
+  variable: TSESLint.Scope.Variable,
+  declarator: TSESTree.VariableDeclarator,
+  transformCall: TSESTree.CallExpression,
+): boolean {
+  for (const reference of variable.references) {
+    if (!reference.identifier) continue;
+    if (!reference.isWrite()) continue;
+
+    const refRange = reference.identifier.range;
+    const declRange = declarator.range;
+    const callRange = transformCall.range;
+
+    if (refRange[0] > declRange[1] && refRange[0] < callRange[0]) {
+      return true;
+    }
+  }
+  return false;
+}
 
 function isArrayType(type: ts.Type): boolean {
   const props = type.getProperties();
@@ -81,45 +100,98 @@ export default createRule({
       return hasAsyncIteratorSignature(argType);
     }
 
+    function unwrapToAwait(
+      n: TSESTree.Node,
+    ): TSESTree.AwaitExpression | null {
+      let current: TSESTree.Node = n;
+      while (
+        current.type === "ParenthesizedExpression" ||
+        current.type === "TSAsExpression" ||
+        current.type === "TSTypeAssertion"
+      ) {
+        if (current.type === "ParenthesizedExpression") {
+          current = current.expression;
+        } else if (current.type === "TSAsExpression") {
+          current = current.expression;
+        } else {
+          current = current.expression;
+        }
+      }
+      return current.type === "AwaitExpression" ? current : null;
+    }
+
     return {
       CallExpression(node) {
         const callee = node.callee;
         if (callee.type !== "MemberExpression") return;
-        if (callee.object.type !== "Identifier") return;
         if (callee.property.type !== "Identifier") return;
 
         const methodName = callee.property.name;
         if (!ARRAY_TRANSFORM_METHODS.has(methodName)) return;
 
-        const varName = callee.object.name;
-        const scope = context.sourceCode.getScope(callee.object);
-        const variable = findVariableInScopeChain(scope, varName);
-        if (!variable || variable.defs.length === 0) return;
+        if (callee.object.type === "Identifier") {
+          const varName = callee.object.name;
+          const scope = context.sourceCode.getScope(callee.object);
+          const variable = findVariableInScopeChain(scope, varName);
+          if (!variable || variable.defs.length === 0) return;
 
-        const def = variable.defs.find(
-          (d: Definition) => d.node.type === "VariableDeclarator",
-        );
-        if (def?.node.type !== "VariableDeclarator") return;
+          const def = variable.defs.find(
+            (d: Definition) => d.node.type === "VariableDeclarator",
+          );
+          if (def?.node.type !== "VariableDeclarator") return;
 
-        const declarator = def.node as TSESTree.VariableDeclarator;
-        const init = declarator.init;
-        if (init?.type !== "AwaitExpression") return;
+          const declarator = def.node as TSESTree.VariableDeclarator;
+          const init = declarator.init;
+          if (!init) return;
 
-        const awaitedExpr = init.argument;
-        if (!isAsyncIterableCall(awaitedExpr)) return;
+          const awaited = unwrapToAwait(init);
+          if (!awaited) return;
 
-        const tsVarIdent =
-          parserServices.esTreeNodeToTSNodeMap.get(callee.object);
-        if (!tsVarIdent) return;
+          const awaitedExpr = awaited.argument;
+          if (!isAsyncIterableCall(awaitedExpr)) return;
 
-        const varType = checker.getTypeAtLocation(tsVarIdent as ts.Expression);
-        if (!isArrayType(varType)) return;
+          if (hasBeenReassigned(variable, declarator, callee)) return;
 
-        context.report({
-          node: init,
-          messageId: "collectThenTransform",
-          data: { method: methodName },
-        });
+          const tsVarIdent =
+            parserServices.esTreeNodeToTSNodeMap.get(callee.object);
+          if (!tsVarIdent) return;
+
+          const varType = checker.getTypeAtLocation(
+            tsVarIdent as ts.Expression,
+          );
+          if (!isArrayType(varType)) return;
+
+          context.report({
+            node: init,
+            messageId: "collectThenTransform",
+            data: { method: methodName },
+          });
+        } else {
+          const awaited = unwrapToAwait(callee.object);
+          if (!awaited) return;
+
+          const awaitedArg = awaited.argument;
+          if (
+            awaitedArg.type !== "CallExpression" ||
+            !isAsyncIterableCall(awaitedArg)
+          )
+            return;
+
+          const tsAwaited =
+            parserServices.esTreeNodeToTSNodeMap.get(awaited);
+          if (!tsAwaited) return;
+
+          const awaitedType = checker.getTypeAtLocation(
+            tsAwaited as ts.Expression,
+          );
+          if (!isArrayType(awaitedType)) return;
+
+          context.report({
+            node: awaited,
+            messageId: "collectThenTransform",
+            data: { method: methodName },
+          });
+        }
       },
     };
   },
