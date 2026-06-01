@@ -47,6 +47,21 @@ export default createRule({
           outerTypeAnn.typeName.type === "Identifier"
         ) {
           toType = outerTypeAnn.typeName.name;
+        } else {
+          const kw = {
+            TSStringKeyword: "string",
+            TSNumberKeyword: "number",
+            TSBooleanKeyword: "boolean",
+            TSBigIntKeyword: "bigint",
+            TSSymbolKeyword: "symbol",
+            TSUndefinedKeyword: "undefined",
+            TSNullKeyword: "null",
+            TSVoidKeyword: "void",
+            TSNeverKeyword: "never",
+            TSObjectKeyword: "object",
+          };
+          const label = kw[outerTypeAnn.type as keyof typeof kw];
+          if (label) toType = label;
         }
 
         context.report({
