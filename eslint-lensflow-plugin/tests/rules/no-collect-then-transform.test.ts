@@ -48,6 +48,22 @@ ruleTester.run("no-collect-then-transform", rule, {
   }
 }`,
     },
+    {
+      filename: TEST_FILENAME,
+      code: `async function collect<T>(source: AsyncIterable<T>): Promise<T[]> {
+  const arr: T[] = [];
+  for await (const item of source) {
+    arr.push(item);
+  }
+  return arr;
+}
+
+async function transformReassigned(source: AsyncIterable<number>): Promise<number[]> {
+  let arr = await collect(source);
+  arr = [1, 2, 3];
+  return arr.map(n => n * 2);
+}`,
+    },
   ],
   invalid: [
     {
@@ -79,6 +95,84 @@ async function transformBad(source: AsyncIterable<number>): Promise<number[]> {
 async function filterEvents(events: AsyncIterable<{ type: string }>): Promise<{ type: string }[]> {
   const collected = await toArray(events);
   return collected.filter(e => e.type === "click");
+}`,
+      errors: [{ messageId: "collectThenTransform" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `async function collect<T>(source: AsyncIterable<T>): Promise<T[]> {
+  const arr: T[] = [];
+  for await (const item of source) {
+    arr.push(item);
+  }
+  return arr;
+}
+
+async function inlineTransform(source: AsyncIterable<number>): Promise<number[]> {
+  return (await collect(source)).map(n => n * 2);
+}`,
+      errors: [{ messageId: "collectThenTransform" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `async function collect<T>(source: AsyncIterable<T>): Promise<T[]> {
+  const arr: T[] = [];
+  for await (const item of source) {
+    arr.push(item);
+  }
+  return arr;
+}
+
+async function typedInlineTransform(source: AsyncIterable<number>): Promise<number[]> {
+  return (await collect(source) as number[]).filter(n => n > 0);
+}`,
+      errors: [{ messageId: "collectThenTransform" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `async function collect<T>(source: AsyncIterable<T>): Promise<T[]> {
+  const arr: T[] = [];
+  for await (const item of source) {
+    arr.push(item);
+  }
+  return arr;
+}
+
+async function sortCollected(source: AsyncIterable<number>): Promise<number[]> {
+  const arr = await collect(source);
+  return arr.sort((a, b) => a - b);
+}`,
+      errors: [{ messageId: "collectThenTransform" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `async function collect<T>(source: AsyncIterable<T>): Promise<T[]> {
+  const arr: T[] = [];
+  for await (const item of source) {
+    arr.push(item);
+  }
+  return arr;
+}
+
+async function findInCollected(source: AsyncIterable<number>): Promise<number | undefined> {
+  const arr = await collect(source);
+  return arr.find(n => n > 100);
+}`,
+      errors: [{ messageId: "collectThenTransform" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `async function collect<T>(source: AsyncIterable<T>): Promise<T[]> {
+  const arr: T[] = [];
+  for await (const item of source) {
+    arr.push(item);
+  }
+  return arr;
+}
+
+async function toSortedCollected(source: AsyncIterable<number>): Promise<number[]> {
+  const arr = await collect(source);
+  return arr.toSorted((a, b) => a - b);
 }`,
       errors: [{ messageId: "collectThenTransform" }],
     },
