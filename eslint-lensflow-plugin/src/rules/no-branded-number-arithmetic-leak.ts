@@ -11,8 +11,7 @@ function hasBrandProperty(type: ts.Type): boolean {
   const props = type.getProperties();
   return props.some((p) => {
     const name = p.escapedName as string;
-    // TypeScript escapes user-defined __brand to ___brand in escapedName
-    return /brand$/i.test(name);
+    return name === "_brand" || name === "__brand" || /Brand$/.test(name);
   });
 }
 
