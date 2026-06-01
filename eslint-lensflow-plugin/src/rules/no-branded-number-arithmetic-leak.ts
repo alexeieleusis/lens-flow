@@ -11,103 +11,26 @@ function hasBrandProperty(type: ts.Type): boolean {
   const props = type.getProperties();
   return props.some((p) => {
     const name = p.escapedName as string;
-    return /_+brand/i.test(name) || /Brand$/.test(name);
+    return name === "_brand" || name === "__brand" || /Brand$/.test(name);
   });
 }
 
-function isIntersectionWithBrandAndNumber(
-  checker: ts.TypeChecker,
-  intersection: ts.IntersectionType,
-): boolean {
-  const constituents = intersection.types;
-  if (!constituents || constituents.length < 2) return false;
+function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
+  const apparent = checker.getApparentType(tsType);
+
+  const constituents = (apparent as ts.IntersectionType)?.types;
+  if (!constituents || constituents.length <= 1) return false;
 
   let hasNumber = false;
-  let hasBrand = false;
-
   for (const constituent of constituents) {
-    const typeStr = checker.typeToString(constituent).trim().toLowerCase();
+    const typeStr = checker.typeToString(constituent).trim();
     if (
-      (constituent.flags &
-        (ts.TypeFlags.Number |
-          ts.TypeFlags.NumberLiteral |
-          ts.TypeFlags.BigInt |
-          ts.TypeFlags.BigIntLiteral)) !==
-      0
+      (constituent.flags & ts.TypeFlags.Number) !== 0 ||
+      typeStr.toLowerCase() === "number"
     ) {
       hasNumber = true;
-    } else if (typeStr === "number") {
-      hasNumber = true;
-    }
-
-    if ((constituent.flags & ts.TypeFlags.Object) !== 0) {
-      if (hasBrandProperty(constituent)) {
-        hasBrand = true;
-      }
-    }
-  }
-
-  return hasNumber && hasBrand;
-}
-
-function isIntersectionType(t: ts.Type): t is ts.IntersectionType {
-  return (t as ts.IntersectionType).types !== undefined;
-}
-
-function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
-  // Check the original type directly (it may already be an intersection)
-  if (isIntersectionType(tsType)) {
-    if (isIntersectionWithBrandAndNumber(checker, tsType)) return true;
-  }
-
-  // Check the apparent type
-  const apparent = checker.getApparentType(tsType);
-  if (apparent !== tsType && isIntersectionType(apparent)) {
-    if (isIntersectionWithBrandAndNumber(checker, apparent)) return true;
-  }
-
-  // Check via symbol declarations (type alias defined as intersection)
-  const sym = tsType.symbol || tsType.aliasSymbol;
-  if (sym) {
-    for (const decl of sym.declarations ?? []) {
-      if (
-        ts.isTypeAliasDeclaration(decl) &&
-        ts.isIntersectionTypeNode(decl.type)
-      ) {
-        let hasNumber = false;
-        let hasBrand = false;
-        for (const typeNode of decl.type.types) {
-          const checkedType = checker.getTypeFromTypeNode(typeNode);
-          const typeStr = checker
-            .typeToString(checkedType)
-            .trim()
-            .toLowerCase();
-          if (
-            (checkedType.flags & ts.TypeFlags.Number) !== 0 ||
-            typeStr === "number"
-          ) {
-            hasNumber = true;
-          }
-          if (
-            (checkedType.flags & ts.TypeFlags.Object) !== 0 &&
-            hasBrandProperty(checkedType)
-          ) {
-            hasBrand = true;
-          }
-        }
-        if (hasNumber && hasBrand) return true;
-      }
-    }
-  }
-
-  // Fallback: check if type is number-like and has brand properties
-  const typeStr = checker.typeToString(tsType).trim().toLowerCase();
-  const isNumberLike =
-    (tsType.flags & ts.TypeFlags.Number) !== 0 || typeStr === "number";
-
-  if (isNumberLike || typeStr.includes("&")) {
-    if (hasBrandProperty(tsType) || hasBrandProperty(apparent)) {
-      return true;
+    } else if (hasBrandProperty(constituent)) {
+      return hasNumber;
     }
   }
 
