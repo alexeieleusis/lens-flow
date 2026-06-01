@@ -14,6 +14,8 @@ ruleTester.run("no-deeply-nested-as-const", rule, {
     `const flat = { a: 1, b: 2 } as const;`,
     `const arr = [1, 2, { a: 3 }] as const;`,
     `const labelled = { a: 1 } as const;`,
+    `const shallow = [...[1, 2]] as const;`,
+    `const shallowSpread = [...[1, 2], ...[3, 4]] as const;`,
   ],
   invalid: [
     {
@@ -44,6 +46,18 @@ ruleTester.run("no-deeply-nested-as-const", rule, {
       code: `const deep = {
   x: { y: [{ z: true }] }
 } as const;`,
+      errors: [{ messageId: "deeplyNested" }],
+    },
+    {
+      code: `const x = [...[[[1]]]] as const;`,
+      errors: [{ messageId: "deeplyNested" }],
+    },
+    {
+      code: `const y = [...[[{ a: 1 }]]] as const;`,
+      errors: [{ messageId: "deeplyNested" }],
+    },
+    {
+      code: `const shallowNested = [...[{ a: 1 }]] as const;`,
       errors: [{ messageId: "deeplyNested" }],
     },
   ],
