@@ -37,7 +37,7 @@ function addDiscriminant(
   const value = extractLiteralValue(member.typeAnnotation.typeAnnotation);
   if (value === null) return;
 
-  const key = `${propName}::${value}`;
+  const key = JSON.stringify([propName, value]);
   const existing = discriminants.get(key);
   if (existing) {
     existing.push(member);
