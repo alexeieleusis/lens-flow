@@ -25,6 +25,10 @@ ruleTester.run("no-chain-for-independent-computations", rule, {
       const val = prev.value;
       return validate(val);
     });`,
+    // Object literal key with same name is NOT a reference — param is still used elsewhere
+    `E.chain((x) => ({ x, computed: x + 1 }));`,
+    // Optional chaining: parameter IS used — dependent computation
+    `result?.flatMap((x) => process(x.value));`,
   ],
   invalid: [
     // Classic antipattern: independent validations chained (no params)
@@ -63,6 +67,16 @@ ruleTester.run("no-chain-for-independent-computations", rule, {
   initial,
   E.chain(function (x) { return independentValidation(); }),
 );`,
+      errors: [{ messageId: "unusedParamInChain" }],
+    },
+    // Object literal key with same name is NOT a reference
+    {
+      code: `E.chain((x) => ({ x: 1 }));`,
+      errors: [{ messageId: "unusedParamInChain" }],
+    },
+    // Non-computed member name with same name is NOT a reference
+    {
+      code: `E.chain((x) => obj.x);`,
       errors: [{ messageId: "unusedParamInChain" }],
     },
   ],

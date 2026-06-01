@@ -1,64 +1,6 @@
 import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
-const SKIP_KEYS = new Set([
-  "parent",
-  "loc",
-  "range",
-  "leadingComments",
-  "trailingComments",
-  "innerComments",
-  "typeAnnotations",
-]);
-
-function isASTNode(val: unknown): val is TSESTree.Node {
-  return val != null && typeof val === "object" && "type" in val;
-}
-
-function getTraversableKeys(node: TSESTree.Node): (keyof TSESTree.Node)[] {
-  return Object.keys(node)
-    .filter((key) => !SKIP_KEYS.has(key))
-    .map((key) => key as keyof TSESTree.Node);
-}
-
-function isParameterUsed(paramName: string, body: TSESTree.Node): boolean {
-  let used = false;
-
-  function walk(node: TSESTree.Node | undefined): void {
-    if (used || !node) return;
-
-    if (node.type === AST_NODE_TYPES.Identifier && node.name === paramName) {
-      used = true;
-      return;
-    }
-
-    for (const key of getTraversableKeys(node)) {
-      const val = (node as unknown as Record<string, unknown>)[key];
-      if (Array.isArray(val)) {
-        for (const item of val) {
-          if (isASTNode(item)) {
-            walk(item);
-          }
-        }
-      } else if (isASTNode(val)) {
-        walk(val);
-      }
-    }
-  }
-
-  if ("body" in body && body.body) {
-    if (Array.isArray(body.body)) {
-      for (const stmt of body.body) {
-        walk(stmt);
-      }
-    } else {
-      walk(body.body);
-    }
-  }
-
-  return used;
-}
-
 export default createRule({
   name: "no-chain-for-independent-computations",
   meta: {
@@ -74,14 +16,22 @@ export default createRule({
         "The chain callback has no parameters. The computation is independent and will be short-circuited if a prior step fails. Use applicative style (ap, sequenceS) for independent validations. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T54-functor-applicative-monad.md",
     },
     schema: [],
+    fixable: undefined,
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"noParamInChain" | "unusedParamInChain", []>) {
     const chainMethods = new Set(["chain", "flatMap"]);
 
+    function unwrapCallee(node: TSESTree.CallExpression): TSESTree.Node {
+      if (node.callee.type === AST_NODE_TYPES.ChainExpression) {
+        return node.callee.expression;
+      }
+      return node.callee;
+    }
+
     function isChainCall(node: TSESTree.CallExpression): boolean {
-      if (node.callee.type === AST_NODE_TYPES.MemberExpression) {
-        const callee = node.callee as TSESTree.MemberExpression;
+      const callee = unwrapCallee(node);
+      if (callee.type === AST_NODE_TYPES.MemberExpression) {
         const prop = callee.property;
 
         if (prop.type === AST_NODE_TYPES.Identifier && chainMethods.has(prop.name)) {
@@ -92,39 +42,55 @@ export default createRule({
       return false;
     }
 
+    function isChainCallback(
+      ctx: TSESLint.RuleContext<"noParamInChain" | "unusedParamInChain", []>,
+      callback: TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression,
+    ): TSESTree.CallExpression | null {
+      const parent = callback.parent;
+      if (parent?.type !== AST_NODE_TYPES.CallExpression) return null;
+      if (!isChainCall(parent)) return null;
+      if (parent.arguments[0] !== callback) return null;
+      return parent;
+    }
+
+    function checkCallbackParams(
+      ctx: TSESLint.RuleContext<"noParamInChain" | "unusedParamInChain", []>,
+      callback: TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression,
+    ): void {
+      const [firstParam] = callback.params;
+
+      if (!firstParam) {
+        ctx.report({
+          node: callback,
+          messageId: "noParamInChain",
+        });
+        return;
+      }
+
+      if (firstParam.type !== AST_NODE_TYPES.Identifier) return;
+
+      const scopeManager = ctx.sourceCode.scopeManager;
+      const paramVar = scopeManager?.getDeclaredVariables(callback).find(
+        (v) => v.name === firstParam.name,
+      );
+
+      if (paramVar && paramVar.references.length === 0) {
+        ctx.report({
+          node: callback,
+          messageId: "unusedParamInChain",
+          data: { param: firstParam.name },
+        });
+      }
+    }
+
     return {
-      CallExpression(node) {
-        if (!isChainCall(node)) return;
-
-        const [callbackArg] = node.arguments;
-        if (!callbackArg) return;
-
-        const isFunction =
-          callbackArg.type === AST_NODE_TYPES.ArrowFunctionExpression ||
-          callbackArg.type === AST_NODE_TYPES.FunctionExpression;
-        if (!isFunction) return;
-
-        const [firstParam] = callbackArg.params;
-
-        if (!firstParam) {
-          context.report({
-            node,
-            messageId: "noParamInChain",
-          });
-          return;
-        }
-
-        if (firstParam.type === AST_NODE_TYPES.Identifier) {
-          const paramName = firstParam.name;
-          const isUsed = isParameterUsed(paramName, callbackArg);
-          if (!isUsed) {
-            context.report({
-              node,
-              messageId: "unusedParamInChain",
-              data: { param: paramName },
-            });
-          }
-        }
+      ArrowFunctionExpression(callbackArg) {
+        if (!isChainCallback(context, callbackArg)) return;
+        checkCallbackParams(context, callbackArg);
+      },
+      FunctionExpression(callbackArg) {
+        if (!isChainCallback(context, callbackArg)) return;
+        checkCallbackParams(context, callbackArg);
       },
     };
   },
