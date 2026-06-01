@@ -10,19 +10,14 @@ const ARITHMETIC_OPS = new Set(["+", "-", "*", "/", "%"]);
 function hasBrandProperty(type: ts.Type): boolean {
   const props = type.getProperties();
   return props.some((p) => {
-    const name = String(p.escapedName);
-    return /^_+brand$/i.test(name) || /Brand$/.test(name);
+    const name = p.escapedName as string;
+    return name === "_brand" || name === "__brand" || /Brand$/.test(name);
   });
 }
 
 function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
   const apparent = checker.getApparentType(tsType);
 
-  // Direct check: the apparent type itself may combine number + brand flags/properties
-  const isNumberLike = (apparent.flags & ts.TypeFlags.Number) !== 0;
-  if (isNumberLike && hasBrandProperty(apparent)) return true;
-
-  // Intersection constituents check
   const constituents = (apparent as ts.IntersectionType)?.types;
   if (!constituents || constituents.length <= 1) return false;
 
