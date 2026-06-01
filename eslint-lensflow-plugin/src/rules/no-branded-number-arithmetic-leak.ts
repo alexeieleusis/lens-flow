@@ -8,11 +8,10 @@ const URL =
 const ARITHMETIC_OPS = new Set(["+", "-", "*", "/", "%"]);
 
 function hasBrandProperty(type: ts.Type): boolean {
-  if ((type.flags & ts.TypeFlags.Object) === 0) return false;
-  const props = (type as ts.ObjectType).getProperties();
+  const props = type.getProperties();
   return props.some((p) => {
-    const name = (p.escapedName as string).toLowerCase();
-    return name.includes("brand");
+    const name = p.escapedName as string;
+    return name === "_brand" || name === "__brand" || /Brand$/.test(name);
   });
 }
 
