@@ -35,7 +35,7 @@ const ARRAY_TRANSFORM_METHODS = new Set([
 function hasBeenReassigned(
   variable: TSESLint.Scope.Variable,
   declarator: TSESTree.VariableDeclarator,
-  transformCall: TSESTree.Node,
+  transformCall: TSESTree.CallExpression,
 ): boolean {
   for (const reference of variable.references) {
     if (!reference.identifier) continue;
@@ -105,10 +105,13 @@ export default createRule({
     ): TSESTree.AwaitExpression | null {
       let current: TSESTree.Node = n;
       while (
+        current.type === "ParenthesizedExpression" ||
         current.type === "TSAsExpression" ||
         current.type === "TSTypeAssertion"
       ) {
-        if (current.type === "TSAsExpression") {
+        if (current.type === "ParenthesizedExpression") {
+          current = current.expression;
+        } else if (current.type === "TSAsExpression") {
           current = current.expression;
         } else {
           current = current.expression;
