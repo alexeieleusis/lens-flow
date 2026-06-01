@@ -20,6 +20,15 @@ ruleTester.run("no-any-in-utility-function", rule, {
     `const obj = {
       fn(data: any) { return data; }
     };`,
+    `const handler = {
+      onClick: (e: any) => console.log(e),
+    };`,
+    `export const handler = {
+      onClick: (e: any) => console.log(e),
+    };`,
+    `class Foo {
+      bar = (data: any) => data;
+    }`,
   ],
   invalid: [
     {
@@ -54,6 +63,87 @@ ruleTester.run("no-any-in-utility-function", rule, {
         { messageId: "anyParam" },
         { messageId: "anyReturn" },
       ],
+    },
+    {
+      code: `function process(...rest: any): void {
+        rest.forEach(console.log);
+      }`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    {
+      code: `function handle({ a }: any): void {
+        console.log(a);
+      }`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    {
+      code: `function process([x]: any): void {
+        console.log(x);
+      }`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    {
+      code: `export const clone = (data: any): any => JSON.parse(JSON.stringify(data))`,
+      errors: [
+        { messageId: "anyParam" },
+        { messageId: "anyReturn" },
+      ],
+    },
+    {
+      code: `const clone = (data: any): any => JSON.parse(JSON.stringify(data))`,
+      errors: [
+        { messageId: "anyParam" },
+        { messageId: "anyReturn" },
+      ],
+    },
+    {
+      code: `export const stringify = function(value: any): any {
+        return JSON.stringify(value);
+      }`,
+      errors: [
+        { messageId: "anyParam" },
+        { messageId: "anyReturn" },
+      ],
+    },
+    {
+      code: `const stringify = function(value: any): any {
+        return JSON.stringify(value);
+      }`,
+      errors: [
+        { messageId: "anyParam" },
+        { messageId: "anyReturn" },
+      ],
+    },
+    {
+      code: `export default function clone(data: any): any {
+        return JSON.parse(JSON.stringify(data));
+      }`,
+      errors: [
+        { messageId: "anyParam" },
+        { messageId: "anyReturn" },
+      ],
+    },
+    {
+      code: `export default (data: any) => data`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    {
+      code: `export default function parse(text: string): any {
+        return JSON.parse(text);
+      }`,
+      errors: [{ messageId: "anyReturn" }],
+    },
+    {
+      code: `export const handle = ({ a = 1 }: any): void => {
+        console.log(a);
+      }`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    {
+      code: `export const process = ([x = 0]: any): void => {
+        console.log(x);
+      }`,
+      errors: [{ messageId: "anyParam" }],
     },
   ],
 });
