@@ -14,12 +14,20 @@ const untrustedCallNames = new Set([
   "prompt",
 ]);
 
+function unwrapExpression(node: TSESTree.Node): TSESTree.Node {
+  if (node.type === "AwaitExpression") return unwrapExpression(node.argument);
+  if (node.type === "ChainExpression") return unwrapExpression(node.expression);
+  if (node.type === "TSNonNullExpression") return unwrapExpression(node.expression);
+  return node;
+}
+
 function getUntrustedCallName(
   node: TSESTree.Node,
 ): string | null {
-  if (node.type !== "CallExpression") return null;
+  const unwrapped = unwrapExpression(node);
+  if (unwrapped.type !== "CallExpression") return null;
 
-  const callee = node.callee;
+  const callee = unwrapped.callee;
   if (callee.type === "Identifier") {
     if (untrustedCallNames.has(callee.name)) return callee.name;
     return null;
@@ -31,6 +39,7 @@ function getUntrustedCallName(
   ) {
     const fullName = `${callee.object.name}.${callee.property.name}`;
     if (untrustedCallNames.has(fullName)) return fullName;
+    if (untrustedCallNames.has(callee.property.name)) return callee.property.name;
     return null;
   }
   return null;
