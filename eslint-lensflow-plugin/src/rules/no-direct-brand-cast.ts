@@ -101,7 +101,7 @@ export default createRule({
     docs: {
       description:
         "Disallow direct `as` cast of a raw primitive value to a branded type outside a smart constructor.",
-     },
+    },
     messages: {
       directBrandCast:
         "Direct `as` cast of raw `{{sourceType}}` to branded type `{{brandType}}` bypasses validation. Use the branded type's smart constructor instead. See: {{url}}",
