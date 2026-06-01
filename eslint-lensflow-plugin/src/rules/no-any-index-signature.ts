@@ -15,6 +15,9 @@ function containsAny(typeNode: TSESTree.TypeNode): boolean {
   if (typeNode.type === "TSTupleType") {
     return typeNode.elementTypes.some(containsAny);
   }
+  if (typeNode.type === "TSParenthesizedType") {
+    return containsAny(typeNode.typeAnnotation);
+  }
   return false;
 }
 
