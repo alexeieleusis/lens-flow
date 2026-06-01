@@ -6,7 +6,7 @@ function getTypeName(typeName: TSESTree.Identifier | TSESTree.ThisExpression | T
     return typeName.name;
   }
   if (typeName.type === "TSQualifiedName") {
-    return typeName.right.name;
+    return null;
   }
   return null;
 }
