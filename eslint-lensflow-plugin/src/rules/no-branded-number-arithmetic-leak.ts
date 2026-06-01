@@ -11,26 +11,30 @@ function hasBrandProperty(type: ts.Type): boolean {
   const props = type.getProperties();
   return props.some((p) => {
     const name = p.escapedName as string;
-    return /_?brand$/i.test(name) || /Brand$/.test(name);
+    return name === "_brand" || name === "__brand" || /Brand$/.test(name);
   });
 }
 
 function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
-  const constituents = (tsType as ts.IntersectionType)?.types;
+  const apparent = checker.getApparentType(tsType);
+
+  const constituents = (apparent as ts.IntersectionType)?.types;
   if (!constituents || constituents.length <= 1) return false;
 
   let hasNumber = false;
-  let hasBrand = false;
   for (const constituent of constituents) {
-    if ((constituent.flags & ts.TypeFlags.Number) !== 0) {
+    const typeStr = checker.typeToString(constituent).trim();
+    if (
+      (constituent.flags & ts.TypeFlags.Number) !== 0 ||
+      typeStr.toLowerCase() === "number"
+    ) {
       hasNumber = true;
-    }
-    if (hasBrandProperty(constituent)) {
-      hasBrand = true;
+    } else if (hasBrandProperty(constituent)) {
+      return hasNumber;
     }
   }
 
-  return hasNumber && hasBrand;
+  return false;
 }
 
 export default createRule({
