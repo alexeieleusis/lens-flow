@@ -7,15 +7,21 @@ const URL =
 
 const ARITHMETIC_OPS = new Set(["+", "-", "*", "/", "%"]);
 
+function hasBrandProperty(type: ts.Type): boolean {
+  const props = type.getProperties();
+  return props.some((p) => {
+    const name = p.escapedName as string;
+    return name === "_brand" || name === "__brand" || /Brand$/.test(name);
+  });
+}
+
 function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
   const apparent = checker.getApparentType(tsType);
 
   const constituents = (apparent as ts.IntersectionType)?.types;
-  if (!constituents || constituents.length < 2) return false;
+  if (!constituents || constituents.length <= 1) return false;
 
   let hasNumber = false;
-  let hasBrandObject = false;
-
   for (const constituent of constituents) {
     const typeStr = checker.typeToString(constituent).trim();
     if (
@@ -23,34 +29,12 @@ function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
       typeStr.toLowerCase() === "number"
     ) {
       hasNumber = true;
-    }
-
-    if ((constituent.flags & ts.TypeFlags.Object) !== 0) {
-      const props = (constituent as ts.ObjectType).getProperties();
-      if (
-        props.some((p) => {
-          const propName = p.escapedName.toString();
-          // TypeScript escapes string-literal property names by prepending underscore,
-          // so "__brand" becomes "___brand" internally
-          const unescaped = propName.startsWith("_")
-            ? propName.replace(/^_+/, (m) => m.slice(1))
-            : propName;
-          return (
-            unescaped === "_brand" ||
-            unescaped === "__brand" ||
-            unescaped.endsWith("Brand") ||
-            propName === "_brand" ||
-            propName === "__brand" ||
-            propName.endsWith("Brand")
-          );
-        })
-      ) {
-        hasBrandObject = true;
-      }
+    } else if (hasBrandProperty(constituent)) {
+      return hasNumber;
     }
   }
 
-  return hasNumber && hasBrandObject;
+  return false;
 }
 
 export default createRule({
