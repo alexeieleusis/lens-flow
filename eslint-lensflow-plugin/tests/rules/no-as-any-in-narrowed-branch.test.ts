@@ -33,6 +33,13 @@ ruleTester.run("no-as-any-in-narrowed-branch", rule, {
     return (m as any).val;
   }
 }`,
+    // Scope shadowing: inner binding shadows the narrowed variable
+    `function getValue(m: { type: "a"; val: number } | { type: "b"; val: string }) {
+  if (m.type === "a") {
+    const m: unknown = getOther();
+    return (m as any).x;
+  }
+}`,
   ],
   invalid: [
     // if guard: casting the narrowed variable itself
@@ -89,6 +96,17 @@ ruleTester.run("no-as-any-in-narrowed-branch", rule, {
       code: `function process(val: string | number) {
   if (typeof val === "string") {
     return (val as any).toUpperCase();
+  }
+}`,
+      errors: [{ messageId: "redundantAsAny" }],
+    },
+    // Nested guard: inner guard narrows a different variable — outer guard narrows m
+    {
+      code: `function getValue(m: { type: "a"; val: number } | { type: "b"; val: string }, other: { type: "x" } | { type: "y" }) {
+  if (m.type === "a") {
+    if (other.type === "x") {
+      return (m as any).val.toFixed(2);
+    }
   }
 }`,
       errors: [{ messageId: "redundantAsAny" }],
