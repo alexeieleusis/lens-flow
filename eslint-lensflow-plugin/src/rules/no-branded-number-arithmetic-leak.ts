@@ -7,45 +7,34 @@ const URL =
 
 const ARITHMETIC_OPS = new Set(["+", "-", "*", "/", "%"]);
 
-const PRIMITIVE_NAMES = new Set(["string", "number", "boolean"]);
-
-function isBrandPropertyName(name: string): boolean {
-  const lower = name.toLowerCase();
-  return /^_+brand$/.test(lower) || /brand$/i.test(name);
-}
-
 function hasBrandProperty(type: ts.Type): boolean {
-  if ((type.flags & ts.TypeFlags.Object) !== 0) {
-    const props = (type as ts.ObjectType).getProperties();
-    return props.some((p) => isBrandPropertyName(p.escapedName as string));
-  }
-  return false;
+  const props = type.getProperties();
+  return props.some((p) => {
+    const name = p.escapedName as string;
+    return name === "_brand" || name === "__brand" || /Brand$/.test(name);
+  });
 }
 
 function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
   const apparent = checker.getApparentType(tsType);
 
   const constituents = (apparent as ts.IntersectionType)?.types;
-  if (!constituents || constituents.length < 2) return false;
+  if (!constituents || constituents.length <= 1) return false;
 
-  let hasNumberBase = false;
-  let hasBrandObject = false;
-
+  let hasNumber = false;
   for (const constituent of constituents) {
-    const typeStr = checker.typeToString(constituent).trim().toLowerCase();
-
-    if (!hasNumberBase && PRIMITIVE_NAMES.has(typeStr)) {
-      hasNumberBase = true;
-    }
-
-    if ((constituent.flags & ts.TypeFlags.Object) !== 0) {
-      if (!hasBrandObject && hasBrandProperty(constituent)) {
-        hasBrandObject = true;
-      }
+    const typeStr = checker.typeToString(constituent).trim();
+    if (
+      (constituent.flags & ts.TypeFlags.Number) !== 0 ||
+      typeStr.toLowerCase() === "number"
+    ) {
+      hasNumber = true;
+    } else if (hasBrandProperty(constituent)) {
+      return hasNumber;
     }
   }
 
-  return hasNumberBase && hasBrandObject;
+  return false;
 }
 
 export default createRule({
