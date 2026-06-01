@@ -39,6 +39,12 @@ function tryVisitChild(child: TSESTree.Node, cb: (n: TSESTree.Node) => boolean):
   return false;
 }
 
+const FUNCTION_BOUNDARIES = new Set([
+  AST_NODE_TYPES.FunctionDeclaration,
+  AST_NODE_TYPES.FunctionExpression,
+  AST_NODE_TYPES.ArrowFunctionExpression,
+]);
+
 function forEachChildNode(
   node: TSESTree.Node,
   cb: (child: TSESTree.Node) => boolean,
@@ -47,12 +53,18 @@ function forEachChildNode(
     const raw = (node as unknown as Record<string, unknown>)[key];
     if (Array.isArray(raw)) {
       for (const item of raw) {
-        if (tryVisitChild(item as TSESTree.Node, cb)) {
-          return true;
+        const child = item as TSESTree.Node;
+        if (isASTNode(child)) {
+          if (FUNCTION_BOUNDARIES.has(child.type)) continue;
+          if (cb(child)) return true;
         }
       }
-    } else if (tryVisitChild(raw as TSESTree.Node, cb)) {
-      return true;
+    } else {
+      const child = raw as TSESTree.Node;
+      if (isASTNode(child)) {
+        if (FUNCTION_BOUNDARIES.has(child.type)) continue;
+        if (cb(child)) return true;
+      }
     }
   }
   return false;

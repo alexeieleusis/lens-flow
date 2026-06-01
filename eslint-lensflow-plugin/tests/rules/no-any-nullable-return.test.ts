@@ -22,6 +22,11 @@ ruleTester.run("no-any-nullable-return", rule, {
       const val = fetchData() ?? null;
       return val;
     }`,
+    // Outer any function should not be flagged for inner function's nullable return
+    `function outer(): any {
+      const inner = (): string | null => { return value ?? null; };
+      return outerData();
+    }`,
   ],
   invalid: [
     // Function declaration with any return and ?? null
