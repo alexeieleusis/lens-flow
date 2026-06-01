@@ -16,6 +16,14 @@ ruleTester.run("no-as-any-bypass-exhaustiveness", rule, {
     default: throw new Error("unhandled");
   }
 }`,
+    `function handle(msg: Message) {
+  switch (msg.outer) {
+    default:
+      switch (msg.inner) {
+        case "a": const x = msg as any; break;
+      }
+  }
+}`,
   ],
   invalid: [
     {
