@@ -7,6 +7,14 @@ const URL =
 
 const ARITHMETIC_OPS = new Set(["+", "-", "*", "/", "%"]);
 
+function hasBrandProperty(type: ts.Type): boolean {
+  const props = type.getProperties();
+  return props.some((p) => {
+    const name = p.escapedName as string;
+    return name === "_brand" || name === "__brand" || /Brand$/.test(name);
+  });
+}
+
 function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
   const apparent = checker.getApparentType(tsType);
 
@@ -14,8 +22,6 @@ function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
   if (!constituents || constituents.length <= 1) return false;
 
   let hasNumber = false;
-  let hasBrand = false;
-
   for (const constituent of constituents) {
     const typeStr = checker.typeToString(constituent).trim();
     if (
@@ -23,23 +29,12 @@ function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
       typeStr.toLowerCase() === "number"
     ) {
       hasNumber = true;
-    }
-
-    if ((constituent.flags & ts.TypeFlags.Object) !== 0) {
-      const props = (constituent as ts.ObjectType).getProperties();
-      if (
-        props.some(
-          (p) =>
-            p.escapedName.toString().toLowerCase().includes("__brand") ||
-            p.escapedName.toString().endsWith("Brand"),
-        )
-      ) {
-        hasBrand = true;
-      }
+    } else if (hasBrandProperty(constituent)) {
+      return hasNumber;
     }
   }
 
-  return hasNumber && hasBrand;
+  return false;
 }
 
 export default createRule({
