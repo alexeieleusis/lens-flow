@@ -7,35 +7,34 @@ const URL =
 
 const ARITHMETIC_OPS = new Set(["+", "-", "*", "/", "%"]);
 
+function hasBrandProperty(type: ts.Type): boolean {
+  const props = type.getProperties();
+  return props.some((p) => {
+    const name = p.escapedName as string;
+    return name === "_brand" || name === "__brand" || /Brand$/.test(name);
+  });
+}
+
 function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
-  const constituents = (tsType as ts.IntersectionType)?.types;
-  if (!constituents || constituents.length < 2) return false;
+  const apparent = checker.getApparentType(tsType);
+
+  const constituents = (apparent as ts.IntersectionType)?.types;
+  if (!constituents || constituents.length <= 1) return false;
 
   let hasNumber = false;
-  let hasBrand = false;
-
   for (const constituent of constituents) {
-    const typeStr = checker.typeToString(constituent).trim().toLowerCase();
+    const typeStr = checker.typeToString(constituent).trim();
     if (
       (constituent.flags & ts.TypeFlags.Number) !== 0 ||
-      typeStr === "number"
+      typeStr.toLowerCase() === "number"
     ) {
       hasNumber = true;
-    }
-    if ((constituent.flags & ts.TypeFlags.Object) !== 0) {
-      const props = (constituent as ts.ObjectType).getProperties();
-      if (
-        props.some((p) => {
-          const name = p.escapedName.toString();
-          return name.includes("__brand") || name.endsWith("Brand");
-        })
-      ) {
-        hasBrand = true;
-      }
+    } else if (hasBrandProperty(constituent)) {
+      return hasNumber;
     }
   }
 
-  return hasNumber && hasBrand;
+  return false;
 }
 
 export default createRule({
@@ -61,16 +60,12 @@ export default createRule({
 
     const checker = program.getTypeChecker();
 
-    const esTreeNodeToTSNodeMap = parserServices.esTreeNodeToTSNodeMap;
-
     return {
       BinaryExpression(node) {
         if (!ARITHMETIC_OPS.has(node.operator)) return;
 
-        const leftTsNode = esTreeNodeToTSNodeMap.get(node.left);
-        const rightTsNode = esTreeNodeToTSNodeMap.get(node.right);
-        const leftType = checker.getTypeAtLocation(leftTsNode);
-        const rightType = checker.getTypeAtLocation(rightTsNode);
+        const leftType = parserServices.getTypeAtLocation(node.left);
+        const rightType = parserServices.getTypeAtLocation(node.right);
 
         const leftBranded = isBrandedNumber(checker, leftType);
         const rightBranded = isBrandedNumber(checker, rightType);
@@ -79,8 +74,7 @@ export default createRule({
 
         const parent = node.parent;
         if (parent?.type === "TSAsExpression" || parent?.type === "TSTypeAssertion") {
-          const castResultTsNode = esTreeNodeToTSNodeMap.get(parent);
-          const castResultType = checker.getTypeAtLocation(castResultTsNode);
+          const castResultType = parserServices.getTypeAtLocation(parent);
           if (isBrandedNumber(checker, castResultType)) return;
         }
 
