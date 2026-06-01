@@ -105,10 +105,17 @@ export default createRule({
     ): TSESTree.AwaitExpression | null {
       let current: TSESTree.Node = n;
       while (
+        current.type === "ParenthesizedExpression" ||
         current.type === "TSAsExpression" ||
         current.type === "TSTypeAssertion"
       ) {
-        current = current.expression;
+        if (current.type === "ParenthesizedExpression") {
+          current = current.expression;
+        } else if (current.type === "TSAsExpression") {
+          current = current.expression;
+        } else {
+          current = current.expression;
+        }
       }
       return current.type === "AwaitExpression" ? current : null;
     }
@@ -143,7 +150,7 @@ export default createRule({
           const awaitedExpr = awaited.argument;
           if (!isAsyncIterableCall(awaitedExpr)) return;
 
-          if (hasBeenReassigned(variable, declarator, node)) return;
+          if (hasBeenReassigned(variable, declarator, callee)) return;
 
           const tsVarIdent =
             parserServices.esTreeNodeToTSNodeMap.get(callee.object);
