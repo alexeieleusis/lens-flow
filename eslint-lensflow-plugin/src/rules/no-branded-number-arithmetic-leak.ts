@@ -8,46 +8,30 @@ const URL =
 const ARITHMETIC_OPS = new Set(["+", "-", "*", "/", "%"]);
 
 function hasBrandProperty(type: ts.Type): boolean {
-  const props = (type as ts.ObjectType).getProperties();
+  const props = type.getProperties();
   return props.some((p) => {
-    const name = p.escapedName.toString();
-    return name.includes("_brand") || /Brand$/.test(name);
+    const name = p.escapedName as string;
+    return name === "_brand" || name === "__brand" || /Brand$/.test(name);
   });
 }
 
 function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
-  const typesToCheck = [tsType, checker.getApparentType(tsType)];
+  const apparent = checker.getApparentType(tsType);
 
-  for (const checkType of typesToCheck) {
-    const constituents = (checkType as ts.IntersectionType)?.types;
-    if (!constituents || constituents.length < 2) continue;
+  const constituents = (apparent as ts.IntersectionType)?.types;
+  if (!constituents || constituents.length <= 1) return false;
 
-    let hasNumber = false;
-    let hasBrand = false;
-
-    for (const constituent of constituents) {
-      const typeStr = checker.typeToString(constituent).trim();
-      if (
-        (constituent.flags & ts.TypeFlags.Number) !== 0 ||
-        typeStr.toLowerCase() === "number"
-      ) {
-        hasNumber = true;
-      }
-      if (hasBrandProperty(constituent)) {
-        hasBrand = true;
-      }
+  let hasNumber = false;
+  for (const constituent of constituents) {
+    const typeStr = checker.typeToString(constituent).trim();
+    if (
+      (constituent.flags & ts.TypeFlags.Number) !== 0 ||
+      typeStr.toLowerCase() === "number"
+    ) {
+      hasNumber = true;
+    } else if (hasBrandProperty(constituent)) {
+      return hasNumber;
     }
-
-    if (hasNumber && hasBrand) return true;
-  }
-
-  // Fallback: check the type itself for brand properties + Number flag
-  if (
-    ((tsType.flags & ts.TypeFlags.Number) !== 0 ||
-      (checker.getApparentType(tsType).flags & ts.TypeFlags.Number) !== 0) &&
-    hasBrandProperty(checker.getApparentType(tsType))
-  ) {
-    return true;
   }
 
   return false;
