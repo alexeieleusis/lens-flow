@@ -39,5 +39,11 @@ ruleTester.run("no-duplicate-discriminant-values", rule, {
       | { type: "click"; target: string };`,
       errors: [{ messageId: "duplicateDiscriminant" }, { messageId: "duplicateDiscriminant" }],
     },
+    {
+      code: `type Action =
+      | { type: \`init\`; payload: number }
+      | { type: \`init\`; payload: string };`,
+      errors: [{ messageId: "duplicateDiscriminant" }, { messageId: "duplicateDiscriminant" }],
+    },
   ],
 });

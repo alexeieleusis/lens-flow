@@ -69,10 +69,13 @@ function reportDuplicate(
 ) {
   const propName = extractPropName(sig.key) ?? "?";
   const typeAnn = sig.typeAnnotation?.typeAnnotation;
-  const value =
-    typeAnn?.type === "TSLiteralType" && typeAnn.literal.type === "Literal"
+  const value = typeAnn?.type === "TSLiteralType"
+    ? (typeAnn.literal.type === "Literal"
       ? String(typeAnn.literal.value)
-      : "?";
+      : typeAnn.literal.type === "TemplateLiteral" && typeAnn.literal.quasis.length === 1
+        ? typeAnn.literal.quasis[0].value.cooked ?? "?"
+        : "?")
+    : "?";
 
   context.report({
     node: sig,
