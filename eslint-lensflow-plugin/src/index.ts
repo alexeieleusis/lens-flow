@@ -1,5 +1,6 @@
 import type { TSESLint } from "@typescript-eslint/utils";
 import noAnyExternalData from "./rules/no-any-external-data.js";
+import noAnyInDiscriminantCheckUC03 from "./rules/no-any-in-discriminant-check-uc03.js";
 
 const plugin: {
   rules: Record<string, TSESLint.RuleModule<string, unknown[]>>;
@@ -7,6 +8,7 @@ const plugin: {
 } = {
   rules: {
     "no-any-external-data": noAnyExternalData,
+    "no-any-in-discriminant-check-uc03": noAnyInDiscriminantCheckUC03,
   },
   configs: {},
 };
