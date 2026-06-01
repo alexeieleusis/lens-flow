@@ -10,11 +10,8 @@ const ARITHMETIC_OPS = new Set(["+", "-", "*", "/", "%"]);
 function hasBrandProperty(type: ts.Type): boolean {
   const props = type.getProperties();
   return props.some((p) => {
-    const name = String(p.escapedName).toLowerCase();
-    return (
-      name.includes("_brand") ||
-      name.endsWith("brand")
-    );
+    const name = p.escapedName as string;
+    return name === "_brand" || name === "__brand" || /Brand$/.test(name);
   });
 }
 
