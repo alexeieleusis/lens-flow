@@ -25,6 +25,26 @@ type UnwrapLevel4<T> = UnwrapLevel2<UnwrapLevel2<T>>;`,
           : never
         : never
       : never;`,
+    // 5 levels is valid when maxDepth is raised to 5
+    {
+      code: `type F<T> = T extends (infer A)[]
+    ? A extends (infer B)[]
+      ? B extends (infer C)[]
+        ? C extends (infer D)[]
+          ? D extends (infer E)[]
+            ? E
+            : never
+          : never
+        : never
+      : never
+    : never;`,
+      options: [{ maxDepth: 5 }],
+    },
+    // exactly at custom maxDepth boundary (2 levels with maxDepth 2)
+    {
+      code: `type H<T> = T extends (infer A)[] ? A extends (infer B)[] ? B : never : never;`,
+      options: [{ maxDepth: 2 }],
+    },
   ],
   invalid: [
     // 5 levels of nesting exceeds default maxDepth of 4
@@ -42,20 +62,48 @@ type UnwrapLevel4<T> = UnwrapLevel2<UnwrapLevel2<T>>;`,
   : never;`,
       errors: [{ messageId: "deepNesting" }],
     },
-    // 5 levels in a different shape
+   // 5 levels in a different shape
     {
       code: `type Deep<T> = T extends string
-  ? T extends \`prefix-\${infer Rest}\`
-    ? Rest extends \`sub-\${infer Inner}\`
-      ? Inner extends number | string
-        ? Inner extends string
-          ? Inner
-          : never
+   ? T extends \`prefix-\${infer Rest}\`
+     ? Rest extends \`sub-\${infer Inner}\`
+       ? Inner extends number | string
+         ? Inner extends string
+           ? Inner
+           : never
+         : never
+       : never
+     : never
+   : never;`,
+      errors: [{ messageId: "deepNesting" }],
+    },
+    // 3 levels exceeds custom maxDepth of 2
+    {
+      code: `type G<T> = T extends (infer A)[]
+    ? A extends (infer B)[]
+      ? B extends (infer C)[]
+        ? C
         : never
       : never
-    : never
-  : never;`,
-      errors: [{ messageId: "deepNesting" }],
+    : never;`,
+      options: [{ maxDepth: 2 }],
+      errors: [{ messageId: "deepNesting", data: { depth: "3" } }],
+    },
+    // 5 levels with maxDepth 4 reports depth 5
+    {
+      code: `type F<T> = T extends (infer A)[]
+   ? A extends (infer B)[]
+     ? B extends (infer C)[]
+       ? C extends (infer D)[]
+         ? D extends (infer E)[]
+           ? E
+           : never
+         : never
+       : never
+     : never
+   : never;`,
+      options: [{ maxDepth: 4 }],
+      errors: [{ messageId: "deepNesting", data: { depth: "5" } }],
     },
   ],
 });

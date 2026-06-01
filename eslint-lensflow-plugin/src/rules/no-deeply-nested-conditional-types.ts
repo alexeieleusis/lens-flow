@@ -7,7 +7,7 @@ export default createRule({
     type: "suggestion",
     docs: {
       description:
-        "Disallow conditional types nested more than 3 levels deep without intermediate named type aliases",
+        "Disallow conditional types nested more than 4 levels deep without intermediate named type aliases. Configurable via `maxDepth`",
     },
     messages: {
       deepNesting:
