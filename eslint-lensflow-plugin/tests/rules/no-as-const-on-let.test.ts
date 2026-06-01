@@ -8,6 +8,14 @@ ruleTester.run("no-as-const-on-let", rule, {
     `let count = 0;`,
     `const config = { host: "localhost", port: 3000 } as const;`,
     `var x = 1 as const;`,
+    // Regression: `findAsConst` must not escape the initializer subtree via
+    // the `parent` pointer and pick up an `as const` from another declaration
+    `const a = 1 as const;
+let b = 2;`,
+    // Regression: `as const` in an unrelated expression statement must not
+    // leak into the `let` initializer check via parent traversal
+    `process(config as const);
+let count = 0;`,
   ],
   invalid: [
     {
@@ -29,6 +37,13 @@ let b = 2 as const;`,
     },
     {
       code: `let nested = { inner: "value" as const };`,
+      errors: [{ messageId: "asConstOnLet" }],
+    },
+    // Regression: sibling declarator in the same `let` has `as const` — the
+    // walker must stay inside each declarator's init subtree and not escape
+    // through `parent` to pick up the sibling's `as const`.
+    {
+      code: `let a = 1 as const, b = 2;`,
       errors: [{ messageId: "asConstOnLet" }],
     },
   ],
