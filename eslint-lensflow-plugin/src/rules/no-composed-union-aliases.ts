@@ -56,14 +56,14 @@ export default createRule({
 
         if (members.length < 2) return;
 
-        const composedAliases: string[] = [];
+        let hasUnionAlias = false;
 
         for (const member of members) {
-          const { isUnion, refName } = analyzeUnionMember(member);
-          if (isUnion && refName) composedAliases.push(refName);
+          const { isUnion } = analyzeUnionMember(member);
+          if (isUnion) { hasUnionAlias = true; break; }
         }
 
-        if (composedAliases.length > 0) {
+        if (hasUnionAlias) {
           context.report({
             node,
             messageId: "composed",
