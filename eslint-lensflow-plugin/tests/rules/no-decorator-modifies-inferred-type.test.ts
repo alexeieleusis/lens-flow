@@ -47,6 +47,38 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
       version: string;
       author: string;
     }`,
+
+    // Nested class with declared property inside namespace — valid
+    `function addId(target: unknown, ctx: ClassDecoratorContext) {
+      Object.defineProperty(target, "id", { value: Math.random() });
+    }
+
+    namespace MyNS {
+      @addId
+      class Entity {
+        id: number;
+      }
+    }`,
+
+    // Arrow function decorator with property declared on class
+    `const addId = (target: unknown, ctx: ClassDecoratorContext) => {
+      Object.defineProperty(target, "id", { value: Math.random() });
+    };
+
+    @addId
+    class Entity {
+      id: number;
+    }`,
+
+    // Function expression decorator with property declared on class
+    `const addId = function(target: unknown, ctx: ClassDecoratorContext) {
+      Object.defineProperty(target, "id", { value: Math.random() });
+    };
+
+    @addId
+    class Entity {
+      id: number;
+    }`,
   ],
   invalid: [
     {
@@ -85,6 +117,81 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
       class Entity {
         name: string;
       }`,
+      errors: [{ messageId: "decoratorModifiesInferredType" }],
+    },
+
+    // Nested inside namespace
+    {
+      code: `function addId(target: unknown, ctx: ClassDecoratorContext) {
+        Object.defineProperty(target, "id", { value: Math.random() });
+      }
+
+      namespace MyNS {
+        @addId
+        class Entity {}
+      }`,
+      errors: [{ messageId: "decoratorModifiesInferredType" }],
+    },
+
+    // Nested inside if block
+    {
+      code: `function addId(target: unknown, ctx: ClassDecoratorContext) {
+        Object.defineProperty(target, "id", { value: Math.random() });
+      }
+
+      if (true) {
+        @addId
+        class Entity {}
+      }`,
+      errors: [{ messageId: "decoratorModifiesInferredType" }],
+    },
+
+    // Nested inside IIFE
+    {
+      code: `function addId(target: unknown, ctx: ClassDecoratorContext) {
+        Object.defineProperty(target, "id", { value: Math.random() });
+      }
+
+      (function() {
+        @addId
+        class Entity {}
+      })();`,
+      errors: [{ messageId: "decoratorModifiesInferredType" }],
+    },
+
+    // Nested inside function
+    {
+      code: `function addId(target: unknown, ctx: ClassDecoratorContext) {
+        Object.defineProperty(target, "id", { value: Math.random() });
+      }
+
+      function factory() {
+        @addId
+        class Entity {}
+        return Entity;
+      }`,
+      errors: [{ messageId: "decoratorModifiesInferredType" }],
+    },
+
+    // Arrow function decorator adding undeclared property
+    {
+      code: `const addId = (target: unknown, ctx: ClassDecoratorContext) => {
+        Object.defineProperty(target, "id", { value: Math.random() });
+      };
+
+      @addId
+      class Entity {}`,
+      errors: [{ messageId: "decoratorModifiesInferredType" }],
+    },
+
+    // Function expression decorator adding undeclared property
+    {
+      code: `const addId = function(target: unknown, ctx: ClassDecoratorContext) {
+        Object.defineProperty(target, "id", { value: Math.random() });
+      };
+
+      @addId
+      class Entity {}`,
       errors: [{ messageId: "decoratorModifiesInferredType" }],
     },
   ],

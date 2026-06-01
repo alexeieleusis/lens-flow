@@ -20,9 +20,9 @@ function isClassDecoratorContextParam(param: TSESTree.Parameter): boolean {
   return false;
 }
 
-function extractDefinePropertyCall(
+function extractDefinePropertyCalls(
   node: TSESTree.CallExpression,
-): string | null {
+): string[] | null {
   const { callee } = node;
   if (
     callee.type === "MemberExpression" &&
@@ -31,17 +31,34 @@ function extractDefinePropertyCall(
     callee.object.name === "Object" &&
     callee.property.type === "Identifier" &&
     (callee.property.name === "defineProperty" ||
-      callee.property.name === "setProperty")
+      callee.property.name === "defineProperties")
   ) {
-    const propArg = node.arguments[1];
-    if (
-      propArg?.type === "Literal" &&
-      typeof propArg.value === "string"
-    ) {
-      return propArg.value;
-    }
-    if (propArg?.type === "Identifier") {
-      return propArg.name;
+    if (callee.property.name === "defineProperty") {
+      const propArg = node.arguments[1];
+      if (
+        propArg?.type === "Literal" &&
+        typeof propArg.value === "string"
+      ) {
+        return [propArg.value];
+      }
+      if (propArg?.type === "Identifier") {
+        return [propArg.name];
+      }
+    } else {
+      const descArg = node.arguments[1];
+      if (descArg?.type === "ObjectExpression") {
+        const names: string[] = [];
+        for (const prop of descArg.properties) {
+          if (prop.type === "Property") {
+            if (prop.key.type === "Identifier" && !prop.computed) {
+              names.push(prop.key.name);
+            } else if (prop.key.type === "Literal" && typeof prop.key.value === "string") {
+              names.push(prop.key.value);
+            }
+          }
+        }
+        if (names.length > 0) return names;
+      }
     }
   }
   return null;
@@ -93,24 +110,21 @@ export default createRule({
         "Decorator adds properties {{properties}} via Object.defineProperty that TypeScript cannot infer. Declare them on the class instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T17-macros-metaprogramming.md",
     },
     schema: [],
+    fixable: undefined,
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"decoratorModifiesInferredType" | "decoratorModifiesMultipleProperties", []>) {
     const decoratorFuncProps = new Map<string, Set<string>>();
-    let insideDecoratorFunc = false;
-    let currentDecoratorFuncName: string | null = null;
+    const decoratorFuncStack: string[] = [];
+    const decoratedClasses: TSESTree.ClassDeclaration[] = [];
 
-    function enterDecoratorFunc(name?: string) {
-      insideDecoratorFunc = true;
-      currentDecoratorFuncName = name ?? null;
-      if (currentDecoratorFuncName) {
-        decoratorFuncProps.set(currentDecoratorFuncName, new Set());
-      }
+    function enterDecoratorFunc(name: string) {
+      decoratorFuncStack.push(name);
+      decoratorFuncProps.set(name, new Set());
     }
 
     function exitDecoratorFunc() {
-      insideDecoratorFunc = false;
-      currentDecoratorFuncName = null;
+      decoratorFuncStack.pop();
     }
 
     function reportUndeclaredProperties(
@@ -128,25 +142,6 @@ export default createRule({
           properties: `"${undeclared.join('", "')}"`,
         },
       });
-    }
-
-    function checkDecoratedClasses(
-      ast: TSESTree.Program,
-    ) {
-      const decoratedClasses: TSESTree.ClassDeclaration[] = [];
-      for (const stmt of ast.body) {
-        if (
-          stmt.type === "ClassDeclaration" &&
-          stmt.decorators != null &&
-          stmt.decorators.length > 0
-        ) {
-          decoratedClasses.push(stmt);
-        }
-      }
-
-      for (const classNode of decoratedClasses) {
-        checkClassDecorators(classNode);
-      }
     }
 
     function checkClassDecorators(
@@ -172,6 +167,12 @@ export default createRule({
     }
 
     return {
+      ClassDeclaration(node) {
+        if (node.decorators != null && node.decorators.length > 0) {
+          decoratedClasses.push(node);
+        }
+      },
+
       FunctionDeclaration(node) {
         if (node.params.some(isClassDecoratorContextParam) && node.id) {
           enterDecoratorFunc(node.id.name);
@@ -187,19 +188,42 @@ export default createRule({
         }
       },
 
+      VariableDeclarator(node) {
+        if (node.id.type !== "Identifier" || !node.init) return;
+        if (
+          (node.init.type === "ArrowFunctionExpression" ||
+            node.init.type === "FunctionExpression") &&
+          node.init.params.some(isClassDecoratorContextParam)
+        ) {
+          enterDecoratorFunc(node.id.name);
+        }
+      },
+
+      "VariableDeclarator:exit"(node) {
+        if (node.id.type !== "Identifier" || !node.init) return;
+        if (
+          (node.init.type === "ArrowFunctionExpression" ||
+            node.init.type === "FunctionExpression") &&
+          node.init.params.some(isClassDecoratorContextParam)
+        ) {
+          exitDecoratorFunc();
+        }
+      },
+
       CallExpression(node) {
-        if (!insideDecoratorFunc || !currentDecoratorFuncName) return;
-        const propName = extractDefinePropertyCall(node);
-        if (propName) {
-          const props = decoratorFuncProps.get(currentDecoratorFuncName)!;
-          props.add(propName);
+        if (decoratorFuncStack.length === 0) return;
+        const currentName = decoratorFuncStack[decoratorFuncStack.length - 1];
+        const propNames = extractDefinePropertyCalls(node);
+        if (propNames) {
+          const props = decoratorFuncProps.get(currentName)!;
+          for (const name of propNames) props.add(name);
         }
       },
 
       "Program:exit"() {
-        const sourceCode = context.sourceCode;
-        const ast = sourceCode.ast;
-        checkDecoratedClasses(ast);
+        for (const classNode of decoratedClasses) {
+          checkClassDecorators(classNode);
+        }
       },
     };
   },
