@@ -15,7 +15,13 @@ function computeNestingDepth(
             return null;
           })
           .filter((v): v is TSESTree.Expression => v !== null)
-      : (node.elements.filter((e) => e !== null && e.type !== "SpreadElement") as TSESTree.Expression[]);
+      : node.elements
+           .map((e) => {
+             if (e === null) return null;
+             if (e.type === "SpreadElement") return e.argument;
+             return e;
+           })
+           .filter((v): v is TSESTree.Expression => v !== null);
 
   for (const value of values) {
     const unwrapped =
