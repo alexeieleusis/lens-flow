@@ -1,4 +1,4 @@
-import { TSESTree, TSESLint } from '@typescript-eslint/utils';
+import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
 function getChain(
@@ -10,7 +10,10 @@ function getChain(
   const nodes: TSESTree.TSNonNullExpression[] = [node];
   let current: TSESTree.Node = node.expression;
 
+  let hasMemberAccess = false;
+
   while (current.type === "MemberExpression") {
+    hasMemberAccess = true;
     if (current.object.type === "TSNonNullExpression") {
       nodes.push(current.object);
       current = current.object.expression;
@@ -19,7 +22,7 @@ function getChain(
     }
   }
 
-  if (current.type === "TSNonNullExpression") {
+  if (hasMemberAccess && current.type === "TSNonNullExpression") {
     nodes.push(current);
   }
 
@@ -57,7 +60,7 @@ export default createRule({
     const [{ minChain } = { minChain: 2 }] = context.options ?? [
       { minChain: 2 },
     ];
-    const reported = new Set();
+    const reported = new Set<TSESTree.TSNonNullExpression>();
 
     return {
       TSNonNullExpression(node) {
