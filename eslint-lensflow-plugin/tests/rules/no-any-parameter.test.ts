@@ -31,5 +31,21 @@ ruleTester.run("no-any-parameter", rule, {
       code: `type BadHandler = (data: any) => void;`,
       errors: [{ messageId: "anyParam" }],
     },
+    {
+      code: `const obj = { greet: function(msg: any) { return msg; } };`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    {
+      code: `interface Service { handle(payload: any): void; }`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    {
+      code: `declare function legacyApi(input: any): string;`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    {
+      code: `class App { constructor(public config: any) {} }`,
+      errors: [{ messageId: "anyParam" }],
+    },
   ],
 });
