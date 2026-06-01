@@ -8,6 +8,9 @@ function getParamName(param: TSESTree.Parameter): string {
   if (param.type === "Identifier") {
     return param.name;
   }
+  if (param.type === "RestElement") {
+    return param.argument.type === "Identifier" ? param.argument.name : "unnamed";
+  }
   return "unnamed";
 }
 
@@ -16,6 +19,13 @@ function isParamAny(param: TSESTree.Parameter): boolean {
     return param.left.typeAnnotation?.typeAnnotation.type === "TSAnyKeyword";
   }
   if (param.type === "Identifier") {
+    return param.typeAnnotation?.typeAnnotation.type === "TSAnyKeyword";
+  }
+  if (
+    param.type === "RestElement" ||
+    param.type === "ObjectPattern" ||
+    param.type === "ArrayPattern"
+  ) {
     return param.typeAnnotation?.typeAnnotation.type === "TSAnyKeyword";
   }
   return false;
@@ -40,14 +50,42 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"anyParam" | "anyReturn", []>) {
-    function checkFunction(
-      node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression,
-    ) {
+    function isStandalone(node: TSESTree.Node) {
       const parent = node.parent;
-      if (
-        parent?.type !== "Program" &&
-        parent?.type !== "ExportNamedDeclaration"
-      ) {
+      if (!parent) return false;
+
+      // Top-level: `function foo() {}` or `export function foo() {}`
+      if (parent.type === "Program" || parent.type === "ExportNamedDeclaration") {
+        return true;
+      }
+
+      // export default function foo() {}
+      if (parent.type === "ExportDefaultDeclaration") {
+        return true;
+      }
+
+      // `const foo = function() {}` / `const foo = () => {}`
+      if (parent.type === "VariableDeclarator") {
+        const decl = parent.parent;
+        if (decl?.type === "VariableDeclaration") {
+          const scope = decl.parent;
+          return (
+            scope?.type === "Program" ||
+            scope?.type === "ExportNamedDeclaration"
+          );
+        }
+      }
+
+      return false;
+    }
+
+    function checkFunction(
+      node:
+        | TSESTree.FunctionDeclaration
+        | TSESTree.FunctionExpression
+        | TSESTree.ArrowFunctionExpression,
+    ) {
+      if (!isStandalone(node)) {
         return;
       }
 
@@ -83,6 +121,7 @@ export default createRule({
     return {
       FunctionDeclaration: checkFunction,
       FunctionExpression: checkFunction,
+      ArrowFunctionExpression: checkFunction,
     };
   },
 });
