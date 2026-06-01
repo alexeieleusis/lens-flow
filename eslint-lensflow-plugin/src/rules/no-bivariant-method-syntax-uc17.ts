@@ -8,7 +8,7 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow method-signature syntax in interfaces and type literals which causes bivariant parameter checking that bypasses --strictFunctionTypes",
+        "Disallow method-signature syntax in interfaces and type literals that causes bivariant parameter checking, bypassing `--strictFunctionTypes`",
     },
     messages: {
       methodSyntax:
