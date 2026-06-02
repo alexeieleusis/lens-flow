@@ -53,9 +53,8 @@ export default createRule({
           }
           if (depth >= maxDepth) {
             const classNode = context.sourceCode.ast.body.find(
-              (n): n is TSESTree.ClassDeclaration =>
-                n.type === "ClassDeclaration" && n.id !== null && n.id.name === className,
-            );
+              (n) => n.type === "ClassDeclaration" && n.id !== null && n.id.name === className,
+            ) as TSESTree.ClassDeclaration | undefined;
             if (classNode) {
               context.report({
                 node: classNode,
