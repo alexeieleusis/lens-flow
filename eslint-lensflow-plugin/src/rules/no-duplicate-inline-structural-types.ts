@@ -8,15 +8,17 @@ type Entry = {
 
 function getTypeName(node: TSESTree.EntityName): string {
   if (node.type === "Identifier") return node.name;
-  if (node.type === "TSQualifiedName") {
-    const left = getTypeName(node.left);
-    let right: string;
-    if (node.right.type === "Identifier") {
-      right = node.right.name;
+  if (node.type === "MemberExpression") {
+    const obj = getTypeName(node.object);
+    let prop: string;
+    if (node.property.type === "Identifier") {
+      prop = node.property.name;
+    } else if (node.property.type === "Literal") {
+      prop = String(node.property.value);
     } else {
-      right = node.right.type;
+      prop = node.property.type;
     }
-    return `${left}.${right}`;
+    return `${obj}.${prop}`;
   }
   return node.type;
 }
@@ -30,13 +32,11 @@ function serializeTypeNode(node: TSESTree.TypeNode): string {
     case "TSLiteralType": {
       const lit = node.literal;
       if (lit.type === "Literal") return String(lit.value);
+      if (lit.type === "Identifier") return lit.name;
       if (lit.type === "TemplateLiteral") {
         return lit.quasis.map((q) => q.value.cooked ?? "").join("");
       }
-      if (lit.type === "UnaryExpression") {
-        return `-${lit.argument}`;
-      }
-      return "literal";
+      return lit.type;
     }
     case "TSUnionType":
       return `(${node.types.map(serializeTypeNode).join("|")})`;
@@ -44,6 +44,8 @@ function serializeTypeNode(node: TSESTree.TypeNode): string {
       return `(${node.types.map(serializeTypeNode).join("&")})`;
     case "TSArrayType":
       return `${serializeTypeNode(node.elementType)}[]`;
+    case "TSParenthesizedType":
+      return serializeTypeNode(node.typeAnnotation);
     case "TSOptionalType":
       return `${serializeTypeNode(node.typeAnnotation)}?`;
     case "TSRestType":
@@ -61,13 +63,8 @@ function serializeTypeNode(node: TSESTree.TypeNode): string {
       return `[${node.elementTypes.map(serializeTypeNode).join(",")}]`;
     case "TSNamedTupleMember":
       return `${node.label.name}: ${serializeTypeNode(node.elementType)}`;
-    default: {
-      const maybeParen = node as unknown as { type: string; typeAnnotation?: TSESTree.TypeNode };
-      if (maybeParen.type === "TSParenthesizedType" && maybeParen.typeAnnotation) {
-        return serializeTypeNode(maybeParen.typeAnnotation);
-      }
+    default:
       return node.type;
-    }
   }
 }
 
