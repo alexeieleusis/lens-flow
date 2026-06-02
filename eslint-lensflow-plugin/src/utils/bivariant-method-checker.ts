@@ -25,10 +25,15 @@ export function createBivariantMethodVisitor(
       })
       .join(", ");
 
+    const returnType =
+      member.returnType?.typeAnnotation != null
+        ? context.getSourceCode().getText(member.returnType.typeAnnotation)
+        : "void";
+
     context.report({
       node: member,
       messageId: "methodSyntax",
-      data: { name, params },
+      data: { name, params, returnType },
     });
   };
 
