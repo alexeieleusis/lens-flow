@@ -25,17 +25,17 @@ const params = member.params
       })
       .join(", ");
 
-     const sourceCode = context.sourceCode;
-      const returnType = member.returnType
-        ? sourceCode.getText(member.returnType.typeAnnotation)
+   const returnType =
+      member.returnType?.typeAnnotation != null
+        ? context.getSourceCode().getText(member.returnType.typeAnnotation)
         : "void";
 
-      context.report({
-        node: member,
-        messageId: "methodSyntax",
-        data: { name, params, returnType },
-      });
-    };
+    context.report({
+      node: member,
+      messageId: "methodSyntax",
+      data: { name, params, returnType },
+    });
+  };
 
   return {
     TSInterfaceBody(node) {
