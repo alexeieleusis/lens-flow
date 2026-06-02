@@ -15,11 +15,6 @@ function getTypeName(node: TSESTree.EntityName): string {
 }
 
 function serializeTypeNode(node: TSESTree.TypeNode): string {
-  // Handle TSParenthesizedType which may not be in the TypeNode union
-  if ((node as any).type === "TSParenthesizedType") {
-    return serializeTypeNode((node as any).typeAnnotation);
-  }
-
   switch (node.type) {
     case "TSTypeReference":
       return getTypeName(node.typeName);
@@ -28,13 +23,11 @@ function serializeTypeNode(node: TSESTree.TypeNode): string {
     case "TSLiteralType": {
       const lit = node.literal;
       if (lit.type === "Literal") return String(lit.value);
+      if (lit.type === "Identifier") return lit.name;
       if (lit.type === "TemplateLiteral") {
-        return lit.quasis.map((q: any) => q.value.cooked ?? "").join("");
+        return lit.quasis.map((q) => q.value.cooked ?? "").join("");
       }
-      if ((lit as any).type === "UnaryExpression") {
-        return `${lit.operator}${serializeTypeNode(lit.argument as any)}`;
-      }
-      return (lit as any).name ?? (lit as any).type;
+      return lit.type;
     }
     case "TSUnionType":
       return `(${node.types.map(serializeTypeNode).join("|")})`;
@@ -42,6 +35,8 @@ function serializeTypeNode(node: TSESTree.TypeNode): string {
       return `(${node.types.map(serializeTypeNode).join("&")})`;
     case "TSArrayType":
       return `${serializeTypeNode(node.elementType)}[]`;
+    case "TSParenthesizedType":
+      return serializeTypeNode(node.typeAnnotation);
     case "TSOptionalType":
       return `${serializeTypeNode(node.typeAnnotation)}?`;
     case "TSRestType":
