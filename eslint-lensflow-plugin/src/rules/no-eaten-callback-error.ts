@@ -38,20 +38,9 @@ function collectIdentifiers(node: TSESTree.Node, visited = new WeakSet<object>()
   return ids;
 }
 
-function isConsoleLogging(node: TSESTree.Node): boolean {
-  if (node.type !== "CallExpression") return false;
-  const { callee } = node;
-  if (callee.type !== "MemberExpression") return false;
-  if (callee.object.type !== "Identifier" || callee.object.name !== "console")
-    return false;
-  if (callee.property.type !== "Identifier") return false;
-  return callee.property.name === "error" || callee.property.name === "warn";
-}
-
 function reportEatenErrorIfApplicable(
   callback: TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression,
   errorParam: string | undefined,
-  allowLogging: boolean,
   context: Parameters<ReturnType<typeof createRule>["create"]>[0],
 ) {
   if (callback.body.type === "BlockStatement") {
@@ -76,12 +65,7 @@ function reportEatenErrorIfApplicable(
     }
   } else {
     const bodyIdentifiers = collectIdentifiers(callback.body);
-    const usesErrorParam = errorParam && bodyIdentifiers.includes(errorParam);
-
-    if (allowLogging && usesErrorParam && isConsoleLogging(callback.body))
-      return;
-
-    if (errorParam && !usesErrorParam) {
+    if (errorParam && !bodyIdentifiers.includes(errorParam)) {
       context.report({
         node: callback,
         messageId: "ignoredParam",
@@ -105,32 +89,17 @@ export default createRule({
       ignoredParam:
         "The .catch() handler does not use the error parameter '{{param}}'. Handle the error or rethrow it. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T12-effect-tracking.md",
     },
-    schema: [
-      {
-        type: "object",
-        properties: {
-          allowLogging: {
-            type: "boolean",
-          },
-        },
-        additionalProperties: false,
-      },
-    ],
+    schema: [],
     fixable: undefined,
   },
-  defaultOptions: [{ allowLogging: false }],
-  create(context: TSESLint.RuleContext<"emptyCatch" | "ignoredParam", [{ allowLogging: boolean }]>) {
-    const opts = context.options[0] as { allowLogging?: boolean } | undefined;
-    const allowLogging = opts?.allowLogging ?? false;
-
+  defaultOptions: [],
+  create(context: TSESLint.RuleContext<"emptyCatch" | "ignoredParam", []>) {
     return {
       CallExpression(node) {
         const { callee, arguments: args } = node;
         if (callee.type !== "MemberExpression") return;
         if (callee.property.type !== "Identifier") return;
-        if (callee.property.name !== "catch") return;
-
- 
+       if (callee.property.name !== "catch") return;
 
         const callback = args[0];
         if (!callback) return;
@@ -140,17 +109,11 @@ export default createRule({
         )
           return;
 
-        const paramNames = callback.params.map(
-          (p) => (p.type === "Identifier" ? p.name : null),
-        );
-        const errorParam = paramNames.find((n) => n !== null);
+        const errorParam = callback.params
+          .filter((p): p is TSESTree.Identifier => p.type === "Identifier")
+          .map((p) => p.name)[0];
 
-        reportEatenErrorIfApplicable(
-          callback,
-          errorParam,
-          allowLogging,
-          context,
-        );
+        reportEatenErrorIfApplicable(callback, errorParam, context);
       },
     };
   },
