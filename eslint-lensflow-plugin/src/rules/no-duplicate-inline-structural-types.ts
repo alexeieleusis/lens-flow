@@ -8,16 +8,22 @@ type Entry = {
 
 function getTypeName(node: TSESTree.EntityName): string {
   if (node.type === "Identifier") return node.name;
-  if (node.type === "TSQualifiedName") {
-    return `${getTypeName(node.left)}.${node.right.name}`;
+  if (node.type === "MemberExpression") {
+    const obj = getTypeName(node.object);
+    let prop: string;
+    if (node.property.type === "Identifier") {
+      prop = node.property.name;
+    } else if (node.property.type === "Literal") {
+      prop = String(node.property.value);
+    } else {
+      prop = node.property.type;
+    }
+    return `${obj}.${prop}`;
   }
   return node.type;
 }
 
 function serializeTypeNode(node: TSESTree.TypeNode): string {
-  if ((node as any).type === "TSParenthesizedType") {
-    return serializeTypeNode((node as any).typeAnnotation);
-  }
   switch (node.type) {
     case "TSTypeReference":
       return getTypeName(node.typeName);
@@ -26,11 +32,11 @@ function serializeTypeNode(node: TSESTree.TypeNode): string {
     case "TSLiteralType": {
       const lit = node.literal;
       if (lit.type === "Literal") return String(lit.value);
-      if (lit.type === "UnaryExpression") return `${lit.operator}${(lit.argument as TSESTree.Literal).value}`;
+      if (lit.type === "Identifier") return lit.name;
       if (lit.type === "TemplateLiteral") {
         return lit.quasis.map((q) => q.value.cooked ?? "").join("");
       }
-      return (lit as TSESTree.BaseNode).type;
+      return lit.type;
     }
     case "TSUnionType":
       return `(${node.types.map(serializeTypeNode).join("|")})`;
@@ -38,6 +44,8 @@ function serializeTypeNode(node: TSESTree.TypeNode): string {
       return `(${node.types.map(serializeTypeNode).join("&")})`;
     case "TSArrayType":
       return `${serializeTypeNode(node.elementType)}[]`;
+    case "TSParenthesizedType":
+      return serializeTypeNode(node.typeAnnotation);
     case "TSOptionalType":
       return `${serializeTypeNode(node.typeAnnotation)}?`;
     case "TSRestType":
