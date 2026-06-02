@@ -6,34 +6,134 @@ type Entry = {
   node: TSESTree.TSTypeLiteral;
 };
 
+function getTypeName(node: TSESTree.EntityName): string {
+  if (node.type === "Identifier") return node.name;
+  if (node.type === "MemberExpression") {
+    const obj = getTypeName(node.object);
+    let prop: string;
+    if (node.property.type === "Identifier") {
+      prop = node.property.name;
+    } else if (node.property.type === "Literal") {
+      prop = String(node.property.value);
+    } else {
+      prop = node.property.type;
+    }
+    return `${obj}.${prop}`;
+  }
+  return node.type;
+}
+
+function serializeTypeNode(node: TSESTree.TypeNode): string {
+  switch (node.type) {
+    case "TSTypeReference":
+      return getTypeName(node.typeName);
+    case "TSTypeLiteral":
+      return canonicalize(node);
+    case "TSLiteralType": {
+      const lit = node.literal;
+      if (lit.type === "Literal") return String(lit.value);
+      if (lit.type === "Identifier") return lit.name;
+      if (lit.type === "TemplateLiteral") {
+        return lit.quasis.map((q) => q.value.cooked ?? "").join("");
+      }
+      return lit.type;
+    }
+    case "TSUnionType":
+      return `(${node.types.map(serializeTypeNode).join("|")})`;
+    case "TSIntersectionType":
+      return `(${node.types.map(serializeTypeNode).join("&")})`;
+    case "TSArrayType":
+      return `${serializeTypeNode(node.elementType)}[]`;
+    case "TSParenthesizedType":
+      return serializeTypeNode(node.typeAnnotation);
+    case "TSOptionalType":
+      return `${serializeTypeNode(node.typeAnnotation)}?`;
+    case "TSRestType":
+      return `...${serializeTypeNode(node.typeAnnotation)}`;
+    case "TSIndexedAccessType":
+      return `${serializeTypeNode(node.objectType)}[${serializeTypeNode(node.indexType)}]`;
+    case "TSTemplateLiteralType": {
+      const parts: string[] = [];
+      for (const elem of node.quasis) {
+        parts.push(elem.value.cooked ?? "");
+      }
+      return `\`${parts.join("")}\``;
+    }
+    case "TSTupleType":
+      return `[${node.elementTypes.map(serializeTypeNode).join(",")}]`;
+    case "TSNamedTupleMember":
+      return `${node.label.name}: ${serializeTypeNode(node.elementType)}`;
+    default:
+      return node.type;
+  }
+}
+
 function serializeTypeAnnotation(node: TSESTree.TSTypeAnnotation): string {
   if (node.typeAnnotation) {
-    return node.typeAnnotation.type;
+    return serializeTypeNode(node.typeAnnotation);
   }
   return "unknown";
 }
 
+function memberKey(m: TSESTree.TSPropertySignature | TSESTree.TSMethodSignature): string {
+  if (m.key.type === "Identifier") return m.key.name;
+  if (m.key.type === "Literal") return String(m.key.value);
+  return m.key.type;
+}
+
+function paramToString(p: TSESTree.Parameter): string {
+  const name = p.type === "Identifier" ? p.name : p.type;
+  if (p.type === "TSParameterProperty") {
+    const ann = p.parameter.typeAnnotation;
+    const typeStr = ann ? serializeTypeAnnotation(ann) : "unknown";
+    return `${name}:${typeStr}`;
+  }
+  const typeAnn = p.typeAnnotation
+    ? serializeTypeAnnotation(p.typeAnnotation)
+    : "unknown";
+  return `${name}:${typeAnn}`;
+}
+
 function canonicalize(node: TSESTree.TSTypeLiteral): string {
-  const members = node.members
-    .filter(
-      (m): m is TSESTree.TSPropertySignature =>
-        m.type === "TSPropertySignature",
-    )
-    .map((m) => {
-      let key: string;
-      if (m.key.type === "Identifier") {
-        key = m.key.name;
-      } else {
-        key = m.key.type === "Literal" ? String(m.key.value) : m.key.type;
-      }
+  const parts: string[] = [];
+
+  for (const m of node.members) {
+    if (m.type === "TSPropertySignature") {
       const typeAnn = m.typeAnnotation
         ? serializeTypeAnnotation(m.typeAnnotation)
         : "unknown";
-      return { key, type: typeAnn };
-    })
-    .sort((a, b) => a.key.localeCompare(b.key));
+      const mods = [m.readonly ? "R" : "", m.optional ? "?" : ""].filter(Boolean).join("");
+      parts.push(`P:${memberKey(m)}:${typeAnn}${mods}`);
+    } else if (m.type === "TSMethodSignature") {
+      const params = m.params.map(paramToString).join(",");
+      const ret = m.returnType
+        ? serializeTypeAnnotation(m.returnType)
+        : "void";
+      const mods = [m.readonly ? "R" : "", m.optional ? "?" : ""].filter(Boolean).join("");
+      parts.push(`M:${memberKey(m)}(${params}):${ret}${mods}`);
+    } else if (m.type === "TSCallSignatureDeclaration") {
+      const params = m.params.map(paramToString).join(",");
+      const ret = m.returnType
+        ? serializeTypeAnnotation(m.returnType)
+        : "void";
+      parts.push(`C(${params}):${ret}`);
+    } else if (m.type === "TSConstructSignatureDeclaration") {
+      const params = m.params.map(paramToString).join(",");
+      const ret = m.returnType
+        ? serializeTypeAnnotation(m.returnType)
+        : "unknown";
+      parts.push(`N(${params}):${ret}`);
+    } else if (m.type === "TSIndexSignature") {
+      const params = m.parameters.map(paramToString).join(",");
+      const ret = m.typeAnnotation
+        ? serializeTypeAnnotation(m.typeAnnotation)
+        : "unknown";
+      parts.push(`I(${params}):${ret}`);
+    }
+  }
 
-  return members.map((m) => `${m.key}:${m.type}`).join("|");
+  parts.sort();
+  return parts.join("|");
 }
 
 export default createRule({

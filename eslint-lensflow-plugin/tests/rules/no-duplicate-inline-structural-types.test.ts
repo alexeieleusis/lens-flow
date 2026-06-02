@@ -25,6 +25,30 @@ function c(c: { host: string; port: number; extra: boolean }) {}`,
       code: `const fn = (c: { x: number }) => c * 2;
 const fn2 = (c: { x: string }) => c.length;`,
     },
+    {
+      code: `type UserId = string & { __brand: 'UserId' };
+type ProductId = string & { __brand: 'ProductId' };
+type OrderId = string & { __brand: 'OrderId' };
+
+function a(c: { value: UserId }) {}
+function b(c: { value: ProductId }) {}
+function c(c: { value: OrderId }) {}`,
+    },
+    {
+      code: `function a(c: { host: string }) {}
+function b(c: { host?: string }) {}
+function c(c: { host?: string }) {}`,
+    },
+    {
+      code: `function a(c: { readonly host: string }) {}
+function b(c: { host: string }) {}
+function c(c: { host: string }) {}`,
+    },
+    {
+      code: `function a(c: { host: string }) {}
+function b(c: { host?: string }) {}
+function c(c: { readonly host: string }) {}`,
+    },
   ],
   invalid: [
     {
