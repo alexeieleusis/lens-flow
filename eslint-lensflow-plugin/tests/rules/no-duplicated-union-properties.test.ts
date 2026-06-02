@@ -18,9 +18,21 @@ ruleTester.run("no-duplicated-union-properties", rule, {
 type Entity =
   | ({ type: "user" } & Saveable & { name: string })
   | ({ type: "post" } & Saveable & { title: string });`,
+    // Intersection-based union member: property repeated across literals in the same arm is NOT a duplicate
+    `type IntersectionMember =
+      | ({ kind: "a"; id: string } & { id: string; extra: number })
+      | { kind: "b"; name: string };`,
+    // Intersection members with no cross-arm duplicates
+    `type NoCrossDup =
+      | ({ kind: "a" } & { extraA: number })
+      | ({ kind: "b" } & { extraB: boolean });`,
+    // Non-discriminated union with duplicated properties — not reported (no discriminant)
+    `type NoDiscriminant =
+      | { id: string; name: string }
+      | { id: string; value: number };`,
   ],
   invalid: [
-    // From antipattern: id: string and save(): void duplicated across both members
+    // From antipattern: id: string duplicated across both members (save() is a method, not inspected by this rule)
     {
       code: `type Entity =
   | { type: "user"; id: string; name: string; save(): void; }
@@ -40,6 +52,13 @@ type Entity =
   | { kind: "pending"; id: number; time: Date }
   | { kind: "done"; id: number; result: string }
   | { kind: "failed"; id: number; error: string };`,
+      errors: [{ messageId: "duplicatedProperties" }],
+    },
+    // Intersection-based members: id: number duplicated across both arms
+    {
+      code: `type IntersectDup =
+  | ({ kind: "a" } & { id: number; extraA: string })
+  | ({ kind: "b" } & { id: number; extraB: boolean });`,
       errors: [{ messageId: "duplicatedProperties" }],
     },
   ],
