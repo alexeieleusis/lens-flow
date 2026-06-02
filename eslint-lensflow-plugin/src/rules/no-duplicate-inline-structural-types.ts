@@ -8,24 +8,29 @@ type Entry = {
 
 function getTypeName(node: TSESTree.EntityName): string {
   if (node.type === "Identifier") return node.name;
-  // TSQualifiedName: has .left (EntityName) and .right (Identifier)
-  const qualified = node as TSESTree.TSQualifiedName;
-  const obj = getTypeName(qualified.left);
-  return `${obj}.${qualified.right.name}`;
+  if (node.type === "MemberExpression") {
+    const obj = getTypeName(node.object);
+    let prop: string;
+    if (node.property.type === "Identifier") {
+      prop = node.property.name;
+    } else if (node.property.type === "Literal") {
+      prop = String(node.property.value);
+    } else {
+      prop = node.property.type;
+    }
+    return `${obj}.${prop}`;
+  }
+  return node.type;
 }
 
 function serializeTypeNode(node: TSESTree.TypeNode): string {
-  // TSParenthesizedType may not be in the TypeNode union in some @typescript-eslint versions
-  if ((node as any).type === "TSParenthesizedType") {
-    return serializeTypeNode((node as any).typeAnnotation);
-  }
   switch (node.type) {
     case "TSTypeReference":
       return getTypeName(node.typeName);
     case "TSTypeLiteral":
       return canonicalize(node);
     case "TSLiteralType": {
-      const lit = node.literal as TSESTree.Literal | TSESTree.TemplateLiteral | TSESTree.UnaryExpression | TSESTree.Identifier;
+      const lit = node.literal;
       if (lit.type === "Literal") return String(lit.value);
       if (lit.type === "Identifier") return lit.name;
       if (lit.type === "TemplateLiteral") {
@@ -39,6 +44,8 @@ function serializeTypeNode(node: TSESTree.TypeNode): string {
       return `(${node.types.map(serializeTypeNode).join("&")})`;
     case "TSArrayType":
       return `${serializeTypeNode(node.elementType)}[]`;
+    case "TSParenthesizedType":
+      return serializeTypeNode(node.typeAnnotation);
     case "TSOptionalType":
       return `${serializeTypeNode(node.typeAnnotation)}?`;
     case "TSRestType":
