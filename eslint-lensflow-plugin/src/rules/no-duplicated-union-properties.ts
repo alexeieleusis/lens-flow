@@ -20,20 +20,24 @@ export default createRule({
   create(context: TSESLint.RuleContext<"duplicatedProperties", []>) {
     const collectMemberLiterals = (
       node: TSESTree.TSUnionType
-    ): TSESTree.TSTypeLiteral[] => {
-      const memberLiterals: TSESTree.TSTypeLiteral[] = [];
+    ): TSESTree.TSTypeLiteral[][] => {
+      const memberGroups: TSESTree.TSTypeLiteral[][] = [];
       for (const member of node.types) {
         if (member.type === "TSTypeLiteral") {
-          memberLiterals.push(member);
+          memberGroups.push([member]);
         } else if (member.type === "TSIntersectionType") {
+          const literals: TSESTree.TSTypeLiteral[] = [];
           for (const part of member.types) {
             if (part.type === "TSTypeLiteral") {
-              memberLiterals.push(part);
+              literals.push(part);
             }
+          }
+          if (literals.length > 0) {
+            memberGroups.push(literals);
           }
         }
       }
-      return memberLiterals;
+      return memberGroups;
     };
 
     const findDuplicatedProperties = (
@@ -57,8 +61,8 @@ export default createRule({
       TSUnionType(node) {
         const sourceCode = context.sourceCode;
 
-        const memberLiterals = collectMemberLiterals(node);
-        if (memberLiterals.length < 2) return;
+        const memberGroups = collectMemberLiterals(node);
+        if (memberGroups.length < 2) return;
 
         const propMap = new Map<string, Map<string, Set<number>>>();
         const litValues = new Map<string, Set<string>>();
@@ -103,17 +107,22 @@ export default createRule({
           propMap.set(propName, typeMap);
         };
 
-        memberLiterals.forEach((literal, idx) => processMember(literal, idx));
+        memberGroups.forEach((group, idx) => {
+          for (const literal of group) {
+            processMember(literal, idx);
+          }
+        });
 
         const discriminants = new Set<string>();
         for (const [propName, values] of litValues) {
-          if (values.size === memberLiterals.length) {
+          if (values.size === memberGroups.length) {
             discriminants.add(propName);
           }
         }
 
         const duplicated = findDuplicatedProperties(propMap, discriminants);
 
+        if (discriminants.size === 0) return;
         if (duplicated.length > 0) {
           context.report({
             node,
