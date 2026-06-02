@@ -1,5 +1,5 @@
 import ts from "typescript";
-import { ESLintUtils, TSESTree, TSESLint } from "@typescript-eslint/utils";
+import { ESLintUtils, TSESTree, TSESLint, AST_NODE_TYPES } from "@typescript-eslint/utils";
 import type { Definition } from "@typescript-eslint/scope-manager";
 import { createRule } from "../utils/rule-creator.js";
 import {
@@ -35,7 +35,7 @@ const ARRAY_TRANSFORM_METHODS = new Set([
 function hasBeenReassigned(
   variable: TSESLint.Scope.Variable,
   declarator: TSESTree.VariableDeclarator,
-  transformCall: TSESTree.CallExpression,
+  transformCall: TSESTree.Node,
 ): boolean {
   for (const reference of variable.references) {
     if (!reference.identifier) continue;
@@ -104,20 +104,16 @@ export default createRule({
       n: TSESTree.Node,
     ): TSESTree.AwaitExpression | null {
       let current: TSESTree.Node = n;
-      while (
-        current.type === "ParenthesizedExpression" ||
-        current.type === "TSAsExpression" ||
-        current.type === "TSTypeAssertion"
-      ) {
-        if (current.type === "ParenthesizedExpression") {
+      while (true) {
+        if (current.type === AST_NODE_TYPES.TSAsExpression) {
           current = current.expression;
-        } else if (current.type === "TSAsExpression") {
+        } else if (current.type === AST_NODE_TYPES.TSTypeAssertion) {
           current = current.expression;
         } else {
-          current = current.expression;
+          break;
         }
       }
-      return current.type === "AwaitExpression" ? current : null;
+      return current.type === AST_NODE_TYPES.AwaitExpression ? current : null;
     }
 
     return {
