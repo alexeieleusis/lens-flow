@@ -8,18 +8,22 @@ type Entry = {
 
 function getTypeName(node: TSESTree.EntityName): string {
   if (node.type === "Identifier") return node.name;
-  if (node.type === "ThisExpression") return "this";
-  // TSQualifiedName: left is EntityName, right is Identifier (e.g., "Foo.Bar.Baz")
-  const left = getTypeName(node.left);
-  return `${left}.${node.right.name}`;
+  if (node.type === "MemberExpression") {
+    const obj = getTypeName(node.object);
+    let prop: string;
+    if (node.property.type === "Identifier") {
+      prop = node.property.name;
+    } else if (node.property.type === "Literal") {
+      prop = String(node.property.value);
+    } else {
+      prop = node.property.type;
+    }
+    return `${obj}.${prop}`;
+  }
+  return node.type;
 }
 
 function serializeTypeNode(node: TSESTree.TypeNode): string {
-  // TSParenthesizedType exists at runtime but isn't in the type definitions
-  if ((node.type as string) === "TSParenthesizedType") {
-    const paren = node as unknown as { typeAnnotation: TSESTree.TypeNode };
-    return serializeTypeNode(paren.typeAnnotation);
-  }
   switch (node.type) {
     case "TSTypeReference":
       return getTypeName(node.typeName);
@@ -28,11 +32,10 @@ function serializeTypeNode(node: TSESTree.TypeNode): string {
     case "TSLiteralType": {
       const lit = node.literal;
       if (lit.type === "Literal") return String(lit.value);
+      if (lit.type === "Identifier") return lit.name;
       if (lit.type === "TemplateLiteral") {
         return lit.quasis.map((q) => q.value.cooked ?? "").join("");
       }
-      // UnaryExpression (e.g., -1n for negative bigint literals)
-      if (lit.argument.type === "Literal") return `${lit.operator}${lit.argument.value}`;
       return lit.type;
     }
     case "TSUnionType":
@@ -41,6 +44,8 @@ function serializeTypeNode(node: TSESTree.TypeNode): string {
       return `(${node.types.map(serializeTypeNode).join("&")})`;
     case "TSArrayType":
       return `${serializeTypeNode(node.elementType)}[]`;
+    case "TSParenthesizedType":
+      return serializeTypeNode(node.typeAnnotation);
     case "TSOptionalType":
       return `${serializeTypeNode(node.typeAnnotation)}?`;
     case "TSRestType":
