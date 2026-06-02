@@ -6,23 +6,10 @@ type Entry = {
   node: TSESTree.TSTypeLiteral;
 };
 
-function extractMemberName(expr: TSESTree.Expression | TSESTree.PrivateIdentifier): string {
-  if (expr.type === "Identifier") return expr.name;
-  if (expr.type === "MemberExpression") {
-    return `${extractMemberName(expr.object)}.${extractMemberName(expr.property)}`;
-  }
-  if (expr.type === "ThisExpression") return "this";
-  if (expr.type === "PrivateIdentifier") return `#${expr.name}`;
-  return expr.type;
-}
-
-function getTypeName(node: TSESTree.EntityName | TSESTree.MemberExpression): string {
+function getTypeName(node: TSESTree.EntityName): string {
   if (node.type === "Identifier") return node.name;
-  if (node.type === "TSQualifiedName") {
-    return `${getTypeName(node.left)}.${getTypeName(node.right)}`;
-  }
   if (node.type === "MemberExpression") {
-    const obj = extractMemberName(node.object);
+    const obj = getTypeName(node.object);
     let prop: string;
     if (node.property.type === "Identifier") {
       prop = node.property.name;
@@ -37,14 +24,6 @@ function getTypeName(node: TSESTree.EntityName | TSESTree.MemberExpression): str
 }
 
 function serializeTypeNode(node: TSESTree.TypeNode): string {
-  // Handle TSParenthesizedType outside the switch since it may not be
-  // recognized as a TypeNode variant in some @typescript-eslint versions.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  while ((node as any).type === "TSParenthesizedType") {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    node = (node as any).typeAnnotation;
-  }
-
   switch (node.type) {
     case "TSTypeReference":
       return getTypeName(node.typeName);
@@ -53,15 +32,11 @@ function serializeTypeNode(node: TSESTree.TypeNode): string {
     case "TSLiteralType": {
       const lit = node.literal;
       if (lit.type === "Literal") return String(lit.value);
+      if (lit.type === "Identifier") return lit.name;
       if (lit.type === "TemplateLiteral") {
         return lit.quasis.map((q) => q.value.cooked ?? "").join("");
       }
-      if (lit.type === "UnaryExpression") {
-        const arg = lit.argument;
-        const argVal = arg.type === "Literal" ? String(arg.value) : arg.type;
-        return `${lit.operator}${argVal}`;
-      }
-      return "literal";
+      return lit.type;
     }
     case "TSUnionType":
       return `(${node.types.map(serializeTypeNode).join("|")})`;
@@ -69,6 +44,8 @@ function serializeTypeNode(node: TSESTree.TypeNode): string {
       return `(${node.types.map(serializeTypeNode).join("&")})`;
     case "TSArrayType":
       return `${serializeTypeNode(node.elementType)}[]`;
+    case "TSParenthesizedType":
+      return serializeTypeNode(node.typeAnnotation);
     case "TSOptionalType":
       return `${serializeTypeNode(node.typeAnnotation)}?`;
     case "TSRestType":
