@@ -14,14 +14,8 @@ ruleTester.run("no-eaten-callback-error", rule, {
   });`,
     `promise.catch(e => { throw e; });`,
     `promise.catch((e) => logger.log(e));`,
-    {
-      code: `promise.catch(e => console.error(e));`,
-      options: [{ allowLogging: true }],
-    },
-    {
-      code: `promise.catch(e => console.warn(e));`,
-      options: [{ allowLogging: true }],
-    },
+    `promise.catch(e => console.error(e));`,
+    `promise.catch(e => console.warn(e));`,
     `promise.catch((err) => {
   reportError(err);
   throw err;
@@ -61,11 +55,6 @@ ruleTester.run("no-eaten-callback-error", rule, {
     },
     {
       code: `promise.catch(e => console.error("oops"));`,
-      errors: [{ messageId: "ignoredParam", data: { param: "e" } }],
-    },
-    {
-      code: `promise.catch(e => console.error("oops"));`,
-      options: [{ allowLogging: true }],
       errors: [{ messageId: "ignoredParam", data: { param: "e" } }],
     },
     {

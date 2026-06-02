@@ -108,7 +108,11 @@ export default createRule({
         current.type === "TSAsExpression" ||
         current.type === "TSTypeAssertion"
       ) {
-        current = current.expression;
+        if (current.type === "TSAsExpression") {
+          current = current.expression;
+        } else {
+          current = current.expression;
+        }
       }
       return current.type === "AwaitExpression" ? current : null;
     }
