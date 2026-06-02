@@ -6,33 +6,36 @@ export function createBivariantMethodVisitor(
   TSInterfaceBody: (node: TSESTree.TSInterfaceBody) => void;
   TSTypeLiteral: (node: TSESTree.TSTypeLiteral) => void;
 } {
-  const reportMethod = (member: TSESTree.TSMethodSignature) => {
-    let name: string;
-    if (member.key.type === "Identifier") {
-      name = member.key.name;
-    } else if (member.key.type === "Literal") {
-      name = String(member.key.value);
-    } else {
-      name = "?";
-    }
+   const reportMethod = (member: TSESTree.TSMethodSignature) => {
+      let name: string;
+      if (member.key.type === "Identifier") {
+        name = member.key.name;
+      } else if (member.key.type === "Literal") {
+        name = String(member.key.value);
+      } else {
+        name = "?";
+      }
 
-    const params = member.params
+const params = member.params
       .map((p) => {
         if (p.type === "Identifier") return p.name;
         if (p.type === "AssignmentPattern")
           return `${p.left.type === "Identifier" ? p.left.name : "?"} = ...`;
-        if (p.type === "RestElement")
-          return `...${p.argument.type === "Identifier" ? p.argument.name : "?"}`;
-        return context.sourceCode.getText(p);
+        return "...";
       })
       .join(", ");
 
-    context.report({
-      node: member,
-      messageId: "methodSyntax",
-      data: { name, params },
-    });
-  };
+      const sourceCode = context.sourceCode;
+      const returnType = member.returnType
+        ? sourceCode.getText(member.returnType.typeAnnotation)
+        : "void";
+
+      context.report({
+        node: member,
+        messageId: "methodSyntax",
+        data: { name, params, returnType },
+      });
+    };
 
   return {
     TSInterfaceBody(node) {
