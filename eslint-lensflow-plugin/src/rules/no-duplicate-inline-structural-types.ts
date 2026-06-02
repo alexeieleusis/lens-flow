@@ -8,9 +8,17 @@ type Entry = {
 
 function getTypeName(node: TSESTree.EntityName): string {
   if (node.type === "Identifier") return node.name;
-  if (node.type === "TSQualifiedName") {
-    const obj = getTypeName(node.left);
-    return `${obj}.${node.right.name}`;
+  if (node.type === "MemberExpression") {
+    const obj = getTypeName(node.object);
+    let prop: string;
+    if (node.property.type === "Identifier") {
+      prop = node.property.name;
+    } else if (node.property.type === "Literal") {
+      prop = String(node.property.value);
+    } else {
+      prop = node.property.type;
+    }
+    return `${obj}.${prop}`;
   }
   return node.type;
 }
@@ -22,7 +30,7 @@ function serializeTypeNode(node: TSESTree.TypeNode): string {
     case "TSTypeLiteral":
       return canonicalize(node);
     case "TSLiteralType": {
-      const lit = node.literal as TSESTree.Literal | TSESTree.TemplateLiteral | TSESTree.Identifier | TSESTree.UnaryExpression;
+      const lit = node.literal;
       if (lit.type === "Literal") return String(lit.value);
       if (lit.type === "Identifier") return lit.name;
       if (lit.type === "TemplateLiteral") {
@@ -36,6 +44,8 @@ function serializeTypeNode(node: TSESTree.TypeNode): string {
       return `(${node.types.map(serializeTypeNode).join("&")})`;
     case "TSArrayType":
       return `${serializeTypeNode(node.elementType)}[]`;
+    case "TSParenthesizedType":
+      return serializeTypeNode(node.typeAnnotation);
     case "TSOptionalType":
       return `${serializeTypeNode(node.typeAnnotation)}?`;
     case "TSRestType":
@@ -53,13 +63,8 @@ function serializeTypeNode(node: TSESTree.TypeNode): string {
       return `[${node.elementTypes.map(serializeTypeNode).join(",")}]`;
     case "TSNamedTupleMember":
       return `${node.label.name}: ${serializeTypeNode(node.elementType)}`;
-    default: {
-      const n = node as { type: string; typeAnnotation?: TSESTree.TypeNode };
-      if (n.type === "TSParenthesizedType" && n.typeAnnotation) {
-        return serializeTypeNode(n.typeAnnotation);
-      }
-      return n.type;
-    }
+    default:
+      return node.type;
   }
 }
 
