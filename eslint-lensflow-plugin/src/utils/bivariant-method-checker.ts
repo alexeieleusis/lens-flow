@@ -25,11 +25,6 @@ const params = member.params
       })
       .join(", ");
 
-   const returnType =
-      member.returnType?.typeAnnotation != null
-        ? context.getSourceCode().getText(member.returnType.typeAnnotation)
-        : "void";
-
     const returnType =
       member.returnType?.typeAnnotation != null
         ? context.getSourceCode().getText(member.returnType.typeAnnotation)
