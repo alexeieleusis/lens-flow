@@ -8,7 +8,7 @@ type Entry = {
 
 function getTypeName(node: TSESTree.EntityName): string {
   if (node.type === "Identifier") return node.name;
-  if (node.type === "ThisExpression") return "this";
+ if (node.type === "ThisExpression") return "this";
   if (node.type === "TSQualifiedName") {
     return `${getTypeName(node.left)}.${node.right.name}`;
   }
@@ -28,7 +28,7 @@ function serializeTypeNode(node: TSESTree.TypeNode): string {
         return lit.quasis.map((q) => q.value.cooked ?? "").join("");
       }
       if (lit.type === "UnaryExpression") {
-        return `${lit.operator}${lit.argument}`;
+       return `${lit.operator}${lit.argument}`;
       }
       return "";
     }

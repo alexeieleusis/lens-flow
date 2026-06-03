@@ -30,6 +30,11 @@ const params = member.params
         ? context.getSourceCode().getText(member.returnType.typeAnnotation)
         : "void";
 
+    let returnType = "?";
+    if (member.returnType) {
+      returnType = context.sourceCode.getText(member.returnType.typeAnnotation);
+    }
+
     context.report({
       node: member,
       messageId: "methodSyntax",
