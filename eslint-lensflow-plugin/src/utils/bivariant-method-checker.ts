@@ -25,10 +25,10 @@ const params = member.params
       })
       .join(", ");
 
-    let returnType = "void";
-    if (member.returnType) {
-      returnType = context.sourceCode.getText(member.returnType.typeAnnotation);
-    }
+   const returnType =
+      member.returnType?.typeAnnotation != null
+        ? context.getSourceCode().getText(member.returnType.typeAnnotation)
+        : "void";
 
     context.report({
       node: member,

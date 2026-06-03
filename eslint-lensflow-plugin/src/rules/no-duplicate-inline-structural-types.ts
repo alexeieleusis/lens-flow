@@ -9,11 +9,7 @@ type Entry = {
 function getTypeName(node: TSESTree.EntityName): string {
   if (node.type === "Identifier") return node.name;
   if (node.type === "TSQualifiedName") {
-    const left = getTypeName(node.left);
-    if (node.right.type === "Identifier") {
-      return `${left}.${node.right.name}`;
-    }
-    return `${left}.${node.right.type}`;
+    return `${getTypeName(node.left)}.${node.right.name}`;
   }
   return "";
 }
@@ -30,11 +26,10 @@ function serializeTypeNode(node: TSESTree.TypeNode): string {
       if (lit.type === "TemplateLiteral") {
         return lit.quasis.map((q) => q.value.cooked ?? "").join("");
       }
-    if (lit.type === "UnaryExpression") {
-        if (lit.argument.type === "Literal") return `${lit.operator}${lit.argument.value}`;
-        return `${lit.operator}(...)`;
+      if (lit.type === "UnaryExpression" && lit.argument.type === "Literal") {
+        return `${lit.operator}${lit.argument.value}`;
       }
-      return (lit as TSESTree.Node).type;
+      return lit.type;
     }
     case "TSUnionType":
       return `(${node.types.map(serializeTypeNode).join("|")})`;

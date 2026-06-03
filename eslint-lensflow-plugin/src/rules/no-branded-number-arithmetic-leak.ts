@@ -10,8 +10,8 @@ const ARITHMETIC_OPS = new Set(["+", "-", "*", "/", "%"]);
 function hasBrandProperty(type: ts.Type): boolean {
   const props = type.getProperties();
   return props.some((p) => {
-    const name = String(p.escapedName).toLowerCase();
-    return name.includes("brand");
+    const name = String(p.escapedName);
+    return /brand$/i.test(name);
   });
 }
 
@@ -22,13 +22,12 @@ function isNumberLike(checker: ts.TypeChecker, type: ts.Type): boolean {
 }
 
 function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
- const hasNumber = isNumberLike(checker, tsType);
+  const hasNumber = isNumberLike(checker, tsType);
   const hasBrand = hasBrandProperty(tsType);
   if (hasNumber && hasBrand) return true;
 
-  const apparent = checker.getApparentType(tsType);
-  const constituents = (apparent as ts.IntersectionType)?.types;
-  if (!constituents || constituents.length < 2) return false;
+  const constituents = (tsType as ts.IntersectionType)?.types;
+  if (!constituents || constituents.length <= 1) return false;
 
   let hasNum = false;
   let hasBranded = false;
