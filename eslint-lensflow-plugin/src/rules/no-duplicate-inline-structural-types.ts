@@ -23,7 +23,7 @@ function serializeTypeNode(node: TSESTree.TypeNode): string {
     case "TSLiteralType": {
       const lit = node.literal;
       if (lit.type === "Literal") return String(lit.value);
-     if (lit.type === "UnaryExpression") {
+      if (lit.type === "UnaryExpression") {
         const arg = lit.argument.type === "Literal" ? String(lit.argument.value) : "";
         return `${lit.operator}${arg}`;
       }
