@@ -23,13 +23,14 @@ function serializeTypeNode(node: TSESTree.TypeNode): string {
     case "TSLiteralType": {
       const lit = node.literal;
       if (lit.type === "Literal") return String(lit.value);
+     if (lit.type === "UnaryExpression") {
+        const arg = lit.argument.type === "Literal" ? String(lit.argument.value) : "";
+        return `${lit.operator}${arg}`;
+      }
       if (lit.type === "TemplateLiteral") {
         return lit.quasis.map((q) => q.value.cooked ?? "").join("");
       }
-      if (lit.type === "UnaryExpression" && lit.argument.type === "Literal") {
-        return `${lit.operator}${lit.argument.value}`;
-      }
-      return lit.type;
+      return "";
     }
     case "TSUnionType":
       return `(${node.types.map(serializeTypeNode).join("|")})`;

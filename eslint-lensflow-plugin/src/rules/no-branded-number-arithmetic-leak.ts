@@ -7,35 +7,41 @@ const URL =
 
 const ARITHMETIC_OPS = new Set(["+", "-", "*", "/", "%"]);
 
-function hasBrandProperty(type: ts.Type): boolean {
-  const props = type.getProperties();
-  return props.some((p) => {
-    const name = String(p.escapedName);
-    return /brand$/i.test(name);
-  });
-}
-
-function isNumberLike(checker: ts.TypeChecker, type: ts.Type): boolean {
-  if ((type.flags & ts.TypeFlags.Number) !== 0) return true;
-  if ((type.flags & ts.TypeFlags.NumberLiteral) !== 0) return true;
-  return checker.isTypeAssignableTo(type, checker.getNumberType());
-}
-
 function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
-  const hasNumber = isNumberLike(checker, tsType);
-  const hasBrand = hasBrandProperty(tsType);
-  if (hasNumber && hasBrand) return true;
+  const apparent = checker.getApparentType(tsType);
 
-  const constituents = (tsType as ts.IntersectionType)?.types;
-  if (!constituents || constituents.length <= 1) return false;
+  const constituents = (apparent as ts.IntersectionType)?.types;
+  if (!constituents || constituents.length < 2) return false;
 
-  let hasNum = false;
-  let hasBranded = false;
-  for (const c of constituents) {
-    if (isNumberLike(checker, c)) hasNum = true;
-    if (hasBrandProperty(c)) hasBranded = true;
+  let hasNumber = false;
+  let hasBrandObject = false;
+
+  for (const constituent of constituents) {
+    const typeStr = checker.typeToString(constituent).trim();
+    const lowerStr = typeStr.toLowerCase().replace(/^["']|["']$/g, "");
+
+    if (
+      (constituent.flags & ts.TypeFlags.Number) !== 0 ||
+      lowerStr === "number"
+    ) {
+      hasNumber = true;
+    }
+
+    if ((constituent.flags & ts.TypeFlags.Object) !== 0) {
+      const props = (constituent as ts.ObjectType).getProperties();
+      if (
+        props.some(
+          (p) =>
+            p.escapedName.toString().toLowerCase().includes("__brand") ||
+            p.escapedName.toString().endsWith("Brand"),
+        )
+      ) {
+        hasBrandObject = true;
+      }
+    }
   }
-  return hasNum && hasBranded;
+
+  return hasNumber && hasBrandObject;
 }
 
 export default createRule({
