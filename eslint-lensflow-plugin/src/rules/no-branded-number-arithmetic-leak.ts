@@ -11,7 +11,7 @@ function hasBrandProperty(type: ts.Type): boolean {
   const props = type.getProperties();
   return props.some((p) => {
     const name = p.escapedName as string;
-    return name === "_brand" || name === "__brand" || /Brand$/.test(name);
+    return name.includes("_brand") || /Brand$/.test(name);
   });
 }
 
@@ -22,6 +22,7 @@ function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
   if (!constituents || constituents.length <= 1) return false;
 
   let hasNumber = false;
+  let hasBrand = false;
   for (const constituent of constituents) {
     const typeStr = checker.typeToString(constituent).trim();
     if (
@@ -30,11 +31,11 @@ function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
     ) {
       hasNumber = true;
     } else if (hasBrandProperty(constituent)) {
-      return hasNumber;
+      hasBrand = true;
     }
   }
 
-  return false;
+  return hasNumber && hasBrand;
 }
 
 export default createRule({
