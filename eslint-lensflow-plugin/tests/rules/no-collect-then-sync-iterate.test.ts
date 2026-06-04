@@ -1,5 +1,4 @@
-import { resolve, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import path from "node:path";
 import { RuleTester } from "@typescript-eslint/rule-tester";
 import { afterAll, describe, it } from "vitest";
 import * as tsParser from "@typescript-eslint/parser";
@@ -9,10 +8,9 @@ RuleTester.afterAll = afterAll;
 RuleTester.describe = describe;
 RuleTester.it = it;
 
-const __dirname = resolve(fileURLToPath(import.meta.url), "..");
-const TEST_FILENAME = "file.ts";
-const TS_CONFIG_DIR = resolve(__dirname, "../..");
-const TS_CONFIG = join(TS_CONFIG_DIR, "tsconfig.test.json");
+const TEST_FILENAME = "tests/rules/test.ts";
+const TS_CONFIG_DIR = path.resolve(__dirname, "../..");
+const TS_CONFIG = path.join(TS_CONFIG_DIR, "tsconfig.test.json");
 
 const ruleTester = new RuleTester({
   languageOptions: {
