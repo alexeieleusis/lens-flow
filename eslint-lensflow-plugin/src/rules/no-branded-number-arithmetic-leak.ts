@@ -11,14 +11,20 @@ function hasBrandProperty(type: ts.Type): boolean {
   const props = type.getProperties();
   return props.some((p) => {
     const name = p.escapedName as string;
-    return name === "_brand" || name === "__brand" || /Brand$/.test(name);
+    return (
+      name === "_brand" ||
+      name === "__brand" ||
+      name === "___brand" ||
+      /Brand$/.test(name)
+    );
   });
 }
 
-function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
-  const apparent = checker.getApparentType(tsType);
-
-  const constituents = (apparent as ts.IntersectionType)?.types;
+function checkIntersectionBrandedNumber(
+  checker: ts.TypeChecker,
+  t: ts.Type,
+): boolean {
+  const constituents = (t as ts.IntersectionType)?.types;
   if (!constituents || constituents.length <= 1) return false;
 
   let hasNumber = false;
@@ -32,6 +38,19 @@ function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
     } else if (hasBrandProperty(constituent)) {
       return hasNumber;
     }
+  }
+
+  return false;
+}
+
+function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
+  // Check the original type first (e.g., from explicit annotations)
+  if (checkIntersectionBrandedNumber(checker, tsType)) return true;
+
+  // Also check the apparent type (for aliases, type references, etc.)
+  const apparent = checker.getApparentType(tsType);
+  if (apparent !== tsType) {
+    return checkIntersectionBrandedNumber(checker, apparent);
   }
 
   return false;
