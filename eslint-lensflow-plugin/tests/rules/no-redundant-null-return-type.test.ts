@@ -8,7 +8,7 @@ RuleTester.afterAll = afterAll;
 RuleTester.describe = describe;
 RuleTester.it = it;
 
-const TEST_FILENAME = "file.ts";
+const TEST_FILENAME = "tests/rules/test.ts";
 const TS_CONFIG_DIR = path.resolve(__dirname, "../..");
 const TS_CONFIG = path.join(TS_CONFIG_DIR, "tsconfig.test.json");
 
