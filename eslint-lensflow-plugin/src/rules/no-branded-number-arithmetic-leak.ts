@@ -10,31 +10,53 @@ const ARITHMETIC_OPS = new Set(["+", "-", "*", "/", "%"]);
 function hasBrandProperty(type: ts.Type): boolean {
   const props = type.getProperties();
   return props.some((p) => {
-    const name = p.escapedName as string;
-    return name === "_brand" || name === "__brand" || /Brand$/.test(name);
+    const name = String(p.name);
+    return (
+      name === "_brand" ||
+      name === "__brand" ||
+      name === "___brand" ||
+      /Brand$/.test(name)
+    );
   });
 }
 
-function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
-  const apparent = checker.getApparentType(tsType);
+function isNumberLike(checker: ts.TypeChecker, t: ts.Type): boolean {
+  if ((t.flags & ts.TypeFlags.Number) !== 0) return true;
+  return checker.typeToString(t).trim().toLowerCase() === "number";
+}
 
-  const constituents = (apparent as ts.IntersectionType)?.types;
-  if (!constituents || constituents.length <= 1) return false;
+function checkIntersection(
+  checker: ts.TypeChecker,
+  candidates: ts.Type[],
+): boolean {
+  for (const ct of candidates) {
+    const constituents = (ct as ts.IntersectionType)?.types;
+    if (!constituents || constituents.length < 2) continue;
 
-  let hasNumber = false;
-  for (const constituent of constituents) {
-    const typeStr = checker.typeToString(constituent).trim();
-    if (
-      (constituent.flags & ts.TypeFlags.Number) !== 0 ||
-      typeStr.toLowerCase() === "number"
-    ) {
-      hasNumber = true;
-    } else if (hasBrandProperty(constituent)) {
-      return hasNumber;
+    let hasNumber = false;
+    for (const c of constituents) {
+      if (isNumberLike(checker, c)) {
+        hasNumber = true;
+      } else if (hasBrandProperty(c)) {
+        if (hasNumber) return true;
+      }
     }
   }
-
   return false;
+}
+
+function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
+  const resolved =
+    (tsType.flags & ts.TypeFlags.Object) !== 0 &&
+    ((tsType as ts.ObjectType).objectFlags & ts.ObjectFlags.Reference) !== 0
+      ? (tsType as ts.TypeReference).target
+      : tsType;
+
+  return checkIntersection(checker, [
+    tsType,
+    resolved,
+    checker.getApparentType(resolved),
+  ]);
 }
 
 export default createRule({
@@ -73,7 +95,10 @@ export default createRule({
         if (!leftBranded && !rightBranded) return;
 
         const parent = node.parent;
-        if (parent?.type === "TSAsExpression" || parent?.type === "TSTypeAssertion") {
+        if (
+          parent?.type === "TSAsExpression" ||
+          parent?.type === "TSTypeAssertion"
+        ) {
           const castResultType = parserServices.getTypeAtLocation(parent);
           if (isBrandedNumber(checker, castResultType)) return;
         }
