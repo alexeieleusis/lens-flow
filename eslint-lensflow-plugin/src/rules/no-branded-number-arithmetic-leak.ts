@@ -10,27 +10,41 @@ const ARITHMETIC_OPS = new Set(["+", "-", "*", "/", "%"]);
 function hasBrandProperty(type: ts.Type): boolean {
   const props = type.getProperties();
   return props.some((p) => {
-    const name = p.escapedName as string;
+    const name = p.name as string;
     return name === "_brand" || name === "__brand" || /Brand$/.test(name);
   });
 }
 
+function hasNumberConstituent(checker: ts.TypeChecker, type: ts.Type): boolean {
+  const constituents = (type as ts.IntersectionType)?.types;
+  if (!constituents) return false;
+
+  for (const c of constituents) {
+    if ((c.flags & ts.TypeFlags.Number) !== 0) return true;
+    if ((c.flags & ts.TypeFlags.NumberLiteral) !== 0) return true;
+    const typeStr = checker.typeToString(c).trim().toLowerCase();
+    if (typeStr === "number") return true;
+  }
+  return false;
+}
+
 function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
+  if ((tsType.flags & ts.TypeFlags.Intersection) !== 0) {
+    if (hasNumberConstituent(checker, tsType) && hasBrandProperty(tsType)) {
+      return true;
+    }
+    const constituents = (tsType as ts.IntersectionType).types;
+    for (const c of constituents) {
+      if (hasNumberConstituent(checker, tsType) && hasBrandProperty(c)) {
+        return true;
+      }
+    }
+  }
+
   const apparent = checker.getApparentType(tsType);
-
-  const constituents = (apparent as ts.IntersectionType)?.types;
-  if (!constituents || constituents.length <= 1) return false;
-
-  let hasNumber = false;
-  for (const constituent of constituents) {
-    const typeStr = checker.typeToString(constituent).trim();
-    if (
-      (constituent.flags & ts.TypeFlags.Number) !== 0 ||
-      typeStr.toLowerCase() === "number"
-    ) {
-      hasNumber = true;
-    } else if (hasBrandProperty(constituent)) {
-      return hasNumber;
+  if (apparent !== tsType && (apparent.flags & ts.TypeFlags.Intersection) !== 0) {
+    if (hasNumberConstituent(checker, apparent) && hasBrandProperty(apparent)) {
+      return true;
     }
   }
 
