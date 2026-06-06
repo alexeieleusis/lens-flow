@@ -7,34 +7,55 @@ const URL =
 
 const ARITHMETIC_OPS = new Set(["+", "-", "*", "/", "%"]);
 
+function isNumberType(checker: ts.TypeChecker, type: ts.Type): boolean {
+  const typeStr = checker.typeToString(type).trim().toLowerCase();
+  return (
+    (type.flags & ts.TypeFlags.Number) !== 0 ||
+    typeStr === "number"
+  );
+}
+
 function hasBrandProperty(type: ts.Type): boolean {
   const props = type.getProperties();
   return props.some((p) => {
-    const name = p.escapedName as string;
-    return name === "_brand" || name === "__brand" || /Brand$/.test(name);
+    const name = String(p.escapedName).toLowerCase();
+    return (
+      name.includes("brand") ||
+      name.endsWith("brand")
+    );
   });
 }
 
-function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
-  const apparent = checker.getApparentType(tsType);
+function getIntersectionConstituents(
+  checker: ts.TypeChecker,
+  tsType: ts.Type,
+): ts.Type[] | undefined {
+  const rawConstituents = (tsType as ts.IntersectionType)?.types;
+  if (rawConstituents && rawConstituents.length >= 2) return rawConstituents;
 
-  const constituents = (apparent as ts.IntersectionType)?.types;
-  if (!constituents || constituents.length <= 1) return false;
+  const apparent = checker.getApparentType(tsType);
+  const apparentConstituents = (apparent as ts.IntersectionType)?.types;
+  return apparentConstituents && apparentConstituents.length >= 2
+    ? apparentConstituents
+    : undefined;
+}
+
+function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
+  const constituents = getIntersectionConstituents(checker, tsType);
+  if (!constituents) return false;
 
   let hasNumber = false;
+  let hasBrand = false;
   for (const constituent of constituents) {
-    const typeStr = checker.typeToString(constituent).trim();
-    if (
-      (constituent.flags & ts.TypeFlags.Number) !== 0 ||
-      typeStr.toLowerCase() === "number"
-    ) {
+    if (isNumberType(checker, constituent)) {
       hasNumber = true;
-    } else if (hasBrandProperty(constituent)) {
-      return hasNumber;
+    }
+    if (hasBrandProperty(constituent)) {
+      hasBrand = true;
     }
   }
 
-  return false;
+  return hasNumber && hasBrand;
 }
 
 export default createRule({
