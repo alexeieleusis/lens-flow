@@ -11,7 +11,16 @@ function hasBrandProperty(type: ts.Type): boolean {
   const props = type.getProperties();
   return props.some((p) => {
     const name = p.escapedName as string;
-    return name === "_brand" || name === "__brand" || /Brand$/.test(name);
+    const unescaped = ts.unescapeLeadingUnderscores(name as never);
+    return (
+      name === "_brand" ||
+      name === "__brand" ||
+      name === "___brand" ||
+      unescaped === "_brand" ||
+      unescaped === "__brand" ||
+      /Brand$/.test(name) ||
+      /Brand$/.test(unescaped)
+    );
   });
 }
 
