@@ -11,26 +11,29 @@ function hasBrandProperty(type: ts.Type): boolean {
   const props = type.getProperties();
   return props.some((p) => {
     const name = p.escapedName as string;
-    return name === "_brand" || name === "__brand" || /Brand$/.test(name);
+    return (
+      name === "_brand" ||
+      name === "__brand" ||
+      name === "___brand" ||
+      /Brand$/.test(name)
+    );
   });
 }
 
 function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
-  const apparent = checker.getApparentType(tsType);
+  // Check if the type is assignable to number
+  const numberType = checker.getNumberType();
+  if (!checker.isTypeAssignableTo(tsType, numberType)) return false;
 
-  const constituents = (apparent as ts.IntersectionType)?.types;
-  if (!constituents || constituents.length <= 1) return false;
+  // Check if the type itself has brand properties
+  // (TypeScript forwards property lookups through intersections)
+  if (hasBrandProperty(tsType)) return true;
 
-  let hasNumber = false;
-  for (const constituent of constituents) {
-    const typeStr = checker.typeToString(constituent).trim();
-    if (
-      (constituent.flags & ts.TypeFlags.Number) !== 0 ||
-      typeStr.toLowerCase() === "number"
-    ) {
-      hasNumber = true;
-    } else if (hasBrandProperty(constituent)) {
-      return hasNumber;
+  // Also check constituents of intersection directly
+  const constituents = (tsType as ts.IntersectionType)?.types;
+  if (constituents && constituents.length > 1) {
+    for (const constituent of constituents) {
+      if (hasBrandProperty(constituent)) return true;
     }
   }
 
