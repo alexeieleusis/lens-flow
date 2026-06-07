@@ -10,28 +10,40 @@ const ARITHMETIC_OPS = new Set(["+", "-", "*", "/", "%"]);
 function hasBrandProperty(type: ts.Type): boolean {
   const props = type.getProperties();
   return props.some((p) => {
-    const name = p.escapedName as string;
-    return name === "_brand" || name === "__brand" || /Brand$/.test(name);
+    const name = String(p.escapedName).toLowerCase();
+    return name.includes("brand");
   });
 }
 
 function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
   const apparent = checker.getApparentType(tsType);
 
-  const constituents = (apparent as ts.IntersectionType)?.types;
-  if (!constituents || constituents.length <= 1) return false;
+  // Check both the original type and apparent type for intersection structure.
+  // getTypeAtLocation on an expression may return a different internal
+  // representation than getTypeFromTypeNode on a type annotation.
+  for (const t of [tsType, apparent]) {
+    const constituents = (t as ts.IntersectionType)?.types;
+    if (!constituents || constituents.length <= 1) continue;
 
-  let hasNumber = false;
-  for (const constituent of constituents) {
-    const typeStr = checker.typeToString(constituent).trim();
-    if (
-      (constituent.flags & ts.TypeFlags.Number) !== 0 ||
-      typeStr.toLowerCase() === "number"
-    ) {
-      hasNumber = true;
-    } else if (hasBrandProperty(constituent)) {
-      return hasNumber;
+    let hasNumber = false;
+    for (const constituent of constituents) {
+      const typeStr = checker.typeToString(constituent).trim();
+      if (
+        (constituent.flags & ts.TypeFlags.Number) !== 0 ||
+        typeStr.toLowerCase() === "number"
+      ) {
+        hasNumber = true;
+      } else if (hasBrandProperty(constituent)) {
+        if (hasNumber) return true;
+      }
     }
+  }
+
+  // Fallback: check for brand property + assignability to number.
+  // Covers cases where the type checker doesn't expose the intersection structure.
+  if (hasBrandProperty(tsType) || hasBrandProperty(apparent)) {
+    const numberType = checker.getNumberType();
+    return checker.isTypeAssignableTo(tsType, numberType);
   }
 
   return false;
