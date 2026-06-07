@@ -11,27 +11,38 @@ function hasBrandProperty(type: ts.Type): boolean {
   const props = type.getProperties();
   return props.some((p) => {
     const name = p.escapedName as string;
-    return name === "_brand" || name === "__brand" || /Brand$/.test(name);
+    // TypeScript escapes leading underscores in property names:
+    // `_brand` -> `__brand`, `__brand` -> `___brand`
+    const unescaped = name.startsWith("_") ? name.slice(1) : name;
+    return unescaped === "_brand" || unescaped === "__brand" || /Brand$/.test(unescaped);
   });
 }
 
 function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
-  const apparent = checker.getApparentType(tsType);
+  const candidates = [
+    tsType,
+    checker.getApparentType(tsType),
+  ];
 
-  const constituents = (apparent as ts.IntersectionType)?.types;
-  if (!constituents || constituents.length <= 1) return false;
+  for (const candidate of candidates) {
+    const constituents = (candidate as ts.IntersectionType)?.types;
+    if (!constituents || constituents.length <= 1) continue;
 
-  let hasNumber = false;
-  for (const constituent of constituents) {
-    const typeStr = checker.typeToString(constituent).trim();
-    if (
-      (constituent.flags & ts.TypeFlags.Number) !== 0 ||
-      typeStr.toLowerCase() === "number"
-    ) {
-      hasNumber = true;
-    } else if (hasBrandProperty(constituent)) {
-      return hasNumber;
+    let hasNumber = false;
+    let hasBranded = false;
+    for (const constituent of constituents) {
+      const typeStr = checker.typeToString(constituent).trim();
+      if (
+        (constituent.flags & ts.TypeFlags.Number) !== 0 ||
+        typeStr.toLowerCase() === "number"
+      ) {
+        hasNumber = true;
+      }
+      if (hasBrandProperty(constituent)) {
+        hasBranded = true;
+      }
     }
+    if (hasNumber && hasBranded) return true;
   }
 
   return false;
