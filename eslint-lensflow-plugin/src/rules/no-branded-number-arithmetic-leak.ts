@@ -10,8 +10,10 @@ const ARITHMETIC_OPS = new Set(["+", "-", "*", "/", "%"]);
 function hasBrandProperty(type: ts.Type): boolean {
   const props = type.getProperties();
   return props.some((p) => {
-    const name = p.escapedName as string;
-    return name === "_brand" || name === "__brand" || /Brand$/.test(name);
+    const name = String(p.escapedName);
+    // TypeScript escapes identifiers starting with __ by prepending an extra _
+    const unescaped = name.startsWith("___") ? name.slice(1) : name;
+    return unescaped === "_brand" || unescaped === "__brand" || /Brand$/.test(unescaped);
   });
 }
 
