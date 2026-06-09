@@ -7,34 +7,13 @@ const URL =
 
 const ARITHMETIC_OPS = new Set(["+", "-", "*", "/", "%"]);
 
-function hasBrandProperty(type: ts.Type): boolean {
-  const props = type.getProperties();
-  return props.some((p) => {
-    const name = p.escapedName as string;
-    return name === "_brand" || name === "__brand" || /Brand$/.test(name);
-  });
-}
-
 function isBrandedNumber(checker: ts.TypeChecker, tsType: ts.Type): boolean {
   const apparent = checker.getApparentType(tsType);
+  const typeStr = checker.typeToString(apparent);
 
-  const constituents = (apparent as ts.IntersectionType)?.types;
-  if (!constituents || constituents.length <= 1) return false;
-
-  let hasNumber = false;
-  for (const constituent of constituents) {
-    const typeStr = checker.typeToString(constituent).trim();
-    if (
-      (constituent.flags & ts.TypeFlags.Number) !== 0 ||
-      typeStr.toLowerCase() === "number"
-    ) {
-      hasNumber = true;
-    } else if (hasBrandProperty(constituent)) {
-      return hasNumber;
-    }
-  }
-
-  return false;
+  // Check if the type string indicates a branded number
+  // Pattern: "number & { __brand: ..." or "number & { _brand: ..." or "number & { ...Brand: ..."
+  return /number\s*&/i.test(typeStr) && /(?:_brand|Brand)/i.test(typeStr);
 }
 
 export default createRule({
