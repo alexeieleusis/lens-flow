@@ -30,7 +30,6 @@ import noAsAnyBypass from "./rules/no-as-any-bypass.js";
 import noAsAnyBypassExhaustiveness from "./rules/no-as-any-bypass-exhaustiveness.js";
 import noAsAnyCapabilityCheckT59 from "./rules/no-as-any-capability-check-t59.js";
 import noAsAnyInNarrowedBranch from "./rules/no-as-any-in-narrowed-branch.js";
-import noAsAnyInSwitchDefault from "./rules/no-as-any-in-switch-default.js";
 import noAsAnyUnionHandlingUc14 from "./rules/no-as-any-union-handling-uc14.js";
 import noAsConstOnDynamicValues from "./rules/no-as-const-on-dynamic-values.js";
 import noAsConstOnLet from "./rules/no-as-const-on-let.js";
@@ -331,8 +330,7 @@ const plugin: {
     "no-as-any-bypass-exhaustiveness": noAsAnyBypassExhaustiveness,
     "no-as-any-capability-check-t59": noAsAnyCapabilityCheckT59,
     "no-as-any-in-narrowed-branch": noAsAnyInNarrowedBranch,
-    "no-as-any-in-switch-default": noAsAnyInSwitchDefault,
-    "no-as-any-union-handling-uc14": noAsAnyUnionHandlingUc14,
+     "no-as-any-union-handling-uc14": noAsAnyUnionHandlingUc14,
     "no-as-const-on-dynamic-values": noAsConstOnDynamicValues,
     "no-as-const-on-let": noAsConstOnLet,
     "no-as-instead-of-narrowing": noAsInsteadOfNarrowing,
