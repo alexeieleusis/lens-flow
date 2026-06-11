@@ -25,20 +25,12 @@ const params = member.params
       })
       .join(", ");
 
-   const returnType =
-      member.returnType?.typeAnnotation != null
-        ? context.getSourceCode().getText(member.returnType.typeAnnotation)
-        : "void";
+      const returnType =
+        member.returnType?.typeAnnotation != null
+          ? context.getSourceCode().getText(member.returnType.typeAnnotation)
+          : "void";
 
-    const returnType = member.returnType
-      ? context.getSourceCode().getText(member.returnType.typeAnnotation)
-      : "void";
-
-    const returnType = member.returnType
-      ? context.getSourceCode().getText(member.returnType.typeAnnotation)
-      : "void";
-
-    context.report({
+      context.report({
       node: member,
       messageId: "methodSyntax",
       data: { name, params, returnType },
