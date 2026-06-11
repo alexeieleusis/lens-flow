@@ -10,7 +10,6 @@ const ARITHMETIC_OPS = new Set(["+", "-", "*", "/", "%"]);
 function hasBrandProperty(type: ts.Type): boolean {
   const props = type.getProperties();
   return props.some((p) => {
-<<<<<<< HEAD
     const name = String(p.escapedName).toLowerCase();
     return name.includes("brand");
   });

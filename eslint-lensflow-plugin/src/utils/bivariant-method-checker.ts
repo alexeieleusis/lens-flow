@@ -25,12 +25,7 @@ const params = member.params
       })
       .join(", ");
 
-    const returnType =
-      member.returnType?.typeAnnotation != null
-        ? context.getSourceCode().getText(member.returnType.typeAnnotation)
-        : "void";
-
-    let returnType = "?";
+    let returnType = "void";
     if (member.returnType) {
       returnType = context.sourceCode.getText(member.returnType.typeAnnotation);
     }
