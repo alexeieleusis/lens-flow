@@ -8,8 +8,13 @@ export function hasAsyncIteratorSignature(
   type: ts.Type,
   checker: ts.TypeChecker,
 ): boolean {
-  const prop = type.getProperty("[Symbol.asyncIterator]");
-  if (!prop) return false;
+  // Use getApparentProperties() which traverses the type hierarchy,
+  // unlike getProperties() which only returns direct instance properties.
+  // This correctly detects inherited [Symbol.asyncIterator] implementations.
+  const prop = type.getApparentProperties().find((p) =>
+    p.escapedName === "[Symbol.asyncIterator]",
+  );
+  if (!prop || !prop.valueDeclaration) return false;
 
   const propType = checker.getTypeOfSymbolAtLocation(prop, prop.valueDeclaration);
   return propType.getCallSignatures().length > 0;
