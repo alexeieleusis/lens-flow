@@ -40,12 +40,15 @@ Uses `capture=True` so failures do not abort the script.
 ```
 LOOKAHEAD_OFFSET = 32  # ~10min Copilot review / ~40s per iteration, rounded up w/ buffer
 
+rerequested = set()  # deduplicate within a single run
+
 for idx, item in enumerate(candidates):
-    # lookahead re-request
+    # lookahead re-request (deduplicated)
     lookahead_idx = idx + LOOKAHEAD_OFFSET
     if lookahead_idx < len(candidates):
         lookahead_pr = state[candidates[lookahead_idx].branch].pr_number
-        if lookahead_pr is not None:
+        if lookahead_pr is not None and lookahead_pr not in rerequested:
+            rerequested.add(lookahead_pr)
             rerequest_review(lookahead_pr, runner)
 
     # existing: checkout, fetch threads, opencode, commit, push
@@ -53,6 +56,21 @@ for idx, item in enumerate(candidates):
 ```
 
 No other behaviour changes.
+
+### Deduplication and restart behaviour
+
+The `rerequested` set prevents duplicate `gh pr edit` calls for the same PR number
+within a single `phase_review` run. This avoids noisy GitHub notifications and
+reduces API rate-limit risk when the lookahead window overlaps (e.g., consecutive
+iterations pointing at the same `idx + 32` candidate).
+
+**Across restarts:** The set is in-memory only and does not persist. If the script
+is interrupted and re-run, a PR that was already re-requested in the previous run
+may receive a second `gh pr edit --add-reviewer copilot` call. This is acceptable:
+GitHub simply re-adds Copilot as a reviewer, which is idempotent. The `capture=True`
+flag ensures a failure (e.g., rate limit 403) won't abort the script. If this proves
+problematic, persistence can be added later via a simple `.re requested` marker file
+or by checking the PR's existing reviewers before calling `gh pr edit`.
 
 ## Out of scope
 
