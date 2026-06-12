@@ -129,12 +129,18 @@ export function defaultHasNeverAssertion(
 
 export function getLiteralFromExpr(
   expr: TSESTree.Node | null | undefined,
-): string | number | null {
+): string | number | boolean | null {
   if (!expr) return null;
   if (expr.type === "Literal" && typeof expr.value === "string")
     return expr.value;
   if (expr.type === "Literal" && typeof expr.value === "number")
     return expr.value;
+  if (expr.type === "Literal" && typeof expr.value === "boolean")
+    return expr.value;
+  if (expr.type === "UnaryExpression" && expr.operator === "!") {
+    const inner = getLiteralFromExpr(expr.argument);
+    if (typeof inner === "boolean") return !inner;
+  }
   return null;
 }
 

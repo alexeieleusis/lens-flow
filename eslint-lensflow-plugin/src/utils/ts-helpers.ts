@@ -117,8 +117,8 @@ export function collectChildTypes(type: TSESTree.TypeNode): TSESTree.TypeNode[] 
   }
 }
 
-export function extractLiteralValues(tsType: ts.Type): (string | number)[] {
-  const values = new Set<string | number>();
+export function extractLiteralValues(tsType: ts.Type): (string | number | boolean)[] {
+  const values = new Set<string | number | boolean>();
 
   function visit(t: ts.Type) {
     if (t.isUnion()) {
@@ -131,6 +131,10 @@ export function extractLiteralValues(tsType: ts.Type): (string | number)[] {
     }
     if ((t.flags & ts.TypeFlags.NumberLiteral) !== 0) {
       values.add((t as ts.NumberLiteralType).value);
+      return;
+    }
+    if ((t.flags & (ts.TypeFlags.TrueLiteral | ts.TypeFlags.FalseLiteral)) !== 0) {
+      values.add((t as ts.Type & { value: boolean }).value);
     }
   }
 
@@ -151,7 +155,7 @@ export function checkSwitchExhaustiveness(
 
   if (literalValues.length < 2) return;
 
-  const matchedValues = new Set<string | number>();
+  const matchedValues = new Set<string | number | boolean>();
 
   for (const case_ of node.cases) {
     const val = getLiteralFromExpr(case_.test);
