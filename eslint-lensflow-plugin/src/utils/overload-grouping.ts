@@ -1,5 +1,12 @@
 import { type TSESTree } from "@typescript-eslint/utils";
 
+/**
+ * Nodes representing top-level function overloads.
+ *
+ * Intentionally limited to `FunctionDeclaration` and `TSDeclareFunction`.
+ * Class method (`MethodDefinition`) and constructor overloads are not
+ * covered — a separate utility would be needed for those cases.
+ */
 export type FnLikeNode =
   | TSESTree.FunctionDeclaration
   | TSESTree.TSDeclareFunction;
