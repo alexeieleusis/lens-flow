@@ -125,6 +125,10 @@ export function extractLiteralValues(tsType: ts.Type): (string | number | boolea
       for (const member of t.types) visit(member);
       return;
     }
+    if (t.isIntersection()) {
+      for (const member of t.types) visit(member);
+      return;
+    }
     if ((t.flags & ts.TypeFlags.StringLiteral) !== 0) {
       values.add((t as ts.StringLiteralType).value);
       return;
