@@ -3,7 +3,17 @@ import { TSESTree } from "@typescript-eslint/utils";
 import type { ParserServices } from "@typescript-eslint/utils";
 
 const ASSERT_NEVER_PATTERN = /^assertNever$/;
-const SKIP_KEYS = new Set(["parent", "loc", "range", "leadingComments", "trailingComments", "innerComments"]);
+const SKIP_KEYS = new Set([
+  "parent",
+  "loc",
+  "range",
+  "leadingComments",
+  "trailingComments",
+  "innerComments",
+  "typeAnnotation",
+  "typeArguments",
+  "returnType",
+]);
 
 function isNodeLike(val: unknown): val is TSESTree.Node {
   return val != null && typeof val === "object" && "type" in val;
