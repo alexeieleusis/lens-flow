@@ -185,7 +185,7 @@ export function getComparisonInfo(
   if (varNode.computed || varNode.property.type !== "Identifier") return null;
 
   const memberName = getMemberName(varNode);
-  if (!memberName) return null;
+  if (!memberName || memberName.startsWith(".") || memberName.startsWith("..")) return null;
 
   const tsVarNode = esTreeNodeToTSNodeMap.get(varNode);
   if (!tsVarNode) return null;
@@ -193,14 +193,21 @@ export function getComparisonInfo(
   return { varName: memberName, tsVarNode, value, operator };
 }
 
-function getMemberName(node: TSESTree.MemberExpression): string | null {
+function getMemberName(
+  node: TSESTree.MemberExpression,
+  depth = 0,
+): string | null {
   if (node.computed || node.property.type !== "Identifier") return null;
+
+  // Limit depth to avoid collision-prone composite keys from deeply nested
+  // chains where different expression shapes can produce the same dotted name.
+  if (depth > 1) return null;
 
   if (node.object.type === "Identifier") {
     return `${node.object.name}.${node.property.name}`;
   }
   if (node.object.type === "MemberExpression") {
-    const objName = getMemberName(node.object);
+    const objName = getMemberName(node.object, depth + 1);
     if (!objName) return null;
     return `${objName}.${node.property.name}`;
   }
