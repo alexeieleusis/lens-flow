@@ -84,7 +84,7 @@ export function checkAnyParams(
 
     if (base.typeAnnotation?.typeAnnotation && containsAnyType(base.typeAnnotation.typeAnnotation)) {
       const paramName =
-        "name" in base && typeof base.name === "string" ? base.name : "unnamed";
+        "name" in base && typeof base.name === "string" ? base.name : context.sourceCode.getText(param);
       context.report({
         node: param,
         messageId,
@@ -114,9 +114,9 @@ export function createNoAnyParamChecker(messageId: string) {
       TSParameterProperty(node) {
         if (node.parameter.typeAnnotation?.typeAnnotation && containsAnyType(node.parameter.typeAnnotation.typeAnnotation)) {
           const paramName =
-            node.parameter.type === "Identifier"
+            "name" in node.parameter && typeof node.parameter.name === "string"
               ? node.parameter.name
-              : "unnamed";
+              : context.sourceCode.getText(node.parameter);
           context.report({
             node,
             messageId,
