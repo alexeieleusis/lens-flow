@@ -21,7 +21,9 @@ export function createBivariantMethodVisitor(
         if (p.type === "Identifier") return p.name;
         if (p.type === "AssignmentPattern")
           return `${p.left.type === "Identifier" ? p.left.name : "?"} = ...`;
-        return "...";
+        if (p.type === "RestElement")
+          return `...${p.argument.type === "Identifier" ? p.argument.name : "?"}`;
+        return context.sourceCode.getText(p);
       })
       .join(", ");
 
