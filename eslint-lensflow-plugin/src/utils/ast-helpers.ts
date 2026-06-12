@@ -142,16 +142,16 @@ export interface ComparisonInfo {
   varName: string;
   tsVarNode: ts.Node;
   value: string;
+  operator: "===" | "!==" | "==" | "!=";
 }
+
+const COMPARISON_OPERATORS = new Set(["===", "!==", "==", "!="]);
 
 export function getComparisonInfo(
   test: TSESTree.Node | undefined,
   esTreeNodeToTSNodeMap: ParserServices["esTreeNodeToTSNodeMap"],
 ): ComparisonInfo | null {
-  if (
-    test?.type !== "BinaryExpression" ||
-    test.operator !== "==="
-  )
+  if (test?.type !== "BinaryExpression" || !COMPARISON_OPERATORS.has(test.operator))
     return null;
 
   let varNode: TSESTree.Node | undefined;
@@ -173,10 +173,12 @@ export function getComparisonInfo(
 
   if (!varNode || value === undefined) return null;
 
+  const operator = test.operator as ComparisonInfo["operator"];
+
   if (varNode.type === "Identifier") {
     const tsVarNode = esTreeNodeToTSNodeMap.get(varNode);
     if (!tsVarNode) return null;
-    return { varName: varNode.name, tsVarNode, value };
+    return { varName: varNode.name, tsVarNode, value, operator };
   }
 
   if (varNode.type !== "MemberExpression") return null;
@@ -188,7 +190,7 @@ export function getComparisonInfo(
   const tsVarNode = esTreeNodeToTSNodeMap.get(varNode);
   if (!tsVarNode) return null;
 
-  return { varName: memberName, tsVarNode, value };
+  return { varName: memberName, tsVarNode, value, operator };
 }
 
 function getMemberName(node: TSESTree.MemberExpression): string | null {
@@ -287,6 +289,69 @@ function collectConsecutiveValues(
   return { consecutiveValues, nextIndex: j };
 }
 
+function collectNestedStatementArrays(stmt: TSESTree.Statement): TSESTree.Statement[][] {
+  const results: TSESTree.Statement[][] = [];
+
+  function extract(stmts: TSESTree.Statement | TSESTree.Statement[] | null | undefined) {
+    if (!stmts) return;
+    if (Array.isArray(stmts)) {
+      results.push(stmts);
+      for (const s of stmts) extractNested(s);
+    } else {
+      if (stmts.type === "BlockStatement") {
+        results.push(stmts.body);
+        for (const s of stmts.body) extractNested(s);
+      }
+    }
+  }
+
+  function extractNested(s: TSESTree.Statement) {
+    switch (s.type) {
+      case "BlockStatement":
+        for (const inner of s.body) extractNested(inner);
+        break;
+      case "IfStatement":
+        extract(s.consequent);
+        extract(s.alternate);
+        break;
+      case "ForStatement":
+      case "WhileStatement":
+        extract(s.body ?? undefined);
+        break;
+      case "ForInStatement":
+      case "ForOfStatement":
+        extract(s.body);
+        break;
+      case "WithStatement":
+        extract(s.body);
+        break;
+      case "LabeledStatement":
+        extractNested(s.body);
+        break;
+      case "TryStatement":
+        extract(s.block.body);
+        if (s.handler) extract(s.handler.body.body);
+        if (s.finalizer) extract(s.finalizer.body);
+        break;
+      case "SwitchStatement":
+        for (const sc of s.cases) {
+          for (const cons of sc.consequent) {
+            if (cons.type === "BlockStatement") {
+              results.push(cons.body);
+              for (const inner of cons.body) extractNested(inner);
+            } else {
+              extractNested(cons);
+            }
+          }
+        }
+        break;
+    }
+  }
+
+  extractNested(stmt);
+  return results;
+}
+
 export function findIfChainStarts(
   statements: TSESTree.Statement[],
   esTreeNodeToTSNodeMap: ParserServices["esTreeNodeToTSNodeMap"],
@@ -312,5 +377,10 @@ export function findIfChainStarts(
     );
 
     handler({ ifStmt: stmt, info, consecutiveValues, nextIndex });
+
+    const nestedArrays = collectNestedStatementArrays(stmt);
+    for (const nested of nestedArrays) {
+      findIfChainStarts(nested, esTreeNodeToTSNodeMap, handler);
+    }
   }
 }
