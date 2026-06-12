@@ -1,0 +1,332 @@
+import { TSESTree, TSESLint } from "@typescript-eslint/utils";
+import { createRule } from "../utils/rule-creator.js";
+
+const DISCRIMINANT_NAMES = new Set([
+  "kind",
+  "type",
+  "status",
+  "tag",
+  "discriminant",
+  "variant",
+  "state",
+  "role",
+  "name",
+]);
+
+function getBaseIdentifier(
+  node: TSESTree.Node,
+): TSESTree.Identifier | null {
+  if (node.type === "Identifier") return node;
+  if (node.type === "MemberExpression") return getBaseIdentifier(node.object);
+  if (node.type === "ChainExpression") return getBaseIdentifier(node.expression);
+  return null;
+}
+
+function isDiscriminantProperty(name: string): boolean {
+  return DISCRIMINANT_NAMES.has(name);
+}
+
+function isFunctionBoundary(node: TSESTree.Node): boolean {
+  return (
+    node.type === "FunctionExpression" ||
+    node.type === "ArrowFunctionExpression" ||
+    node.type === "FunctionDeclaration"
+  );
+}
+
+function findEnclosingIf(
+  node: TSESTree.Node,
+): TSESTree.IfStatement | null {
+  let current: TSESTree.Node | undefined = node.parent;
+  while (current) {
+    if (isFunctionBoundary(current)) return null;
+    if (current.type === "IfStatement") return current;
+    current = current.parent;
+  }
+  return null;
+}
+
+function findEnclosingSwitch(
+  node: TSESTree.Node,
+): TSESTree.SwitchStatement | null {
+  let current: TSESTree.Node | undefined = node.parent;
+  while (current) {
+    if (isFunctionBoundary(current)) return null;
+    if (current.type === "SwitchStatement") return current;
+    current = current.parent;
+  }
+  return null;
+}
+
+function extractBasesFromTest(
+  test: TSESTree.Expression,
+): Set<TSESTree.Identifier> {
+  const bases = new Set<TSESTree.Identifier>();
+  if (test.type === "BinaryExpression") {
+    const leftBase = getBaseIdentifier(test.left);
+    if (
+      test.left.type === "MemberExpression" &&
+      test.left.property.type === "Identifier" &&
+      isDiscriminantProperty(test.left.property.name) &&
+      leftBase
+    ) {
+      bases.add(leftBase);
+    }
+    const rightBase = getBaseIdentifier(test.right);
+    if (
+      test.right.type === "MemberExpression" &&
+      test.right.property.type === "Identifier" &&
+      isDiscriminantProperty(test.right.property.name) &&
+      rightBase
+    ) {
+      bases.add(rightBase);
+    }
+  }
+  if (test.type === "LogicalExpression") {
+    for (const b of extractBasesFromTest(test.left)) bases.add(b);
+    for (const b of extractBasesFromTest(test.right)) bases.add(b);
+  }
+  if (
+    test.type === "MemberExpression" &&
+    test.property.type === "Identifier" &&
+    isDiscriminantProperty(test.property.name)
+  ) {
+    const base = getBaseIdentifier(test.object);
+    if (base) bases.add(base);
+  }
+  return bases;
+}
+
+function extractBaseFromSwitchDiscriminant(
+  discriminant: TSESTree.Expression,
+): TSESTree.Identifier | null {
+  const base = getBaseIdentifier(discriminant);
+  if (
+    discriminant.type === "MemberExpression" &&
+    discriminant.property.type === "Identifier" &&
+    isDiscriminantProperty(discriminant.property.name) &&
+    base
+  ) {
+    return base;
+  }
+  return null;
+}
+
+function extractPropName(expr: TSESTree.Expression): string {
+  if (
+    expr.type === "MemberExpression" &&
+    expr.property.type === "Identifier"
+  ) {
+    return expr.property.name;
+  }
+  if (
+    expr.type === "BinaryExpression" &&
+    expr.left.type === "MemberExpression" &&
+    expr.left.property.type === "Identifier"
+  ) {
+    return expr.left.property.name;
+  }
+  return "property";
+}
+
+function findDiscriminantForBase(
+  test: TSESTree.Expression,
+  baseName: string,
+): string | null {
+  if (test.type === "BinaryExpression") {
+    const side =
+      getBaseIdentifier(test.left)?.name === baseName ? test.left : test.right;
+    if (
+      side.type === "MemberExpression" &&
+      side.property.type === "Identifier" &&
+      isDiscriminantProperty(side.property.name)
+    ) {
+      return side.property.name;
+    }
+  }
+  if (test.type === "LogicalExpression") {
+    const left = findDiscriminantForBase(test.left, baseName);
+    if (left) return left;
+    return findDiscriminantForBase(test.right, baseName);
+  }
+  if (
+    test.type === "MemberExpression" &&
+    test.property.type === "Identifier" &&
+    isDiscriminantProperty(test.property.name)
+  ) {
+    const base = getBaseIdentifier(test.object);
+    if (base?.name === baseName) return test.property.name;
+  }
+  return null;
+}
+
+function isCastDirectlyOnBase(
+  expr: TSESTree.Expression,
+  base: TSESTree.Identifier,
+): boolean {
+  let target: TSESTree.Expression = expr;
+  if (target.type === "ChainExpression") target = target.expression;
+  return target === base;
+}
+
+function areSameVariable(
+  scopeManager: TSESLint.Scope.ScopeManager,
+  controlStructure: TSESTree.Node,
+  id1: TSESTree.Identifier,
+  id2: TSESTree.Identifier,
+): boolean {
+  if (id1 === id2) return true;
+  if (id1.name !== id2.name) return false;
+
+  const resolveScope = (
+    node: TSESTree.Node,
+    scope: TSESLint.Scope.Scope,
+  ): TSESLint.Scope.Scope | null => {
+    let best: TSESLint.Scope.Scope | null = null;
+    const walk = (s: TSESLint.Scope.Scope) => {
+      let cur: TSESTree.Node | undefined = node;
+      while (cur) {
+        if (cur === s.block) {
+          best = s;
+          for (const c of s.childScopes) walk(c);
+          return;
+        }
+        cur = cur.parent;
+      }
+    };
+    walk(scope);
+    return best;
+  };
+
+  const findScopeForNode = (
+    node: TSESTree.Node,
+  ): TSESLint.Scope.Scope | null => {
+    let cur: TSESTree.Node | undefined = node;
+    while (cur) {
+      const acquired = scopeManager.acquire(cur);
+      if (acquired) return acquired;
+      cur = cur.parent;
+    }
+    return null;
+  };
+
+  const moduleScope =
+    scopeManager.scopes.find((s) => s.type === "module") ??
+    scopeManager.globalScope;
+  if (!moduleScope) return true;
+  const castScope = resolveScope(id2, moduleScope);
+  if (!castScope) return true;
+
+  const controlScope = findScopeForNode(controlStructure);
+  if (!controlScope) return true;
+
+  const scopesBetween: TSESLint.Scope.Scope[] = [];
+  let scope: TSESLint.Scope.Scope | null = castScope;
+  while (scope && scope !== controlScope) {
+    scopesBetween.push(scope);
+    scope = scope.upper || null;
+  }
+  if (!scope) return true;
+
+  for (const s of scopesBetween) {
+    for (const v of s.variables) {
+      if (v.name === id1.name) return false;
+    }
+  }
+  return true;
+}
+
+function reportIfCastInDiscriminantCheck(
+  context: Parameters<ReturnType<typeof createRule>["create"]>["0"],
+  node: TSESTree.TSAsExpression,
+  castBase: TSESTree.Identifier,
+) {
+  const enclosingIf = findEnclosingIf(node);
+  if (enclosingIf) {
+    const scopeManager = context.sourceCode.scopeManager;
+    if (!scopeManager) return false;
+    const testBases = extractBasesFromTest(enclosingIf.test);
+    const match = Array.from(testBases).find(
+      (b) =>
+        b.name === castBase.name &&
+        areSameVariable(scopeManager, enclosingIf, b, castBase),
+    );
+    if (match) {
+      const discriminant = findDiscriminantForBase(enclosingIf.test, castBase.name) ?? "property";
+      context.report({
+        node,
+        messageId: "ifDiscriminant",
+        data: {
+          base: castBase.name,
+          discriminant,
+        },
+      });
+      return true;
+    }
+  }
+  return false;
+}
+
+function reportSwitchCastInDiscriminantCheck(
+  context: Parameters<ReturnType<typeof createRule>["create"]>["0"],
+  node: TSESTree.TSAsExpression,
+  castBase: TSESTree.Identifier,
+) {
+  const enclosingSwitch = findEnclosingSwitch(node);
+  if (enclosingSwitch) {
+    const scopeManager = context.sourceCode.scopeManager;
+    if (!scopeManager) return false;
+    const switchBase = extractBaseFromSwitchDiscriminant(
+      enclosingSwitch.discriminant,
+    );
+    if (
+      switchBase &&
+      switchBase.name === castBase.name &&
+      areSameVariable(scopeManager, enclosingSwitch, switchBase, castBase)
+    ) {
+      context.report({
+        node,
+        messageId: "switchDiscriminant",
+        data: {
+          base: castBase.name,
+          discriminant: extractPropName(enclosingSwitch.discriminant),
+        },
+      });
+      return true;
+    }
+  }
+  return false;
+}
+
+export default createRule({
+  name: "no-any-in-discriminant-check-uc03",
+  meta: {
+    type: "problem",
+    docs: {
+      description:
+        "Disallow `as any` casts inside conditional blocks that check a discriminant-like property on the same expression",
+    },
+    messages: {
+      ifDiscriminant:
+        "Using `as any` inside a conditional that checks `{{discriminant}}` on `{{base}}`. Use a discriminated union with proper narrowing instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC03-exhaustiveness.md",
+      switchDiscriminant:
+        "Using `as any` inside a `switch` on `{{base}}.{{discriminant}}`. Use a discriminated union with proper narrowing instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC03-exhaustiveness.md",
+    },
+    schema: [],
+    fixable: undefined,
+  },
+  defaultOptions: [],
+  create(context: TSESLint.RuleContext<"ifDiscriminant" | "switchDiscriminant", []>) {
+    return {
+      TSAsExpression(node) {
+        if (node.typeAnnotation.type !== "TSAnyKeyword") return;
+
+        const castBase = getBaseIdentifier(node.expression);
+        if (!castBase || !isCastDirectlyOnBase(node.expression, castBase)) return;
+
+        if (reportIfCastInDiscriminantCheck(context, node, castBase)) return;
+        reportSwitchCastInDiscriminantCheck(context, node, castBase);
+      },
+    };
+  },
+});
