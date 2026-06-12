@@ -44,33 +44,59 @@ export function getChildren(node: TSESTree.Node): TSESTree.Node[] {
   return children;
 }
 
+const FUNCTION_BOUNDARY_TYPES = new Set([
+  "FunctionDeclaration",
+  "FunctionExpression",
+  "ArrowFunctionExpression",
+]);
+
+function isFunctionBoundary(node: TSESTree.Node): boolean {
+  return FUNCTION_BOUNDARY_TYPES.has(node.type);
+}
+
+export interface WalkOptions {
+  /**
+   * When true, the walker will not descend into nested function bodies.
+   * ESLint visits nested functions as separate entry points, so descending
+   * into them would attribute inner-function constructs to the outer scope
+   * and produce false positives. Defaults to `true`.
+   */
+  stopAtFunctionBoundaries?: boolean;
+}
+
 export function walk(
   root: TSESTree.Node,
   cb: (node: TSESTree.Node) => void,
+  options: WalkOptions = {},
 ): void {
+  const stopBoundary = options.stopAtFunctionBoundaries ?? true;
   cb(root);
   for (const child of getChildren(root)) {
-    walk(child, cb);
+    if (stopBoundary && isFunctionBoundary(child)) continue;
+    walk(child, cb, options);
   }
 }
 
 export function walkNodes(
   root: TSESTree.Node,
   predicate: (node: TSESTree.Node) => boolean,
+  options: WalkOptions = {},
 ): boolean {
+  const stopBoundary = options.stopAtFunctionBoundaries ?? true;
   const seen = new Set<TSESTree.Node>();
-  function walk(node: TSESTree.Node): boolean {
+  function innerWalk(node: TSESTree.Node): boolean {
     if (seen.has(node)) return false;
     seen.add(node);
 
     if (predicate(node)) return true;
 
     for (const child of getChildren(node)) {
-      if (walk(child)) return true;
+      if (stopBoundary && isFunctionBoundary(child)) continue;
+      if (innerWalk(child)) return true;
     }
     return false;
   }
-  return walk(root);
+  return innerWalk(root);
 }
 
 export function hasAssertNever(stmt: TSESTree.Statement): boolean {
