@@ -1,0 +1,149 @@
+import { ruleTester } from "../helpers/rule-tester.js";
+import rule from "../../src/rules/no-any-in-utility-function.js";
+
+ruleTester.run("no-any-in-utility-function", rule, {
+  valid: [
+    `function clone<T>(data: T): T {
+      return JSON.parse(JSON.stringify(data));
+    }`,
+    `function greet(name: string): void {
+      console.log(name);
+    }`,
+    `function process(data: unknown): boolean {
+      return typeof data === "object";
+    }`,
+    `class Helper {
+      method(data: any): any {
+        return data;
+      }
+    }`,
+    `const obj = {
+      fn(data: any) { return data; }
+    };`,
+    `const handler = {
+      onClick: (e: any) => console.log(e),
+    };`,
+    `export const handler = {
+      onClick: (e: any) => console.log(e),
+    };`,
+    `class Foo {
+      bar = (data: any) => data;
+    }`,
+  ],
+  invalid: [
+    {
+      code: `function clone(data: any): any {
+        return JSON.parse(JSON.stringify(data));
+      }`,
+      errors: [
+        { messageId: "anyParam" },
+        { messageId: "anyReturn" },
+      ],
+    },
+    {
+      code: `export function stringify(value: any): any {
+        return JSON.stringify(value);
+      }`,
+      errors: [
+        { messageId: "anyParam" },
+        { messageId: "anyReturn" },
+      ],
+    },
+    {
+      code: `function parse(text: string): any {
+        return JSON.parse(text);
+      }`,
+      errors: [{ messageId: "anyReturn" }],
+    },
+    {
+      code: `export function deepMerge(a: any, b: any): any {
+        return Object.assign({}, a, b);
+      }`,
+      errors: [
+        { messageId: "anyParam" },
+        { messageId: "anyReturn" },
+      ],
+    },
+    {
+      code: `function process(...rest: any): void {
+        rest.forEach(console.log);
+      }`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    {
+      code: `function handle({ a }: any): void {
+        console.log(a);
+      }`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    {
+      code: `function process([x]: any): void {
+        console.log(x);
+      }`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    {
+      code: `export const clone = (data: any): any => JSON.parse(JSON.stringify(data))`,
+      errors: [
+        { messageId: "anyParam" },
+        { messageId: "anyReturn" },
+      ],
+    },
+    {
+      code: `const clone = (data: any): any => JSON.parse(JSON.stringify(data))`,
+      errors: [
+        { messageId: "anyParam" },
+        { messageId: "anyReturn" },
+      ],
+    },
+    {
+      code: `export const stringify = function(value: any): any {
+        return JSON.stringify(value);
+      }`,
+      errors: [
+        { messageId: "anyParam" },
+        { messageId: "anyReturn" },
+      ],
+    },
+    {
+      code: `const stringify = function(value: any): any {
+        return JSON.stringify(value);
+      }`,
+      errors: [
+        { messageId: "anyParam" },
+        { messageId: "anyReturn" },
+      ],
+    },
+    {
+      code: `export default function clone(data: any): any {
+        return JSON.parse(JSON.stringify(data));
+      }`,
+      errors: [
+        { messageId: "anyParam" },
+        { messageId: "anyReturn" },
+      ],
+    },
+    {
+      code: `export default (data: any) => data`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    {
+      code: `export default function parse(text: string): any {
+        return JSON.parse(text);
+      }`,
+      errors: [{ messageId: "anyReturn" }],
+    },
+    {
+      code: `export const handle = ({ a = 1 }: any): void => {
+        console.log(a);
+      }`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    {
+      code: `export const process = ([x = 0]: any): void => {
+        console.log(x);
+      }`,
+      errors: [{ messageId: "anyParam" }],
+    },
+  ],
+});
