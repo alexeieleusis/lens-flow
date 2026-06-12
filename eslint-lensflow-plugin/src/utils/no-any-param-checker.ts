@@ -3,6 +3,72 @@ import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 type ParamsNode = TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression;
 
 /**
+ * Recursively checks whether a type node contains `any`.
+ * Unwraps unions, intersections, and other type wrappers.
+ */
+function containsAnyType(node: TSESTree.TypeNode): boolean {
+  if (node.type === "TSAnyKeyword") return true;
+
+  if (node.type === "TSUnionType" || node.type === "TSIntersectionType") {
+    return node.types.some((member) => containsAnyType(member));
+  }
+
+  if (node.type === "TSArrayType") {
+    return containsAnyType(node.elementType);
+  }
+
+  if (node.type === "TSTupleType") {
+    return node.elementTypes.some((element) => containsAnyType(element));
+  }
+
+  if (node.type === "TSTypeReference" && node.typeArguments) {
+    return node.typeArguments.params.some((param) => containsAnyType(param));
+  }
+
+  if (node.type === "TSRestType" || node.type === "TSOptionalType") {
+    return containsAnyType(node.typeAnnotation);
+  }
+
+  if (node.type === "TSIndexedAccessType") {
+    return containsAnyType(node.objectType) || containsAnyType(node.indexType);
+  }
+
+  if (node.type === "TSConditionalType") {
+    return (
+      containsAnyType(node.checkType) ||
+      containsAnyType(node.extendsType) ||
+      containsAnyType(node.trueType) ||
+      containsAnyType(node.falseType)
+    );
+  }
+
+  if (node.type === "TSFunctionType" || node.type === "TSConstructorType") {
+    if (node.returnType?.typeAnnotation) {
+      return containsAnyType(node.returnType.typeAnnotation);
+    }
+    return false;
+  }
+
+  if (node.type === "TSMappedType") {
+    return (
+      containsAnyType(node.constraint) ||
+      (node.nameType != null && containsAnyType(node.nameType)) ||
+      (node.typeAnnotation != null && containsAnyType(node.typeAnnotation))
+    );
+  }
+
+  if (node.type === "TSImportType" && node.typeArguments) {
+    return node.typeArguments.params.some((param) => containsAnyType(param));
+  }
+
+  if (node.type === "TSTypeOperator" && node.typeAnnotation) {
+    return containsAnyType(node.typeAnnotation);
+  }
+
+  return false;
+}
+
+/**
  * Checks function parameters for `any` types and reports violations.
  * Skips TSParameterProperty nodes (handled separately).
  */
@@ -16,7 +82,7 @@ export function checkAnyParams(
 
     const base = param.type === "AssignmentPattern" ? param.left : param;
 
-    if (base.typeAnnotation?.typeAnnotation.type === "TSAnyKeyword") {
+    if (base.typeAnnotation?.typeAnnotation && containsAnyType(base.typeAnnotation.typeAnnotation)) {
       const paramName =
         "name" in base && typeof base.name === "string" ? base.name : "unnamed";
       context.report({
@@ -46,7 +112,7 @@ export function createNoAnyParamChecker(messageId: string) {
         checkAnyParams(node.params, context, messageId);
       },
       TSParameterProperty(node) {
-        if (node.parameter.typeAnnotation?.typeAnnotation.type === "TSAnyKeyword") {
+        if (node.parameter.typeAnnotation?.typeAnnotation && containsAnyType(node.parameter.typeAnnotation.typeAnnotation)) {
           const paramName =
             node.parameter.type === "Identifier"
               ? node.parameter.name
