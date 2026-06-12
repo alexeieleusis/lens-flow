@@ -23,7 +23,8 @@
     "lint": "eslint src/ tests/"
   },
   "dependencies": {
-    "@typescript-eslint/utils": "^8.0.0"
+    "@typescript-eslint/utils": "^8.0.0",
+    "eslint-visitor-keys": "^5.0.1"
   },
   "devDependencies": {
     "@typescript-eslint/parser": "^8.0.0",

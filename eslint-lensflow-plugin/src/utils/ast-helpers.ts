@@ -1,19 +1,9 @@
 import ts from "typescript";
 import { TSESTree } from "@typescript-eslint/utils";
 import type { ParserServices } from "@typescript-eslint/utils";
+import { KEYS } from "eslint-visitor-keys";
 
 const ASSERT_NEVER_PATTERN = /^assertNever$/;
-const SKIP_KEYS = new Set([
-  "parent",
-  "loc",
-  "range",
-  "leadingComments",
-  "trailingComments",
-  "innerComments",
-  "typeAnnotation",
-  "typeArguments",
-  "returnType",
-]);
 
 function isNodeLike(val: unknown): val is TSESTree.Node {
   return val != null && typeof val === "object" && "type" in val;
@@ -29,11 +19,13 @@ function collectNodeArray(val: unknown[], children: TSESTree.Node[]): void {
 
 export function getChildren(node: TSESTree.Node): TSESTree.Node[] {
   const children: TSESTree.Node[] = [];
+  const childKeys = KEYS[node.type];
+  if (!childKeys) return children;
 
-  for (const key of Object.keys(node)) {
-    if (SKIP_KEYS.has(key)) continue;
+  for (const key of childKeys) {
+    if (key === "type") continue;
     const val = (node as unknown as Record<string, unknown>)[key];
-    if (!(val && typeof val === "object")) continue;
+    if (val == null || typeof val !== "object") continue;
 
     if (Array.isArray(val)) {
       collectNodeArray(val, children);
