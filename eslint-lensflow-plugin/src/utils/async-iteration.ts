@@ -1,7 +1,7 @@
 import ts from "typescript";
 
 export const ASYNC_ITERATION_URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T64-async-iteration.md";
+  "https://raw.githubusercontent.com/jpablo/vibe-types/ebff3754e7ddc862d05c3cd1a19480bdf52dfc25/plugin/skills/typescript/catalog/T64-async-iteration.md";
 
 export function hasAsyncIteratorSignature(
   type: ts.Type,
