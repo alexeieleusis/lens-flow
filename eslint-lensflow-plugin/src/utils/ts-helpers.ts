@@ -108,6 +108,8 @@ export function collectChildTypes(type: TSESTree.TypeNode): TSESTree.TypeNode[] 
       return type.typeAnnotation ? [type.typeAnnotation] : [];
     case "TSTypeReference":
       return type.typeArguments ? [...type.typeArguments.params] : [];
+    case "TSParenthesizedType":
+      return type.typeAnnotation ? [type.typeAnnotation] : [];
     case "TSTemplateLiteralType":
       return [];
     default:
