@@ -28,7 +28,7 @@ export function checkAnyParams(
   }
 }
 
-type TypeNode = TSESTree.TSFunctionType | TSESTree.TSMethodSignature | TSESTree.TSDeclareFunction;
+type TypeNode = TSESTree.TSFunctionType | TSESTree.TSMethodSignature | TSESTree.TSDeclareFunction | TSESTree.TSCallSignatureDeclaration;
 
 /**
  * Creates a rule listener for concrete function nodes that checks parameters for `any` types.
@@ -75,6 +75,9 @@ export function createNoAnyParamTypeChecker(messageId: string) {
         checkAnyParams(node.params, context, messageId);
       },
       TSDeclareFunction(node: TypeNode) {
+        checkAnyParams(node.params, context, messageId);
+      },
+      TSCallSignatureDeclaration(node: TypeNode) {
         checkAnyParams(node.params, context, messageId);
       },
     };
