@@ -33,36 +33,22 @@ export function createOverloadGroupVisitor(
     "Program:exit"() {
       if (allFns.length === 0) return;
 
-      let i = 0;
-      while (i < allFns.length) {
-        let implIdx = -1;
-        for (let j = i; j < allFns.length; j++) {
-          if (isImpl(allFns[j])) {
-            implIdx = j;
-            break;
-          }
-        }
+      const byName = new Map<string, FnLikeNode[]>();
+      for (const fn of allFns) {
+        const name = fn.id?.name;
+        if (name === undefined) continue;
+        if (!byName.has(name)) byName.set(name, []);
+        byName.get(name).push(fn);
+      }
 
-        if (implIdx < 0) {
-          break;
-        }
+      for (const declarations of byName.values()) {
+        const impl = declarations.find(isImpl);
+        if (!impl) continue;
 
-        const impl = allFns[implIdx];
-        const implName = impl.id?.name;
+        const overloads = declarations.filter((n) => !isImpl(n));
+        if (overloads.length === 0) continue;
 
-        if (implName === undefined) {
-          i = implIdx + 1;
-          continue;
-        }
-
-        const group = allFns
-          .slice(i, implIdx + 1)
-          .filter((n) => n.id?.name === implName);
-        const overloads = group.filter((n) => !isImpl(n));
-
-        onGroup({ all: group, impl, overloads });
-
-        i = implIdx + 1;
+        onGroup({ all: declarations, impl, overloads });
       }
     },
   };
