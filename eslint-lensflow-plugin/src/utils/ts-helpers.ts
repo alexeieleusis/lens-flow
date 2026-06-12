@@ -103,9 +103,7 @@ export function collectChildTypes(type: TSESTree.TypeNode): TSESTree.TypeNode[] 
     case "TSConstructorType":
       return collectFunctionParamTypes(type);
     case "TSTypeQuery":
-      return type.exprName.type === "TSImportType" && type.exprName.typeArguments
-        ? [...type.exprName.typeArguments.params]
-        : [];
+      return [];
     case "TSTypeOperator":
       return type.typeAnnotation ? [type.typeAnnotation] : [];
     case "TSTypeReference":
