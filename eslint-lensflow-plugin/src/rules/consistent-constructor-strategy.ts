@@ -2,7 +2,7 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { getKeys } from "eslint-visitor-keys";
 import { createRule } from "../utils/rule-creator.js";
 
-const URL =
+const DOCS_URL =
   "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T26-refinement-types.md";
 
 function getKeyName(key: TSESTree.Expression | TSESTree.PrivateIdentifier): string | null {
@@ -249,7 +249,7 @@ export default createRule({
           data: {
             throwing: throwing.map((c) => c.name).join(", "),
             resultReturning: resultReturning.map((c) => c.name).join(", "),
-            url: URL,
+            url: DOCS_URL,
           },
         });
       }
