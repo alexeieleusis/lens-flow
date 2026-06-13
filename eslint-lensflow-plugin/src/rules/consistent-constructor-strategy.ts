@@ -143,9 +143,7 @@ export default createRule({
         | TSESTree.ArrowFunctionExpression
         | TSESTree.FunctionExpression,
     ): void {
-      const returnType = (
-        fn as TSESTree.FunctionDeclaration
-      ).returnType?.typeAnnotation;
+      const returnType = fn.returnType?.typeAnnotation;
       const body = fn.body;
       if (body?.type === "BlockStatement") {
         const strategy = classifyStrategy(returnType, body);
