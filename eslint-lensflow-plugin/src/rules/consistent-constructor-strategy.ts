@@ -3,7 +3,7 @@ import { getKeys } from "eslint-visitor-keys";
 import { createRule } from "../utils/rule-creator.js";
 
 const DOCS_URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T26-refinement-types.md";
+  "https://raw.githubusercontent.com/jpablo/vibe-types/f5ab7f35de4cc4e292500398c8b2f6edab96c2db/plugin/skills/typescript/catalog/T26-refinement-types.md";
 
 function getKeyName(key: TSESTree.Expression | TSESTree.PrivateIdentifier): string | null {
   if (key.type === "Identifier") return key.name;
