@@ -392,6 +392,16 @@ def resolve_thread(thread_id: str, runner: Runner) -> None:
     runner.gh("api", "graphql", "-f", f"query={mutation}")
 
 
+def rerequest_review(pr_number: int, runner: Runner) -> None:
+    print(f"  re-requesting Copilot review for PR #{pr_number}")
+    runner.gh(
+        "pr", "edit", str(pr_number),
+        "--add-reviewer", "copilot",
+        "--repo", GITHUB_REPO,
+        capture=True,
+    )
+
+
 _REVIEW_THREADS_QUERY = """
 query($owner: String!, $name: String!, $number: Int!) {
   repository(owner: $owner, name: $name) {
