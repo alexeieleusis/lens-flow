@@ -6,12 +6,10 @@ import noAnyArrayParameter from "./rules/no-any-array-parameter.js";
 import noAnyArrayReturn from "./rules/no-any-array-return.js";
 import noAnyBoundary from "./rules/no-any-boundary.js";
 import noAnyCallbackParam from "./rules/no-any-callback-param.js";
-import noAnyCallbackParameter from "./rules/no-any-callback-parameter.js";
 import noAnyCallbackType from "./rules/no-any-callback-type.js";
 import noAnyCastChain from "./rules/no-any-cast-chain.js";
 import noAnyDomainParameterUc02 from "./rules/no-any-domain-parameter-uc02.js";
 import noAnyExternalData from "./rules/no-any-external-data.js";
-import noAnyFunctionParameter from "./rules/no-any-function-parameter.js";
 import noAnyInCallable from "./rules/no-any-in-callable.js";
 import noAnyInDiscriminantCheckUc03 from "./rules/no-any-in-discriminant-check-uc03.js";
 import noAnyInInterface from "./rules/no-any-in-interface.js";
@@ -37,7 +35,6 @@ import noAsInsteadOfNarrowing from "./rules/no-as-instead-of-narrowing.js";
 import noAssertionBypass from "./rules/no-assertion-bypass.js";
 import noAssertneverCastUnknown from "./rules/no-assertnever-cast-unknown.js";
 import noBivariantMethodSyntax from "./rules/no-bivariant-method-syntax.js";
-import noBivariantMethodSyntaxUc17 from "./rules/no-bivariant-method-syntax-uc17.js";
 import noBlindAsAnyCast from "./rules/no-blind-as-any-cast.js";
 import noBlindAsCast from "./rules/no-blind-as-cast.js";
 import noBooleanParseReturn from "./rules/no-boolean-parse-return.js";
@@ -66,7 +63,6 @@ import noDeeplyNestedUnionMembers from "./rules/no-deeply-nested-union-members.j
 import noDirectBrandCast from "./rules/no-direct-brand-cast.js";
 import noDirectCircularAlias from "./rules/no-direct-circular-alias.js";
 import noDoubleAssertion from "./rules/no-double-assertion.js";
-import noDoubleAssertionEscape from "./rules/no-double-assertion-escape.js";
 import noDoubleCastAny from "./rules/no-double-cast-any.js";
 import noDuplicateDiscriminantValues from "./rules/no-duplicate-discriminant-values.js";
 import noDuplicateInlineStructuralTypes from "./rules/no-duplicate-inline-structural-types.js";
@@ -156,7 +152,6 @@ import noOverlyBroadGenericConstraints from "./rules/no-overly-broad-generic-con
 import noOverlyComplexBound from "./rules/no-overly-complex-bound.js";
 import noOverlyComplexInferChainT63 from "./rules/no-overly-complex-infer-chain-t63.js";
 import noOverrideThisWithBaseType from "./rules/no-override-this-with-base-type.js";
-import noParallelBooleanFlags from "./rules/no-parallel-boolean-flags.js";
 import noParallelBooleanStateFlags from "./rules/no-parallel-boolean-state-flags.js";
 import noParallelCaseTransformedEnums from "./rules/no-parallel-case-transformed-enums.js";
 import noParallelOptionalFieldsUc01 from "./rules/no-parallel-optional-fields-uc01.js";
@@ -306,12 +301,10 @@ const plugin: {
     "no-any-array-return": noAnyArrayReturn,
     "no-any-boundary": noAnyBoundary,
     "no-any-callback-param": noAnyCallbackParam,
-    "no-any-callback-parameter": noAnyCallbackParameter,
     "no-any-callback-type": noAnyCallbackType,
     "no-any-cast-chain": noAnyCastChain,
     "no-any-domain-parameter-uc02": noAnyDomainParameterUc02,
     "no-any-external-data": noAnyExternalData,
-    "no-any-function-parameter": noAnyFunctionParameter,
     "no-any-in-callable": noAnyInCallable,
     "no-any-in-discriminant-check-uc03": noAnyInDiscriminantCheckUc03,
     "no-any-in-interface": noAnyInInterface,
@@ -337,7 +330,6 @@ const plugin: {
     "no-assertion-bypass": noAssertionBypass,
     "no-assertnever-cast-unknown": noAssertneverCastUnknown,
     "no-bivariant-method-syntax": noBivariantMethodSyntax,
-    "no-bivariant-method-syntax-uc17": noBivariantMethodSyntaxUc17,
     "no-blind-as-any-cast": noBlindAsAnyCast,
     "no-blind-as-cast": noBlindAsCast,
     "no-boolean-parse-return": noBooleanParseReturn,
@@ -366,7 +358,6 @@ const plugin: {
     "no-direct-brand-cast": noDirectBrandCast,
     "no-direct-circular-alias": noDirectCircularAlias,
     "no-double-assertion": noDoubleAssertion,
-    "no-double-assertion-escape": noDoubleAssertionEscape,
     "no-double-cast-any": noDoubleCastAny,
     "no-duplicate-discriminant-values": noDuplicateDiscriminantValues,
     "no-duplicate-inline-structural-types": noDuplicateInlineStructuralTypes,
@@ -456,7 +447,6 @@ const plugin: {
     "no-overly-complex-bound": noOverlyComplexBound,
     "no-overly-complex-infer-chain-t63": noOverlyComplexInferChainT63,
     "no-override-this-with-base-type": noOverrideThisWithBaseType,
-    "no-parallel-boolean-flags": noParallelBooleanFlags,
     "no-parallel-boolean-state-flags": noParallelBooleanStateFlags,
     "no-parallel-case-transformed-enums": noParallelCaseTransformedEnums,
     "no-parallel-optional-fields-uc01": noParallelOptionalFieldsUc01,
