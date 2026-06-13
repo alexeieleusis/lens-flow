@@ -177,7 +177,10 @@ export default createRule({
     ): void {
       const returnType = fn.returnType?.typeAnnotation;
       const body = fn.body;
-      if (body?.type === "BlockStatement") {
+      // Skip declare functions and overload signatures — body is null,
+      // there's no runtime code to analyze.
+      if (!body) return;
+      if (body.type === "BlockStatement") {
         const strategy = classifyStrategy(returnType, body);
         if (strategy) {
           constructors.push({ name, node: fn, strategy });
