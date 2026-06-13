@@ -1,0 +1,148 @@
+import { TSESTree, TSESLint } from "@typescript-eslint/utils";
+import { createRule } from "../utils/rule-creator.js";
+
+export default createRule({
+  name: "require-validation-after-json-parse",
+  meta: {
+    type: "problem",
+    docs: {
+      description:
+        "Require schema validation after JSON.parse before using parsed data",
+    },
+    messages: {
+      directUnvalidated:
+        "JSON.parse result used directly in {{calleeName}} without schema validation. Wrap with a validator like Schema.parse() or Schema.safeParse(). See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC19-serialization.md",
+      unvalidatedVariableUsage:
+        "Unvalidated JSON.parse result from '{{varName}}' used in {{calleeName}} without passing through a schema validator. Wrap the parse result with Schema.parse() or Schema.safeParse(). See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC19-serialization.md",
+    },
+    schema: [],
+  },
+  defaultOptions: [],
+  create(context: TSESLint.RuleContext<"unvalidatedVariableUsage" | "directUnvalidated", []>) {
+    const parsedData: Record<string, unknown> = {};
+
+    const isValidationMethod = (callee: unknown): boolean => {
+      if (
+        callee &&
+        typeof callee === "object" &&
+        "type" in callee &&
+        callee.type === "MemberExpression" &&
+        "property" in callee
+      ) {
+        const prop = callee.property;
+        if (prop && typeof prop === "object" && "name" in prop) {
+          return /^(safe)?parse$|decode$|validate$/i.test(prop.name as string);
+        }
+      }
+      return false;
+    };
+
+    const getCalleeName = (callee: unknown): string => {
+      if (
+        callee &&
+        typeof callee === "object" &&
+        "type" in callee &&
+        callee.type === "MemberExpression" &&
+        "property" in callee
+      ) {
+        const prop = callee.property;
+        if (prop && typeof prop === "object" && "name" in prop) {
+          return prop.name as string;
+        }
+      }
+      return "unknown";
+    };
+
+    const isJsonParseCall = (node: unknown): node is TSESTree.CallExpression => {
+      if (!node || typeof node !== "object" || !("callee" in node)) return false;
+      const call = node as TSESTree.CallExpression;
+      const { callee } = call;
+      return (
+        callee.type === "MemberExpression" &&
+        callee.object.type === "Identifier" &&
+        callee.object.name === "JSON" &&
+        callee.property.type === "Identifier" &&
+        callee.property.name === "parse"
+      );
+    };
+
+    const isParentCallExpression = (
+      node: TSESTree.CallExpression
+    ): TSESTree.CallExpression | null => {
+      const p = node.parent;
+      if (!p || typeof p !== "object" || !("type" in p)) return null;
+      if (p.type !== "CallExpression" || !("arguments" in p)) return null;
+      return p;
+    };
+
+    const isVariableDeclaratorWithId = (
+      node: TSESTree.CallExpression
+    ): string | null => {
+      const p = node.parent;
+      if (!p || typeof p !== "object" || !("type" in p)) return null;
+      if (p.type !== "VariableDeclarator" || !("id" in p)) return null;
+      if (p.id.type !== "Identifier") return null;
+      return p.id.name;
+    };
+
+    const checkUnvalidatedArgs = (
+      callee: TSESTree.Expression,
+      args: TSESTree.CallExpressionArgument[]
+    ) => {
+      if (isValidationMethod(callee)) return;
+      for (const arg of args) {
+        if (arg.type === "Identifier" && arg.name in parsedData) {
+          context.report({
+            node: arg,
+            messageId: "unvalidatedVariableUsage",
+            data: {
+              varName: arg.name,
+              calleeName: getCalleeName(callee),
+            },
+          });
+        }
+      }
+    };
+
+    const handleJsonParse = (node: TSESTree.CallExpression) => {
+      const parentCall = isParentCallExpression(node);
+      if (parentCall) {
+        if (
+          Array.isArray(parentCall.arguments) &&
+          !parentCall.arguments.includes(node)
+        ) {
+          return;
+        }
+
+        if (!isValidationMethod(parentCall.callee)) {
+          context.report({
+            node,
+            messageId: "directUnvalidated",
+            data: {
+              calleeName: getCalleeName(parentCall.callee),
+            },
+          });
+        }
+        return;
+      }
+
+      const varName = isVariableDeclaratorWithId(node);
+      if (varName) {
+        parsedData[varName] = node;
+      }
+    };
+
+    return {
+      CallExpression(node) {
+        const { callee, arguments: args } = node;
+
+        if (isJsonParseCall(node)) {
+          handleJsonParse(node);
+          return;
+        }
+
+        checkUnvalidatedArgs(callee, args);
+      },
+    };
+  },
+});
