@@ -70,8 +70,10 @@ export function containsTypeRef(
       );
     }
     case AST_NODE_TYPES.TSTypeOperator: {
-      const to = node;
-      return containsTypeRef(to.typeAnnotation!, paramName);
+      if (node.operator === "keyof") {
+        return false;
+      }
+      return containsTypeRef(node.typeAnnotation!, paramName);
     }
     case AST_NODE_TYPES.TSFunctionType:
     case AST_NODE_TYPES.TSConstructorType: {
@@ -200,6 +202,9 @@ export function containsTypeRefInOutput(
       );
     }
     case AST_NODE_TYPES.TSTypeOperator: {
+      if (node.operator === "keyof") {
+        return false;
+      }
       return containsTypeRefInOutput(node.typeAnnotation!, paramName);
     }
     case AST_NODE_TYPES.TSTypeLiteral:
