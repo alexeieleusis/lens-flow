@@ -188,7 +188,7 @@ function extractBinaryDiscriminant(
     test.left.object.type === "Identifier"
   ) {
     const value = getLiteralFromExpr(test.right);
-    if (value === null) return null;
+    if (value === null || typeof value === "boolean") return null;
     return {
       varName: test.left.object.name,
       propName: test.left.property.name,
@@ -197,7 +197,7 @@ function extractBinaryDiscriminant(
   }
   if (test.left.type === "Identifier") {
     const value = getLiteralFromExpr(test.right);
-    if (value === null) return null;
+    if (value === null || typeof value === "boolean") return null;
     return { varName: test.left.name, propName: null, value };
   }
   if (
@@ -206,7 +206,7 @@ function extractBinaryDiscriminant(
     test.right.object.type === "Identifier"
   ) {
     const value = getLiteralFromExpr(test.left);
-    if (value === null) return null;
+    if (value === null || typeof value === "boolean") return null;
     return {
       varName: test.right.object.name,
       propName: test.right.property.name,
@@ -215,7 +215,7 @@ function extractBinaryDiscriminant(
   }
   if (test.right.type === "Identifier") {
     const value = getLiteralFromExpr(test.left);
-    if (value === null) return null;
+    if (value === null || typeof value === "boolean") return null;
     return { varName: test.right.name, propName: null, value };
   }
   return null;
@@ -245,7 +245,8 @@ function getAllDiscriminantValues(
   }
 
   const values = extractLiteralValues(paramType);
-  return values.length > 0 ? values : null;
+  const filtered = values.filter((v): v is string | number => typeof v !== "boolean");
+  return filtered.length > 0 ? filtered : null;
 }
 
 type FunctionNode =

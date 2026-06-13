@@ -97,7 +97,7 @@ export default createRule({
         tsFirstArg as ts.Expression,
       );
 
-      return hasAsyncIteratorSignature(argType);
+      return hasAsyncIteratorSignature(argType, checker);
     }
 
     function unwrapToAwait(

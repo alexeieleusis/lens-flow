@@ -12,7 +12,7 @@ RuleTester.it = it;
 const __dirname = resolve(fileURLToPath(import.meta.url), "..");
 const TEST_FILENAME = "tests/rules/test.ts";
 const TS_CONFIG_DIR = resolve(__dirname, "../..");
-const TS_CONFIG = join(TS_CONFIG_DIR, "tsconfig.test.json");
+const TS_CONFIG = join(TS_CONFIG_DIR, "tests", "tsconfig.json");
 
 const ruleTester = new RuleTester({
   languageOptions: {

@@ -1,7 +1,7 @@
 import ts from "typescript";
 import { TSESTree } from "@typescript-eslint/utils";
 import type { ParserServices } from "@typescript-eslint/utils";
-import { KEYS } from "eslint-visitor-keys";
+import { visitorKeys as KEYS } from "@typescript-eslint/visitor-keys";
 
 const ASSERT_NEVER_PATTERN = /^assertNever$/;
 
