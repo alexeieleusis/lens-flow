@@ -1,4 +1,5 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
+import { getKeys } from "eslint-visitor-keys";
 import { createRule } from "../utils/rule-creator.js";
 
 const URL =
@@ -48,20 +49,6 @@ function isPotentiallyBrandedType(typeNode: TSESTree.TypeNode): boolean {
 function hasThrowStatement(body: TSESTree.BlockStatement): boolean {
   const visited = new Set<object>();
 
-  function walkChild(child: unknown): boolean {
-    if (child && typeof child === "object" && "type" in child) {
-      return walk(child as TSESTree.Node);
-    }
-    if (Array.isArray(child)) {
-      for (const item of child) {
-        if (item && typeof item === "object" && "type" in item) {
-          if (walk(item as TSESTree.Node)) return true;
-        }
-      }
-    }
-    return false;
-  }
-
   function walk(node: TSESTree.Node): boolean {
     if (visited.has(node)) return false;
     visited.add(node);
@@ -76,11 +63,18 @@ function hasThrowStatement(body: TSESTree.BlockStatement): boolean {
       return false;
     }
 
-    for (const key of Object.keys(node)) {
-      if (key === "parent") continue;
+    for (const key of getKeys(node)) {
       const child = (node as unknown as Record<string, unknown>)[key];
-      if (child && typeof child === "object") {
-        if (walkChild(child)) return true;
+      if (child == null || typeof child !== "object") continue;
+
+      if ("type" in child) {
+        if (walk(child as TSESTree.Node)) return true;
+      } else if (Array.isArray(child)) {
+        for (const item of child) {
+          if (item && typeof item === "object" && "type" in item) {
+            if (walk(item as TSESTree.Node)) return true;
+          }
+        }
       }
     }
     return false;
