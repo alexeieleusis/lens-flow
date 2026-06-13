@@ -329,6 +329,27 @@ export function isUsedAsInputInBody(
       if (typeAnn?.type === AST_NODE_TYPES.TSFunctionType) {
         return paramsContainTypeRef(typeAnn.params, paramName);
       }
+      if (typeAnn?.type === AST_NODE_TYPES.TSConstructorType) {
+        return paramsContainTypeRef(typeAnn.params, paramName);
+      }
+    }
+    if (member.type === AST_NODE_TYPES.TSCallSignatureDeclaration) {
+      return paramsContainTypeRef(
+        (member as TSESTree.TSCallSignatureDeclaration).params,
+        paramName,
+      );
+    }
+    if (member.type === AST_NODE_TYPES.TSConstructSignatureDeclaration) {
+      return paramsContainTypeRef(
+        (member as TSESTree.TSConstructSignatureDeclaration).params,
+        paramName,
+      );
+    }
+    if (member.type === AST_NODE_TYPES.TSIndexSignature) {
+      return (member as TSESTree.TSIndexSignature).parameters.some((p) => {
+        const tp = paramTypeAnnotation(p);
+        return tp ? containsTypeRef(tp, paramName) : false;
+      });
     }
     return false;
   });
