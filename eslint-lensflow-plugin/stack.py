@@ -427,7 +427,11 @@ def fetch_unresolved_threads(pr_number: int, runner: Runner) -> list[dict]:
         print(f"  warning: failed to fetch review threads: {result.stderr.strip()}")
         return []
     data = json.loads(result.stdout)
-    nodes = data["data"]["repository"]["pullRequest"]["reviewThreads"]["nodes"]
+    pr = data["data"]["repository"]["pullRequest"]
+    if not pr:
+        print(f"  warning: PR #{pr_number} not found or inaccessible")
+        return []
+    nodes = pr["reviewThreads"]["nodes"]
     return [t for t in nodes if not t.get("isResolved", True)]
 
 
