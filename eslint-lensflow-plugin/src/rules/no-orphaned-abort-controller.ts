@@ -1,0 +1,188 @@
+import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
+import { createRule } from "../utils/rule-creator.js";
+
+type ASTNode = TSESTree.Node | TSESTree.Statement | TSESTree.Expression;
+
+function isASTNode(
+  obj: unknown,
+): obj is TSESTree.Node | TSESTree.Statement | TSESTree.Expression {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    "type" in obj &&
+    typeof (obj as Record<string, unknown>).type === "string"
+  );
+}
+
+function walkChildren(
+  node: ASTNode,
+  visitor: (n: ASTNode) => void,
+): void {
+  for (const key of Object.keys(node)) {
+    if (key === "parent") continue;
+    const child = (node as unknown as Record<string, unknown>)[key];
+    if (Array.isArray(child)) {
+      for (const item of child) {
+        if (isASTNode(item)) visitor(item);
+      }
+    } else if (isASTNode(child)) {
+      visitor(child);
+    }
+  }
+}
+
+function passedToFunction(
+  body: TSESTree.BlockStatement | null,
+  varName: string,
+): boolean {
+  if (!body) return false;
+
+  let found = false;
+
+  function visit(n: ASTNode): void {
+    if (found) return;
+
+    if (
+      n.type === "CallExpression" &&
+      (n.callee.type !== "MemberExpression" ||
+        !(
+          n.callee.object.type === "Identifier" &&
+          n.callee.object.name === varName
+        ))
+    ) {
+      const hasControllerArg = n.arguments.some((arg) => {
+        if (arg.type === "Identifier" && arg.name === varName)
+          return true;
+        if (
+          arg.type === "MemberExpression" &&
+          arg.object.type === "Identifier" &&
+          arg.object.name === varName
+        )
+          return true;
+        return false;
+      });
+      if (hasControllerArg) {
+        found = true;
+        return;
+      }
+    }
+
+    walkChildren(n, visit);
+  }
+
+  visit(body);
+  return found;
+}
+
+function hasAbortCall(
+  body: TSESTree.BlockStatement | null,
+  varName: string,
+): boolean {
+  if (!body) return false;
+
+  let found = false;
+
+  function visit(n: ASTNode): void {
+    if (found) return;
+
+    if (
+      n.type === "CallExpression" &&
+      n.callee.type === "MemberExpression" &&
+      n.callee.object.type === "Identifier" &&
+      n.callee.object.name === varName &&
+      n.callee.property.type === "Identifier" &&
+      n.callee.property.name === "abort"
+    ) {
+      found = true;
+      return;
+    }
+
+    walkChildren(n, visit);
+  }
+
+  visit(body);
+  return found;
+}
+
+function findEnclosingFunctionBody(
+  node: ASTNode,
+): TSESTree.BlockStatement | null {
+  let current: TSESTree.Node | undefined = node;
+  while (current) {
+    if (
+      current.type === "FunctionDeclaration" ||
+      current.type === "FunctionExpression" ||
+      current.type === "ArrowFunctionExpression"
+    ) {
+      const fn = current as
+        | TSESTree.FunctionDeclaration
+        | TSESTree.FunctionExpression
+        | TSESTree.ArrowFunctionExpression;
+      if (
+        fn.body.type === "BlockStatement" &&
+        fn.body.body.length > 0
+      ) {
+        return fn.body;
+      }
+      return null;
+    }
+    current = current.parent;
+  }
+  return null;
+}
+
+export default createRule({
+  name: "no-orphaned-abort-controller",
+  meta: {
+    type: "problem",
+    docs: {
+      description:
+        "Disallow creating an AbortController without ever calling .abort()",
+    },
+    messages: {
+      orphanedAbortController:
+        "AbortController '{{name}}' is never aborted, which may cause a memory leak. Ensure .abort() is called in a cleanup path (e.g., try/finally or a timeout callback). See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC21-async-concurrency.md",
+    },
+    schema: [],
+  },
+  defaultOptions: [],
+  create(context: TSESLint.RuleContext<"orphanedAbortController", []>) {
+    return {
+      NewExpression(node: TSESTree.NewExpression): void {
+        if (
+          node.callee.type !== "Identifier" ||
+          node.callee.name !== "AbortController"
+        ) {
+          return;
+        }
+
+        const decl = node.parent;
+        if (decl?.type !== "VariableDeclarator" || !decl.id) {
+          return;
+        }
+
+        if (decl.id.type !== "Identifier") {
+          return;
+        }
+
+        const varName = decl.id.name;
+        const body = findEnclosingFunctionBody(node);
+
+        if (!body) {
+          return;
+        }
+
+        const hasAbort = hasAbortCall(body, varName);
+        const passedOut = passedToFunction(body, varName);
+
+        if (!hasAbort && !passedOut) {
+          context.report({
+            node,
+            messageId: "orphanedAbortController",
+            data: { name: varName },
+          });
+        }
+      },
+    };
+  },
+});
