@@ -1,0 +1,53 @@
+import { ruleTester } from "../helpers/rule-tester.js";
+import rule from "../../src/rules/no-jsdoc-constraint-spec.js";
+
+ruleTester.run("no-jsdoc-constraint-spec", rule, {
+  valid: [
+    `type Request =
+      | { method: "GET"; body?: never }
+      | { method: "POST"; body: unknown }
+      | { method: "PUT"; body: unknown }
+      | { method: "DELETE"; body?: never };`,
+    `interface Config {
+      host: string;
+      port: number;
+    }`,
+    `/** The name of the user */
+    interface User {
+      name: string;
+    }`,
+    `type State = {
+      status: "pending" | "complete" | "failed";
+    }`,
+  ],
+  invalid: [
+    {
+      code: `interface Request {
+  // @method must be "GET"|"POST"|"PUT"|"DELETE"
+  method: string;
+}`,
+      errors: [{ messageId: "jsdocConstraint" }],
+    },
+    {
+      code: `interface Request {
+  // @body required when method is "POST"
+  body: string;
+}`,
+      errors: [{ messageId: "jsdocConditionalField" }],
+    },
+    {
+      code: `interface Account {
+  /** status must be one of "active" | "inactive" */
+  status: string;
+}`,
+      errors: [{ messageId: "jsdocConstraint" }],
+    },
+    {
+      code: `type Response = {
+  // code must be "OK"|"ERR"|"WARN"
+  code: string;
+}`,
+      errors: [{ messageId: "jsdocConstraint" }],
+    },
+  ],
+});
