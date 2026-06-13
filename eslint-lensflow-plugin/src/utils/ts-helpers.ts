@@ -108,8 +108,6 @@ export function collectChildTypes(type: TSESTree.TypeNode): TSESTree.TypeNode[] 
       return type.typeAnnotation ? [type.typeAnnotation] : [];
     case "TSTypeReference":
       return type.typeArguments ? [...type.typeArguments.params] : [];
-    case "TSParenthesizedType":
-      return type.typeAnnotation ? [type.typeAnnotation] : [];
     case "TSTemplateLiteralType":
       return [];
     default:
@@ -137,7 +135,7 @@ export function extractLiteralValues(tsType: ts.Type): (string | number | boolea
       values.add((t as ts.NumberLiteralType).value);
       return;
     }
-    if ((t.flags & (ts.TypeFlags.TrueLiteral | ts.TypeFlags.FalseLiteral)) !== 0) {
+    if ((t.flags & ts.TypeFlags.BooleanLiteral) !== 0) {
       values.add((t as ts.Type & { value: boolean }).value);
     }
   }

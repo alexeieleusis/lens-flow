@@ -45,7 +45,8 @@ export function createOverloadGroupVisitor(
         const name = fn.id?.name;
         if (name === undefined) continue;
         if (!byName.has(name)) byName.set(name, []);
-        byName.get(name).push(fn);
+        const group = byName.get(name);
+        if (group) group.push(fn);
       }
 
       for (const declarations of byName.values()) {

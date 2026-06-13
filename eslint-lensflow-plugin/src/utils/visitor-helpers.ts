@@ -28,10 +28,7 @@ export function createFunctionParamVisitor(
     },
     MethodDefinition(node) {
       const fn = (node as TSESTree.MethodDefinition).value;
-      if (
-        fn &&
-        (fn.type === "FunctionExpression" || fn.type === "ArrowFunctionExpression")
-      ) {
+      if (fn && fn.body) {
         fn.params.forEach(checkParam);
       }
     },
