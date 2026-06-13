@@ -247,15 +247,27 @@ function memberContainsOutputRef(
       ? containsTypeRefInOutput(member.typeAnnotation.typeAnnotation, paramName)
       : false;
   }
+  if (member.type === AST_NODE_TYPES.TSCallSignatureDeclaration) {
+    const c = member as TSESTree.TSCallSignatureDeclaration;
+    return c.returnType?.typeAnnotation
+      ? containsTypeRefInOutput(c.returnType.typeAnnotation, paramName)
+      : false;
+  }
+  if (member.type === AST_NODE_TYPES.TSConstructSignatureDeclaration) {
+    const c = member as TSESTree.TSConstructSignatureDeclaration;
+    return c.returnType?.typeAnnotation
+      ? containsTypeRefInOutput(c.returnType.typeAnnotation, paramName)
+      : false;
+  }
   return false;
 }
 
-export function paramTypeAnnotation(param: TSESTree.Node): TSESTree.Node | undefined {
+function innerParamTypeAnnotation(param: TSESTree.Node): TSESTree.Node | undefined {
   if (param.type === AST_NODE_TYPES.Identifier) {
     return param.typeAnnotation?.typeAnnotation;
   }
   if (param.type === AST_NODE_TYPES.RestElement) {
-    return param.typeAnnotation?.typeAnnotation;
+    return param.typeAnnotation?.typeAnnotation || innerParamTypeAnnotation(param.argument);
   }
   if (
     param.type === AST_NODE_TYPES.ObjectPattern ||
@@ -264,6 +276,16 @@ export function paramTypeAnnotation(param: TSESTree.Node): TSESTree.Node | undef
     return param.typeAnnotation?.typeAnnotation;
   }
   return undefined;
+}
+
+export function paramTypeAnnotation(param: TSESTree.Node): TSESTree.Node | undefined {
+  if (param.type === AST_NODE_TYPES.AssignmentPattern) {
+    return param.typeAnnotation?.typeAnnotation || innerParamTypeAnnotation(param.left);
+  }
+  if (param.type === AST_NODE_TYPES.TSParameterProperty) {
+    return innerParamTypeAnnotation(param.parameter);
+  }
+  return innerParamTypeAnnotation(param);
 }
 
 function paramsContainTypeRef(
