@@ -9,7 +9,7 @@ SCRIPT = Path(__file__).parent / "stack.py"
 
 sys.path.insert(0, str(Path(__file__).parent))
 import stack
-from stack import Runner, build_work_list, copy_utils, WorkItem, derive_state, ItemState, to_camel_case, generate_index, build_review_prompt, make_rebase_onto_cmd
+from stack import Runner, build_work_list, copy_utils, WorkItem, derive_state, ItemState, to_camel_case, generate_index, build_review_prompt, make_rebase_onto_cmd, rerequest_review
 
 
 def run(args: list[str]) -> subprocess.CompletedProcess:
@@ -247,6 +247,17 @@ def test_build_review_prompt_no_line():
     )
     assert "General comment." in prompt
     assert "no-any-parameter" in prompt
+
+
+# ── rerequest_review tests ────────────────────────────────────────────────────
+
+def test_rerequest_review_calls_gh_pr_edit(capsys):
+    r = Runner(dry_run=True)
+    from stack import rerequest_review
+    rerequest_review(42, r)
+    out = capsys.readouterr().out
+    assert "gh pr edit 42" in out
+    assert "copilot" in out
 
 
 # ── make_rebase_onto_cmd tests ────────────────────────────────────────────────

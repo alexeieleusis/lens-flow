@@ -249,6 +249,13 @@ def write_register_rules(runner: Runner) -> None:
 
 # ── Phase: branch ─────────────────────────────────────────────────────────────
 
+def local_branch_exists(branch: str) -> bool:
+    result = subprocess.run(
+        ["git", "rev-parse", "--verify", f"refs/heads/{branch}"],
+        cwd=TARGET_REPO, capture_output=True, text=True
+    )
+    return result.returncode == 0
+
 def pr_title(item: WorkItem) -> str:
     if item.kind == "utils":
         return "feat: add shared utility files"
@@ -300,36 +307,42 @@ def phase_branch(
 
         # Steps 1-5: only needed if branch not yet pushed
         if not item_state.branched:
-            # 1. Checkout new branch
-            runner.git("checkout", "-b", item.branch, prev_branch)
+            branch_local = local_branch_exists(item.branch) if not runner.dry_run else False
 
-            # 2. Copy files
-            if item.kind == "utils":
-                copy_utils(runner)
-            elif item.kind == "rule":
-                copy_rule(item.rule_name, runner)
-            elif item.kind == "register-rules":
-                write_register_rules(runner)
+            if not branch_local:
+                # 1. Checkout new branch
+                runner.git("checkout", "-b", item.branch, prev_branch)
 
-            # 3. Check build
-            if not runner.dry_run:
-                ok = run_checks(item.rule_name or item.kind, runner)
-                if not ok:
-                    print(f"  [!!] still failing after opencode retry — stopping.")
-                    print(f"  Branch '{item.branch}' left in place for inspection.")
-                    sys.exit(1)
+                # 2. Copy files
+                if item.kind == "utils":
+                    copy_utils(runner)
+                elif item.kind == "rule":
+                    copy_rule(item.rule_name, runner)
+                elif item.kind == "register-rules":
+                    write_register_rules(runner)
 
-            # 4. Commit
-            has_changes = subprocess.run(
-                ["git", "status", "--porcelain"],
-                cwd=TARGET_REPO, capture_output=True, text=True
-            ).stdout.strip()
+                # 3. Check build
+                if not runner.dry_run:
+                    ok = run_checks(item.rule_name or item.kind, runner)
+                    if not ok:
+                        print(f"  [!!] still failing after opencode retry — stopping.")
+                        print(f"  Branch '{item.branch}' left in place for inspection.")
+                        sys.exit(1)
 
-            if has_changes or runner.dry_run:
-                runner.git("add", "-A")
-                runner.git("commit", "-m", pr_title(item))
+                # 4. Commit
+                has_changes = subprocess.run(
+                    ["git", "status", "--porcelain"],
+                    cwd=TARGET_REPO, capture_output=True, text=True
+                ).stdout.strip()
+
+                if has_changes or runner.dry_run:
+                    runner.git("add", "-A")
+                    runner.git("commit", "-m", pr_title(item))
+                else:
+                    print("  (nothing to commit — skipping)")
             else:
-                print("  (nothing to commit — skipping)")
+                print("  branch exists locally — skipping setup, will push")
+                runner.git("checkout", item.branch)
 
             # 5. Push + track
             runner.git("push", "-u", "origin", item.branch)
@@ -345,19 +358,12 @@ def phase_branch(
                 "--base", prev_branch,
                 "--title", pr_title(item),
                 "--body", pr_body(item),
+                "--reviewer", "copilot",
                 "--repo", GITHUB_REPO,
                 capture=True,
             )
             pr_url = result.stdout.strip() if result.stdout else ""
             print(f"  PR: {pr_url}")
-
-            # 7. Request Copilot review
-            if pr_url or runner.dry_run:
-                runner.gh(
-                    "pr", "edit", pr_url,
-                    "--add-reviewer", "copilot",
-                    "--repo", GITHUB_REPO,
-                )
         else:
             print(f"  PR #{item_state.pr_number} already exists — skipping creation")
 
@@ -386,6 +392,59 @@ def resolve_thread(thread_id: str, runner: Runner) -> None:
     runner.gh("api", "graphql", "-f", f"query={mutation}")
 
 
+def rerequest_review(pr_number: int, runner: Runner) -> None:
+    print(f"  re-requesting Copilot review for PR #{pr_number}")
+    runner.gh(
+        "pr", "edit", str(pr_number),
+        "--add-reviewer", "copilot",
+        "--repo", GITHUB_REPO,
+        capture=True,
+    )
+
+
+_REVIEW_THREADS_QUERY = """
+query($owner: String!, $name: String!, $number: Int!) {
+  repository(owner: $owner, name: $name) {
+    pullRequest(number: $number) {
+      reviewThreads(first: 100) {
+        nodes {
+          id
+          isResolved
+          comments(first: 10) {
+            nodes { body path line }
+          }
+        }
+      }
+    }
+  }
+}
+""".strip()
+
+
+def fetch_unresolved_threads(pr_number: int, runner: Runner) -> list[dict]:
+    owner, repo = GITHUB_REPO.split("/")
+    result = runner.gh(
+        "api", "graphql",
+        "-f", f"query={_REVIEW_THREADS_QUERY}",
+        "-f", f"owner={owner}",
+        "-f", f"name={repo}",
+        "-F", f"number={pr_number}",
+        capture=True,
+    )
+    if runner.dry_run:
+        return []
+    if result.returncode != 0 or not result.stdout.strip():
+        print(f"  warning: failed to fetch review threads: {result.stderr.strip()}")
+        return []
+    data = json.loads(result.stdout)
+    pr = data["data"]["repository"]["pullRequest"]
+    if not pr:
+        print(f"  warning: PR #{pr_number} not found or inaccessible")
+        return []
+    nodes = pr["reviewThreads"]["nodes"]
+    return [t for t in nodes if not t.get("isResolved", True)]
+
+
 def phase_review(
     items: list[WorkItem],
     state: dict[str, ItemState],
@@ -397,30 +456,22 @@ def phase_review(
         if state[i.branch].pr_number is not None
         and state[i.branch].pr_state == "OPEN"
     ]
-    if limit is not None:
-        candidates = candidates[:limit]
 
     if not candidates:
         print("No open PRs to review.")
         return
 
-    for item in candidates:
+    for idx, item in enumerate(candidates):
+        if limit is not None and idx >= limit:
+            break
         pr_number = state[item.branch].pr_number
         print(f"\n[review] {item.branch} (PR #{pr_number})")
 
-        # Fetch review threads
-        result = runner.gh(
-            "pr", "view", str(pr_number),
-            "--json", "reviewThreads",
-            "--repo", GITHUB_REPO,
-            capture=True,
-        )
+        # Fetch review threads via GraphQL
+        threads = fetch_unresolved_threads(pr_number, runner)
         if runner.dry_run:
             print("  (dry-run: skipping thread processing)")
             continue
-
-        data = json.loads(result.stdout)
-        threads = [t for t in data.get("reviewThreads", []) if not t.get("isResolved", True)]
 
         if not threads:
             print("  no unresolved threads — skipping")

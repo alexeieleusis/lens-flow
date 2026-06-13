@@ -1,0 +1,63 @@
+import { type TSESTree } from "@typescript-eslint/utils";
+
+/**
+ * Nodes representing top-level function overloads.
+ *
+ * Intentionally limited to `FunctionDeclaration` and `TSDeclareFunction`.
+ * Class method (`MethodDefinition`) and constructor overloads are not
+ * covered — a separate utility would be needed for those cases.
+ */
+export type FnLikeNode =
+  | TSESTree.FunctionDeclaration
+  | TSESTree.TSDeclareFunction;
+
+export function isImpl(node: FnLikeNode): boolean {
+  return node.type === "FunctionDeclaration" && node.body !== null;
+}
+
+export type FnGroup = {
+  all: FnLikeNode[];
+  impl: FnLikeNode;
+  overloads: FnLikeNode[];
+};
+
+export function createOverloadGroupVisitor(
+  onGroup: (group: FnGroup) => void,
+): {
+  FunctionDeclaration: (node: TSESTree.FunctionDeclaration) => void;
+  TSDeclareFunction: (node: TSESTree.TSDeclareFunction) => void;
+  "Program:exit": () => void;
+} {
+  const allFns: FnLikeNode[] = [];
+
+  return {
+    FunctionDeclaration(node) {
+      allFns.push(node);
+    },
+    TSDeclareFunction(node) {
+      allFns.push(node);
+    },
+    "Program:exit"() {
+      if (allFns.length === 0) return;
+
+      const byName = new Map<string, FnLikeNode[]>();
+      for (const fn of allFns) {
+        const name = fn.id?.name;
+        if (name === undefined) continue;
+        if (!byName.has(name)) byName.set(name, []);
+        const group = byName.get(name);
+        if (group) group.push(fn);
+      }
+
+      for (const declarations of byName.values()) {
+        const impl = declarations.find(isImpl);
+        if (!impl) continue;
+
+        const overloads = declarations.filter((n) => !isImpl(n));
+        if (overloads.length === 0) continue;
+
+        onGroup({ all: declarations, impl, overloads });
+      }
+    },
+  };
+}
