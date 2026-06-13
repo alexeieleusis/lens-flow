@@ -53,6 +53,15 @@ function hasThrowStatement(body: TSESTree.BlockStatement): boolean {
     visited.add(node);
     if (node.type === "ThrowStatement") return true;
 
+    // Stop at function boundaries — nested functions belong to a different scope.
+    if (
+      node.type === "FunctionDeclaration" ||
+      node.type === "FunctionExpression" ||
+      node.type === "ArrowFunctionExpression"
+    ) {
+      return false;
+    }
+
     for (const key of Object.keys(node)) {
       if (key === "parent") continue;
       const child = (node as unknown as Record<string, unknown>)[key];
