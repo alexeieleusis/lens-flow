@@ -1,0 +1,90 @@
+import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
+import { createRule } from "../utils/rule-creator.js";
+
+const ID_NAME_RE = /^(id|.*Id)$/i;
+
+function isBareStringType(typeAnn: TSESTree.TypeNode): boolean {
+  return typeAnn.type === "TSStringKeyword";
+}
+
+function isIdParam(param: TSESTree.Parameter): { name: string } | null {
+  let paramName = "";
+
+  if (param.type === "Identifier") {
+    paramName = param.name;
+  } else if (param.type === "TSParameterProperty") {
+    if (param.parameter.type === "Identifier") {
+      paramName = param.parameter.name;
+    } else {
+      return null;
+    }
+  } else {
+    return null;
+  }
+
+  if (!ID_NAME_RE.test(paramName)) return null;
+
+  const inner = param.type === "TSParameterProperty" ? param.parameter : param;
+  const typeAnn = inner.typeAnnotation?.typeAnnotation;
+  if (!typeAnn) return null;
+  if (!isBareStringType(typeAnn)) return null;
+
+  return { name: paramName };
+}
+
+export default createRule({
+  name: "no-plain-string-ids",
+  meta: {
+    type: "suggestion",
+    docs: {
+      description:
+        "Disallow multiple functions in the same module from accepting bare `string` parameters for entity IDs.",
+    },
+    messages: {
+      plainStringId:
+        "Parameter \"{{paramName}}\" is a bare `string` ID. Found {{count}} functions in this module with bare-string ID parameters — use branded types to prevent ID confusion. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC10-encapsulation.md",
+    },
+    schema: [],
+    fixable: undefined,
+  },
+  defaultOptions: [],
+  create(context: TSESLint.RuleContext<"plainStringId", []>) {
+    const violations: Array<{ fnNode: TSESTree.Node; paramName: string }> = [];
+
+    function checkFunction(
+      node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression
+    ) {
+      for (const param of node.params) {
+        const idInfo = isIdParam(param);
+        if (idInfo) {
+          violations.push({ fnNode: node, paramName: idInfo.name });
+        }
+      }
+    }
+
+    return {
+      FunctionDeclaration(node) {
+        checkFunction(node);
+      },
+      FunctionExpression(node) {
+        checkFunction(node);
+      },
+      ArrowFunctionExpression(node) {
+        checkFunction(node);
+      },
+      "Program:exit"() {
+        if (violations.length < 2) return;
+        for (const { fnNode, paramName } of violations) {
+          context.report({
+            node: fnNode,
+            messageId: "plainStringId",
+            data: {
+              paramName,
+              count: String(violations.length),
+            },
+          });
+        }
+      },
+    };
+  },
+});
