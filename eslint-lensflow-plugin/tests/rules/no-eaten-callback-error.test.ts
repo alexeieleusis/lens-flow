@@ -1,0 +1,69 @@
+import { ruleTester } from "../helpers/rule-tester.js";
+import rule from "../../src/rules/no-eaten-callback-error.js";
+
+ruleTester.run("no-eaten-callback-error", rule, {
+  valid: [
+    `fetch("/api")
+  .then(r => r.json())
+  .then(r => callback(r))
+  .catch(e => handleError(e));`,
+    `fetch("/api")
+  .then(r => r.json())
+  .catch(function (err) {
+    console.error(err);
+  });`,
+    `promise.catch(e => { throw e; });`,
+    `promise.catch((e) => logger.log(e));`,
+    `promise.catch(e => console.error(e));`,
+    `promise.catch(e => console.warn(e));`,
+    `promise.catch((err) => {
+  reportError(err);
+  throw err;
+});`,
+  ],
+  invalid: [
+    {
+      code: `fetch("/api")
+  .then(r => r.json())
+  .then(r => callback(r))
+  .catch(e => {});`,
+      errors: [{ messageId: "emptyCatch" }],
+    },
+    {
+      code: `promise.catch(e => { });`,
+      errors: [{ messageId: "emptyCatch" }],
+    },
+    {
+      code: `promise.catch((err) => { ; ; });`,
+      errors: [{ messageId: "emptyCatch" }],
+    },
+    {
+      code: `fetch("/api").catch(e => 42);`,
+      errors: [{ messageId: "ignoredParam", data: { param: "e" } }],
+    },
+    {
+      code: `promise.catch(err => null);`,
+      errors: [{ messageId: "ignoredParam", data: { param: "err" } }],
+    },
+    {
+      code: `promise.catch(e => "ignored");`,
+      errors: [{ messageId: "ignoredParam", data: { param: "e" } }],
+    },
+    {
+      code: `promise.catch(err => someOtherFunc());`,
+      errors: [{ messageId: "ignoredParam", data: { param: "err" } }],
+    },
+    {
+      code: `promise.catch(e => console.error("oops"));`,
+      errors: [{ messageId: "ignoredParam", data: { param: "e" } }],
+    },
+    {
+      code: `obj.method().catch(e => {});`,
+      errors: [{ messageId: "emptyCatch" }],
+    },
+    {
+      code: `asyncFn().catch(function(e) { return; });`,
+      errors: [{ messageId: "ignoredParam" }],
+    },
+  ],
+});
