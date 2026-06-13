@@ -46,6 +46,19 @@ function isPotentiallyBrandedType(typeNode: TSESTree.TypeNode): boolean {
   return isBrandedIntersection(typeNode) || isPascalCaseIdentifier(typeNode);
 }
 
+/**
+ * Keys that point into type-annotation subtrees. Value nodes like
+ * `ThrowStatement` never appear in these positions, so skipping them
+ * keeps the walker confined to the value AST.
+ */
+const TYPE_ANNOTATION_KEYS = new Set([
+  "typeAnnotation",
+  "typeParameters",
+  "typeArguments",
+  "returnType",
+  "extendsType",
+]);
+
 function hasThrowStatement(body: TSESTree.BlockStatement): boolean {
   const visited = new Set<object>();
 
@@ -64,6 +77,8 @@ function hasThrowStatement(body: TSESTree.BlockStatement): boolean {
     }
 
     for (const key of getKeys(node)) {
+      if (TYPE_ANNOTATION_KEYS.has(key)) continue;
+
       const child = (node as unknown as Record<string, unknown>)[key];
       if (child == null || typeof child !== "object") continue;
 
