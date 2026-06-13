@@ -28,6 +28,12 @@ function isBrandedIntersection(typeNode: TSESTree.TypeNode): boolean {
 }
 
 function isPascalCaseIdentifier(typeNode: TSESTree.TypeNode): boolean {
+  if (typeNode.type === "TSUnionType") {
+    return typeNode.types.some((t) => isPascalCaseIdentifier(t));
+  }
+  if (typeNode.type === "TSIntersectionType") {
+    return typeNode.types.some((t) => isPascalCaseIdentifier(t));
+  }
   if (typeNode.type !== "TSTypeReference") return false;
   const tn = typeNode.typeName;
   return (
