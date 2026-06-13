@@ -20,6 +20,21 @@ export function createFunctionParamVisitor(
     TSMethodSignature(node) {
       (node as TSESTree.TSMethodSignature).params.forEach(checkParam);
     },
+    TSDeclareFunction(node) {
+      (node as TSESTree.TSDeclareFunction).params.forEach(checkParam);
+    },
+    TSFunctionType(node) {
+      (node as TSESTree.TSFunctionType).params.forEach(checkParam);
+    },
+    MethodDefinition(node) {
+      const fn = (node as TSESTree.MethodDefinition).value;
+      if (
+        fn &&
+        (fn.type === "FunctionExpression" || fn.type === "ArrowFunctionExpression")
+      ) {
+        fn.params.forEach(checkParam);
+      }
+    },
   };
 }
 
