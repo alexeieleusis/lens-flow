@@ -1,10 +1,20 @@
 import { AST_NODE_TYPES, type TSESTree } from "@typescript-eslint/utils";
 
+function getTypeNameRightmost(typeName: TSESTree.EntityName): string | null {
+  let current: TSESTree.Identifier | TSESTree.TSQualifiedName | TSESTree.ThisExpression | null = typeName;
+  while (current && current.type === AST_NODE_TYPES.TSQualifiedName) {
+    current = current.right;
+  }
+  if (current && current.type === AST_NODE_TYPES.Identifier) {
+    return current.name;
+  }
+  return null;
+}
+
 export function isTypeRefTo(node: TSESTree.Node, paramName: string): boolean {
   return (
     node.type === AST_NODE_TYPES.TSTypeReference &&
-    node.typeName.type === AST_NODE_TYPES.Identifier &&
-    node.typeName.name === paramName
+    getTypeNameRightmost(node.typeName) === paramName
   );
 }
 
