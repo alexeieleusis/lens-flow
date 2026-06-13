@@ -4,6 +4,17 @@ import { createRule } from "../utils/rule-creator.js";
 const URL =
   "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T26-refinement-types.md";
 
+function getKeyName(key: TSESTree.Expression | TSESTree.PrivateIdentifier): string | null {
+  if (key.type === "Identifier") return key.name;
+  if (key.type === "Literal" && typeof key.value === "string") return key.value;
+  return null;
+}
+
+function isBrandKeyName(name: string): boolean {
+  if (name === "_brand" || name === "__brand") return true;
+  return /[a-z]Brand$/.test(name);
+}
+
 function isBrandedIntersection(typeNode: TSESTree.TypeNode): boolean {
   if (typeNode.type !== "TSIntersectionType") return false;
   return typeNode.types.some((t) => {
@@ -11,10 +22,7 @@ function isBrandedIntersection(typeNode: TSESTree.TypeNode): boolean {
     return t.members.some(
       (m) =>
         m.type === "TSPropertySignature" &&
-        m.key.type === "Identifier" &&
-        (m.key.name === "_brand" ||
-          m.key.name === "__brand" ||
-          m.key.name.endsWith("Brand")),
+        isBrandKeyName(getKeyName(m.key) ?? ""),
     );
   });
 }
