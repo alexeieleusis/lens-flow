@@ -88,6 +88,16 @@ function extractBasesFromTest(
     for (const b of extractBasesFromTest(test.left)) bases.add(b);
     for (const b of extractBasesFromTest(test.right)) bases.add(b);
   }
+  if (test.type === "UnaryExpression") {
+    for (const b of extractBasesFromTest(test.argument)) bases.add(b);
+  }
+  if (test.type === "CallExpression") {
+    for (const arg of test.arguments) {
+      if (arg.type !== "SpreadElement") {
+        for (const b of extractBasesFromTest(arg)) bases.add(b);
+      }
+    }
+  }
   if (
     test.type === "MemberExpression" &&
     test.property.type === "Identifier" &&
@@ -150,6 +160,17 @@ function findDiscriminantForBase(
     const left = findDiscriminantForBase(test.left, baseName);
     if (left) return left;
     return findDiscriminantForBase(test.right, baseName);
+  }
+  if (test.type === "UnaryExpression") {
+    return findDiscriminantForBase(test.argument, baseName);
+  }
+  if (test.type === "CallExpression") {
+    for (const arg of test.arguments) {
+      if (arg.type !== "SpreadElement") {
+        const found = findDiscriminantForBase(arg, baseName);
+        if (found) return found;
+      }
+    }
   }
   if (
     test.type === "MemberExpression" &&
