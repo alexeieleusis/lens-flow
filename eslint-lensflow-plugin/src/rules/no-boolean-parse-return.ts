@@ -48,6 +48,22 @@ export default createRule({
       }
     }
 
+    function checkTypedSignature(
+      nameNode: TSESTree.Identifier | TSESTree.Literal | TSESTree.PrivateIdentifier | null | undefined,
+      returnType: TSESTree.TypeNode | undefined
+    ) {
+      if (!nameNode) return;
+      const name = nameNode.type === "Identifier" ? nameNode.name : String(nameNode.value ?? "");
+      if (!NAME_PATTERN.test(name)) return;
+      if (returnType?.type === "TSBooleanKeyword") {
+        context.report({
+          node: nameNode.type === "Identifier" ? nameNode : nameNode,
+          messageId: "booleanParseReturn",
+          data: { name },
+        });
+      }
+    }
+
     return {
       VariableDeclarator(node: TSESTree.VariableDeclarator) {
         declaratorIds.push(node.id.type === "Identifier" ? node.id : undefined);
@@ -58,6 +74,20 @@ export default createRule({
       FunctionDeclaration: checkFunction,
       FunctionExpression: checkFunction,
       ArrowFunctionExpression: checkFunction,
+      // TSDeclareFunction: `declare function check(): boolean;` — name on node.id
+      TSDeclareFunction(node: TSESTree.TSDeclareFunction) {
+        checkTypedSignature(node.id, node.returnType?.typeAnnotation);
+      },
+      // TSMethodSignature: `interface P { parse(): boolean; }` — name on node.key
+      TSMethodSignature(node: TSESTree.TSMethodSignature) {
+        checkTypedSignature(node.key, node.returnType?.typeAnnotation);
+      },
+      // TSFunctionType and TSCallSignatureDeclaration are intentionally NOT visited.
+      // These represent anonymous type-level signatures (e.g. `type Fn = () => boolean`
+      // or a call signature `interface X { (): boolean; }`). Since there is no stable
+      // function name to report on, flagging them would produce noisy or misleading
+      // diagnostics. The runtime declaration (FunctionDeclaration, variable assignment,
+      // class method) that implements the type is what the rule catches instead.
     };
   },
 });
