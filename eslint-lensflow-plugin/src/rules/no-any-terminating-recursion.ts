@@ -69,21 +69,63 @@ function isSelfReferentialInMember(declName: string, member: TSESTree.Node): boo
     }
   }
 
-  if (member.type !== "TSMethodSignature") return false;
-  const method = member as TSESTree.TSMethodSignature;
-
-  for (const param of method.params) {
-    const typeAnn = getParamTypeAnnotation(param);
-    if (typeAnn && isSelfReferential(declName, typeAnn.typeAnnotation)) {
+  if (member.type === "TSMethodSignature") {
+    const method = member as TSESTree.TSMethodSignature;
+    for (const param of method.params) {
+      const typeAnn = getParamTypeAnnotation(param);
+      if (typeAnn && isSelfReferential(declName, typeAnn.typeAnnotation)) {
+        return true;
+      }
+    }
+    if (method.returnType && isSelfReferential(declName, method.returnType.typeAnnotation)) {
       return true;
     }
+    return false;
   }
 
-  if (method.returnType && isSelfReferential(declName, method.returnType.typeAnnotation)) {
-    return true;
+  if (member.type === "TSCallSignatureDeclaration") {
+    const call = member as TSESTree.TSCallSignatureDeclaration;
+    for (const param of call.params) {
+      const typeAnn = getParamTypeAnnotation(param);
+      if (typeAnn && isSelfReferential(declName, typeAnn.typeAnnotation)) {
+        return true;
+      }
+    }
+    if (call.returnType && isSelfReferential(declName, call.returnType.typeAnnotation)) {
+      return true;
+    }
+    return false;
+  }
+
+  if (member.type === "TSConstructSignatureDeclaration") {
+    const construct = member as TSESTree.TSConstructSignatureDeclaration;
+    for (const param of construct.params) {
+      const typeAnn = getParamTypeAnnotation(param);
+      if (typeAnn && isSelfReferential(declName, typeAnn.typeAnnotation)) {
+        return true;
+      }
+    }
+    if (construct.returnType && isSelfReferential(declName, construct.returnType.typeAnnotation)) {
+      return true;
+    }
+    return false;
   }
 
   return false;
+}
+
+function checkCallSignatureForAny(sig: TSESTree.TSCallSignatureDeclaration | TSESTree.TSConstructSignatureDeclaration): AnyOrUnknownNode[] {
+  const results: AnyOrUnknownNode[] = [];
+  for (const param of sig.params) {
+    const typeAnn = getParamTypeAnnotation(param);
+    if (typeAnn) {
+      results.push(findAnyOrUnknown(typeAnn.typeAnnotation));
+    }
+  }
+  if (sig.returnType) {
+    results.push(findAnyOrUnknown(sig.returnType.typeAnnotation));
+  }
+  return results;
 }
 
 function findAnyOrUnknownInInterfaceBody(body: TSESTree.TSInterfaceBody): AnyOrUnknownNode[] {
@@ -101,6 +143,10 @@ function findAnyOrUnknownInInterfaceBody(body: TSESTree.TSInterfaceBody): AnyOrU
       if (m.returnType) {
         results.push(findAnyOrUnknown(m.returnType.typeAnnotation));
       }
+    } else if (m.type === "TSCallSignatureDeclaration") {
+      results.push(...checkCallSignatureForAny(m));
+    } else if (m.type === "TSConstructSignatureDeclaration") {
+      results.push(...checkCallSignatureForAny(m));
     }
   }
   return results;

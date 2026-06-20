@@ -22,6 +22,16 @@ ruleTester.run("no-any-terminating-recursion", rule, {
       next: Node | null;
       data: { a: string; b: number };
     };`,
+    // Callable interface with no any/unknown
+    `interface CallableRec {
+      (x: string): CallableRec;
+      label: number;
+    }`,
+    // Construct signature with no any/unknown
+    `interface ConstructRec {
+      new (n: number): ConstructRec;
+      value: string;
+    }`,
   ],
   invalid: [
     // any in a self-referential recursive type (type alias)
@@ -54,6 +64,29 @@ ruleTester.run("no-any-terminating-recursion", rule, {
   children: DeepNode[];
   metadata: { raw: any };
 };`,
+      errors: [{ messageId: "anyInRecursive" }],
+    },
+    // any in call signature param of self-referential interface
+    {
+      code: `interface CallableWeak {
+  (x: any): CallableWeak;
+}`,
+      errors: [{ messageId: "anyInRecursive" }],
+    },
+    // unknown in call signature return of self-referential interface
+    {
+      code: `interface CallableUnknown {
+  (n: number): CallableUnknown;
+  result: unknown;
+}`,
+      errors: [{ messageId: "anyInRecursive" }],
+    },
+    // any in construct signature of self-referential interface
+    {
+      code: `interface ConstructWeak {
+  new (data: any): ConstructWeak;
+  children: ConstructWeak[];
+}`,
       errors: [{ messageId: "anyInRecursive" }],
     },
   ],
