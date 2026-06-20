@@ -1,33 +1,9 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
-
-function normalizeParam(node: unknown): unknown {
-  const n = node as { type?: string; left?: unknown; parameter?: unknown };
-  if (n.type === "AssignmentPattern" && n.left) return n.left;
-  if (n.type === "TSParameterProperty" && n.parameter) return n.parameter;
-  return node;
-}
-
-function isAnyType(node: unknown): boolean {
-  const normalized = normalizeParam(node);
-  const n = normalized as { typeAnnotation?: { typeAnnotation?: { type: string } } };
-  return n.typeAnnotation?.typeAnnotation?.type === "TSAnyKeyword";
-}
-
-function getParamName(param: unknown): string {
-  if ((param as { type: string }).type === "TSParameterProperty") {
-    const inner = (param as { parameter: { name?: string } }).parameter;
-    return inner.name || "unnamed";
-  }
-  if ((param as { type: string }).type === "AssignmentPattern") {
-    const left = (param as { left: { name?: string } }).left;
-    return left.name || "unnamed";
-  }
-  if ((param as { type: string; name?: string }).type === "Identifier") {
-    return (param as { name: string }).name;
-  }
-  return "unnamed";
-}
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+import {
+  createNoAnyParamChecker,
+  createNoAnyParamTypeChecker,
+} from "../utils/no-any-param-checker.js";
 
 export default createRule({
   name: "no-any-in-callable",
@@ -48,56 +24,40 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"anyParam" | "anyReturn", []>) {
-    function checkFunction(
-      node: {
-        params: readonly unknown[];
-        returnType?: { typeAnnotation?: { type: string } } | null;
-        declare?: boolean;
-      },
+    function checkReturn(
+      node:
+        | TSESTree.FunctionDeclaration
+        | TSESTree.FunctionExpression
+        | TSESTree.ArrowFunctionExpression
+        | TSESTree.TSFunctionType
+        | TSESTree.TSConstructorType
+        | TSESTree.TSMethodSignature
+        | TSESTree.TSDeclareFunction
+        | TSESTree.TSCallSignatureDeclaration,
     ) {
-      if ((node as { declare?: boolean }).declare) {
-        return;
-      }
-
-      for (const param of node.params) {
-        if (isAnyType(param)) {
-          const name = getParamName(param);
-          context.report({
-            node: param as any,
-            messageId: "anyParam",
-            data: { name },
-          });
-        }
-      }
-
-      if (
-        node.returnType?.typeAnnotation?.type === "TSAnyKeyword"
-      ) {
-        context.report({
-          node: node.returnType as any,
-          messageId: "anyReturn",
-        });
+      if ("declare" in node && node.declare) return;
+      if (node.returnType?.typeAnnotation?.type === "TSAnyKeyword") {
+        context.report({ node: node.returnType, messageId: "anyReturn" });
       }
     }
 
     return {
-      FunctionDeclaration(node) {
-        checkFunction(node);
+      ...createNoAnyParamChecker("anyParam")(context),
+      ...createNoAnyParamTypeChecker("anyParam")(context),
+      TSFunctionType(node: TSESTree.TSFunctionType) {
+        checkReturn(node);
       },
-      FunctionExpression(node) {
-        checkFunction(node);
+      TSConstructorType(node: TSESTree.TSConstructorType) {
+        checkReturn(node);
       },
-      ArrowFunctionExpression(node) {
-        checkFunction(node);
+      TSMethodSignature(node: TSESTree.TSMethodSignature) {
+        checkReturn(node);
       },
-      TSFunctionType(node) {
-        checkFunction(node);
+      TSDeclareFunction(node: TSESTree.TSDeclareFunction) {
+        checkReturn(node);
       },
-      TSConstructorType(node) {
-        checkFunction(node);
-      },
-      TSMethodSignature(node) {
-        checkFunction(node);
+      TSCallSignatureDeclaration(node: TSESTree.TSCallSignatureDeclaration) {
+        checkReturn(node);
       },
     };
   },
