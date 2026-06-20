@@ -1,5 +1,23 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+function containsUnknownCast(node: TSESTree.Node): boolean {
+  if (node.type === "TSAsExpression") {
+    const cast = node as TSESTree.TSAsExpression;
+    if (cast.typeAnnotation.type === "TSUnknownKeyword") return true;
+    return containsUnknownCast(cast.expression);
+  }
+  if (
+    node.type === "TSSatisfiesExpression" ||
+    node.type === "TSNonNullExpression" ||
+    node.type === "ChainExpression"
+  ) {
+    return containsUnknownCast(
+      (node as TSESTree.TSSatisfiesExpression | TSESTree.TSNonNullExpression | TSESTree.ChainExpression).expression,
+    );
+  }
+  return false;
+}
 
 export default createRule({
   name: "no-assertnever-cast-unknown",
@@ -25,10 +43,7 @@ export default createRule({
           return;
         }
         for (const arg of node.arguments) {
-          if (
-            arg.type === "TSAsExpression" &&
-            arg.typeAnnotation.type === "TSUnknownKeyword"
-          ) {
+          if (containsUnknownCast(arg)) {
             context.report({
               node: arg,
               messageId: "bypassExhaustiveness",

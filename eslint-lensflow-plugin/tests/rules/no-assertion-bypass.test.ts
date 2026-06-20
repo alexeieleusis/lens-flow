@@ -82,5 +82,37 @@ const s = settings as Settings;
 `,
       errors: [{ messageId: "excessProps" }],
     },
+    // Double-cast: `(obj as unknown) as Target` — excess property should still be caught
+    {
+      filename: TEST_FILENAME,
+      code: `
+interface Config { name: string }
+const obj = { name: "a", extra: true };
+const typed = (obj as unknown) as Config;
+`,
+      errors: [
+        { messageId: "excessProps" },
+        { messageId: "excessProps" },
+      ],
+    },
+    // TSNonNullExpression wrapper — excess property should still be caught
+    {
+      filename: TEST_FILENAME,
+      code: `
+interface Config { name: string }
+const typed = ({ name: "a", extra: true }!) as Config;
+`,
+      errors: [{ messageId: "excessProps" }],
+    },
+    // TSSatisfiesExpression wrapper — excess property should still be caught
+    {
+      filename: TEST_FILENAME,
+      code: `
+interface Source { name: string; extra: boolean }
+interface Config { name: string }
+const obj = ({ name: "a", extra: true } satisfies Source) as Config;
+`,
+      errors: [{ messageId: "excessProps" }],
+    },
   ],
 });

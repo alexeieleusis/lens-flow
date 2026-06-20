@@ -2,7 +2,7 @@ import ts from "typescript";
 import { ESLintUtils, type TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
-const URL =
+const CATALOG_URL =
   "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T07-structural-typing.md";
 
 function getObjectLiteralProps(obj: TSESTree.ObjectExpression): string[] {
@@ -19,6 +19,18 @@ function getObjectLiteralProps(obj: TSESTree.ObjectExpression): string[] {
       if (typeof lit.value === "string") return lit.value;
       return String(lit.value);
     });
+}
+
+function unwrap(node: TSESTree.Node): TSESTree.Expression {
+  if (
+    node.type === "TSAsExpression" ||
+    node.type === "TSNonNullExpression" ||
+    node.type === "TSSatisfiesExpression" ||
+    node.type === "ChainExpression"
+  ) {
+    return unwrap(node.expression);
+  }
+  return node as TSESTree.Expression;
 }
 
 function findObjectLiteral(
@@ -95,7 +107,7 @@ export default createRule({
           ),
         );
 
-        const objLit = findObjectLiteral(node.expression, context);
+        const objLit = findObjectLiteral(unwrap(node.expression), context);
         if (!objLit) return;
 
         const literalProps = getObjectLiteralProps(objLit);
@@ -110,7 +122,7 @@ export default createRule({
             data: {
               targetType: checker.typeToString(targetType),
               excessProps: excessProps.map((p) => `"${p}"`).join(", "),
-              url: URL,
+              url: CATALOG_URL,
             },
           });
         }
