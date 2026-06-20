@@ -19,7 +19,10 @@ function findAnyOrUnknown(node: TSESTree.Node): AnyOrUnknownNode {
 function isSelfReferential(declName: string, typeNode: TSESTree.TypeNode): boolean {
   function check(node: TSESTree.Node): boolean {
     if (node.type === "TSTypeReference") {
-      if (node.typeName.type === "Identifier" && node.typeName.name === declName) {
+      if (
+        (node.typeName.type === "Identifier" && node.typeName.name === declName) ||
+        (node.typeName.type === "TSQualifiedName" && node.typeName.right.name === declName)
+      ) {
         return true;
       }
     }
