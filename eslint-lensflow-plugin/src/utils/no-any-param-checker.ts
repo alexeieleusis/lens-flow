@@ -43,6 +43,12 @@ function containsAnyType(node: TSESTree.TypeNode): boolean {
   }
 
   if (node.type === "TSFunctionType" || node.type === "TSConstructorType") {
+    if (node.params.some((p) => {
+      const typeAnn = p.typeAnnotation?.typeAnnotation;
+      return typeAnn && containsAnyType(typeAnn);
+    })) {
+      return true;
+    }
     if (node.returnType?.typeAnnotation) {
       return containsAnyType(node.returnType.typeAnnotation);
     }
@@ -65,6 +71,28 @@ function containsAnyType(node: TSESTree.TypeNode): boolean {
     return containsAnyType(node.typeAnnotation);
   }
 
+  if (node.type === "TSParenthesizedType") {
+    return containsAnyType(node.typeAnnotation);
+  }
+
+  if (node.type === "TSTypeLiteral") {
+    return node.members.some((member) => {
+      if (member.type === "TSPropertySignature" && member.typeAnnotation?.typeAnnotation) {
+        return containsAnyType(member.typeAnnotation.typeAnnotation);
+      }
+      if (member.type === "TSCallSignatureDeclaration" || member.type === "TSConstructSignatureDeclaration") {
+        if (member.params.some((p) => {
+          const typeAnn = p.typeAnnotation?.typeAnnotation;
+          return typeAnn && containsAnyType(typeAnn);
+        })) return true;
+        if (member.returnType?.typeAnnotation) {
+          return containsAnyType(member.returnType.typeAnnotation);
+        }
+      }
+      return false;
+    });
+  }
+
   return false;
 }
 
@@ -81,8 +109,9 @@ export function checkAnyParams(
     if (param.type === "TSParameterProperty") continue;
 
     const base = param.type === "AssignmentPattern" ? param.left : param;
+    const typeNode = base.typeAnnotation?.typeAnnotation;
 
-    if (base.typeAnnotation?.typeAnnotation && containsAnyType(base.typeAnnotation.typeAnnotation)) {
+    if (typeNode && containsAnyType(typeNode)) {
       const paramName =
         "name" in base && typeof base.name === "string" ? base.name : context.sourceCode.getText(param);
       context.report({
