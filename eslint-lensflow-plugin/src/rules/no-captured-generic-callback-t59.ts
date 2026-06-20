@@ -54,6 +54,10 @@ const SKIP_KEYS = new Set([
   "tokens",
   "comments",
   "typeAnnotation",
+  "typeArguments",
+  "returnType",
+  "key",
+  "typeParameters",
 ]);
 
 function hasVariableDeclaration(node: TSESTree.Node, name: string): boolean {
@@ -115,28 +119,38 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"capturedGenericCallback", []>) {
+    function isGenericCallbackParam(
+      rhs: TSESTree.Expression,
+      sourceNode: TSESTree.Node,
+    ): { paramName: string; fn: FunctionNode } | undefined {
+      if (rhs.type !== AST_NODE_TYPES.Identifier || !("name" in rhs)) return;
+
+      const paramName = rhs.name;
+      const fn = findEnclosingFunction(sourceNode);
+      if (!fn) return;
+
+      if (!isParameterOf(paramName, fn)) return;
+
+      const paramType = getParamTypeAnnotation(paramName, fn);
+      if (!paramType || !isGenericCallbackType(paramType)) return;
+
+      return { paramName, fn };
+    }
+
     function checkCapture(
       targetName: string,
       rhs: TSESTree.Expression,
       sourceNode: TSESTree.Node,
     ) {
-      if (rhs.type !== AST_NODE_TYPES.Identifier || !("name" in rhs)) return;
+      const result = isGenericCallbackParam(rhs, sourceNode);
+      if (!result) return;
 
-      const rhsName = rhs.name;
-      const fn = findEnclosingFunction(sourceNode);
-      if (!fn) return;
-
-      if (!isParameterOf(rhsName, fn)) return;
-
-      const paramType = getParamTypeAnnotation(rhsName, fn);
-      if (!paramType || !isGenericCallbackType(paramType)) return;
-
-      if (isDeclaredInsideFn(targetName, fn)) return;
+      if (isDeclaredInsideFn(targetName, result.fn)) return;
 
       context.report({
         node: sourceNode,
         messageId: "capturedGenericCallback",
-        data: { paramName: rhsName, targetName },
+        data: { paramName: result.paramName, targetName },
       });
     }
 
@@ -145,16 +159,8 @@ export default createRule({
       rhs: TSESTree.Expression,
       sourceNode: TSESTree.Node,
     ) {
-      if (rhs.type !== AST_NODE_TYPES.Identifier || !("name" in rhs)) return;
-
-      const rhsName = rhs.name;
-      const fn = findEnclosingFunction(sourceNode);
-      if (!fn) return;
-
-      if (!isParameterOf(rhsName, fn)) return;
-
-      const paramType = getParamTypeAnnotation(rhsName, fn);
-      if (!paramType || !isGenericCallbackType(paramType)) return;
+      const result = isGenericCallbackParam(rhs, sourceNode);
+      if (!result) return;
 
       const targetName =
         memberNode.object.type === AST_NODE_TYPES.Identifier
@@ -163,7 +169,7 @@ export default createRule({
 
       if (
         memberNode.object.type === AST_NODE_TYPES.Identifier &&
-        isDeclaredInsideFn(memberNode.object.name, fn)
+        isDeclaredInsideFn(memberNode.object.name, result.fn)
       ) {
         return;
       }
@@ -171,7 +177,7 @@ export default createRule({
       context.report({
         node: sourceNode,
         messageId: "capturedGenericCallback",
-        data: { paramName: rhsName, targetName },
+        data: { paramName: result.paramName, targetName },
       });
     }
 

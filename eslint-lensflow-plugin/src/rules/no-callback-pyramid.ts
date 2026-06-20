@@ -94,6 +94,14 @@ const findNestedCallbackCalls = (
   let maxDepth = depth;
 
   for (const node of nodes) {
+    if (
+      node.type === "FunctionDeclaration" ||
+      node.type === "FunctionExpression" ||
+      node.type === "ArrowFunctionExpression"
+    ) {
+      continue;
+    }
+
     if (node.type === "BlockStatement") {
       maxDepth = Math.max(maxDepth, findNestedCallbackCalls(node.body, depth));
       continue;
@@ -138,10 +146,11 @@ export default createRule({
     docs: {
       description:
         "Disallow deeply nested callback pyramid patterns that should use async/await with Promise.all",
+      url: "https://github.com/jpablo/vibe-types/blob/main/plugin/skills/typescript/usecases/UC21-async-concurrency.md",
     },
     messages: {
       callbackPyramid:
-        "Found {{depth}} levels of nested callbacks. Refactor using async/await and Promise.all instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC21-async-concurrency.md",
+        "Found {{depth}} levels of nested callbacks. Refactor using async/await and Promise.all instead.",
     },
     schema: [
       {
