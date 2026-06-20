@@ -2,7 +2,7 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { getChildren } from "../utils/ast-helpers.js";
 
-const URL = "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T61-recursive-types.md";
+const DOCS_URL = "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T61-recursive-types.md";
 
 function collectTypeRefNames(node: TSESTree.Node, refs: Set<string>): void {
   if (node.type === "TSTypeReference") {
@@ -152,14 +152,14 @@ export default createRule({
             context.report({
               node: prop,
               messageId: "anyOrUnknownInRecursiveVariant",
-              data: { keyword: "any", url: URL },
+              data: { keyword: "any", url: DOCS_URL },
             });
           }
           for (const prop of unknownProps) {
             context.report({
               node: prop,
               messageId: "anyOrUnknownInRecursiveVariant",
-              data: { keyword: "unknown", url: URL },
+              data: { keyword: "unknown", url: DOCS_URL },
             });
           }
         }
