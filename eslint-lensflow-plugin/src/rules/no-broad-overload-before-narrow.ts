@@ -4,7 +4,7 @@ import { createRule } from "../utils/rule-creator.js";
 import type { FnLikeNode } from "../utils/overload-grouping.js";
 import { createOverloadGroupVisitor } from "../utils/overload-grouping.js";
 
-const URL =
+const DOC_URL =
   "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T22-callable-typing.md";
 
 function isNarrowerType(
@@ -109,7 +109,7 @@ export default createRule({
           context.report({
             node: overloads[i + 1].node,
             messageId: "broadBeforeNarrow",
-            data: { fnName: name, url: URL },
+            data: { fnName: name, url: DOC_URL },
           });
           break;
         }
