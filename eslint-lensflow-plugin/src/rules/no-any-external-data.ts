@@ -7,7 +7,7 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow `any` as a function parameter type when handling external data, which bypasses all type checking and prevents narrowing.",
+        "Disallow `any` as a function parameter type, which bypasses all type checking and prevents narrowing.",
     },
     messages: {
       anyExternalParam:
