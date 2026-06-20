@@ -34,7 +34,7 @@ function isAnyTypeReference(node: {
   return node.typeArguments?.params?.some((p) => isAnyType(p)) ?? false;
 }
 
-function hasAnyType(typeAnnotation: { type: string; elementType?: { type: string }; elementTypes?: Array<{ type: string }>; typeAnnotation?: { type: string; elementType?: { type: string }; elementTypes?: Array<{ type: string }> }; typeName?: { type: string; name?: string }; typeArguments?: { params?: Array<{ type: string }> } } | undefined): boolean {
+function hasAnyType(typeAnnotation: { type: string; elementType?: { type: string }; elementTypes?: Array<{ type: string }>; typeAnnotation?: { type: string; elementType?: { type: string }; elementTypes?: Array<{ type: string }> }; typeName?: { type: string; name?: string }; typeArguments?: { params?: Array<{ type: string }> }; types?: Array<{ type: string }> } | undefined): boolean {
   if (!typeAnnotation) return false;
   if (
     isAnyType(typeAnnotation) ||
@@ -56,6 +56,16 @@ function hasAnyType(typeAnnotation: { type: string; elementType?: { type: string
     return typeAnnotation.typeArguments.params.some(
       (p) => p && hasAnyType(p as Parameters<typeof hasAnyType>[0])
     );
+  }
+  if (typeAnnotation.type === "TSUnionType") {
+    return typeAnnotation.types?.some(
+      (t) => t && hasAnyType(t as Parameters<typeof hasAnyType>[0])
+    ) ?? false;
+  }
+  if (typeAnnotation.type === "TSIntersectionType") {
+    return typeAnnotation.types?.some(
+      (t) => t && hasAnyType(t as Parameters<typeof hasAnyType>[0])
+    ) ?? false;
   }
   return false;
 }
