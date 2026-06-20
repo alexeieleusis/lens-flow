@@ -1,6 +1,6 @@
 import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
-import { getKeys } from "eslint-visitor-keys";
+import { walkNodes } from "../utils/ast-helpers.js";
 
 function isNullishLiteral(node: TSESTree.Node): boolean {
   if (
@@ -28,83 +28,11 @@ function isNullishCoalesceWithLiteral(node: TSESTree.Node): boolean {
   );
 }
 
-function isASTNode(val: unknown): val is TSESTree.Node {
-  return val !== null && typeof val === "object" && "type" in val;
-}
-
-function tryVisitChild(child: TSESTree.Node, cb: (n: TSESTree.Node) => boolean): boolean {
-  if (isASTNode(child) && cb(child)) {
-    return true;
-  }
-  return false;
-}
-
-const FUNCTION_BOUNDARIES = new Set([
-  AST_NODE_TYPES.FunctionDeclaration,
-  AST_NODE_TYPES.FunctionExpression,
-  AST_NODE_TYPES.ArrowFunctionExpression,
-]);
-
-function forEachChildNode(
-  node: TSESTree.Node,
-  cb: (child: TSESTree.Node) => boolean,
-): boolean {
-  for (const key of getKeys(node)) {
-    const raw = (node as unknown as Record<string, unknown>)[key];
-    if (Array.isArray(raw)) {
-      for (const item of raw) {
-        const child = item as TSESTree.Node;
-        if (isASTNode(child)) {
-          if (FUNCTION_BOUNDARIES.has(child.type)) continue;
-          if (cb(child)) return true;
-        }
-      }
-    } else {
-      const child = raw as TSESTree.Node;
-      if (isASTNode(child)) {
-        if (FUNCTION_BOUNDARIES.has(child.type)) continue;
-        if (cb(child)) return true;
-      }
-    }
-  }
-  return false;
-}
-
-function containsNullishCoalesceInChildren(
-  node: TSESTree.Node,
-): boolean {
-  return forEachChildNode(node, (child) =>
-    containsNullishCoalesce(child),
-  );
-}
-
-function containsNullishCoalesce(node: TSESTree.Node): boolean {
-  return (
-    isNullishCoalesceWithLiteral(node) ||
-    containsNullishCoalesceInChildren(node)
-  );
-}
-
-function hasMatchingChildNode(
-  node: TSESTree.Node,
-  predicate: (n: TSESTree.Node) => boolean,
-): boolean {
-  return forEachChildNode(node, (child) =>
-    predicate(child) || hasMatchingChildNode(child, predicate),
-  );
-}
-
-function hasAnyNullishReturn(body: TSESTree.Node): boolean {
-  if (
-    body.type === AST_NODE_TYPES.ReturnStatement &&
-    body.argument !== null
-  ) {
-    if (containsNullishCoalesce(body.argument)) {
-      return true;
-    }
-  }
-
-  return hasMatchingChildNode(body, hasAnyNullishReturn);
+function containsNullishCoalesce(body: TSESTree.Node): boolean {
+  return walkNodes(body, (node) => {
+    if (node.type !== AST_NODE_TYPES.LogicalExpression) return false;
+    return isNullishCoalesceWithLiteral(node);
+  });
 }
 
 function checkFunction(
@@ -126,8 +54,16 @@ function checkFunction(
     return containsNullishCoalesce(node.body);
   }
 
-  // Block body (arrow with braces, function declaration, function expression)
-  return hasAnyNullishReturn(node.body);
+  // Block body: check for return statements with nullish-coalesced expressions
+  return walkNodes(node.body, (child) => {
+    if (
+      child.type === AST_NODE_TYPES.ReturnStatement &&
+      child.argument !== null
+    ) {
+      return containsNullishCoalesce(child.argument);
+    }
+    return false;
+  });
 }
 
 export default createRule({
@@ -140,7 +76,7 @@ export default createRule({
     },
     messages: {
       anyNullableReturn:
-        "Function declares return type 'any' but returns a nullish-coalesced expression. Use a concrete return type instead (e.g., T | null). See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC16-nullability.md",
+        "Function declares return type 'any' but returns a nullish-coalesced expression. Use a concrete return type instead (e.g., T | null). See: https://raw.githubusercontent.com/jpablo/vibe-types/66eaf514cd2bd8bf79b2c3c64d9d43786b3dc174/plugin/skills/typescript/usecases/UC16-nullability.md",
     },
     schema: [],
     fixable: undefined,
