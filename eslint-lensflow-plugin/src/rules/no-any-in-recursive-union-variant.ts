@@ -9,6 +9,8 @@ function collectTypeRefNames(node: TSESTree.Node, refs: Set<string>): void {
     const ref = node;
     if (ref.typeName.type === "Identifier") {
       refs.add(ref.typeName.name);
+    } else if (ref.typeName.type === "TSQualifiedName") {
+      refs.add(ref.typeName.right.name);
     }
   }
   for (const child of getChildren(node)) {
@@ -27,7 +29,12 @@ function hasTypeRefToName(
 
   if (member.type === "TSTypeReference") {
     const ref = member;
-    const refName = ref.typeName.type === "Identifier" ? ref.typeName.name : null;
+    const refName =
+      ref.typeName.type === "Identifier"
+        ? ref.typeName.name
+        : ref.typeName.type === "TSQualifiedName"
+          ? ref.typeName.right.name
+          : null;
     if (refName && typeAliases.has(refName)) {
       const resolved = typeAliases.get(refName)!;
       return hasTypeRefToName(resolved, name, typeAliases);
@@ -45,6 +52,14 @@ function findKeyword(node: TSESTree.TypeNode): "any" | "unknown" | null {
       if (found === "any") return "any";
       if (found === "unknown") return "unknown";
     }
+  } else if (node.type === "TSIntersectionType") {
+    for (const t of node.types) {
+      const found = findKeyword(t);
+      if (found === "any") return "any";
+      if (found === "unknown") return "unknown";
+    }
+  } else if (node.type === "TSParenthesizedType") {
+    return findKeyword(node.typeAnnotation);
   }
   return null;
 }
@@ -76,7 +91,12 @@ function collectAnyProps(
     collectAnyPropsFromLiteral(member, anyProps, unknownProps);
   } else if (member.type === "TSTypeReference") {
     const ref = member;
-    const refName = ref.typeName.type === "Identifier" ? ref.typeName.name : null;
+    const refName =
+      ref.typeName.type === "Identifier"
+        ? ref.typeName.name
+        : ref.typeName.type === "TSQualifiedName"
+          ? ref.typeName.right.name
+          : null;
     if (refName && typeAliases.has(refName)) {
       const resolved = typeAliases.get(refName)!;
       if (resolved.type === "TSTypeLiteral") {
@@ -106,6 +126,7 @@ export default createRule({
   name: "no-any-in-recursive-union-variant",
   meta: {
     type: "problem",
+    fixable: undefined,
     docs: {
       description:
         "Disallow `any` or `unknown` in data fields of recursive discriminated union variants",

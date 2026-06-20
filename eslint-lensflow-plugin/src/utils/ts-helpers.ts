@@ -42,6 +42,34 @@ export function containsAny(typeNode: TSESTree.TypeNode): boolean {
     if (paramAny) return true;
     if (typeNode.returnType) return containsAny(typeNode.returnType.typeAnnotation);
   }
+  if (typeNode.type === "TSParenthesizedType") {
+    return containsAny(typeNode.typeAnnotation);
+  }
+  if (typeNode.type === "TSConditionalType") {
+    return (
+      containsAny(typeNode.checkType) ||
+      containsAny(typeNode.extendsType) ||
+      containsAny(typeNode.trueType) ||
+      containsAny(typeNode.falseType)
+    );
+  }
+  if (typeNode.type === "TSMappedType") {
+    return typeNode.typeAnnotation ? containsAny(typeNode.typeAnnotation) : false;
+  }
+  if (typeNode.type === "TSIndexedAccessType") {
+    return containsAny(typeNode.objectType) || containsAny(typeNode.indexType);
+  }
+  if (typeNode.type === "TSRestType") {
+    return containsAny(typeNode.typeAnnotation);
+  }
+  if (typeNode.type === "TSInferType") {
+    return typeNode.typeParameter.constraint
+      ? containsAny(typeNode.typeParameter.constraint)
+      : false;
+  }
+  if (typeNode.type === "TSTypeOperator") {
+    return typeNode.typeAnnotation ? containsAny(typeNode.typeAnnotation) : false;
+  }
   return false;
 }
 import {
