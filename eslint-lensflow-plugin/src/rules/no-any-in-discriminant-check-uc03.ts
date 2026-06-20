@@ -35,25 +35,27 @@ function isFunctionBoundary(node: TSESTree.Node): boolean {
 }
 
 function findEnclosingIf(
+  context: Parameters<ReturnType<typeof createRule>["create"]>["0"],
   node: TSESTree.Node,
 ): TSESTree.IfStatement | null {
-  let current: TSESTree.Node | undefined = node.parent;
-  while (current) {
+  const ancestors = context.sourceCode.getAncestors(node);
+  for (let i = ancestors.length - 1; i >= 0; i--) {
+    const current = ancestors[i];
     if (isFunctionBoundary(current)) return null;
     if (current.type === "IfStatement") return current;
-    current = current.parent;
   }
   return null;
 }
 
 function findEnclosingSwitch(
+  context: Parameters<ReturnType<typeof createRule>["create"]>["0"],
   node: TSESTree.Node,
 ): TSESTree.SwitchStatement | null {
-  let current: TSESTree.Node | undefined = node.parent;
-  while (current) {
+  const ancestors = context.sourceCode.getAncestors(node);
+  for (let i = ancestors.length - 1; i >= 0; i--) {
+    const current = ancestors[i];
     if (isFunctionBoundary(current)) return null;
     if (current.type === "SwitchStatement") return current;
-    current = current.parent;
   }
   return null;
 }
@@ -241,7 +243,7 @@ function reportIfCastInDiscriminantCheck(
   node: TSESTree.TSAsExpression,
   castBase: TSESTree.Identifier,
 ) {
-  const enclosingIf = findEnclosingIf(node);
+  const enclosingIf = findEnclosingIf(context, node);
   if (enclosingIf) {
     const scopeManager = context.sourceCode.scopeManager;
     if (!scopeManager) return false;
@@ -272,7 +274,7 @@ function reportSwitchCastInDiscriminantCheck(
   node: TSESTree.TSAsExpression,
   castBase: TSESTree.Identifier,
 ) {
-  const enclosingSwitch = findEnclosingSwitch(node);
+  const enclosingSwitch = findEnclosingSwitch(context, node);
   if (enclosingSwitch) {
     const scopeManager = context.sourceCode.scopeManager;
     if (!scopeManager) return false;
