@@ -45,6 +45,22 @@ function isInterfaceSelfReferential(declName: string, body: TSESTree.TSInterface
   return false;
 }
 
+function getParamTypeAnnotation(param: TSESTree.Node): TSESTree.TSTypeAnnotation | null {
+  // Unwrap RestElement (...args, ...{a}, ...x = "default")
+  let p = param;
+  if (p.type === "RestElement") {
+    p = (p as TSESTree.RestElement).argument;
+  }
+  // Check for typeAnnotation on the param itself (Identifier, ObjectPattern, ArrayPattern, RestElement)
+  if ((p as any).typeAnnotation) return (p as any).typeAnnotation;
+  // AssignmentPattern: the annotation is on the left side (x: T = "default")
+  if (p.type === "AssignmentPattern") {
+    const left = (p as TSESTree.AssignmentPattern).left;
+    if (left.typeAnnotation) return left.typeAnnotation;
+  }
+  return null;
+}
+
 function isSelfReferentialInMember(declName: string, member: TSESTree.Node): boolean {
   if (member.type === "TSPropertySignature") {
     const sig = member as TSESTree.TSPropertySignature;
@@ -57,8 +73,8 @@ function isSelfReferentialInMember(declName: string, member: TSESTree.Node): boo
   const method = member as TSESTree.TSMethodSignature;
 
   for (const param of method.params) {
-    const p = param as TSESTree.Identifier | TSESTree.RestElement;
-    if (p.typeAnnotation && isSelfReferential(declName, p.typeAnnotation.typeAnnotation)) {
+    const typeAnn = getParamTypeAnnotation(param);
+    if (typeAnn && isSelfReferential(declName, typeAnn.typeAnnotation)) {
       return true;
     }
   }
@@ -77,9 +93,9 @@ function findAnyOrUnknownInInterfaceBody(body: TSESTree.TSInterfaceBody): AnyOrU
       results.push(findAnyOrUnknown(m.typeAnnotation.typeAnnotation));
     } else if (m.type === "TSMethodSignature") {
       for (const param of m.params) {
-        const p = param as TSESTree.Identifier | TSESTree.RestElement;
-        if (p.typeAnnotation) {
-          results.push(findAnyOrUnknown(p.typeAnnotation.typeAnnotation));
+        const typeAnn = getParamTypeAnnotation(param);
+        if (typeAnn) {
+          results.push(findAnyOrUnknown(typeAnn.typeAnnotation));
         }
       }
       if (m.returnType) {
