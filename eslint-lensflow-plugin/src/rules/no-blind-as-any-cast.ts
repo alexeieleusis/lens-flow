@@ -48,6 +48,14 @@ export default createRule({
           c.consequent.some(containsEarlyExitOrBlock),
         );
       }
+      if (node.type === "VariableDeclaration") {
+        return node.declarations.some(
+          (d) => d.init && containsEarlyExitOrBlock(d.init),
+        );
+      }
+      if (node.type === "ForOfStatement" || node.type === "ForInStatement") {
+        return containsEarlyExitOrBlock(node.body);
+      }
       return false;
     }
 
