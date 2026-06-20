@@ -1,66 +1,6 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
-
-function isJsonParseCall(node: TSESTree.Node): boolean {
-  return (
-    node.type === "CallExpression" &&
-    node.callee.type === "MemberExpression" &&
-    !node.callee.computed &&
-    node.callee.property.type === "Identifier" &&
-    node.callee.property.name === "parse" &&
-    node.callee.object.type === "Identifier" &&
-    node.callee.object.name === "JSON"
-  );
-}
-
-function isAstNode(value: unknown): value is TSESTree.Node {
-  return value != null && typeof value === "object" && "type" in value;
-}
-
-const FUNCTION_TYPES = new Set([
-  "FunctionDeclaration",
-  "FunctionExpression",
-  "ArrowFunctionExpression",
-]);
-
-function childHasJsonParse(
-  child: unknown,
-  visited: Set<object>,
-): boolean {
-  if (Array.isArray(child)) {
-    for (const item of child) {
-      if (isAstNode(item) && findJsonParse(item, visited)) return true;
-    }
-  } else if (isAstNode(child)) {
-    // Stop at nested function boundaries — the rule's visitors will
-    // evaluate those functions separately.
-    if (FUNCTION_TYPES.has(child.type)) return false;
-    if (findJsonParse(child, visited)) return true;
-  }
-  return false;
-}
-
-function findJsonParse(node: TSESTree.Node, visited = new Set<object>()): boolean {
-  if (visited.has(node)) return false;
-  visited.add(node);
-
-  if (isJsonParseCall(node)) return true;
-
-  // Stop at nested function boundaries — the rule's visitors will
-  // evaluate those functions separately.
-  if (FUNCTION_TYPES.has(node.type)) return false;
-
-  for (const key of Object.keys(node)) {
-    if (key === "parent" || key === "loc" || key === "range") continue;
-
-    const child = (node as unknown as Record<string, unknown>)[key];
-    if (child == null) continue;
-
-    if (childHasJsonParse(child, visited)) return true;
-  }
-
-  return false;
-}
+import { walkNodes } from "../utils/ast-helpers.js";
 
 export default createRule({
   name: "no-any-json-parse-return",
@@ -106,11 +46,19 @@ export default createRule({
 
       if (!body) return;
 
-      if (findJsonParse(body)) {
-        context.report({
-          node,
-          messageId: "anyJsonParseReturn",
-        });
+      if (walkNodes(body, (node) => {
+        if (node.type !== "CallExpression") return false;
+        const ce = node;
+        return (
+          ce.callee.type === "MemberExpression" &&
+          !ce.callee.computed &&
+          ce.callee.property.type === "Identifier" &&
+          ce.callee.property.name === "parse" &&
+          ce.callee.object.type === "Identifier" &&
+          ce.callee.object.name === "JSON"
+        );
+      })) {
+        context.report({ node, messageId: "anyJsonParseReturn" });
       }
     }
 
