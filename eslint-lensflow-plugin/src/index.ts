@@ -12,7 +12,6 @@ import noAnyDomainParameterUc02 from "./rules/no-any-domain-parameter-uc02.js";
 import noAnyInCallable from "./rules/no-any-in-callable.js";
 import noAnyInDiscriminantCheckUc03 from "./rules/no-any-in-discriminant-check-uc03.js";
 import noAnyInInterface from "./rules/no-any-in-interface.js";
-import noAnyInPluginContextUc14 from "./rules/no-any-in-plugin-context-uc14.js";
 import noAnyInRecursiveUnionVariant from "./rules/no-any-in-recursive-union-variant.js";
 import noAnyInUtilityFunction from "./rules/no-any-in-utility-function.js";
 import noAnyIndexSignature from "./rules/no-any-index-signature.js";
@@ -302,8 +301,7 @@ const plugin: {
      "no-any-in-callable": noAnyInCallable,
     "no-any-in-discriminant-check-uc03": noAnyInDiscriminantCheckUc03,
     "no-any-in-interface": noAnyInInterface,
-    "no-any-in-plugin-context-uc14": noAnyInPluginContextUc14,
-    "no-any-in-recursive-union-variant": noAnyInRecursiveUnionVariant,
+     "no-any-in-recursive-union-variant": noAnyInRecursiveUnionVariant,
     "no-any-in-utility-function": noAnyInUtilityFunction,
     "no-any-index-signature": noAnyIndexSignature,
     "no-any-json-parse-return": noAnyJsonParseReturn,
