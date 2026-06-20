@@ -5,10 +5,17 @@ import { createRule } from "../utils/rule-creator.js";
 const KB_URL =
   "See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC14-extensibility.md";
 
-function hasAnyParam(params: readonly unknown[]): boolean {
+function hasParamTypeAnnotation(
+  p: TSESTree.Parameter,
+): p is TSESTree.Parameter & { typeAnnotation: TSESTree.TSTypeAnnotation } {
+  return "typeAnnotation" in p && p.typeAnnotation !== undefined;
+}
+
+function hasAnyParam(params: readonly TSESTree.Parameter[]): boolean {
   return params.some(
-    (p: any) =>
-      p.typeAnnotation?.typeAnnotation?.type === AST_NODE_TYPES.TSAnyKeyword,
+    p =>
+      hasParamTypeAnnotation(p) &&
+      p.typeAnnotation.typeAnnotation?.type === AST_NODE_TYPES.TSAnyKeyword,
   );
 }
 
@@ -17,23 +24,22 @@ function hasAnyReturn(node: { returnType?: { typeAnnotation?: { type?: string } 
 }
 
 function checkMemberForAny(
-  member: unknown,
-): { targetNode: unknown; anyParam: boolean; anyReturn: boolean } | null {
-  const m = member as any;
-  if (m.type === AST_NODE_TYPES.TSMethodSignature) {
+  member: TSESTree.TypeElement,
+): { targetNode: TSESTree.TypeElement; anyParam: boolean; anyReturn: boolean } | null {
+  if (member.type === AST_NODE_TYPES.TSMethodSignature) {
     return {
-      targetNode: m,
-      anyParam: hasAnyParam(m.params),
-      anyReturn: hasAnyReturn(m),
+      targetNode: member,
+      anyParam: hasAnyParam(member.params),
+      anyReturn: hasAnyReturn(member),
     };
   }
   if (
-    m.type === AST_NODE_TYPES.TSPropertySignature &&
-    m.typeAnnotation?.typeAnnotation?.type === AST_NODE_TYPES.TSFunctionType
+    member.type === AST_NODE_TYPES.TSPropertySignature &&
+    member.typeAnnotation?.typeAnnotation?.type === AST_NODE_TYPES.TSFunctionType
   ) {
-    const fnType = m.typeAnnotation.typeAnnotation;
+    const fnType = member.typeAnnotation.typeAnnotation;
     return {
-      targetNode: m,
+      targetNode: member,
       anyParam: hasAnyParam(fnType.params),
       anyReturn: hasAnyReturn(fnType),
     };
@@ -71,7 +77,7 @@ export default createRule({
           if (!result || (!result.anyParam && !result.anyReturn)) continue;
 
           context.report({
-            node: result.targetNode as TSESTree.Node,
+            node: result.targetNode,
             messageId: selectMessageId(result.anyParam, result.anyReturn),
           });
         }
