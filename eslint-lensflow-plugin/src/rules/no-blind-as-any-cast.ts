@@ -100,6 +100,19 @@ export default createRule({
       return false;
     }
 
+    const reportedNodes = new Set<string>();
+
+    function reportBlindCast(node: TSESTree.TSAsExpression) {
+      const key = `${node.loc.start.line}:${node.loc.start.column}`;
+      if (!reportedNodes.has(key)) {
+        reportedNodes.add(key);
+        context.report({
+          node,
+          messageId: "blindAsAnyCast",
+        });
+      }
+    }
+
     function checkFunctionBody(body: TSESTree.BlockStatement) {
       for (let i = 0; i < body.body.length; i++) {
         const stmt = body.body[i];
@@ -113,10 +126,7 @@ export default createRule({
           const precedingStmts = body.body.slice(0, i);
           const hasValidation = precedingStmts.some(containsValidation);
           if (!hasValidation) {
-            context.report({
-              node: arg,
-              messageId: "blindAsAnyCast",
-            });
+            reportBlindCast(arg);
           }
         }
       }
@@ -136,10 +146,15 @@ export default createRule({
           node.body.type === "TSAsExpression" &&
           node.body.typeAnnotation.type === "TSAnyKeyword"
         ) {
-          context.report({
-            node: node.body,
-            messageId: "blindAsAnyCast",
-          });
+          reportBlindCast(node.body);
+        }
+      },
+      MethodDefinition(node) {
+        if (
+          node.value.type === "FunctionExpression" &&
+          node.value.body
+        ) {
+          checkFunctionBody(node.value.body);
         }
       },
     };
