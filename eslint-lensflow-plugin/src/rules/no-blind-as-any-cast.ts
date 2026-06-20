@@ -57,6 +57,49 @@ export default createRule({
       );
     }
 
+    function containsValidation(node: TSESTree.Node): boolean {
+      if (node.type === "ThrowStatement") return true;
+      if (node.type === "BlockStatement") {
+        return node.body.some(containsValidation);
+      }
+      if (node.type === "IfStatement") {
+        if (containsEarlyExitOrBlock(node.consequent)) return true;
+        return (
+          containsValidation(node.consequent) ||
+          (node.alternate ? containsValidation(node.alternate) : false)
+        );
+      }
+      if (node.type === "LabeledStatement") {
+        return containsValidation(node.body);
+      }
+      if (node.type === "WithStatement") {
+        return containsValidation(node.body);
+      }
+      if (node.type === "SwitchStatement") {
+        return node.cases.some((c) =>
+          c.consequent.some(containsValidation),
+        );
+      }
+      if (
+        node.type === "ForStatement" ||
+        node.type === "ForInStatement" ||
+        node.type === "ForOfStatement"
+      ) {
+        return containsValidation(node.body);
+      }
+      if (node.type === "WhileStatement" || node.type === "DoWhileStatement") {
+        return containsValidation(node.body);
+      }
+      if (node.type === "TryStatement") {
+        return (
+          containsValidation(node.block) ||
+          (node.handler ? containsValidation(node.handler.body) : false) ||
+          (node.finalizer ? containsValidation(node.finalizer) : false)
+        );
+      }
+      return false;
+    }
+
     function checkFunctionBody(body: TSESTree.BlockStatement) {
       for (let i = 0; i < body.body.length; i++) {
         const stmt = body.body[i];
@@ -67,9 +110,8 @@ export default createRule({
           arg.type === "TSAsExpression" &&
           arg.typeAnnotation.type === "TSAnyKeyword"
         ) {
-          const hasValidation = body.body.slice(0, i).some(
-            (s) => s.type === "ThrowStatement" || isGuardIf(s),
-          );
+          const precedingStmts = body.body.slice(0, i);
+          const hasValidation = precedingStmts.some(containsValidation);
           if (!hasValidation) {
             context.report({
               node: arg,
