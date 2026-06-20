@@ -20,21 +20,16 @@ const params = member.params
       .map((p) => {
         if (p.type === "Identifier") return p.name;
         if (p.type === "AssignmentPattern")
-          return `${p.left.type === "Identifier" ? p.left.name : "?"} = ...`;
-        return "...";
+          return `${p.left.type === "Identifier" ? p.left.name : context.getSourceCode().getText(p.left)} = ...`;
+        return context.getSourceCode().getText(p);
       })
       .join(", ");
 
-      const returnType =
-        member.returnType?.typeAnnotation != null
-          ? context.getSourceCode().getText(member.returnType.typeAnnotation)
-          : "void";
-
        context.report({
-      node: member,
-      messageId: "methodSyntax",
-      data: { name, params, returnType },
-    });
+       node: member,
+       messageId: "methodSyntax",
+       data: { name, params },
+     });
   };
 
   return {
