@@ -2,7 +2,7 @@ import ts from "typescript";
 import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
-const URL =
+const DOCS_URL =
   "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T03-newtypes-opaque.md";
 
 const ARITHMETIC_OPS = new Set(["+", "-", "*", "/", "%"]);
@@ -92,7 +92,7 @@ export default createRule({
           messageId: "leak",
           data: {
             brandType: brandTypeName,
-            url: URL,
+            url: DOCS_URL,
           },
         });
       },
