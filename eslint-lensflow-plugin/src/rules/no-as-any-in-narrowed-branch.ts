@@ -111,6 +111,13 @@ function findSwitchStatement(
     const next: TSESTreeWithParent | undefined = current.parent;
     if (!next) return null;
     if (next.type === "SwitchStatement") return next;
+    if (
+      next.type === "ArrowFunctionExpression" ||
+      next.type === "FunctionExpression" ||
+      next.type === "FunctionDeclaration"
+    ) {
+      return null;
+    }
     current = next;
   }
   return null;
@@ -196,6 +203,14 @@ function findNarrowedVariable(
   while (current) {
     const parent: TSESTreeWithParent | undefined = current.parent;
     if (!parent) return null;
+
+    if (
+      parent.type === "ArrowFunctionExpression" ||
+      parent.type === "FunctionExpression" ||
+      parent.type === "FunctionDeclaration"
+    ) {
+      return null;
+    }
 
     let candidate: TSESTree.Identifier | null = null;
 
