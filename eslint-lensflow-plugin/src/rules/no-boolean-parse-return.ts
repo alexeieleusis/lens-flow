@@ -20,9 +20,10 @@ export default createRule({
   create(context: TSESLint.RuleContext<"booleanParseReturn", []>) {
     const NAME_PATTERN = /^(parse|validate|check|parseAndValidate)/i;
 
-    // Track the enclosing VariableDeclarator so we can derive the function name
+    // Stack of enclosing VariableDeclarator identifiers so we can derive the function name
     // from the variable when the function itself has no id (arrows, anonymous FE).
-    let declaratorId: TSESTree.Identifier | undefined;
+    // Using a stack handles nested VariableDeclarators with destructuring patterns correctly.
+    const declaratorIds: (TSESTree.Identifier | undefined)[] = [];
 
     function checkFunction(node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression) {
       // Prefer the function's own id (FunctionDeclaration, named FunctionExpression).
@@ -32,7 +33,7 @@ export default createRule({
           ? node.id
           : node.type === "FunctionExpression" && node.id
             ? node.id
-            : declaratorId;
+            : declaratorIds[declaratorIds.length - 1];
 
       if (!nameNode) return;
       if (!NAME_PATTERN.test(nameNode.name)) return;
@@ -49,14 +50,10 @@ export default createRule({
 
     return {
       VariableDeclarator(node: TSESTree.VariableDeclarator) {
-        if (node.id.type === "Identifier") {
-          declaratorId = node.id;
-        }
+        declaratorIds.push(node.id.type === "Identifier" ? node.id : undefined);
       },
-      "VariableDeclarator:exit"(node: TSESTree.VariableDeclarator) {
-        if (node.id.type === "Identifier") {
-          declaratorId = undefined;
-        }
+      "VariableDeclarator:exit"() {
+        declaratorIds.pop();
       },
       FunctionDeclaration: checkFunction,
       FunctionExpression: checkFunction,
