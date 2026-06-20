@@ -1,5 +1,6 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+import { containsAny } from "../utils/ts-helpers.js";
 
 export default createRule({
   name: "no-any-in-interface",
@@ -22,7 +23,8 @@ export default createRule({
   create(context: TSESLint.RuleContext<"anyProperty" | "anyIndexSignature", []>) {
     return {
       TSPropertySignature(node) {
-        if (node.typeAnnotation?.typeAnnotation.type === "TSAnyKeyword") {
+        const typeAnnotation = node.typeAnnotation?.typeAnnotation;
+        if (typeAnnotation && containsAny(typeAnnotation)) {
           let name: string;
           if (node.key.type === "Identifier") {
             name = node.key.name;
@@ -39,7 +41,8 @@ export default createRule({
         }
       },
       TSIndexSignature(node) {
-        if (node.typeAnnotation?.typeAnnotation.type === "TSAnyKeyword") {
+        const typeAnnotation = node.typeAnnotation?.typeAnnotation;
+        if (typeAnnotation && containsAny(typeAnnotation)) {
           context.report({
             node,
             messageId: "anyIndexSignature",

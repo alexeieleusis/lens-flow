@@ -1,22 +1,6 @@
-import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
-
-function containsAny(typeNode: TSESTree.TypeNode): boolean {
-  if (typeNode.type === "TSAnyKeyword") return true;
-  if (typeNode.type === "TSUnionType" || typeNode.type === "TSIntersectionType") {
-    return typeNode.types.some(containsAny);
-  }
-  if (typeNode.type === "TSArrayType") {
-    return containsAny(typeNode.elementType);
-  }
-  if (typeNode.type === "TSTypeReference") {
-    return (typeNode.typeArguments?.params ?? []).some(containsAny);
-  }
-  if (typeNode.type === "TSTupleType") {
-    return typeNode.elementTypes.some(containsAny);
-  }
-  return false;
-}
+import { containsAny } from "../utils/ts-helpers.js";
 
 export default createRule({
   name: "no-any-index-signature",

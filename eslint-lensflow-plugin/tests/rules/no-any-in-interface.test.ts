@@ -49,5 +49,38 @@ ruleTester.run("no-any-in-interface", rule, {
       }`,
       errors: [{ messageId: "anyIndexSignature" }],
     },
+    {
+      code: `interface X { foo: string | any }`,
+      errors: [{ messageId: "anyProperty" }],
+    },
+    {
+      code: `interface X { foo: any[] }`,
+      errors: [{ messageId: "anyProperty" }],
+    },
+    {
+      code: `interface X { foo: Array<any> }`,
+      errors: [{ messageId: "anyProperty" }],
+    },
+    {
+      code: `interface X { foo: [any, string] }`,
+      errors: [{ messageId: "anyProperty" }],
+    },
+    {
+      code: `interface X { foo: { bar: any } }`,
+      errors: [
+        { messageId: "anyProperty" },
+        { messageId: "anyProperty" },
+      ],
+    },
+    {
+      code: `interface X { foo: string & any }`,
+      errors: [{ messageId: "anyProperty" }],
+    },
+    {
+      code: `interface Bucket {
+        [key: string]: string | any;
+      }`,
+      errors: [{ messageId: "anyIndexSignature" }],
+    },
   ],
 });
