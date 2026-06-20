@@ -82,10 +82,10 @@ export default createRule({
 
     return {
       FunctionDeclaration(node) {
-        checkFunctionBody(node.body);
+        if (node.body) checkFunctionBody(node.body);
       },
       FunctionExpression(node) {
-        checkFunctionBody(node.body);
+        if (node.body) checkFunctionBody(node.body);
       },
       ArrowFunctionExpression(node) {
         if (node.body.type === "BlockStatement") {
