@@ -1,5 +1,6 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { walkNodes } from "../utils/ast-helpers.js";
 
 function isAsConst(node: TSESTree.Node): boolean {
   return (
@@ -12,38 +13,15 @@ function isAsConst(node: TSESTree.Node): boolean {
 
 function findAsConst(node: TSESTree.Node | null | undefined): TSESTree.Node | null {
   if (!node) return null;
-
-  if (isAsConst(node)) return node;
-
-  const seen = new WeakSet<object>();
-
-  function walkChild(value: unknown): TSESTree.Node | null {
-    if (!value || typeof value !== "object") return null;
-    if ("type" in value) {
-      return walk(value as TSESTree.Node);
+  let result: TSESTree.Node | null = null;
+  walkNodes(node, (n) => {
+    if (isAsConst(n)) {
+      result = n;
+      return true;
     }
-    if (Array.isArray(value)) {
-      for (const item of value) {
-        const found = walkChild(item);
-        if (found) return found;
-      }
-    }
-    return null;
-  }
-
-  function walk(current: TSESTree.Node): TSESTree.Node | null {
-    if (isAsConst(current)) return current;
-    if (seen.has(current)) return null;
-    seen.add(current);
-    for (const [key, value] of Object.entries(current)) {
-      if (key === "parent" || key === "loc" || key === "range") continue;
-      const found = walkChild(value);
-      if (found) return found;
-    }
-    return null;
-  }
-
-  return walk(node);
+    return false;
+  }, { stopAtFunctionBoundaries: true });
+  return result;
 }
 
 export default createRule({
