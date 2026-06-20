@@ -2,6 +2,9 @@ import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 import { containsAny } from "../utils/ts-helpers.js";
 
+const KNOWLEDGE_URL =
+  "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T05-type-classes.md";
+
 export default createRule({
   name: "no-any-in-interface",
   meta: {
@@ -12,9 +15,9 @@ export default createRule({
     },
     messages: {
       anyProperty:
-        "Property \"{{name}}\" uses `any` type, defeating structural typing. Replace with a specific type. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T05-type-classes.md",
+        "Property \"{{name}}\" uses `any` type, defeating structural typing. Replace with a specific type. See: {{url}}",
       anyIndexSignature:
-        "Index signature returns `any` type. Replace with a specific return type. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T05-type-classes.md",
+        "Index signature returns `any` type. Replace with a specific return type. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -31,12 +34,12 @@ export default createRule({
           } else if (node.key.type === "Literal") {
             name = String(node.key.value);
           } else {
-            name = "[unknown]";
+            name = context.sourceCode.getText(node.key);
           }
           context.report({
             node,
             messageId: "anyProperty",
-            data: { name },
+            data: { name, url: KNOWLEDGE_URL },
           });
         }
       },
@@ -46,6 +49,7 @@ export default createRule({
           context.report({
             node,
             messageId: "anyIndexSignature",
+            data: { url: KNOWLEDGE_URL },
           });
         }
       },
