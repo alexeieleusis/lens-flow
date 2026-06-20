@@ -1,5 +1,6 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { getChildren } from "../utils/ast-helpers.js";
 
 const isCallback = (node: TSESTree.Node): boolean =>
   node.type === "ArrowFunctionExpression" ||
@@ -30,21 +31,6 @@ const getCallbackBody = (node: TSESTree.CallExpression): TSESTree.Node[] => {
   return [];
 };
 
-const childProperties: string[] = [
-  "body",
-  "consequent",
-  "alternate",
-  "test",
-  "init",
-  "left",
-  "right",
-  "argument",
-  "arguments",
-  "expression",
-  "object",
-  "property",
-];
-
 const processIfBranch = (
   branch: TSESTree.Node | null | undefined,
   depth: number,
@@ -72,17 +58,8 @@ const processChildProperties = (
   depth: number,
 ): number => {
   let maxDepth = depth;
-  for (const prop of childProperties) {
-    const val = (node as unknown as Record<string, unknown>)[prop];
-    if (!val || typeof val !== "object") continue;
-    if (Array.isArray(val)) {
-      maxDepth = Math.max(maxDepth, findNestedCallbackCalls(val, depth));
-    } else if ("type" in val) {
-      maxDepth = Math.max(
-        maxDepth,
-        findNestedCallbackCalls([val as TSESTree.Node], depth),
-      );
-    }
+  for (const child of getChildren(node)) {
+    maxDepth = Math.max(maxDepth, findNestedCallbackCalls([child], depth));
   }
   return maxDepth;
 };
