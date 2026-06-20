@@ -1,6 +1,12 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
+function getPropertyName(key: TSESTree.PropertyName): string | null {
+  if (key.type === "Identifier") return key.name;
+  if (key.type === "Literal" && typeof key.value === "string") return key.value;
+  return null;
+}
+
 export default createRule({
   name: "no-call-signature-leaked-internals",
   meta: {
@@ -26,12 +32,15 @@ export default createRule({
 
         if (!hasCallSignature) return;
 
-        const underscoreProps = node.body.filter(
-          (member): member is TSESTree.TSPropertySignature =>
-            member.type === "TSPropertySignature" &&
-            member.key.type === "Identifier" &&
-            member.key.name.startsWith("_"),
-        );
+        const underscoreProps = node.body
+          .filter(
+            (member): member is TSESTree.TSPropertySignature =>
+              member.type === "TSPropertySignature",
+          )
+          .filter((member) => {
+            const name = getPropertyName(member.key);
+            return name !== null && name.startsWith("_");
+          });
 
         if (underscoreProps.length > 0) {
           context.report({
@@ -39,10 +48,7 @@ export default createRule({
             messageId: "leakedInternals",
             data: {
               internals: underscoreProps
-                .map(
-                  (m) =>
-                    (m.key.type === "Identifier" ? m.key.name : "?"),
-                )
+                .map((m) => getPropertyName(m.key))
                 .join(", "),
             },
           });
