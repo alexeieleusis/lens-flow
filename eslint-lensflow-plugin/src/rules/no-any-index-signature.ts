@@ -6,13 +6,15 @@ export default createRule({
   name: "no-any-index-signature",
   meta: {
     type: "problem",
+    deprecated: true,
+    replacedBy: ["no-broad-index-signatures"],
     docs: {
       description:
         "Disallow index signatures that use `any` as the value type, which loses all type safety for dynamically keyed properties.",
     },
     messages: {
       anyIndexSignature:
-        "Index signature uses `any` as the value type, losing all type safety for dynamically keyed properties. Use a specific union type instead (e.g., `string | number | boolean`). See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T31-record-types.md",
+        "Index signature uses `any` as the value type, losing all type safety for dynamically keyed properties. Use a specific union type instead (e.g., `string | number | boolean`). This rule is deprecated; use no-broad-index-signatures instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T31-record-types.md",
     },
     schema: [],
     fixable: undefined,

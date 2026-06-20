@@ -72,6 +72,78 @@ export function containsAny(typeNode: TSESTree.TypeNode): boolean {
   }
   return false;
 }
+
+export function containsUnknown(typeNode: TSESTree.TypeNode): boolean {
+  if (typeNode.type === "TSUnknownKeyword") return true;
+  if (typeNode.type === "TSUnionType" || typeNode.type === "TSIntersectionType") {
+    return typeNode.types.some(containsUnknown);
+  }
+  if (typeNode.type === "TSArrayType") {
+    return containsUnknown(typeNode.elementType);
+  }
+  if (typeNode.type === "TSTypeReference") {
+    return (typeNode.typeArguments?.params ?? []).some(containsUnknown);
+  }
+  if (typeNode.type === "TSTupleType") {
+    return typeNode.elementTypes.some((elem) => {
+      if (elem.type === "TSNamedTupleMember") return containsUnknown(elem.elementType);
+      if (elem.type === "TSRestType") return containsUnknown(elem.typeAnnotation);
+      return containsUnknown(elem);
+    });
+  }
+  if (typeNode.type === "TSTypeLiteral") {
+    return typeNode.members.some((member) => {
+      if (member.type === "TSPropertySignature") {
+        return member.typeAnnotation
+          ? containsUnknown(member.typeAnnotation.typeAnnotation)
+          : false;
+      }
+      if (member.type === "TSIndexSignature") {
+        return member.typeAnnotation
+          ? containsUnknown(member.typeAnnotation.typeAnnotation)
+          : false;
+      }
+      return false;
+    });
+  }
+  if (typeNode.type === "TSFunctionType" || typeNode.type === "TSConstructorType") {
+    const paramUnknown = typeNode.params.some((p) => {
+      const inner = p.type === "TSParameterProperty" ? p.parameter : p;
+      return inner.typeAnnotation ? containsUnknown(inner.typeAnnotation.typeAnnotation) : false;
+    });
+    if (paramUnknown) return true;
+    if (typeNode.returnType) return containsUnknown(typeNode.returnType.typeAnnotation);
+  }
+  if (typeNode.type === "TSParenthesizedType") {
+    return containsUnknown(typeNode.typeAnnotation);
+  }
+  if (typeNode.type === "TSConditionalType") {
+    return (
+      containsUnknown(typeNode.checkType) ||
+      containsUnknown(typeNode.extendsType) ||
+      containsUnknown(typeNode.trueType) ||
+      containsUnknown(typeNode.falseType)
+    );
+  }
+  if (typeNode.type === "TSMappedType") {
+    return typeNode.typeAnnotation ? containsUnknown(typeNode.typeAnnotation) : false;
+  }
+  if (typeNode.type === "TSIndexedAccessType") {
+    return containsUnknown(typeNode.objectType) || containsUnknown(typeNode.indexType);
+  }
+  if (typeNode.type === "TSRestType") {
+    return containsUnknown(typeNode.typeAnnotation);
+  }
+  if (typeNode.type === "TSInferType") {
+    return typeNode.typeParameter.constraint
+      ? containsUnknown(typeNode.typeParameter.constraint)
+      : false;
+  }
+  if (typeNode.type === "TSTypeOperator") {
+    return typeNode.typeAnnotation ? containsUnknown(typeNode.typeAnnotation) : false;
+  }
+  return false;
+}
 import {
   defaultHasNeverAssertion,
   getLiteralFromExpr,
