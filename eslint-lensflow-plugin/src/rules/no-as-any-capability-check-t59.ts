@@ -39,6 +39,7 @@ export default createRule({
         }
 
         const tsNode = esTreeNodeToTSNodeMap.get(node.expression);
+        if (!tsNode) return;
         const exprType = checker.getTypeAtLocation(tsNode);
         if (!exprType.isUnion()) return;
 
