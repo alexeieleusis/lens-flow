@@ -10,11 +10,10 @@ const ARITHMETIC_OPS = new Set(["+", "-", "*", "/", "%"]);
 function hasBrandProperty(constituent: ts.Type): boolean {
   if ((constituent.flags & ts.TypeFlags.Object) !== 0) {
     const props = (constituent as ts.ObjectType).getProperties();
-    return props.some(
-      (p) =>
-        p.escapedName.toString().toLowerCase().includes("_brand") ||
-        p.escapedName.toString().endsWith("Brand"),
-    );
+    return props.some((p) => {
+      const name = p.escapedName.toString();
+      return name === "_brand" || name === "__brand" || name.endsWith("_brand") || name.endsWith("Brand");
+    });
   }
   return false;
 }
@@ -61,7 +60,7 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"leak", []>) {
-    const parserServices = ESLintUtils.getParserServices(context);
+    const parserServices = ESLintUtils.getParserServices(context, true);
     const program = parserServices.program;
     if (!program) return {};
 
