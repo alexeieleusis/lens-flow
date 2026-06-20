@@ -1,14 +1,19 @@
 import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { walkNodes } from "../utils/ast-helpers.js";
 
 type FunctionNode =
   | TSESTree.FunctionDeclaration
   | TSESTree.FunctionExpression
   | TSESTree.ArrowFunctionExpression;
 
-function findEnclosingFunction(node: TSESTree.Node): FunctionNode | undefined {
-  let current: TSESTree.Node | null = node;
-  while (current) {
+function findEnclosingFunction(
+  sourceCode: TSESLint.SourceCode,
+  node: TSESTree.Node,
+): FunctionNode | undefined {
+  const ancestors = sourceCode.getAncestors(node);
+  for (let i = ancestors.length - 1; i >= 0; i--) {
+    const current = ancestors[i];
     if (
       current.type === AST_NODE_TYPES.FunctionDeclaration ||
       current.type === AST_NODE_TYPES.FunctionExpression ||
@@ -16,7 +21,6 @@ function findEnclosingFunction(node: TSESTree.Node): FunctionNode | undefined {
     ) {
       return current as FunctionNode;
     }
-    current = (current as { parent?: TSESTree.Node }).parent ?? null;
   }
   return undefined;
 }
@@ -45,47 +49,15 @@ function getParamTypeAnnotation(
   return param?.typeAnnotation?.typeAnnotation;
 }
 
-const SKIP_KEYS = new Set([
-  "parent",
-  "loc",
-  "range",
-  "start",
-  "end",
-  "tokens",
-  "comments",
-  "typeAnnotation",
-  "typeArguments",
-  "returnType",
-  "key",
-  "typeParameters",
-]);
-
 function hasVariableDeclaration(node: TSESTree.Node, name: string): boolean {
-  if (node.type === AST_NODE_TYPES.VariableDeclaration) {
-    if (
-      (node as TSESTree.VariableDeclaration).declarations.some(
+  return walkNodes(
+    node,
+    (n) =>
+      n.type === AST_NODE_TYPES.VariableDeclaration &&
+      (n as TSESTree.VariableDeclaration).declarations.some(
         (d) => d.id.type === AST_NODE_TYPES.Identifier && d.id.name === name,
-      )
-    ) {
-      return true;
-    }
-  }
-
-  for (const [key, value] of Object.entries(node)) {
-    if (SKIP_KEYS.has(key) || value === null || value === undefined) continue;
-    if (typeof value !== "object") continue;
-
-    if (Array.isArray(value)) {
-      for (const item of value) {
-        if (item !== null && typeof item === "object" && "type" in item) {
-          if (hasVariableDeclaration(item as TSESTree.Node, name)) return true;
-        }
-      }
-    } else if ("type" in value && typeof value.type === "string") {
-      if (hasVariableDeclaration(value as TSESTree.Node, name)) return true;
-    }
-  }
-  return false;
+      ),
+  );
 }
 
 function isDeclaredInsideFn(name: string, fn: FunctionNode): boolean {
@@ -126,7 +98,7 @@ export default createRule({
       if (rhs.type !== AST_NODE_TYPES.Identifier || !("name" in rhs)) return;
 
       const paramName = rhs.name;
-      const fn = findEnclosingFunction(sourceNode);
+      const fn = findEnclosingFunction(context.sourceCode, sourceNode);
       if (!fn) return;
 
       if (!isParameterOf(paramName, fn)) return;
