@@ -25,19 +25,20 @@ export default createRule({
           (node.declaration.kind === "let" || node.declaration.kind === "var")
         ) {
           const decl = node.declaration;
-          const name =
-            decl.declarations.length > 0 &&
-            decl.declarations[0].id.type === "Identifier"
-              ? decl.declarations[0].id.name
-              : "(unnamed)";
-          context.report({
-            node,
-            messageId: "mutableExport",
-            data: {
-              kind: decl.kind,
-              name,
-            },
-          });
+          for (const declarator of decl.declarations) {
+            const name =
+              declarator.id.type === "Identifier"
+                ? declarator.id.name
+                : "(unnamed)";
+            context.report({
+              node: declarator,
+              messageId: "mutableExport",
+              data: {
+                kind: decl.kind,
+                name,
+              },
+            });
+          }
         }
       },
     };
