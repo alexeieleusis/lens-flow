@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       duplicatedProperties:
-        "{{dupCount}} property signature(s) ({{properties}}) duplicated across union members. Extract shared structure into a common interface. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T36-trait-objects.md",
+        "{{dupCount}} property signature(s) ({{properties}}) duplicated across union members. Extract shared structure into a common interface. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T36-trait-objects.md",
     },
     schema: [],
     fixable: undefined,
