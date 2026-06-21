@@ -31,7 +31,8 @@ function serializeTypeLiteral(node: TSESTree.TSTypeLiteral): string {
         typeStr = serializeType(member.typeAnnotation.typeAnnotation);
       }
 
-      members.push(`prop:${keyName}:${typeStr}`);
+      const mods = [member.readonly ? "r" : "", member.optional ? "?" : ""].filter(Boolean).join("");
+      members.push(`prop:${keyName}:${typeStr}${mods}`);
 
     } else if (member.type === "TSMethodSignature") {
       const keyName =
