@@ -8,6 +8,8 @@ export default createRule({
     docs: {
       description:
         "Disallow double-cast through `any` (`value as any as T`) which bypasses all structural type checking",
+      deprecated: true,
+      replacedBy: ["no-double-assertion"],
     },
     messages: {
       doubleCastAny:

@@ -30,12 +30,6 @@ export default createRule({
           fromType = "unknown";
         } else if (innerTypeAnn.type === "TSAnyKeyword") {
           fromType = "any";
-        } else if (
-          innerTypeAnn.type === "TSTypeReference" &&
-          innerTypeAnn.typeName.type === "Identifier" &&
-          innerTypeAnn.typeName.name === "unknown"
-        ) {
-          fromType = "unknown";
         }
 
         if (!fromType) return;
