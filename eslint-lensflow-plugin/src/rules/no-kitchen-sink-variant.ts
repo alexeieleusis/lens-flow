@@ -7,7 +7,7 @@ export default createRule({
     type: "suggestion",
     docs: {
       description:
-        "Flag discriminated-union variants with too many top-level fields",
+        "Flag union type-literal variants with too many top-level fields",
     },
     messages: {
       tooManyFields:
