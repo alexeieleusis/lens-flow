@@ -103,6 +103,7 @@ function reportInterfaceIssues(
 export default createRule({
   name: "no-interface-implementation-leak",
   meta: {
+    fixable: undefined,
     type: "problem",
     docs: {
       description:
