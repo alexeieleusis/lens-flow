@@ -29,7 +29,7 @@ export default createRule({
   },
   defaultOptions: [{ maxOptional: 10 }],
   create(context: TSESLint.RuleContext<"tooManyOptional", [{ maxOptional: number }]>) {
-    const [{ maxOptional } = { maxOptional: 10 }] = context.options ?? [];
+    const { maxOptional = 10 } = context.options[0] ?? {};
 
     return {
       TSInterfaceBody(node) {

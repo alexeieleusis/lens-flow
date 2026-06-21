@@ -1,7 +1,10 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
-function isMutableType(node: TSESTree.TypeNode): boolean {
+function isMutableType(
+  node: TSESTree.TypeNode,
+  sourceCode: TSESLint.SourceCode,
+): boolean {
   if (node.type === "TSTypeOperator" && node.operator === "readonly") {
     return false;
   }
@@ -12,12 +15,18 @@ function isMutableType(node: TSESTree.TypeNode): boolean {
 
   if (node.type === "TSTypeReference") {
     const typeName = node.typeName;
+    let name: string | null = null;
     if (typeName.type === "Identifier") {
-      const name = typeName.name;
-      if (["Map", "Set"].includes(name)) {
+      name = typeName.name;
+    } else {
+      const full = sourceCode.getText(typeName);
+      name = full.split(".").pop() || null;
+    }
+    if (name) {
+      if (["Map", "Set", "Array"].includes(name)) {
         return true;
       }
-      if (["ReadonlyMap", "ReadonlySet"].includes(name)) {
+      if (["ReadonlyMap", "ReadonlySet", "ReadonlyArray"].includes(name)) {
         return false;
       }
     }
@@ -29,7 +38,7 @@ function isMutableType(node: TSESTree.TypeNode): boolean {
   }
 
   if (node.type === "TSUnionType") {
-    return node.types.some((member) => isMutableType(member));
+    return node.types.some((member) => isMutableType(member, sourceCode));
   }
 
   return false;
@@ -64,7 +73,7 @@ export default createRule({
 
           if (
             returnTypeAnnotation &&
-            isMutableType(returnTypeAnnotation)
+            isMutableType(returnTypeAnnotation, context.sourceCode)
           ) {
             const getterName =
               getter.key.type === "Identifier" ? getter.key.name : "?";
