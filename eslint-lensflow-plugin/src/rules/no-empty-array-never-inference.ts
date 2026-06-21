@@ -29,10 +29,10 @@ export default createRule({
         if (
           node.init?.type === "ArrayExpression" &&
           node.init.elements.length === 0 &&
-          !node.id.typeAnnotation
-        ) {
+         !node.id.typeAnnotation
+         ) {
           context.report({
-            node,
+            node: node.init,
             messageId: "emptyArrayNoType",
           });
         }
