@@ -36,6 +36,14 @@ export default createRule({
           return;
         }
 
+        // Skip if wrapped in `as const`
+        if (node.init.parent?.type === "TSAsExpression" &&
+            node.init.parent.typeAnnotation.type === "TSTypeReference" &&
+            node.init.parent.typeAnnotation.typeName.type === "Identifier" &&
+            node.init.parent.typeAnnotation.typeName.name === "const") {
+          return;
+        }
+
         for (const prop of node.init.properties) {
           if (prop.type !== "Property") continue;
 
