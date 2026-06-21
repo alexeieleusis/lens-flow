@@ -63,33 +63,31 @@ function isPlainPrimitive(
   return checker.isTypeAssignableTo(sourceType, basePrimitive);
 }
 
-function findEnclosingSmartConstructor(node: TSESTree.Node): boolean {
-  let current: TSESTree.Node | undefined = node.parent;
-  while (current) {
+function findEnclosingSmartConstructor(
+  context: TSESLint.RuleContext<string, []>,
+  node: TSESTree.Node,
+): boolean {
+  const ancestors = context.sourceCode.getAncestors(node);
+  for (let i = 0; i < ancestors.length; i++) {
+    const current = ancestors[i];
     if (current.type === "FunctionDeclaration") {
-      if (current.id && SMART_CONSTRUCTOR_RE.test(current.id.name)) {
-        return true;
-      }
-      return false;
+      return !!(current.id && SMART_CONSTRUCTOR_RE.test(current.id.name));
     }
     if (current.type === "FunctionExpression") {
-      if (current.id && SMART_CONSTRUCTOR_RE.test(current.id.name)) {
-        return true;
-      }
-      return false;
+      return !!(current.id && SMART_CONSTRUCTOR_RE.test(current.id.name));
     }
     if (current.type === "ArrowFunctionExpression") {
-      const parent = current.parent;
+      const declarator = ancestors[i + 1];
       if (
-        parent?.type === "VariableDeclarator" &&
-        parent.id.type === "Identifier" &&
-        SMART_CONSTRUCTOR_RE.test(parent.id.name)
+        declarator &&
+        declarator.type === "VariableDeclarator" &&
+        declarator.id.type === "Identifier" &&
+        SMART_CONSTRUCTOR_RE.test(declarator.id.name)
       ) {
         return true;
       }
       return false;
     }
-    current = current.parent;
   }
   return false;
 }
@@ -136,7 +134,7 @@ export default createRule({
         const sourceType = parserServices.getTypeAtLocation(node.expression);
         if (!isPlainPrimitive(checker, sourceType, basePrimitive)) return;
 
-        if (findEnclosingSmartConstructor(node)) return;
+        if (findEnclosingSmartConstructor(context, node)) return;
 
         context.report({
           node,
