@@ -68,6 +68,22 @@ function isFunctionNode(node: TSESTree.Node): node is TSESTree.FunctionDeclarati
   );
 }
 
+function paramHasBinding(
+  fn: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression,
+  paramName: string,
+): boolean {
+  for (const param of fn.params) {
+    if (param.type === "Identifier" && param.name === paramName) return true;
+    if (
+      param.type === "AssignmentPattern" &&
+      param.left.type === "Identifier" &&
+      param.left.name === paramName
+    )
+      return true;
+  }
+  return false;
+}
+
 function findTypeInFunctionParams(
   fn: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression,
   paramName: string,
@@ -93,6 +109,15 @@ function findTypeInFunctionParams(
     }
   }
   return undefined;
+}
+
+function varDeclHasBinding(
+  decl: TSESTree.VariableDeclaration,
+  varName: string,
+): boolean {
+  return decl.declarations.some(
+    (d) => d.id.type === "Identifier" && d.id.name === varName,
+  );
 }
 
 function findTypeInVariableDeclaration(
@@ -121,16 +146,18 @@ function findParamTypeAnnotation(
     const current = ancestors[i];
 
     if (isFunctionNode(current)) {
-      const typeAnn = findTypeInFunctionParams(current, name);
-      if (typeAnn) return typeAnn;
+      if (paramHasBinding(current, name)) {
+        return findTypeInFunctionParams(current, name);
+      }
     }
 
     if (current.type === "VariableDeclaration") {
-      const typeAnn = findTypeInVariableDeclaration(
-        current as TSESTree.VariableDeclaration,
-        name,
-      );
-      if (typeAnn) return typeAnn;
+      if (varDeclHasBinding(current as TSESTree.VariableDeclaration, name)) {
+        return findTypeInVariableDeclaration(
+          current as TSESTree.VariableDeclaration,
+          name,
+        );
+      }
     }
   }
 
