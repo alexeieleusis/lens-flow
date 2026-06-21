@@ -51,7 +51,7 @@ function collectProperties(
   for (const member of members) {
     if (member.type !== AST_NODE_TYPES.TSPropertySignature) continue;
 
-    const m = member as TSESTree.TSPropertySignature;
+    const m = member;
     const propName = extractPropertyName(m.key);
     if (propName === undefined) continue;
     const ta = m.typeAnnotation?.typeAnnotation;
