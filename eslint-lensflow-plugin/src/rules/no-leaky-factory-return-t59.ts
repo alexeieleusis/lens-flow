@@ -10,7 +10,9 @@ type FunctionNode =
 function getObjectKeys(objExpr: TSESTree.ObjectExpression): string[] {
   const keys: string[] = [];
   for (const p of objExpr.properties) {
+    if (p.type === "SpreadElement") continue;
     if (p.type !== "Property") continue;
+    if (p.computed) continue;
     if (p.key.type === "Identifier") {
       keys.push(p.key.name);
     } else if (p.key.type === "Literal" && typeof p.key.value === "string") {
