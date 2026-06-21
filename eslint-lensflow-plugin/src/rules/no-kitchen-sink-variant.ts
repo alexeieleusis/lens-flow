@@ -28,9 +28,8 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ maxFields: 6 }],
-  create(context: TSESLint.RuleContext<"tooManyFields", [{ maxFields: number }]>) {
-    const opts = context.options[0] ?? {};
-    const maxFields = opts.maxFields ?? 6;
+  create(context: TSESLint.RuleContext<"tooManyFields", [{ maxFields?: number }]>) {
+    const { maxFields = 6 } = context.options[0] ?? { maxFields: 6 };
 
     return {
       TSTypeLiteral(node) {
@@ -41,11 +40,10 @@ export default createRule({
           (member) => member.type === "TSPropertySignature",
         );
 
-        const hasDataProperty = properties.some(
-          (p) =>
-            p.key.type === "Identifier" &&
-            p.key.name === "data",
-        );
+        const hasDataProperty = properties.some((p) => {
+          const name = p.key.type === "Identifier" ? p.key.name : p.key.type === "Literal" ? String(p.key.value) : null;
+          return name === "data";
+        });
 
         if (properties.length > maxFields && !hasDataProperty) {
           context.report({
