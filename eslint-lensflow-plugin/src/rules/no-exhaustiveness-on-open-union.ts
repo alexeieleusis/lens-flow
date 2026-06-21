@@ -24,17 +24,6 @@ function hasExhaustivenessCheck(consequent: TSESTree.Statement[]): boolean {
   return false;
 }
 
-function hasLiteralCases(cases: TSESTree.SwitchCase[]): boolean {
-  return cases.some(
-    (c) =>
-      c.test !== null &&
-      c.test.type === "Literal" &&
-      (typeof c.test.value === "string" ||
-        typeof c.test.value === "number" ||
-        typeof c.test.value === "boolean"),
-  );
-}
-
 function isBroadType(tsType: ts.Type): boolean {
   const flags = tsType.flags;
   return (
