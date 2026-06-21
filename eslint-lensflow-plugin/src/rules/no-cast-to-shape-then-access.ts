@@ -1,5 +1,20 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+function unwrapExpression(
+  node: TSESTree.Expression,
+): TSESTree.Expression {
+  if (node.type === "TSNonNullExpression") return node.expression;
+  if (node.type === "ChainExpression") return node.expression;
+  return node;
+}
+
+function isCastToShape(node: TSESTree.Expression): boolean {
+  const inner = unwrapExpression(node);
+  if (inner.type !== "TSAsExpression" && inner.type !== "TSSatisfiesExpression")
+    return false;
+  return inner.typeAnnotation.type === "TSTypeLiteral";
+}
 
 export default createRule({
   name: "no-cast-to-shape-then-access",
@@ -20,10 +35,7 @@ export default createRule({
   create(context: TSESLint.RuleContext<"castToShapeThenAccess", []>) {
     return {
       MemberExpression(node) {
-        if (
-          node.object.type === "TSAsExpression" &&
-          node.object.typeAnnotation.type === "TSTypeLiteral"
-        ) {
+        if (isCastToShape(node.object)) {
           context.report({
             node: node.object,
             messageId: "castToShapeThenAccess",
