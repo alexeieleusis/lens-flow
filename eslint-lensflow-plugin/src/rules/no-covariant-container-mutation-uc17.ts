@@ -26,16 +26,25 @@ function paramsReferenceCovariant(
 function findMatchedCovariantParam(
   params: TSESTree.Parameter[],
   covariantNames: Set<string>,
-): string {
+): { name: string; node: TSESTree.Parameter } | null {
   for (const p of params) {
     const ann = paramTypeAnnotation(p);
     if (ann) {
       for (const name of covariantNames) {
-        if (containsTypeRef(ann, name)) return name;
+        if (containsTypeRef(ann, name)) return { name, node: p };
       }
     }
   }
-  return "?";
+  return null;
+}
+
+function paramText(
+  match: { name: string; node: TSESTree.Parameter },
+  context: Parameters<NonNullable<Parameters<typeof createRule>[0]["create"]>>[0],
+): string {
+  const ann = paramTypeAnnotation(match.node);
+  if (ann) return context.sourceCode.getText(ann);
+  return context.sourceCode.getText(match.node);
 }
 
 function extractKeyName(key: TSESTree.Node): string {
@@ -55,12 +64,15 @@ function checkMethodSignature(
 ) {
   if (!paramsReferenceCovariant(member.params, covariantNames)) return;
 
+  const match = findMatchedCovariantParam(member.params, covariantNames);
+  if (!match) return;
+
   context.report({
     node: member,
     messageId: "mutationOnCovariant",
     data: {
       methodName: extractKeyName(member.key),
-      paramName: findMatchedCovariantParam(member.params, covariantNames),
+      paramName: paramText(match, context),
       url: KNOWLEDGE_URL,
     },
   });
@@ -75,12 +87,15 @@ function checkPropertySignature(
   if (typeAnn?.type !== AST_NODE_TYPES.TSFunctionType) return;
   if (!paramsReferenceCovariant(typeAnn.params, covariantNames)) return;
 
+  const match = findMatchedCovariantParam(typeAnn.params, covariantNames);
+  if (!match) return;
+
   context.report({
     node: member,
     messageId: "propertyMutationOnCovariant",
     data: {
       propName: extractKeyName(member.key),
-      paramName: findMatchedCovariantParam(typeAnn.params, covariantNames),
+      paramName: paramText(match, context),
       url: KNOWLEDGE_URL,
     },
   });
