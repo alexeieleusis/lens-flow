@@ -63,7 +63,6 @@ import noDeeplyNestedUnionMembers from "./rules/no-deeply-nested-union-members.j
 import noDirectBrandCast from "./rules/no-direct-brand-cast.js";
 import noDirectCircularAlias from "./rules/no-direct-circular-alias.js";
 import noDoubleAssertion from "./rules/no-double-assertion.js";
-import noDoubleCastAny from "./rules/no-double-cast-any.js";
 import noDuplicateDiscriminantValues from "./rules/no-duplicate-discriminant-values.js";
 import noDuplicateInlineStructuralTypes from "./rules/no-duplicate-inline-structural-types.js";
 import noDuplicatedConstraintLiteral from "./rules/no-duplicated-constraint-literal.js";
@@ -358,7 +357,6 @@ const plugin: {
     "no-direct-brand-cast": noDirectBrandCast,
     "no-direct-circular-alias": noDirectCircularAlias,
     "no-double-assertion": noDoubleAssertion,
-    "no-double-cast-any": noDoubleCastAny,
     "no-duplicate-discriminant-values": noDuplicateDiscriminantValues,
     "no-duplicate-inline-structural-types": noDuplicateInlineStructuralTypes,
     "no-duplicated-constraint-literal": noDuplicatedConstraintLiteral,
