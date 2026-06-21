@@ -2,20 +2,23 @@ import ts from "typescript";
 import { ESLintUtils, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
-function isArrayType(type: ts.Type) {
-  const props = type.getProperties();
-  return props.some((p) => p.name === "length");
-}
+function createTypeCheckers(checker: ts.TypeChecker) {
+  function isArrayType(type: ts.Type) {
+    return checker.isArrayType(type);
+  }
 
-function isMutableArray(type: ts.Type) {
-  const props = type.getProperties();
-  return props.some(
-    (p) => p.name === "push" || p.name === "pop" || p.name === "splice"
-  );
-}
+  function isMutableArray(type: ts.Type) {
+    const pushProp = type.getProperty("push");
+    if (!pushProp || !pushProp.valueDeclaration) return false;
+    const pushType = checker.getTypeOfSymbolAtLocation(pushProp, pushProp.valueDeclaration);
+    return pushType.getCallSignatures().length > 0;
+  }
 
-function isReadonlyArray(type: ts.Type) {
-  return isArrayType(type) && !isMutableArray(type);
+  function isReadonlyArray(type: ts.Type) {
+    return isArrayType(type) && !isMutableArray(type);
+  }
+
+  return { isArrayType, isMutableArray, isReadonlyArray };
 }
 
 export default createRule({
@@ -37,6 +40,9 @@ export default createRule({
   create(context: TSESLint.RuleContext<"mutableAssignmentFromReadonly", []>) {
     const parserServices = ESLintUtils.getParserServices(context);
     if (!parserServices.program) return {};
+
+    const checker = parserServices.program.getTypeChecker();
+    const { isMutableArray, isReadonlyArray } = createTypeCheckers(checker);
 
     return {
       VariableDeclarator(node: TSESTree.VariableDeclarator) {
