@@ -3,6 +3,7 @@ import { createRule } from "../utils/rule-creator.js";
 import {
   containsTypeRef,
   paramTypeAnnotation,
+  createVarianceDeclarationVisitor,
 } from "../utils/variance-checker.js";
 
 const KNOWLEDGE_URL =
@@ -107,7 +108,7 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow mutation methods or setters that accept a covariant (`out`) type parameter as input on a generic interface",
+        "Disallow mutation methods or setters that accept a covariant (`out`) type parameter as input on a generic interface or type alias",
     },
     messages: {
       mutationOnCovariant:
@@ -120,36 +121,34 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"mutationOnCovariant" | "propertyMutationOnCovariant", []>) {
-    return {
-      TSInterfaceDeclaration(node) {
-        const decl = node;
-        if (!decl.typeParameters || !decl.body) return;
+    return createVarianceDeclarationVisitor((typeParams, body) => {
+      const covariantParams = typeParams.filter(
+        (tp) => tp.out && !tp.in,
+      );
+      if (covariantParams.length === 0) return;
 
-        const covariantParams = decl.typeParameters.params.filter(
-          (tp) => tp.out && !tp.in,
-        );
-        if (covariantParams.length === 0) return;
+      const covariantNames = new Set(
+        covariantParams.map((tp) => tp.name.name),
+      );
 
-        const covariantNames = new Set(
-          covariantParams.map((tp) => tp.name.name),
-        );
+      const members =
+        body.type === AST_NODE_TYPES.TSInterfaceBody ? body.body : body.members;
 
-        for (const member of decl.body.body) {
-          if (member.type === AST_NODE_TYPES.TSMethodSignature) {
-            checkMethodSignature(
-              member as TSESTree.TSMethodSignature,
-              covariantNames,
-              context,
-            );
-          } else if (member.type === AST_NODE_TYPES.TSPropertySignature) {
-            checkPropertySignature(
-              member as TSESTree.TSPropertySignature,
-              covariantNames,
-              context,
-            );
-          }
+      for (const member of members) {
+        if (member.type === AST_NODE_TYPES.TSMethodSignature) {
+          checkMethodSignature(
+            member as TSESTree.TSMethodSignature,
+            covariantNames,
+            context,
+          );
+        } else if (member.type === AST_NODE_TYPES.TSPropertySignature) {
+          checkPropertySignature(
+            member as TSESTree.TSPropertySignature,
+            covariantNames,
+            context,
+          );
         }
-      },
-    };
+      }
+    });
   },
 });
