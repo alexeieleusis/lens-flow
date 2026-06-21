@@ -2,8 +2,12 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
 function isMutableType(node: TSESTree.TypeNode): boolean {
+  if (node.type === "TSTypeOperator" && node.operator === "readonly") {
+    return false;
+  }
+
   if (node.type === "TSArrayType") {
-    return !(node as TSESTree.TSArrayType & { readonly?: boolean }).readonly;
+    return true;
   }
 
   if (node.type === "TSTypeReference") {
