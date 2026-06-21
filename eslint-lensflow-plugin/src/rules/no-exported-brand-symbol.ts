@@ -1,6 +1,14 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
+function isBrandSymbolName(name: string): boolean {
+  // Matches common branding conventions:
+  // - ends with "_brand" (e.g., MyType_brand)
+  // - contains "$$" (e.g., $$type, $$MyBrand)
+  // - underscore-prefixed (e.g., _brand, _type, _key)
+  return /\$[$]/.test(name) || /\b_brand$/.test(name) || /^_/.test(name);
+}
+
 export default createRule({
   name: "no-exported-brand-symbol",
   meta: {
@@ -38,6 +46,7 @@ export default createRule({
           ) {
             const name =
               decl.id.type === "Identifier" ? decl.id.name : "<unknown>";
+            if (!name || !isBrandSymbolName(name)) continue;
 
             context.report({
               node: decl,
