@@ -1,5 +1,5 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 export default createRule({
   name: "no-intersected-function-types",
@@ -7,7 +7,7 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow intersecting function or constructor types, which creates overloaded signatures rarely intended",
+        "Disallow intersecting function or constructor types, which creates overloaded signatures that are rarely intended",
     },
     messages: {
       intersectedFunctions:
@@ -21,7 +21,8 @@ export default createRule({
     return {
       TSIntersectionType(node) {
         const functionTypes = node.types.filter(
-          (member) => member.type === "TSFunctionType" || member.type === "TSConstructorType",
+          (member): member is TSESTree.TSFunctionType | TSESTree.TSConstructorType =>
+            member.type === "TSFunctionType" || member.type === "TSConstructorType",
         );
         if (functionTypes.length >= 2) {
           context.report({

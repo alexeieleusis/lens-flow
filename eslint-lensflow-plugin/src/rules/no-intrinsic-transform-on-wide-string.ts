@@ -15,10 +15,11 @@ export default createRule({
     docs: {
       description:
         "Disallow applying intrinsic string transform types to the wide `string` type, which has no effect",
+      url: "https://github.com/jpablo/vibe-types/blob/main/plugin/skills/typescript/catalog/T63-template-literal-types.md",
     },
     messages: {
       noEffect:
-        "{{transform}} has no effect on the wide `string` type — it produces `string` unchanged. Use a string literal type or constrain the generic with `extends string`. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T63-template-literal-types.md",
+        "{{transform}} has no effect on the wide `string` type — it produces `string` unchanged. Use a string literal type or constrain the generic with `extends string`.",
     },
     schema: [],
     fixable: undefined,
@@ -35,7 +36,9 @@ export default createRule({
         const params = node.typeArguments?.params;
         if (params?.length !== 1) return;
 
-        const typeParam = params[0];
+        let typeParam = params[0];
+        if (typeParam.type === "TSParenthesizedType")
+          typeParam = typeParam.typeAnnotation;
         if (typeParam.type !== "TSStringKeyword") return;
 
         context.report({
