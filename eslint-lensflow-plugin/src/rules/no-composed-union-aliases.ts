@@ -23,18 +23,10 @@ export default createRule({
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"composed", []>) {
     const parserServices = ESLintUtils.getParserServices(context, { allowNoProject: true });
-    const program = parserServices.program;
-    if (!program) return {};
-
-    const checker = program.getTypeChecker();
-
     function analyzeUnionMember(member: TSESTree.TypeElement | TSESTree.TypeNode): { isUnion: boolean; refName: string } {
       if (member.type !== "TSTypeReference") return { isUnion: false, refName: "" };
 
-      const tsNode = parserServices.esTreeNodeToTSNodeMap.get(member);
-      if (!tsNode) return { isUnion: false, refName: "" };
-
-      const memberTsType = checker.getTypeFromTypeNode(tsNode as ts.TypeNode);
+      const memberTsType = parserServices.getTypeAtLocation(member);
       const isUnion = (memberTsType.flags & ts.TypeFlags.Union) !== 0;
 
       if (!isUnion) return { isUnion: false, refName: "" };
