@@ -34,7 +34,7 @@ export default createRule({
     return {
       TSInterfaceBody(node) {
         const count = node.body.length;
-        if (count >= maxMembers) {
+        if (count > maxMembers) {
           const decl = node.parent;
           const name =
             decl?.type === "TSInterfaceDeclaration" && decl.id
