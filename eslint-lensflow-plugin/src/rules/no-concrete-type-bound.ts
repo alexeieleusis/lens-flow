@@ -30,9 +30,9 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ allowedReferences: [] as string[] }],
-  create(context: TSESLint.RuleContext<"concreteBound", [{ allowedReferences: unknown }]>) {
-    const [{ allowedReferences } = { allowedReferences: [] }] = context.options ?? [];
-    const allowed = new Set([...BUILT_IN_REFERENCES, ...(allowedReferences as string[])]);
+  create(context: TSESLint.RuleContext<"concreteBound", [{ allowedReferences?: string[] }]>) {
+    const { allowedReferences = [] } = context.options[0] ?? {};
+    const allowed = new Set([...BUILT_IN_REFERENCES, ...allowedReferences]);
 
     return {
       TSTypeParameter(node) {
