@@ -1,58 +1,38 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+import { walk } from "../utils/ast-helpers.js";
 
-function getObjectKeys(objExpr: unknown): string[] {
-  const props = (objExpr as { properties: unknown[] }).properties || [];
+type FunctionNode =
+  | TSESTree.FunctionDeclaration
+  | TSESTree.FunctionExpression
+  | TSESTree.ArrowFunctionExpression;
+
+function getObjectKeys(objExpr: TSESTree.ObjectExpression): string[] {
   const keys: string[] = [];
-  for (const p of props) {
-    const prop = p as {
-      type: string;
-      key: { type: string; name?: string; value?: string };
-    };
-    if (prop.type === "Property") {
-      if (prop.key.type === "Identifier" && prop.key.name !== undefined) {
-        keys.push(prop.key.name);
-      } else if (prop.key.type === "Literal" && prop.key.value !== undefined) {
-        keys.push(String(prop.key.value));
-      }
+  for (const p of objExpr.properties) {
+    if (p.type !== "Property") continue;
+    if (p.key.type === "Identifier") {
+      keys.push(p.key.name);
+    } else if (p.key.type === "Literal" && typeof p.key.value === "string") {
+      keys.push(p.key.value);
+    } else if (p.key.type === "Literal" && p.key.value != null) {
+      keys.push(String(p.key.value));
     }
   }
   return keys;
 }
 
-function findReturnStatements(node: unknown): unknown[] {
-  const results: unknown[] = [];
-  const seen = new WeakSet<object>();
-  const FUNCTION_BOUNDARIES = new Set([
-    "FunctionDeclaration",
-    "FunctionExpression",
-    "ArrowFunctionExpression",
-  ]);
-  function walk(n: unknown) {
-    if (!n || typeof n !== "object") return;
-    if (seen.has(n)) return;
-    seen.add(n);
-    const obj = n as Record<string, unknown>;
-    const nodeType = obj.type as string;
-    if (FUNCTION_BOUNDARIES.has(nodeType)) return;
+function findReturnStatements(fnNode: FunctionNode): TSESTree.ReturnStatement[] {
+  const results: TSESTree.ReturnStatement[] = [];
+  walk(fnNode.body, (node) => {
     if (
-      nodeType === "ReturnStatement" &&
-      obj.argument != null &&
-      (obj.argument as { type?: string }).type === "ObjectExpression"
+      node.type === "ReturnStatement" &&
+      node.argument != null &&
+      node.argument.type === "ObjectExpression"
     ) {
-      results.push(obj);
+      results.push(node);
     }
-    for (const key of Object.keys(obj)) {
-      if (key === "parent") continue;
-      const child = obj[key];
-      if (Array.isArray(child)) {
-        child.forEach(walk);
-      } else {
-        walk(child);
-      }
-    }
-  }
-  walk(node);
+  });
   return results;
 }
 
@@ -76,66 +56,41 @@ export default createRule({
     const interfaces = new Map<string, Set<string>>();
     const sourceCode = context.sourceCode;
 
-    function collectInterfaces(node: unknown) {
-      if (!node || typeof node !== "object") return;
-      const n = node as Record<string, unknown>;
-      if (n.type === "TSInterfaceDeclaration" && (n.id as { type?: string }).type === "Identifier") {
-        const name = (n.id as { name: string }).name;
-        const props = new Set<string>();
-        for (const member of (n.body as { body?: unknown[] })?.body || []) {
-          if (
-            (member as { type: string }).type === "TSPropertySignature" &&
-            (member as { key: { type: string; name?: string } }).key
-              .type === "Identifier"
-          ) {
-            props.add(
-              (
-                member as { key: { type: string; name: string } }
-              ).key.name
-            );
-          }
-        }
-        interfaces.set(name, props);
-      }
-      for (const key of Object.keys(n)) {
-        if (key === "parent") continue;
-        const child = n[key];
-        if (Array.isArray(child)) {
-          child.forEach(collectInterfaces);
-        } else {
-          collectInterfaces(child);
+    walk(sourceCode.ast as TSESTree.Node, (node) => {
+      if (node.type !== "TSInterfaceDeclaration") return;
+      const name = node.id.name;
+      const props = new Set<string>();
+      for (const member of node.body.body) {
+        if (
+          member.type === "TSPropertySignature" &&
+          member.key.type === "Identifier"
+        ) {
+          props.add(member.key.name);
         }
       }
-    }
+      interfaces.set(name, props);
+    });
 
-    collectInterfaces(sourceCode.ast);
-
-    function checkFunction(fnNode: Record<string, unknown>) {
-      const returnTypeAnn = (fnNode.returnType as
-        | { typeAnnotation: { type: string; typeName?: { type: string; name: string } } }
-        | undefined)?.typeAnnotation;
+    function checkFunction(fnNode: FunctionNode) {
+      const returnTypeAnn = fnNode.returnType?.typeAnnotation;
       if (returnTypeAnn?.type !== "TSTypeReference") return;
-      if (returnTypeAnn.typeName?.type !== "Identifier") return;
+      if (returnTypeAnn.typeName.type !== "Identifier") return;
 
       const interfaceName = returnTypeAnn.typeName.name;
       const ifaceProps = interfaces.get(interfaceName);
       if (!ifaceProps) return;
 
-      const body = fnNode.body as { type?: string } | undefined;
-
-      if ((body as { type?: string }).type === "BlockStatement") {
-        const returns = findReturnStatements(fnNode.body);
+      if (fnNode.body.type === "BlockStatement") {
+        const returns = findReturnStatements(fnNode);
         for (const ret of returns) {
-          const retObj = ret as { argument: unknown };
-          const objExpr = retObj.argument;
-          if (!objExpr || (objExpr as { type: string }).type !== "ObjectExpression")
-            continue;
+          const objExpr = ret.argument;
+          if (!objExpr || objExpr.type !== "ObjectExpression") continue;
 
           const objKeys = getObjectKeys(objExpr);
           const extraProps = objKeys.filter((k) => !ifaceProps.has(k));
           if (extraProps.length > 0) {
             context.report({
-              node: ret as never,
+              node: ret,
               messageId: "leakyReturn",
               data: {
                 extraProps: extraProps.join(", "),
@@ -144,12 +99,12 @@ export default createRule({
             });
           }
         }
-      } else if ((body as { type?: string }).type === "ObjectExpression") {
-        const objKeys = getObjectKeys(body);
+      } else if (fnNode.body.type === "ObjectExpression") {
+        const objKeys = getObjectKeys(fnNode.body);
         const extraProps = objKeys.filter((k) => !ifaceProps.has(k));
         if (extraProps.length > 0) {
           context.report({
-            node: body as never,
+            node: fnNode.body,
             messageId: "leakyReturn",
             data: {
               extraProps: extraProps.join(", "),
@@ -161,14 +116,14 @@ export default createRule({
     }
 
     return {
-      FunctionDeclaration(node) {
-        checkFunction(node as unknown as Record<string, unknown>);
+      FunctionDeclaration(node: TSESTree.FunctionDeclaration) {
+        checkFunction(node);
       },
-      FunctionExpression(node) {
-        checkFunction(node as unknown as Record<string, unknown>);
+      FunctionExpression(node: TSESTree.FunctionExpression) {
+        checkFunction(node);
       },
-      ArrowFunctionExpression(node) {
-        checkFunction(node as unknown as Record<string, unknown>);
+      ArrowFunctionExpression(node: TSESTree.ArrowFunctionExpression) {
+        checkFunction(node);
       },
     };
   },
