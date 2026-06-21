@@ -24,6 +24,13 @@ function hasFailurePath(n: unknown): boolean {
   if (t === "ThrowStatement") return true;
   if (t === "TryStatement") return true;
 
+  if (
+    t === "FunctionDeclaration" ||
+    t === "FunctionExpression" ||
+    t === "ArrowFunctionExpression"
+  )
+    return false;
+
   for (const key of Object.keys(node)) {
     if (key === "type" || key === "loc" || key === "range" || key === "parent") continue;
     if (hasFailureInValue(node[key])) return true;
