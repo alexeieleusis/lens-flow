@@ -91,7 +91,7 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow conflicting property types in intersection types that produce `never`",
+        "Disallow conflicting property types in intersection types that produce `never`. Note: only checks TSPropertySignature; method (TSMethodSignature) and index (TSIndexSignature) conflicts are not detected.",
     },
     messages: {
       conflict:
