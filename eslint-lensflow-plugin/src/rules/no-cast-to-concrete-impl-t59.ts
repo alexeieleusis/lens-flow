@@ -37,17 +37,11 @@ export default createRule({
 
     return {
       TSAsExpression(node) {
-        const tsCastNode = parserServices.esTreeNodeToTSNodeMap.get(node);
-        const sourceType = checker.getTypeAtLocation(tsCastNode.expression);
+        const sourceType = parserServices.getTypeAtLocation(node.expression);
 
         if (!isInterfaceType(sourceType)) return;
 
-        const tsTypeAnnNode = parserServices.esTreeNodeToTSNodeMap.get(
-          node.typeAnnotation,
-        );
-        const targetType = checker.getTypeFromTypeNode(
-          tsTypeAnnNode as ts.TypeNode,
-        );
+        const targetType = parserServices.getTypeAtLocation(node.typeAnnotation);
         const targetSymbol = targetType.getSymbol() || targetType.aliasSymbol;
 
         if (!targetSymbol) return;
