@@ -11,19 +11,19 @@ const PRIMITIVE_TYPES = new Set([
   "TSNeverKeyword",
 ]);
 
-type PropEntry = { typeAnnotation: unknown };
+type PropEntry = { typeAnnotation: TSESTree.TSType };
 
-function isConflictingTypes(a: unknown, b: unknown): boolean {
-  const typeA = (a as { type: string }).type;
-  const typeB = (b as { type: string }).type;
+function isConflictingTypes(a: TSESTree.TSType, b: TSESTree.TSType): boolean {
+  const typeA = a.type;
+  const typeB = b.type;
 
   if (PRIMITIVE_TYPES.has(typeA) && PRIMITIVE_TYPES.has(typeB)) {
     return typeA !== typeB;
   }
 
   if (typeA === "TSLiteralType" && typeB === "TSLiteralType") {
-    const litA = (a as { literal: { value?: unknown } }).literal;
-    const litB = (b as { literal: { value?: unknown } }).literal;
+    const litA = (a as TSESTree.TSLiteralType).literal;
+    const litB = (b as TSESTree.TSLiteralType).literal;
     return litA.value !== litB.value;
   }
 
