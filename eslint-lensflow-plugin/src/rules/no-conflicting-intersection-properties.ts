@@ -13,6 +13,36 @@ const PRIMITIVE_TYPES = new Set([
 
 type PropEntry = { typeAnnotation: TSESTree.TSType };
 
+function literalValueEquals(a: unknown, b: unknown): boolean {
+  if (typeof a !== typeof b) return false;
+  if (typeof a === "bigint") {
+    return a === b;
+  }
+  if (typeof a === "object" && a !== null && b !== null) {
+    return JSON.stringify(a) === JSON.stringify(b);
+  }
+  return a === b;
+}
+
+function literalMatchesPrimitive(litVal: unknown, primType: string): boolean {
+  switch (primType) {
+    case "TSStringKeyword":
+      return typeof litVal === "string";
+    case "TSNumberKeyword":
+      return typeof litVal === "number";
+    case "TSBooleanKeyword":
+      return typeof litVal === "boolean";
+    case "TSBigIntKeyword":
+      return typeof litVal === "bigint";
+    case "TSNullKeyword":
+      return litVal === null;
+    case "TSUndefinedKeyword":
+      return litVal === undefined;
+    default:
+      return false;
+  }
+}
+
 function isConflictingTypes(a: TSESTree.TSType, b: TSESTree.TSType): boolean {
   const typeA = a.type;
   const typeB = b.type;
@@ -24,7 +54,34 @@ function isConflictingTypes(a: TSESTree.TSType, b: TSESTree.TSType): boolean {
   if (typeA === "TSLiteralType" && typeB === "TSLiteralType") {
     const litA = (a as TSESTree.TSLiteralType).literal;
     const litB = (b as TSESTree.TSLiteralType).literal;
-    return litA.value !== litB.value;
+    return !literalValueEquals(litA.value, litB.value);
+  }
+
+  if (PRIMITIVE_TYPES.has(typeA) && typeB === "TSLiteralType") {
+    const litVal = (b as TSESTree.TSLiteralType).literal.value;
+    return !literalMatchesPrimitive(litVal, typeA);
+  }
+
+  if (typeA === "TSLiteralType" && PRIMITIVE_TYPES.has(typeB)) {
+    const litVal = (a as TSESTree.TSLiteralType).literal.value;
+    return !literalMatchesPrimitive(litVal, typeB);
+  }
+
+  if (typeA === "TSTypeLiteral" && typeB === "TSTypeLiteral") {
+    const mapA = collectProperties((a as TSESTree.TSTypeLiteral).members);
+    const mapB = collectProperties((b as TSESTree.TSTypeLiteral).members);
+    for (const [prop, entriesA] of mapA) {
+      const entriesB = mapB.get(prop);
+      if (!entriesB) continue;
+      for (const ea of entriesA) {
+        for (const eb of entriesB) {
+          if (isConflictingTypes(ea.typeAnnotation, eb.typeAnnotation)) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
   }
 
   return false;
@@ -91,7 +148,7 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow conflicting property types in intersection types that produce `never`. Note: only checks TSPropertySignature with static string or numeric literal keys; method (TSMethodSignature), index (TSIndexSignature), and computed property keys (e.g. `[symbolKey]`) are not detected.",
+        "Disallow conflicting property types in intersection types that produce `never`. Detects: different primitive types (e.g. `string` vs `number`), primitive vs incompatible literal (e.g. `string` vs `42`), different literal values (including object/array literals), and nested object type property conflicts. Note: only checks TSPropertySignature with static string or numeric literal keys; method (TSMethodSignature), index (TSIndexSignature), and computed property keys (e.g. `[symbolKey]`) are not detected.",
     },
     messages: {
       conflict:
