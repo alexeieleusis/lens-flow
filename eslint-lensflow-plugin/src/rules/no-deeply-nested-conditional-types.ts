@@ -29,7 +29,7 @@ export default createRule({
   },
   defaultOptions: [{ maxDepth: 4 }],
   create(context: TSESLint.RuleContext<"deepNesting", [{ maxDepth: number }]>) {
-    const [{ maxDepth } = { maxDepth: 4 }] = context.options ?? [];
+    const [{ maxDepth = 4 } = {}] = context.options ?? [];
 
     return {
       TSConditionalType(node) {
