@@ -2,6 +2,22 @@ import ts from "typescript";
 import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
+const DISCRIMINANT_NAMES = new Set([
+  "kind",
+  "type",
+  "status",
+  "tag",
+  "discriminator",
+  "case",
+  "variant",
+  "eventType",
+  "messageType",
+  "actionType",
+  "state",
+  "role",
+  "flavor",
+]);
+
 export default createRule({
   name: "no-literal-widening-on-construct",
   meta: {
@@ -62,6 +78,9 @@ export default createRule({
               prop.key.type === "Identifier"
                 ? prop.key.name
                 : prop.key.value;
+
+            // Only flag properties with discriminant-like names
+            if (!DISCRIMINANT_NAMES.has(propName)) continue;
 
             context.report({
               node,
