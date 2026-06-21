@@ -9,7 +9,13 @@ function getParamTypeAnnotation(
   param: TSESTree.Parameter,
 ): TSESTree.TypeNode | undefined {
   const base =
-    param.type === "TSParameterProperty" ? param.parameter : param;
+    param.type === "TSParameterProperty"
+      ? param.parameter
+      : param.type === "AssignmentPattern"
+        ? param.left
+        : param.type === "RestElement"
+          ? param.argument
+          : param;
   if ("typeAnnotation" in base && base.typeAnnotation) {
     return base.typeAnnotation.typeAnnotation;
   }

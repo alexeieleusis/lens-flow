@@ -37,7 +37,7 @@ export default createRule({
           (member) => member.type === "TSLiteralType",
         );
 
-        if (literalMembers.length >= maxMembers) {
+        if (literalMembers.length > maxMembers) {
           const parent = node.parent;
           const reportNode =
             parent?.type === "TSTypeAliasDeclaration" &&
