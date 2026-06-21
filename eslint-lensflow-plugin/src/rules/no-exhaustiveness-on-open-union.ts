@@ -110,13 +110,16 @@ function findTypeInVariableDeclaration(
 function findParamTypeAnnotation(
   discriminant: TSESTree.Expression,
   switchNode: TSESTree.SwitchStatement,
+  sourceCode: TSESLint.SourceCode,
 ): TSESTree.TypeNode | undefined {
   if (discriminant.type !== "Identifier") return undefined;
 
   const name = discriminant.name;
+  const ancestors = sourceCode.getAncestors(switchNode);
 
-  let current: TSESTree.Node | undefined = switchNode;
-  while (current) {
+  for (let i = ancestors.length - 1; i >= 0; i--) {
+    const current = ancestors[i];
+
     if (isFunctionNode(current)) {
       const typeAnn = findTypeInFunctionParams(current, name);
       if (typeAnn) return typeAnn;
@@ -129,8 +132,6 @@ function findParamTypeAnnotation(
       );
       if (typeAnn) return typeAnn;
     }
-
-    current = (current as TSESTree.Node & { parent?: TSESTree.Node }).parent;
   }
 
   return undefined;
@@ -173,6 +174,7 @@ export default createRule({
         const typeAnn = findParamTypeAnnotation(
           node.discriminant,
           node,
+          context.sourceCode,
         );
 
         const openUnion = typeAnnotationIsOpenUnion(typeAnn);
