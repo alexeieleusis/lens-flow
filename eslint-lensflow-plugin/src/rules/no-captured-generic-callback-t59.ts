@@ -32,21 +32,37 @@ function isGenericCallbackType(typeAnn: TSESTree.TypeNode): boolean {
   );
 }
 
+function extractParamIdentifier(
+  param: TSESTree.Parameter,
+): (TSESTree.Identifier & { typeAnnotation?: TSESTree.TSTypeAnnotation }) | null {
+  if (param.type === AST_NODE_TYPES.Identifier) return param;
+  if (param.type === AST_NODE_TYPES.TSParameterProperty)
+    return param.parameter.type === AST_NODE_TYPES.Identifier ? param.parameter : null;
+  if (param.type === AST_NODE_TYPES.RestElement)
+    return param.argument.type === AST_NODE_TYPES.Identifier
+      ? param.argument as TSESTree.Identifier & { typeAnnotation?: TSESTree.TSTypeAnnotation }
+      : null;
+  if (param.type === AST_NODE_TYPES.AssignmentPattern)
+    return param.left.type === AST_NODE_TYPES.Identifier ? param.left : null;
+  return null;
+}
+
 function isParameterOf(name: string, fn: FunctionNode): boolean {
-  return fn.params.some(
-    (p) => p.type === AST_NODE_TYPES.Identifier && p.name === name,
-  );
+  return fn.params.some((p) => {
+    const ident = extractParamIdentifier(p);
+    return ident !== null && ident.name === name;
+  });
 }
 
 function getParamTypeAnnotation(
   name: string,
   fn: FunctionNode,
 ): TSESTree.TypeNode | undefined {
-  const param = fn.params.find(
-    (p): p is TSESTree.Identifier & { typeAnnotation?: TSESTree.TSTypeAnnotation } =>
-      p.type === AST_NODE_TYPES.Identifier && p.name === name,
+  const ident = fn.params.map((p) => extractParamIdentifier(p)).find(
+    (i): i is TSESTree.Identifier & { typeAnnotation?: TSESTree.TSTypeAnnotation } =>
+      i !== null && i.name === name,
   );
-  return param?.typeAnnotation?.typeAnnotation;
+  return ident?.typeAnnotation?.typeAnnotation;
 }
 
 function hasVariableDeclaration(node: TSESTree.Node, name: string): boolean {
