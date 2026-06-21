@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       missingAsConst:
-        "Object literal assigned to uppercase constant '{{name}}' without `as const`. String and number values will widen to `string`/`number`. Add `as const` to narrow to literal types. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T52-literal-types.md",
+        "Object literal assigned to uppercase constant '{{name}}' without `as const`. String and number values will widen to `string`/`number`. Add `as const` to narrow to literal types. See: https://raw.githubusercontent.com/jpablo/vibe-types/f5ab7f35de4cc4e292500398c8b2f6edab96c2db/plugin/skills/typescript/catalog/T52-literal-types.md",
     },
     schema: [],
     fixable: undefined,
@@ -30,7 +30,7 @@ export default createRule({
           return;
         }
 
-        let init = node.init;
+        const init = node.init;
         if (!init) return;
 
         // Check for TSSatisfiesExpression (already narrow, skip)
@@ -38,8 +38,7 @@ export default createRule({
           return;
         }
 
-        // Check for TSTypeAssertion with type 'const' — unwrap to get the base expression
-        let baseInit = init;
+        // Already `as const` — skip
         if (
           init.type === "TSTypeAssertion" &&
           init.typeAnnotation.type === "TSTypeReference" &&
@@ -49,13 +48,13 @@ export default createRule({
           return;
         }
 
-        // The init (or unwrapped init) must be an ObjectExpression
-        if (baseInit.type !== "ObjectExpression") {
+        // The init must be an ObjectExpression
+        if (init.type !== "ObjectExpression") {
           return;
         }
 
         // Check that at least one property value is a string or number Literal
-        const hasLiteralValue = baseInit.properties.some(
+        const hasLiteralValue = init.properties.some(
           (prop) =>
             prop.type === "Property" &&
             prop.value.type === "Literal" &&
