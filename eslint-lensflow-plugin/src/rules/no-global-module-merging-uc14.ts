@@ -71,7 +71,7 @@ export default createRule({
             const builtinName = isExtendingBuiltin(stmt);
             if (builtinName) {
               context.report({
-                node,
+                node: stmt,
                 messageId: "builtInInterfaceAugmentation",
                 data: { interface: builtinName },
               });
