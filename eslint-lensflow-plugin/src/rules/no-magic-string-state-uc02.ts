@@ -18,29 +18,26 @@ function normalizeVariable(
   if (node.type === "Identifier") {
     return node.name;
   }
-  if (node.object.type === "Identifier") {
-    const prop =
-      node.property.type === "Identifier" ? node.property.name : "?";
-    return node.object.name + "." + prop;
-  }
-  return "?";
+  const objName =
+    node.object.type === "Identifier" || node.object.type === "MemberExpression"
+      ? normalizeVariable(node.object as TSESTree.Identifier | TSESTree.MemberExpression)
+      : undefined;
+  if (!objName) return "?";
+  const prop =
+    node.property.type === "Identifier" ? node.property.name : "?";
+  return objName + "." + prop;
 }
 
 function getSwitchVariable(
   sw: TSESTree.SwitchStatement,
 ): string {
-  if (sw.discriminant.type === "Identifier") {
-    return sw.discriminant.name;
-  }
   if (
-    sw.discriminant.type === "MemberExpression" &&
-    sw.discriminant.object.type === "Identifier"
+    sw.discriminant.type === "Identifier" ||
+    sw.discriminant.type === "MemberExpression"
   ) {
-    const prop =
-      sw.discriminant.property.type === "Identifier"
-        ? sw.discriminant.property.name
-        : "?";
-    return sw.discriminant.object.name + "." + prop;
+    return normalizeVariable(
+      sw.discriminant as TSESTree.Identifier | TSESTree.MemberExpression,
+    );
   }
   return "?";
 }
