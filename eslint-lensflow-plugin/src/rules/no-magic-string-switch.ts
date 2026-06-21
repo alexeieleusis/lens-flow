@@ -9,24 +9,25 @@ function hasNamespacePattern(value: string): boolean {
 
 function findEnclosingFunction(
   node: TSESTree.Node,
+  context: TSESLint.RuleContext<"magicStringSwitch", []>,
 ):
   | TSESTree.FunctionDeclaration
   | TSESTree.FunctionExpression
   | TSESTree.ArrowFunctionExpression
   | null {
-  let current: TSESTree.Node | undefined = node;
-  while (current) {
+  const ancestors = context.sourceCode.getAncestors(node);
+  for (let i = ancestors.length - 1; i >= 0; i--) {
+    const a = ancestors[i];
     if (
-      current.type === "FunctionDeclaration" ||
-      current.type === "FunctionExpression" ||
-      current.type === "ArrowFunctionExpression"
+      a.type === "FunctionDeclaration" ||
+      a.type === "FunctionExpression" ||
+      a.type === "ArrowFunctionExpression"
     ) {
-      return current as
+      return a as
         | TSESTree.FunctionDeclaration
         | TSESTree.FunctionExpression
         | TSESTree.ArrowFunctionExpression;
     }
-    current = current.parent;
   }
   return null;
 }
@@ -54,17 +55,33 @@ export default createRule({
         if (discriminant.type !== "Identifier") return;
 
         const paramName = discriminant.name;
-        const func = findEnclosingFunction(node);
+        const func = findEnclosingFunction(node, context);
         if (!func) return;
 
-        const params = func.params;
-        const param = params.find(
-          (p) =>
-            p.type === "Identifier" &&
-            p.name === paramName &&
-            p.typeAnnotation?.typeAnnotation.type === "TSStringKeyword",
+        // Resolve the discriminant via scope analysis to avoid false positives
+        // when a nested scope shadows the function parameter.
+        const innerScope = context.sourceCode.getScope(discriminant);
+        let binding = innerScope.set.get(paramName);
+        if (!binding) {
+          // Walk up the scope chain to find the binding
+          let currentScope = innerScope.upper;
+          while (currentScope && !binding) {
+            binding = currentScope.set.get(paramName);
+            currentScope = currentScope.upper;
+          }
+        }
+        if (!binding) return;
+
+        // Verify the binding's declaration is one of the function's string-typed parameters.
+        const stringParams = new Set(
+          func.params.filter(
+            (p) =>
+              p.type === "Identifier" &&
+              p.typeAnnotation?.typeAnnotation.type === "TSStringKeyword",
+          ),
         );
-        if (!param) return;
+        const isParamBinding = binding.identifiers.some((ident) => stringParams.has(ident));
+        if (!isParamBinding) return;
 
         const stringCases = node.cases
           .filter((c) => c.test?.type === "Literal" && typeof c.test.value === "string")
