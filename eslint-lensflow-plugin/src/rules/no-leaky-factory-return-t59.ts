@@ -22,11 +22,21 @@ function getObjectKeys(objExpr: unknown): string[] {
 
 function findReturnStatements(node: unknown): unknown[] {
   const results: unknown[] = [];
+  const seen = new WeakSet<object>();
+  const FUNCTION_BOUNDARIES = new Set([
+    "FunctionDeclaration",
+    "FunctionExpression",
+    "ArrowFunctionExpression",
+  ]);
   function walk(n: unknown) {
     if (!n || typeof n !== "object") return;
+    if (seen.has(n)) return;
+    seen.add(n);
     const obj = n as Record<string, unknown>;
+    const nodeType = obj.type as string;
+    if (FUNCTION_BOUNDARIES.has(nodeType)) return;
     if (
-      obj.type === "ReturnStatement" &&
+      nodeType === "ReturnStatement" &&
       obj.argument != null &&
       (obj.argument as { type?: string }).type === "ObjectExpression"
     ) {

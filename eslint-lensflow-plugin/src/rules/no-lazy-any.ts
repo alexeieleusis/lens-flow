@@ -1,9 +1,6 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
-
-function isAnyType(node: TSESTree.TypeNode): boolean {
-  return node.type === "TSAnyKeyword";
-}
+import { containsAnyType } from "../utils/no-any-param-checker.js";
 
 function getParamTypeAnnotation(
   param: TSESTree.Parameter,
@@ -55,13 +52,13 @@ export default createRule({
 
       const allParamsAny = params.every((p) => {
         const typeAnn = getParamTypeAnnotation(p);
-        return typeAnn !== undefined && isAnyType(typeAnn);
+        return typeAnn !== undefined && containsAnyType(typeAnn);
       });
 
       if (!allParamsAny) return;
 
       const returnTypeAnn = node.returnType?.typeAnnotation;
-      if (returnTypeAnn && isAnyType(returnTypeAnn)) {
+      if (returnTypeAnn && containsAnyType(returnTypeAnn)) {
         context.report({ node, messageId: "lazyAny" });
       }
     }
