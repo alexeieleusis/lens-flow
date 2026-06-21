@@ -28,8 +28,13 @@ export default createRule({
         for (const decl of node.declarations) {
           if (
             decl.init?.type === "CallExpression" &&
-            decl.init.callee.type === "Identifier" &&
-            decl.init.callee.name === "Symbol"
+            ((decl.init.callee.type === "Identifier" &&
+              decl.init.callee.name === "Symbol") ||
+              (decl.init.callee.type === "MemberExpression" &&
+                decl.init.callee.object.type === "Identifier" &&
+                decl.init.callee.object.name === "Symbol" &&
+                decl.init.callee.property.type === "Identifier" &&
+                decl.init.callee.property.name === "for"))
           ) {
             const name =
               decl.id.type === "Identifier" ? decl.id.name : "<unknown>";
