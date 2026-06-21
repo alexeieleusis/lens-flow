@@ -42,7 +42,7 @@ export default createRule({
     },
     messages: {
       deepNesting:
-        "Union member has a nesting depth of {{depth}} (max {{maxDepth}}). Flatten the structure to simplify narrowing. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T02-union-intersection.md",
+        "Union member has a nesting depth of {{depth}} (max {{maxDepth}}). Flatten the structure to simplify narrowing.",
     },
     schema: [
       {
@@ -79,7 +79,6 @@ export default createRule({
                 maxDepth: String(maxDepth),
               },
             });
-            break;
           }
         }
       },
