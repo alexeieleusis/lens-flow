@@ -7,11 +7,11 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow empty array literals in const declarations without explicit type annotation, which infer as never[]",
+        "Disallow empty array literals without explicit type annotation, which may infer as never[]",
     },
     messages: {
       emptyArrayNoType:
-        "Empty array literal in a const declaration without type annotation is inferred as never[]. Add an explicit type annotation (e.g. string[]) to avoid cryptic errors on push(). See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T34-never-bottom.md",
+        "Empty array literal without type annotation is inferred as never[]. Add an explicit type annotation (e.g. string[]) to avoid cryptic errors on push(). See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T34-never-bottom.md",
     },
     schema: [],
     fixable: undefined,
@@ -30,6 +30,43 @@ export default createRule({
           node.init?.type === "ArrayExpression" &&
           node.init.elements.length === 0 &&
           !node.id.typeAnnotation
+        ) {
+          context.report({
+            node,
+            messageId: "emptyArrayNoType",
+          });
+        }
+      },
+      PropertyDefinition(node) {
+        if (
+          node.value?.type === "ArrayExpression" &&
+          node.value.elements.length === 0 &&
+          !node.typeAnnotation
+        ) {
+          context.report({
+            node,
+            messageId: "emptyArrayNoType",
+          });
+        }
+      },
+      Property(node) {
+        if (node.method) return;
+        if (
+          node.value?.type === "ArrayExpression" &&
+          node.value.elements.length === 0
+        ) {
+          context.report({
+            node,
+            messageId: "emptyArrayNoType",
+          });
+        }
+      },
+      AssignmentPattern(node) {
+        if (node.left.type !== "Identifier") return;
+        if (
+          !node.left.typeAnnotation &&
+          node.right.type === "ArrayExpression" &&
+          node.right.elements.length === 0
         ) {
           context.report({
             node,
