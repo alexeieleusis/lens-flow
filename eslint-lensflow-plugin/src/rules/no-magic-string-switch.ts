@@ -7,6 +7,24 @@ function hasNamespacePattern(value: string): boolean {
   return NAMESPACE_SEPARATORS.some((sep) => value.includes(sep));
 }
 
+function getParamIdentifier(
+  p: TSESTree.Parameter,
+): TSESTree.Identifier | null {
+  if (p.type === "Identifier") return p;
+  if (p.type === "AssignmentPattern" && p.left.type === "Identifier")
+    return p.left;
+  if (p.type === "RestElement" && p.argument.type === "Identifier")
+    return p.argument as TSESTree.Identifier;
+  return null;
+}
+
+function unwrapTSType(type: TSESTree.TypeNode): TSESTree.TypeNode {
+  while ((type as any).type === "TSParenthesizedType") {
+    type = (type as any).typeAnnotation;
+  }
+  return type;
+}
+
 function findEnclosingFunction(
   node: TSESTree.Node,
   context: TSESLint.RuleContext<"magicStringSwitch", []>,
@@ -73,15 +91,18 @@ export default createRule({
         if (!binding) return;
 
         // Verify the binding's declaration is one of the function's string-typed parameters.
-        const stringParams = new Set(
-          func.params.filter(
-            (p) =>
-              p.type === "Identifier" &&
-              p.typeAnnotation?.typeAnnotation.type === "TSStringKeyword",
-          ),
+        const stringParamNames = new Set(
+          func.params
+            .map(getParamIdentifier)
+            .filter(
+              (id): id is TSESTree.Identifier =>
+                id !== null &&
+                id.typeAnnotation !== undefined &&
+                unwrapTSType(id.typeAnnotation.typeAnnotation).type === "TSStringKeyword",
+            )
+            .map((id) => id.name),
         );
-        const isParamBinding = binding.identifiers.some((ident) => stringParams.has(ident));
-        if (!isParamBinding) return;
+        if (!stringParamNames.has(binding.name)) return;
 
         const stringCases = node.cases
           .filter((c) => c.test?.type === "Literal" && typeof c.test.value === "string")
