@@ -33,135 +33,29 @@ function isBroadType(tsType: ts.Type): boolean {
   );
 }
 
-function typeAnnotationIsOpenUnion(
-  typeAnn: TSESTree.TypeNode | undefined,
-): boolean {
-  if (typeAnn?.type !== "TSUnionType") return false;
+function isLiteralType(tsType: ts.Type): boolean {
+  return (
+    (tsType.flags &
+      (ts.TypeFlags.StringLiteral |
+        ts.TypeFlags.NumberLiteral |
+        ts.TypeFlags.BooleanLiteral)) !==
+    0
+  );
+}
 
+function isOpenUnion(tsType: ts.Type): boolean {
+  if ((tsType.flags & ts.TypeFlags.Union) === 0) return false;
+
+  const types = (tsType as ts.UnionType).types;
   let hasLiteral = false;
   let hasBroad = false;
 
-  for (const member of typeAnn.types) {
-    if (
-      member.type === "TSLiteralType" &&
-      member.literal.type === "Literal"
-    ) {
-      hasLiteral = true;
-    }
-    if (
-      member.type === "TSStringKeyword" ||
-      member.type === "TSNumberKeyword" ||
-      member.type === "TSBooleanKeyword"
-    ) {
-      hasBroad = true;
-    }
+  for (const member of types) {
+    if (isLiteralType(member)) hasLiteral = true;
+    if (isBroadType(member)) hasBroad = true;
   }
 
   return hasLiteral && hasBroad;
-}
-
-function isFunctionNode(node: TSESTree.Node): node is TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression {
-  return (
-    node.type === "FunctionDeclaration" ||
-    node.type === "FunctionExpression" ||
-    node.type === "ArrowFunctionExpression"
-  );
-}
-
-function paramHasBinding(
-  fn: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression,
-  paramName: string,
-): boolean {
-  for (const param of fn.params) {
-    if (param.type === "Identifier" && param.name === paramName) return true;
-    if (
-      param.type === "AssignmentPattern" &&
-      param.left.type === "Identifier" &&
-      param.left.name === paramName
-    )
-      return true;
-  }
-  return false;
-}
-
-function findTypeInFunctionParams(
-  fn: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression,
-  paramName: string,
-): TSESTree.TypeNode | undefined {
-  for (const param of fn.params) {
-    if (param.type === "Identifier" && param.name === paramName) {
-      return (
-        (param as TSESTree.Identifier & {
-          typeAnnotation?: TSESTree.TSTypeAnnotation;
-        }).typeAnnotation?.typeAnnotation
-      );
-    }
-    if (
-      param.type === "AssignmentPattern" &&
-      param.left.type === "Identifier" &&
-      param.left.name === paramName
-    ) {
-      return (
-        (param.left as TSESTree.Identifier & {
-          typeAnnotation?: TSESTree.TSTypeAnnotation;
-        }).typeAnnotation?.typeAnnotation
-      );
-    }
-  }
-  return undefined;
-}
-
-function varDeclHasBinding(
-  decl: TSESTree.VariableDeclaration,
-  varName: string,
-): boolean {
-  return decl.declarations.some(
-    (d) => d.id.type === "Identifier" && d.id.name === varName,
-  );
-}
-
-function findTypeInVariableDeclaration(
-  decl: TSESTree.VariableDeclaration,
-  varName: string,
-): TSESTree.TypeNode | undefined {
-  for (const d of decl.declarations) {
-    if (d.id.type === "Identifier" && d.id.name === varName) {
-      return d.id.typeAnnotation?.typeAnnotation;
-    }
-  }
-  return undefined;
-}
-
-function findParamTypeAnnotation(
-  discriminant: TSESTree.Expression,
-  switchNode: TSESTree.SwitchStatement,
-  sourceCode: TSESLint.SourceCode,
-): TSESTree.TypeNode | undefined {
-  if (discriminant.type !== "Identifier") return undefined;
-
-  const name = discriminant.name;
-  const ancestors = sourceCode.getAncestors(switchNode);
-
-  for (let i = ancestors.length - 1; i >= 0; i--) {
-    const current = ancestors[i];
-
-    if (isFunctionNode(current)) {
-      if (paramHasBinding(current, name)) {
-        return findTypeInFunctionParams(current, name);
-      }
-    }
-
-    if (current.type === "VariableDeclaration") {
-      if (varDeclHasBinding(current as TSESTree.VariableDeclaration, name)) {
-        return findTypeInVariableDeclaration(
-          current as TSESTree.VariableDeclaration,
-          name,
-        );
-      }
-    }
-  }
-
-  return undefined;
 }
 
 export default createRule({
@@ -195,18 +89,7 @@ export default createRule({
 
         const discriminantType = checker.getTypeAtLocation(tsDiscriminant);
 
-        const broad = isBroadType(discriminantType);
-        if (!broad) return;
-
-        const typeAnn = findParamTypeAnnotation(
-          node.discriminant,
-          node,
-          context.sourceCode,
-        );
-
-        const openUnion = typeAnnotationIsOpenUnion(typeAnn);
-
-        if (!openUnion) return;
+        if (!isOpenUnion(discriminantType)) return;
 
         const defaultCase = node.cases.find((c) => c.test === null);
         if (!defaultCase) return;
