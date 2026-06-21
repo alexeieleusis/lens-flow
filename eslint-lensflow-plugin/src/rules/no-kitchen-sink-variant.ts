@@ -47,7 +47,7 @@ export default createRule({
             p.key.name === "data",
         );
 
-        if (properties.length >= maxFields && !hasDataProperty) {
+        if (properties.length > maxFields && !hasDataProperty) {
           context.report({
             node,
             messageId: "tooManyFields",
