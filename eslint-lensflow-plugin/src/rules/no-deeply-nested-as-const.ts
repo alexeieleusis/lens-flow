@@ -24,8 +24,16 @@ function computeNestingDepth(
            .filter((v): v is TSESTree.Expression => v !== null);
 
   for (const value of values) {
-    const unwrapped =
-      value.type === "TSAsExpression" ? value.expression : value;
+    let unwrapped: TSESTree.Expression = value;
+    while (
+      unwrapped.type === "TSAsExpression" ||
+      unwrapped.type === "TSSatisfiesExpression" ||
+      unwrapped.type === "TSNonNullExpression"
+    ) {
+      unwrapped = "expression" in unwrapped
+        ? (unwrapped as any).expression
+        : value;
+    }
 
     if (
       unwrapped.type === "ObjectExpression" ||
