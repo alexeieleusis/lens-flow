@@ -1,7 +1,7 @@
 import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
-const URL =
+const DOCS_URL =
   "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T12-effect-tracking.md";
 
 const KNOWN_EFFECT_NAMES = new Set([
@@ -99,7 +99,7 @@ export default createRule({
             data: {
               effectType: innerTypeStr,
               assertedType: assertedTypeStr,
-              url: URL,
+              url: DOCS_URL,
             },
           });
         }
