@@ -91,11 +91,11 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow conflicting property types in intersection types that produce `never`. Note: only checks TSPropertySignature; method (TSMethodSignature) and index (TSIndexSignature) conflicts are not detected.",
+        "Disallow conflicting property types in intersection types that produce `never`. Note: only checks TSPropertySignature with static string or numeric literal keys; method (TSMethodSignature), index (TSIndexSignature), and computed property keys (e.g. `[symbolKey]`) are not detected.",
     },
     messages: {
       conflict:
-        "Property '{{prop}}' has conflicting types in intersection members. This produces `never` for the property. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T02-union-intersection.md",
+        "Property '{{prop}}' has conflicting types in intersection members. This produces `never` for the property. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T02-union-intersection.md",
     },
     schema: [],
     fixable: undefined,
