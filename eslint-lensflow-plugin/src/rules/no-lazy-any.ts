@@ -44,7 +44,10 @@ export default createRule({
         | TSESTree.FunctionDeclaration
         | TSESTree.FunctionExpression
         | TSESTree.ArrowFunctionExpression
-        | TSESTree.TSFunctionType,
+        | TSESTree.TSFunctionType
+        | TSESTree.TSDeclareFunction
+        | TSESTree.TSMethodSignature
+        | TSESTree.TSCallSignatureDeclaration,
     ) {
       const params = node.params;
 
@@ -68,6 +71,14 @@ export default createRule({
       FunctionExpression: checkFunctionNode,
       ArrowFunctionExpression: checkFunctionNode,
       TSFunctionType: checkFunctionNode,
+      TSDeclareFunction: checkFunctionNode,
+      TSMethodSignature: checkFunctionNode,
+      TSCallSignatureDeclaration: checkFunctionNode,
+      MethodDefinition(node: TSESTree.MethodDefinition) {
+        if (node.value.body !== null) {
+          checkFunctionNode(node.value);
+        }
+      },
     };
   },
 });
