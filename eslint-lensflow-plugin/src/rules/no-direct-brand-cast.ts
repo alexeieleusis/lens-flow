@@ -35,9 +35,10 @@ function isBrandedPrimitiveType(
       const props = (constituent as ts.ObjectType).getProperties();
       if (
         props.some(
-          (p) =>
-            p.escapedName.toString().toLowerCase().includes("__brand") ||
-            p.escapedName.toString().endsWith("Brand"),
+          (p) => {
+            const name = p.escapedName.toString();
+            return name === "_brand" || name === "__brand" || name.endsWith("Brand");
+          },
         )
       ) {
         hasBrandObject = true;
@@ -110,7 +111,7 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"directBrandCast", []>) {
-    const parserServices = ESLintUtils.getParserServices(context);
+    const parserServices = ESLintUtils.getParserServices(context, true);
     const program = parserServices.program;
     if (!program) return {};
 
