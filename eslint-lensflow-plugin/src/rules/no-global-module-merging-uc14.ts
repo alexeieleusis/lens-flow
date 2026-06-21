@@ -3,15 +3,24 @@ import { createRule } from "../utils/rule-creator.js";
 
 const BUILTIN_INTERFACES = new Set(["Window", "Document", "NodeJS.Global", "NodeJS"]);
 
-function isExtendingBuiltin(node: any): string | null {
+function resolveExprName(node: TSESTree.TSExpressionWithTypeArguments["expression"]): string | null {
+  if (node.type === "Identifier") return node.name;
+  if (node.type === "Literal" && typeof node.value === "string") return String(node.value);
+  if (node.type === "TSQualifiedName") {
+    const left = resolveExprName(node.left);
+    const right = node.right.name;
+    return left ? `${left}.${right}` : right;
+  }
+  return null;
+}
+
+function isExtendingBuiltin(node: TSESTree.Statement): string | null {
   if (node.type !== "TSInterfaceDeclaration") return null;
   const extendsList = node.extends;
   if (!extendsList || extendsList.length === 0) return null;
   for (const ext of extendsList) {
-    const name = ext.expression
-      ? ext.expression.name || ext.expression.value
-      : ext.name;
-    if (BUILTIN_INTERFACES.has(name)) {
+    const name = ext.expression ? resolveExprName(ext.expression) : ext.name;
+    if (name && BUILTIN_INTERFACES.has(name)) {
       return name;
     }
   }
