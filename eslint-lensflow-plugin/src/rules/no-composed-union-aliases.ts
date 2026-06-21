@@ -2,7 +2,7 @@ import ts from "typescript";
 import { ESLintUtils, type TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
-const URL =
+const RULE_URL =
   "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T02-union-intersection.md";
 
 export default createRule({
@@ -22,7 +22,7 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"composed", []>) {
-    const parserServices = ESLintUtils.getParserServices(context);
+    const parserServices = ESLintUtils.getParserServices(context, { allowNoProject: true });
     const program = parserServices.program;
     if (!program) return {};
 
@@ -69,7 +69,7 @@ export default createRule({
             messageId: "composed",
             data: {
               name: node.id.name,
-              url: URL,
+              url: RULE_URL,
             },
           });
         }
