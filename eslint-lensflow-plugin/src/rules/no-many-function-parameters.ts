@@ -52,6 +52,9 @@ export default createRule({
       FunctionDeclaration: checkParams,
       FunctionExpression: checkParams,
       ArrowFunctionExpression: checkParams,
+      MethodDefinition(node) {
+        if (node.value) checkParams(node.value);
+      },
     };
   },
 });
