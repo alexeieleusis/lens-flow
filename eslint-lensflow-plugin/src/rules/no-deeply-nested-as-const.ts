@@ -67,9 +67,7 @@ export default createRule({
   },
   defaultOptions: [{ threshold: 3 }],
   create(context: TSESLint.RuleContext<"deeplyNested", [{ threshold: number }]>) {
-    const [{ threshold } = { threshold: 3 }] = context.options ?? [
-      { threshold: 3 },
-    ];
+    const { threshold = 3 } = context.options[0] ?? {};
 
     return {
       TSAsExpression(node) {
