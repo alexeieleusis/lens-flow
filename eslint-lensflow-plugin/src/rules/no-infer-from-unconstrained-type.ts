@@ -117,6 +117,14 @@ export default createRule({
       "TSPropertySignature:exit"(node) { exitScope(node); },
       TSMappedType(node) { enterScope(node); },
       "TSMappedType:exit"(node) { exitScope(node); },
+      ArrowFunctionExpression(node) { enterScope(node); },
+      "ArrowFunctionExpression:exit"(node) { exitScope(node); },
+      FunctionDeclaration(node) { enterScope(node); },
+      "FunctionDeclaration:exit"(node) { exitScope(node); },
+      FunctionExpression(node) { enterScope(node); },
+      "FunctionExpression:exit"(node) { exitScope(node); },
+      TSDeclareFunction(node) { enterScope(node); },
+      "TSDeclareFunction:exit"(node) { exitScope(node); },
     };
   },
 });
