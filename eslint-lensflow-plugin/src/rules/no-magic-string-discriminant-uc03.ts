@@ -86,9 +86,33 @@ export default createRule({
       FunctionDeclaration: enterFunction,
       FunctionExpression: enterFunction,
       ArrowFunctionExpression: enterFunction,
+      TSDeclareFunction(node) {
+        enterFunction(node as TSESTree.FunctionLike);
+      },
+      TSFunctionType(node) {
+        enterFunction(node as unknown as TSESTree.FunctionLike);
+      },
+      TSMethodSignature(node) {
+        enterFunction(node as unknown as TSESTree.FunctionLike);
+      },
+      MethodDefinition(node) {
+        enterFunction(node.value as TSESTree.FunctionLike);
+      },
       "FunctionDeclaration:exit": leaveFunction,
       "FunctionExpression:exit": leaveFunction,
       "ArrowFunctionExpression:exit": leaveFunction,
+      "TSDeclareFunction:exit"(node) {
+        leaveFunction(node as TSESTree.FunctionLike);
+      },
+      "TSFunctionType:exit"(node) {
+        leaveFunction(node as unknown as TSESTree.FunctionLike);
+      },
+      "TSMethodSignature:exit"(node) {
+        leaveFunction(node as unknown as TSESTree.FunctionLike);
+      },
+      "MethodDefinition:exit"(node) {
+        leaveFunction(node.value as TSESTree.FunctionLike);
+      },
       BinaryExpression(node) {
         if (scopeStack.length === 0) return;
         if (node.operator !== "===" && node.operator !== "==") return;
