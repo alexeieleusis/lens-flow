@@ -99,8 +99,13 @@ function serializeType(node: TSESTree.TypeNode | null): string {
       return "void";
     case "TSLiteralType":
       return `literal:${JSON.stringify(node.literal)}`;
-    case "TSTypeReference":
-      return `ref:${node.typeName.type === "Identifier" ? node.typeName.name : "complex"}`;
+    case "TSTypeReference": {
+      const name = node.typeName.type === "Identifier" ? node.typeName.name : "complex";
+      const params = node.typeParameters
+        ? `[${node.typeParameters.params.map(serializeType).join(",")}]`
+        : "";
+      return `ref:${name}${params}`;
+    }
     case "TSUnionType":
       return `union:[${node.types.map(serializeType).sort((a, b) => a.localeCompare(b)).join("|")}]`;
     case "TSIntersectionType":
