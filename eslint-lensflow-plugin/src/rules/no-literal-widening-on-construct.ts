@@ -86,7 +86,7 @@ export default createRule({
             if (!DISCRIMINANT_NAMES.has(propName)) continue;
 
             context.report({
-              node,
+              node: prop,
               messageId: "widen",
               data: {
                 varName: node.id.name,
