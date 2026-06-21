@@ -20,6 +20,20 @@ function isClassDecoratorContextParam(param: TSESTree.Parameter): boolean {
   return false;
 }
 
+function extractTemplateLiteralValue(node: TSESTree.TemplateLiteral): string | null {
+  if (node.expressions.length === 0 && node.quasis.length === 1) {
+    return node.quasis[0].value.cooked ?? node.quasis[0].value.raw;
+  }
+  return null;
+}
+
+function extractKeyname(key: TSESTree.Expression): string | null {
+  if (key.type === "Identifier") return key.name;
+  if (key.type === "Literal" && typeof key.value === "string") return key.value;
+  if (key.type === "TemplateLiteral") return extractTemplateLiteralValue(key);
+  return null;
+}
+
 function extractDefinePropertyCalls(
   node: TSESTree.CallExpression,
 ): string[] | null {
@@ -35,26 +49,16 @@ function extractDefinePropertyCalls(
   ) {
     if (callee.property.name === "defineProperty") {
       const propArg = node.arguments[1];
-      if (
-        propArg?.type === "Literal" &&
-        typeof propArg.value === "string"
-      ) {
-        return [propArg.value];
-      }
-      if (propArg?.type === "Identifier") {
-        return [propArg.name];
-      }
+      const name = extractKeyname(propArg);
+      if (name !== null) return [name];
     } else {
       const descArg = node.arguments[1];
       if (descArg?.type === "ObjectExpression") {
         const names: string[] = [];
         for (const prop of descArg.properties) {
           if (prop.type === "Property") {
-            if (prop.key.type === "Identifier" && !prop.computed) {
-              names.push(prop.key.name);
-            } else if (prop.key.type === "Literal" && typeof prop.key.value === "string") {
-              names.push(prop.key.value);
-            }
+            const name = extractKeyname(prop.key);
+            if (name !== null) names.push(name);
           }
         }
         if (names.length > 0) return names;
@@ -149,7 +153,7 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow class decorators that add properties via Object.defineProperty invisible to TypeScript",
+        "Disallow class decorators that add properties via Object.defineProperty invisible to TypeScript. Note: Only inline literal, identifier, and template-literal keys are detected. Object.defineProperties with a variable reference for the properties argument is not analyzed.",
     },
     messages: {
       decoratorModifiesInferredType:
