@@ -77,7 +77,10 @@ export default createRule({
             const propName =
               prop.key.type === "Identifier"
                 ? prop.key.name
-                : prop.key.value;
+                : typeof prop.key.value === "string"
+                  ? prop.key.value
+                  : null;
+            if (propName === null) continue;
 
             // Only flag properties with discriminant-like names
             if (!DISCRIMINANT_NAMES.has(propName)) continue;
