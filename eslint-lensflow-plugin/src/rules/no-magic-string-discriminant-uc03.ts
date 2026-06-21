@@ -11,11 +11,18 @@ interface FuncScope {
   params: ParamScope[];
 }
 
-function isStringParam(param: TSESTree.Parameter): param is TSESTree.Identifier & { typeAnnotation: TSESTree.TSTypeAnnotation } {
-  return (
-    param.type === "Identifier" &&
-    param.typeAnnotation?.typeAnnotation.type === "TSStringKeyword"
-  );
+function normalizeParam(param: TSESTree.Parameter): TSESTree.Node {
+  if (param.type === "AssignmentPattern") return param.left;
+  if (param.type === "RestElement") return param.argument;
+  return param;
+}
+
+function getStringParamIdent(param: TSESTree.Parameter): TSESTree.Identifier & { typeAnnotation: TSESTree.TSTypeAnnotation } | null {
+  const inner = normalizeParam(param);
+  if (inner.type !== "Identifier") return null;
+  if (!inner.typeAnnotation) return null;
+  if (inner.typeAnnotation.typeAnnotation.type !== "TSStringKeyword") return null;
+  return inner;
 }
 
 export default createRule({
@@ -40,10 +47,11 @@ export default createRule({
     function enterFunction(fn: TSESTree.FunctionLike) {
       const params: ParamScope[] = [];
       for (const param of fn.params) {
-        if (isStringParam(param)) {
+        const ident = getStringParamIdent(param);
+        if (ident) {
           params.push({
-            paramName: param.name,
-            typeNode: param.typeAnnotation.typeAnnotation as TSESTree.TSStringKeyword,
+            paramName: ident.name,
+            typeNode: ident.typeAnnotation.typeAnnotation as TSESTree.TSStringKeyword,
             literals: new Set(),
           });
         }
@@ -115,7 +123,8 @@ export default createRule({
       },
       BinaryExpression(node) {
         if (scopeStack.length === 0) return;
-        if (node.operator !== "===" && node.operator !== "==") return;
+        const OPS = new Set(["===", "==", "!==", "!="]);
+        if (!OPS.has(node.operator)) return;
 
         const left = node.left;
         const right = node.right;

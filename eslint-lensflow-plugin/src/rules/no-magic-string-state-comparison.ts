@@ -1,94 +1,35 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import { walkNodes } from "../utils/ast-helpers.js";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-function isThisMemberExpression(node: unknown): node is { object: { type: "ThisExpression" }; property: { type: "Identifier"; name: string } } {
-  if (
-    node &&
+function isThisMemberExpression(node: unknown): node is TSESTree.MemberExpression {
+  return (
+    node != null &&
     typeof node === "object" &&
     "type" in node &&
     node.type === "MemberExpression"
-  ) {
-    const member = node as unknown as { object: unknown; property: unknown };
-    if (
-      member.object &&
-      typeof member.object === "object" &&
-      "type" in member.object &&
-      member.object.type === "ThisExpression" &&
-      member.property &&
-      typeof member.property === "object" &&
-      "type" in member.property &&
-      member.property.type === "Identifier"
-    ) {
-      return true;
-    }
-  }
-  return false;
+  );
 }
 
-function getThisPropertyName(node: { object: { type: string }; property: { type: string; name: string } }): string | null {
-  if (node.property.type === "Identifier") {
-    return node.property.name;
-  }
+function getThisPropertyName(node: TSESTree.MemberExpression): string | null {
+  if (node.property.type === "Identifier") return node.property.name;
   return null;
 }
 
-function shouldSkipNodeKey(key: string): boolean {
-  return key === "parent" || key === "loc" || key === "range";
-}
-
-function checkArrayItems(child: unknown[], check: (n: unknown) => boolean): boolean {
-  for (const item of child) {
-    if (check(item)) return true;
-  }
-  return false;
-}
-
-function checkObjectChild(child: unknown, check: (n: unknown) => boolean): boolean {
-  if (!child || typeof child !== "object") return false;
-  return check(child);
-}
-
-function traverseChildren(node: Record<string, unknown>, check: (n: unknown) => boolean): boolean {
-  for (const key of Object.keys(node)) {
-    if (shouldSkipNodeKey(key)) continue;
-    const child = node[key];
-    if (Array.isArray(child)) {
-      if (checkArrayItems(child, check)) return true;
-    } else if (checkObjectChild(child, check)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function isStateAssignmentMatch(node: { type: string }, propName: string): boolean {
+function isThisStateAssignment(node: TSESTree.Node, propName: string): boolean {
   if (node.type !== "AssignmentExpression") return false;
-  const assign = node as unknown as { left: unknown };
+  const assign = node;
   if (!isThisMemberExpression(assign.left)) return false;
-  const assignedProp = getThisPropertyName(assign.left as { object: { type: string }; property: { type: string; name: string } });
-  return assignedProp === propName;
+  if (assign.left.object.type !== "ThisExpression") return false;
+  return getThisPropertyName(assign.left) === propName;
 }
 
-function findAssignmentInConsequent(consequent: unknown, propName: string): boolean {
-  if (!consequent || typeof consequent !== "object" || !("type" in consequent)) return false;
+function findAssignmentInConsequent(consequent: TSESTree.Statement, propName: string): boolean {
+  const statements: TSESTree.Statement[] =
+    consequent.type === "BlockStatement" ? consequent.body : [consequent];
 
-  const body = (consequent as { body?: unknown[] }).body;
-  if (!Array.isArray(body)) return false;
-
-  const visited = new Set<unknown>();
-
-  function checkNode(node: unknown): boolean {
-    if (!node || typeof node !== "object") return false;
-    if (visited.has(node)) return false;
-    visited.add(node);
-
-    if (!("type" in node)) return false;
-    if (isStateAssignmentMatch(node as { type: string }, propName)) return true;
-    return traverseChildren(node as Record<string, unknown>, checkNode);
-  }
-
-  for (const stmt of body) {
-    if (checkNode(stmt)) return true;
+  for (const stmt of statements) {
+    if (walkNodes(stmt, (node) => isThisStateAssignment(node, propName))) return true;
   }
   return false;
 }
@@ -131,7 +72,7 @@ export default createRule({
         let stringValue: string | null = null;
 
         if (isThisMemberExpression(left)) {
-          propName = getThisPropertyName(left as { object: { type: string }; property: { type: string; name: string } });
+          propName = getThisPropertyName(left);
           if (
             right &&
             typeof right === "object" &&
@@ -142,7 +83,7 @@ export default createRule({
             stringValue = (right as unknown as { value: string }).value;
           }
         } else if (isThisMemberExpression(right)) {
-          propName = getThisPropertyName(right as { object: { type: string }; property: { type: string; name: string } });
+          propName = getThisPropertyName(right);
           if (
             left &&
             typeof left === "object" &&
@@ -156,7 +97,7 @@ export default createRule({
 
         if (propName === null || stringValue === null) return;
 
-        if (findAssignmentInConsequent((node as unknown as { consequent: unknown }).consequent, propName)) {
+        if (findAssignmentInConsequent((node as unknown as { consequent: TSESTree.Statement }).consequent, propName)) {
           context.report({
             node,
             messageId: "magicStringStateComparison",
