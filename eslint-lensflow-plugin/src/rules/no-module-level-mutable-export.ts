@@ -25,11 +25,9 @@ export default createRule({
           (node.declaration.kind === "let" || node.declaration.kind === "var")
         ) {
           const decl = node.declaration;
+          const sourceCode = context.getSourceCode();
           for (const declarator of decl.declarations) {
-            const name =
-              declarator.id.type === "Identifier"
-                ? declarator.id.name
-                : "(unnamed)";
+            const name = sourceCode.getText(declarator.id);
             context.report({
               node: declarator,
               messageId: "mutableExport",
