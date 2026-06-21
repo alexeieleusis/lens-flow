@@ -28,8 +28,8 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ maxMembers: 20 }],
-  create(context: TSESLint.RuleContext<"tooManyLiteralMembers", [{ maxMembers: number }]>) {
-    const { maxMembers } = context.options[0] ?? { maxMembers: 20 };
+  create(context: TSESLint.RuleContext<"tooManyLiteralMembers", [{ maxMembers?: number }]>) {
+    const { maxMembers = 20 } = context.options[0] ?? {};
 
     return {
       TSUnionType(node) {
