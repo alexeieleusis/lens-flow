@@ -2,14 +2,17 @@ import ts from "typescript";
 import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
-const URL =
+const DOCS_URL =
   "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T01-algebraic-data-types.md";
 
 function isClassType(tsType: ts.Type): boolean {
   const symbol = tsType.getSymbol() || tsType.aliasSymbol;
   if (!symbol) return false;
   const decls = symbol.declarations || [];
-  return decls.some((d): d is ts.ClassDeclaration => ts.isClassDeclaration(d));
+  return decls.some(
+    (d): d is ts.ClassDeclaration | ts.ClassExpression =>
+      ts.isClassDeclaration(d) || ts.isClassExpression(d),
+  );
 }
 
 export default createRule({
@@ -52,9 +55,13 @@ export default createRule({
 
     return {
       TSTypeAliasDeclaration(node) {
-        if (node.typeAnnotation.type !== "TSUnionType") return;
+        let typeAnnotation = node.typeAnnotation;
+        while (typeAnnotation.type === "TSParenthesizedType") {
+          typeAnnotation = typeAnnotation.typeAnnotation;
+        }
+        if (typeAnnotation.type !== "TSUnionType") return;
 
-        const unionNode = node.typeAnnotation;
+        const unionNode = typeAnnotation;
         const members = unionNode.types;
 
         if (members.length < 2) return;
@@ -63,10 +70,7 @@ export default createRule({
         let hasLiteralObjectMember = false;
 
         for (const member of members) {
-          const tsNode = parserServices.esTreeNodeToTSNodeMap.get(member);
-          if (!tsNode) continue;
-
-          const memberTsType = checker.getTypeFromTypeNode(tsNode as ts.TypeNode);
+          const memberTsType = parserServices.getTypeAtNode(member);
 
           if (isClassType(memberTsType)) {
             hasClassMember = true;
@@ -79,7 +83,7 @@ export default createRule({
           context.report({
             node,
             messageId: "mixed",
-            data: { url: URL },
+            data: { url: DOCS_URL },
           });
         }
       },
