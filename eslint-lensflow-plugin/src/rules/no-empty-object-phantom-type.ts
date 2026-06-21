@@ -7,7 +7,7 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow empty object type aliases ({}) used as phantom or state types, which provide no structural distinction.",
+        "Disallow empty object type literals ({}), which provide no structural distinction.",
     },
     messages: {
       emptyObjectPhantomType:
