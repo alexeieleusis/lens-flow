@@ -33,17 +33,12 @@ export default createRule({
 
     return {
       TSConditionalType(node) {
-        let depth = 0;
-        let current: typeof node | null = node;
-        while (current) {
-          if (current.type === "TSConditionalType") {
-            depth += 1;
-          }
-          current =
-            current.parent?.type === "TSConditionalType"
-              ? current.parent
-              : null;
-        }
+        const ancestors = context.sourceCode.getAncestors(node);
+        const depth =
+          1 +
+          ancestors.filter(
+            (ancestor) => ancestor.type === "TSConditionalType",
+          ).length;
 
         if (depth > maxDepth) {
           context.report({
