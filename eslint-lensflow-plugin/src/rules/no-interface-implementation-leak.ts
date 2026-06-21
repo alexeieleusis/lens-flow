@@ -32,7 +32,7 @@ function analyzeInterfaceMembers(node: any) {
         ? member.key.name
         : getPropertyNameFromKey(member.key);
 
-    if (propName && /^internal|^_/i.test(propName)) {
+    if (propName && /^(internal|_)/.test(propName)) {
       internalNameProps.push(propName);
     }
 
