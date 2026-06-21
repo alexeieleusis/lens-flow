@@ -1,5 +1,5 @@
 import * as ts from "typescript";
-import { ESLintUtils, type TSESTree, TSESLint } from "@typescript-eslint/utils";
+import { ESLintUtils, type TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
 interface ESTreeToTSNodeMap {
@@ -7,7 +7,7 @@ interface ESTreeToTSNodeMap {
 }
 
 const URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T02-union-intersection.md";
+  "https://github.com/jpablo/vibe-types/blob/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T02-union-intersection.md";
 
 function getBaseName(
   typeName: TSESTree.Identifier | TSESTree.TSTypeParameter,
@@ -31,6 +31,30 @@ function groupTypeRefs(
   return groups;
 }
 
+function typesOverlap(typeA: ts.Type, typeB: ts.Type): boolean {
+  if ((typeA.flags & ts.TypeFlags.Never) || (typeB.flags & ts.TypeFlags.Never)) {
+    return false;
+  }
+
+  if (typeA.flags & ts.TypeFlags.Union) {
+    const unionA = typeA as ts.UnionType;
+    return unionA.types.some((member) => typesOverlap(member, typeB));
+  }
+  if (typeB.flags & ts.TypeFlags.Union) {
+    const unionB = typeB as ts.UnionType;
+    return unionB.types.some((member) => typesOverlap(typeA, member));
+  }
+
+  if ((typeA.flags & ts.TypeFlags.StringLiteral) && (typeB.flags & ts.TypeFlags.StringLiteral)) {
+    return (typeA as ts.StringLiteralType).value === (typeB as ts.StringLiteralType).value;
+  }
+  if ((typeA.flags & ts.TypeFlags.NumberLiteral) && (typeB.flags & ts.TypeFlags.NumberLiteral)) {
+    return (typeA as ts.NumberLiteralType).value === (typeB as ts.NumberLiteralType).value;
+  }
+
+  return true;
+}
+
 function checkPairIncompatible(
   checker: ts.TypeChecker,
   nodeMap: ESTreeToTSNodeMap,
@@ -44,8 +68,29 @@ function checkPairIncompatible(
   const typeA = checker.getTypeFromTypeNode(tsNodeA as ts.TypeNode);
   const typeB = checker.getTypeFromTypeNode(tsNodeB as ts.TypeNode);
 
-  return !checker.isTypeAssignableTo(typeA, typeB)
-    && !checker.isTypeAssignableTo(typeB, typeA);
+  // Check if both reference the same generic with type arguments — test for type-argument overlap
+  if (
+    typeA.aliasSymbol &&
+    typeB.aliasSymbol &&
+    typeA.aliasSymbol === typeB.aliasSymbol &&
+    typeA.aliasTypeArguments &&
+    typeB.aliasTypeArguments
+  ) {
+    const argsA = typeA.aliasTypeArguments;
+    const argsB = typeB.aliasTypeArguments;
+    if (argsA.length === argsB.length && argsA.length > 0) {
+      for (let i = 0; i < argsA.length; i++) {
+        if (!typesOverlap(argsA[i], argsB[i])) {
+          return true;
+        }
+      }
+      return false;
+    }
+  }
+
+  // For other cases, check if the intersection resolves to `never`
+  const intersection = checker.createIntersectionType([typeA, typeB]);
+  return !!(intersection.flags & ts.TypeFlags.Never);
 }
 
 function checkGroupForIncompatibility(
