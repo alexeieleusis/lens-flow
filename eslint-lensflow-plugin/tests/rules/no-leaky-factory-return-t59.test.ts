@@ -8,6 +8,11 @@ ruleTester.run("no-leaky-factory-return-t59", rule, {
 function createBox(n: number): Box {
   return { value: n };
 }`,
+    // Interface with string-literal keys
+    `interface Config { "host": string; "port": number }
+function makeConfig(): Config {
+  return { host: "localhost", port: 3000 };
+}`,
     // Returns with as cast — argument is TSAsExpression, not ObjectExpression
     `interface Box { value: number }
 function createBox(n: number): Box {

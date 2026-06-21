@@ -56,22 +56,6 @@ export default createRule({
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"leakyReturn", []>) {
     const interfaces = new Map<string, Set<string>>();
-    const sourceCode = context.sourceCode;
-
-    walk(sourceCode.ast as TSESTree.Node, (node) => {
-      if (node.type !== "TSInterfaceDeclaration") return;
-      const name = node.id.name;
-      const props = new Set<string>();
-      for (const member of node.body.body) {
-        if (
-          member.type === "TSPropertySignature" &&
-          member.key.type === "Identifier"
-        ) {
-          props.add(member.key.name);
-        }
-      }
-      interfaces.set(name, props);
-    });
 
     function checkFunction(fnNode: FunctionNode) {
       const returnTypeAnn = fnNode.returnType?.typeAnnotation;
@@ -118,6 +102,19 @@ export default createRule({
     }
 
     return {
+      TSInterfaceDeclaration(node: TSESTree.TSInterfaceDeclaration) {
+        const name = node.id.name;
+        const props = new Set<string>();
+        for (const member of node.body.body) {
+          if (member.type !== "TSPropertySignature") continue;
+          if (member.key.type === "Identifier") {
+            props.add(member.key.name);
+          } else if (member.key.type === "Literal") {
+            props.add(String(member.key.value));
+          }
+        }
+        interfaces.set(name, props);
+      },
       FunctionDeclaration(node: TSESTree.FunctionDeclaration) {
         checkFunction(node);
       },
