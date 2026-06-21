@@ -20,6 +20,19 @@ if (!result.success) return respond(400, result.error);`,
     return null;
   }
 }`,
+    `const timestamp = Date.parse("2024-01-01");`,
+    `const ms = Date.parse(someString);`,
+    `const obj = JSON.parse(raw);`,
+    `const map = new Map(entries);`,
+    {
+      code: `const result = MyParser.parse(raw);`,
+      options: [{ allowedReceivers: ["MyParser"] }],
+    },
+    {
+      code: `const a = CustomParse.parse(x);
+const b = AnotherParser.parse(y);`,
+      options: [{ allowedReceivers: ["CustomParse", "AnotherParser"] }],
+    },
   ],
   invalid: [
     {
@@ -38,6 +51,11 @@ if (!result.success) return respond(400, result.error);`,
   const body = JsonSchema.parse(req.body);
   console.log(body);
 };`,
+      errors: [{ messageId: "unhandledParse" }],
+    },
+    {
+      code: `const data = Schema.parse(req.body);`,
+      options: [{ allowedReceivers: ["OtherParser"] }],
       errors: [{ messageId: "unhandledParse" }],
     },
   ],

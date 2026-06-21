@@ -1,22 +1,67 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
+const BUILT_IN_RECEIVERS = new Set([
+  "Date",
+  "JSON",
+  "Number",
+  "String",
+  "Boolean",
+  "Array",
+  "Object",
+  "Map",
+  "Set",
+  "WeakMap",
+  "WeakSet",
+  "Intl",
+  "Math",
+  "Reflect",
+  "Promise",
+  "Symbol",
+  "RegExp",
+  "Error",
+  "Function",
+  "Atomics",
+  "SharedArrayBuffer",
+  "WebAssembly",
+]);
+
+type RuleOptions = [{ allowedReceivers?: string[] }];
+
 export default createRule({
   name: "no-ignored-parse-errors",
   meta: {
     type: "problem",
     docs: {
       description:
-        "Disallow calling .parse() without try/catch or using .safeParse() instead",
+        "Disallow calling .parse() on schema validators without try/catch or using .safeParse() instead",
     },
     messages: {
       unhandledParse:
         "Calling .parse() without try/catch can crash on invalid input. Use .safeParse() or wrap in try/catch. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC19-serialization.md",
     },
-    schema: [],
+    schema: [
+      {
+        type: "object",
+        properties: {
+          allowedReceivers: {
+            type: "array",
+            items: { type: "string" },
+            description:
+              "Receiver names to exclude from this rule (e.g. ['MyParser', 'customParse'])",
+          },
+        },
+        additionalProperties: false,
+      },
+    ],
   },
-  defaultOptions: [],
-  create(context: TSESLint.RuleContext<"unhandledParse", []>) {
+  defaultOptions: [{}],
+  create(context: TSESLint.RuleContext<"unhandledParse", RuleOptions>) {
+    const [options] = context.options;
+    const allowedReceivers = new Set(
+      options?.allowedReceivers ?? [],
+    );
+
     return {
       CallExpression(node) {
         const callee = node.callee;
@@ -25,6 +70,12 @@ export default createRule({
 
         const methodName = callee.property.name;
         if (methodName !== "parse") return;
+
+        const obj = callee.object;
+        if (obj.type === "Identifier") {
+          if (BUILT_IN_RECEIVERS.has(obj.name)) return;
+          if (allowedReceivers.has(obj.name)) return;
+        }
 
         let hasTryCatch = false;
         let ancestor: unknown = node.parent;
