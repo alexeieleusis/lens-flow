@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       intersectedFunctions:
-        "Intersecting {{count}} function/constructor types creates an overloaded signature that is rarely intended. Use function/constructor overloads instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T02-union-intersection.md",
+        "Intersecting {{count}} function/constructor types creates an overloaded signature that is rarely intended. Use function/constructor overloads instead.",
     },
     schema: [],
     fixable: undefined,
