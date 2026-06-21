@@ -39,7 +39,7 @@ export default createRule({
     if (!parserServices.program) return {};
 
     return {
-      VariableDeclarator(node: any) {
+      VariableDeclarator(node: TSESLint.TSESTree.VariableDeclarator) {
         if (node.init?.type !== "ObjectExpression") return;
         if (node.id.type !== "Identifier") return;
 
