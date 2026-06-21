@@ -8,6 +8,8 @@ ruleTester.run("no-empty-array-never-inference", rule, {
 items.push(1);`,
     `const items = [1];`,
     `const items: any[] = [];`,
+    `let data = [];`,
+    `var items = [];`,
   ],
   invalid: [
     {
@@ -17,10 +19,6 @@ items.push("hello");`,
     },
     {
       code: `const list = [];`,
-      errors: [{ messageId: "emptyArrayNoType" }],
-    },
-    {
-      code: `let data = [];`,
       errors: [{ messageId: "emptyArrayNoType" }],
     },
   ],
