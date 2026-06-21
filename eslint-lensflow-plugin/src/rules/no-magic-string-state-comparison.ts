@@ -1,35 +1,60 @@
+import { TSESTree, type TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
-import { walkNodes } from "../utils/ast-helpers.js";
-import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-function isThisMemberExpression(node: unknown): node is TSESTree.MemberExpression {
-  return (
-    node != null &&
-    typeof node === "object" &&
-    "type" in node &&
-    node.type === "MemberExpression"
-  );
+function isThisMemberExpression(node: TSESTree.Node): node is TSESTree.MemberExpression {
+  if (node.type !== "MemberExpression") return false;
+  if (node.object.type !== "ThisExpression") return false;
+  if (node.property.type !== "Identifier") return false;
+  return true;
 }
 
 function getThisPropertyName(node: TSESTree.MemberExpression): string | null {
-  if (node.property.type === "Identifier") return node.property.name;
+  if (node.property.type === "Identifier") {
+    return node.property.name;
+  }
   return null;
 }
 
-function isThisStateAssignment(node: TSESTree.Node, propName: string): boolean {
+function shouldSkipNodeKey(key: string): boolean {
+  return key === "parent" || key === "loc" || key === "range";
+}
+
+function traverseChildren(node: TSESTree.Node, check: (n: TSESTree.Node) => boolean): boolean {
+  for (const key of Object.keys(node)) {
+    if (shouldSkipNodeKey(key)) continue;
+    const child = (node as any)[key];
+    if (Array.isArray(child)) {
+      for (const item of child) {
+        if (item && typeof item === "object" && "type" in item && check(item as TSESTree.Node)) return true;
+      }
+    } else if (child && typeof child === "object" && "type" in child && check(child as TSESTree.Node)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function isStateAssignmentMatch(node: TSESTree.Node, propName: string): boolean {
   if (node.type !== "AssignmentExpression") return false;
   const assign = node;
   if (!isThisMemberExpression(assign.left)) return false;
-  if (assign.left.object.type !== "ThisExpression") return false;
-  return getThisPropertyName(assign.left) === propName;
+  const assignedProp = getThisPropertyName(assign.left);
+  return assignedProp === propName;
 }
 
-function findAssignmentInConsequent(consequent: TSESTree.Statement, propName: string): boolean {
-  const statements: TSESTree.Statement[] =
-    consequent.type === "BlockStatement" ? consequent.body : [consequent];
+function findAssignmentInConsequent(consequent: TSESTree.BlockStatement, propName: string): boolean {
+  const visited = new WeakSet<TSESTree.Node>();
 
-  for (const stmt of statements) {
-    if (walkNodes(stmt, (node) => isThisStateAssignment(node, propName))) return true;
+  function checkNode(node: TSESTree.Node): boolean {
+    if (visited.has(node)) return false;
+    visited.add(node);
+
+    if (isStateAssignmentMatch(node, propName)) return true;
+    return traverseChildren(node, checkNode);
+  }
+
+  for (const stmt of consequent.body) {
+    if (checkNode(stmt)) return true;
   }
   return false;
 }
@@ -50,54 +75,35 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"magicStringStateComparison", []>) {
+ create(context: TSESLint.RuleContext<"magicStringStateComparison", []>) {
     return {
-      "MethodDefinition IfStatement"(node) {
-        const ifNode = node as unknown as { test: unknown };
-        const test = ifNode.test;
+      IfStatement(node) {
+        const test = node.test;
 
-        if (
-          !test ||
-          typeof test !== "object" ||
-          (test as { type: unknown }).type !== "BinaryExpression"
-        )
-          return;
+        if (test.type !== "BinaryExpression") return;
+        if (test.operator !== "==" && test.operator !== "===") return;
 
-        const bin = test as unknown as { left: unknown; right: unknown; operator: string };
-        if (bin.operator !== "==" && bin.operator !== "===") return;
-
-        const { left, right } = bin;
+        const { left, right } = test;
 
         let propName: string | null = null;
         let stringValue: string | null = null;
 
         if (isThisMemberExpression(left)) {
           propName = getThisPropertyName(left);
-          if (
-            right &&
-            typeof right === "object" &&
-            "type" in right &&
-            right.type === "Literal" &&
-           typeof (right as unknown as { value: unknown }).value === "string"
-           ) {
-            stringValue = (right as unknown as { value: string }).value;
+          if (right.type === "Literal" && typeof right.value === "string") {
+            stringValue = right.value;
           }
         } else if (isThisMemberExpression(right)) {
           propName = getThisPropertyName(right);
-          if (
-            left &&
-            typeof left === "object" &&
-            "type" in left &&
-            left.type === "Literal" &&
-           typeof (left as unknown as { value: unknown }).value === "string"
-           ) {
-            stringValue = (left as unknown as { value: string }).value;
+          if (left.type === "Literal" && typeof left.value === "string") {
+            stringValue = left.value;
           }
         }
 
         if (propName === null || stringValue === null) return;
 
-        if (findAssignmentInConsequent((node as unknown as { consequent: TSESTree.Statement }).consequent, propName)) {
+        if (node.consequent.type !== "BlockStatement") return;
+        if (findAssignmentInConsequent(node.consequent, propName)) {
           context.report({
             node,
             messageId: "magicStringStateComparison",
