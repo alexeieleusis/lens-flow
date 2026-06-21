@@ -1,5 +1,5 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 const BUILT_IN_REFERENCES = new Set(["Error", "Object", "Record"]);
 
@@ -40,11 +40,17 @@ export default createRule({
 
         const constraint = node.constraint;
 
-        if (constraint.type !== "TSTypeReference") return;
+        // Unwrap TSParenthesizedType wrappers (e.g., `T extends (SomeType)`)
+        // TSParenthesizedType exists at runtime but isn't in @typescript-eslint's types.
+        let unwrapped: TSESTree.TypeNode = constraint;
+        while ((unwrapped as any).type === "TSParenthesizedType") {
+          unwrapped = (unwrapped as any).typeAnnotation;
+        }
+        if (unwrapped.type !== "TSTypeReference") return;
 
         const typeName =
-          constraint.typeName.type === "Identifier"
-            ? constraint.typeName.name
+          unwrapped.typeName.type === "Identifier"
+            ? unwrapped.typeName.name
             : null;
 
         if (!typeName || allowed.has(typeName)) return;
