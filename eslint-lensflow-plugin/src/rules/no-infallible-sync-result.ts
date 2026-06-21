@@ -1,41 +1,15 @@
 import ts from "typescript";
 import { ESLintUtils, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { walkNodes } from "../utils/ast-helpers.js";
 
 const RULE_DOC_URL =
   "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T12-effect-tracking.md";
 
-function hasFailureInValue(val: unknown): boolean {
-  if (Array.isArray(val)) {
-    return val.some((child) => hasFailurePath(child));
-  }
-  if (typeof val === "object" && val) {
-    return hasFailurePath(val);
-  }
-  return false;
-}
-
-function hasFailurePath(n: unknown): boolean {
-  if (!n || typeof n !== "object") return false;
-  const node = n as Record<string, unknown>;
-  const t = node.type as string;
-
-  if (t === "AwaitExpression") return true;
-  if (t === "ThrowStatement") return true;
-  if (t === "TryStatement") return true;
-
-  if (
-    t === "FunctionDeclaration" ||
-    t === "FunctionExpression" ||
-    t === "ArrowFunctionExpression"
-  )
-    return false;
-
-  for (const key of Object.keys(node)) {
-    if (key === "type" || key === "loc" || key === "range" || key === "parent") continue;
-    if (hasFailureInValue(node[key])) return true;
-  }
-  return false;
+function hasFailurePath(node: TSESTree.Node): boolean {
+  return node.type === "AwaitExpression" ||
+    node.type === "ThrowStatement" ||
+    node.type === "TryStatement";
 }
 
 function isSyncBody(body: TSESTree.Node): boolean {
@@ -44,7 +18,9 @@ function isSyncBody(body: TSESTree.Node): boolean {
   // are handled by early returns in checkFunction before this is called.
   if (body.type !== "BlockStatement") return true;
   const stmts = body.body;
-  return !stmts.some((stmt) => hasFailurePath(stmt));
+  return !stmts.some((stmt) =>
+    walkNodes(stmt, hasFailurePath, { stopAtFunctionBoundaries: true }),
+  );
 }
 
 function isAsyncNamedFunction(
@@ -65,11 +41,11 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow synchronous functions with no failure path from returning Result<T, never> instead of the plain value.",
+        "Disallow synchronous functions with no failure path from returning Result<T, never> or Either<never, T> instead of the plain value.",
      },
     messages: {
       infallibleSyncResult:
-        "Synchronous function with no failure path returns Result<T, never>. Return the plain value directly. See: {{url}}",
+        "Synchronous function with no failure path returns Result<T, never> or Either<never, T>. Return the plain value directly. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
