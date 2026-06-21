@@ -31,6 +31,7 @@ type RuleOptions = [{ allowedReceivers?: string[] }];
 export default createRule({
   name: "no-ignored-parse-errors",
   meta: {
+    fixable: undefined,
     type: "problem",
     docs: {
       description:
@@ -38,7 +39,7 @@ export default createRule({
     },
     messages: {
       unhandledParse:
-        "Calling .parse() without try/catch can crash on invalid input. Use .safeParse() or wrap in try/catch. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC19-serialization.md",
+        "Calling .parse() without try/catch can crash on invalid input. Use .safeParse() or wrap in try/catch. See: https://raw.githubusercontent.com/jpablo/vibe-types/786645c333d27418ae273aee1df3f9513b9d4919/plugin/skills/typescript/usecases/UC19-serialization.md",
     },
     schema: [
       {
@@ -77,18 +78,10 @@ export default createRule({
           if (allowedReceivers.has(obj.name)) return;
         }
 
-        let hasTryCatch = false;
-        let ancestor: unknown = node.parent;
-        while (ancestor) {
-          if (
-            (ancestor as { type: string }).type === "TryStatement" ||
-            (ancestor as { type: string }).type === "CatchClause"
-          ) {
-            hasTryCatch = true;
-            break;
-          }
-          ancestor = (ancestor as { parent?: unknown }).parent;
-        }
+        const ancestors = context.sourceCode.getAncestors(node);
+        const hasTryCatch = ancestors.some(
+          (a) => a.type === "TryStatement" || a.type === "CatchClause",
+        );
 
         if (!hasTryCatch) {
           context.report({
