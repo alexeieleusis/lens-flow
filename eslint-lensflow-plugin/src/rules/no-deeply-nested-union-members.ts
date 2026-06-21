@@ -72,7 +72,7 @@ export default createRule({
           const depth = computeMaxDepth(member);
           if (depth > maxDepth) {
             context.report({
-              node: node.parent ?? node,
+              node: member,
               messageId: "deepNesting",
               data: {
                 depth: String(depth),
