@@ -7,9 +7,9 @@ function extractPropName(key: TSESTree.Property["key"]): string | null {
   return null;
 }
 
-function extractLiteralValue(literal: TSESTree.TypeNode): string | null {
-  const typeAnn = literal;
-  if (typeAnn.type !== "TSLiteralType") return null;
+function extractLiteralValue(literal: TSESTree.TypeNode | undefined): string | null {
+  if (!literal) return null;
+  if (literal.type !== "TSLiteralType") return null;
 
   const lit = typeAnn.literal;
   if (lit.type === "Literal") return String(lit.value);
@@ -68,14 +68,7 @@ function reportDuplicate(
   sig: TSESTree.TSPropertySignature,
 ) {
   const propName = extractPropName(sig.key) ?? "?";
-  const typeAnn = sig.typeAnnotation?.typeAnnotation;
-  const value = typeAnn?.type === "TSLiteralType"
-    ? (typeAnn.literal.type === "Literal"
-      ? String(typeAnn.literal.value)
-      : typeAnn.literal.type === "TemplateLiteral" && typeAnn.literal.quasis.length === 1
-        ? typeAnn.literal.quasis[0].value.cooked ?? "?"
-        : "?")
-    : "?";
+  const value = extractLiteralValue(sig.typeAnnotation?.typeAnnotation) ?? "?";
 
   context.report({
     node: sig,
