@@ -1,7 +1,7 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
-const URL =
+const DOCS_URL =
   "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T49-associated-types.md";
 
 function extractTypeParams(
@@ -37,7 +37,7 @@ export default createRule({
     messages: {
       inferFromUnconstrained:
         "Using `infer` on unconstrained type parameter '{{paramName}}' (pattern `{{paramName}} extends infer {{inferName}} ? {{inferName}} : ...`) produces an identity mapping. Constrain the type parameter so inference targets a meaningful structure. See: " +
-        URL,
+        DOCS_URL,
     },
     schema: [],
     fixable: undefined,
