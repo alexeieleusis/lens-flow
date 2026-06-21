@@ -4,25 +4,11 @@ import {
   containsTypeRef,
   paramTypeAnnotation,
   createVarianceDeclarationVisitor,
+  paramsContainAnyTypeRef,
 } from "../utils/variance-checker.js";
 
 const KNOWLEDGE_URL =
   "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC17-variance.md";
-
-function paramsReferenceCovariant(
-  params: TSESTree.Parameter[],
-  covariantNames: Set<string>,
-): boolean {
-  for (const p of params) {
-    const ann = paramTypeAnnotation(p);
-    if (ann) {
-      for (const name of covariantNames) {
-        if (containsTypeRef(ann, name)) return true;
-      }
-    }
-  }
-  return false;
-}
 
 function findMatchedCovariantParam(
   params: TSESTree.Parameter[],
@@ -63,7 +49,7 @@ function checkMethodSignature(
   covariantNames: Set<string>,
   context: Parameters<NonNullable<Parameters<typeof createRule>[0]["create"]>>[0],
 ) {
-  if (!paramsReferenceCovariant(member.params, covariantNames)) return;
+  if (!paramsContainAnyTypeRef(member.params, [...covariantNames])) return;
 
   const match = findMatchedCovariantParam(member.params, covariantNames);
   if (!match) return;
@@ -86,7 +72,7 @@ function checkPropertySignature(
 ) {
   const typeAnn = member.typeAnnotation?.typeAnnotation;
   if (typeAnn?.type !== AST_NODE_TYPES.TSFunctionType) return;
-  if (!paramsReferenceCovariant(typeAnn.params, covariantNames)) return;
+  if (!paramsContainAnyTypeRef(typeAnn.params, [...covariantNames])) return;
 
   const match = findMatchedCovariantParam(typeAnn.params, covariantNames);
   if (!match) return;

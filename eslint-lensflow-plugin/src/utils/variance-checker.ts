@@ -309,6 +309,17 @@ function paramsContainTypeRef(
   });
 }
 
+export function paramsContainAnyTypeRef(
+  params: TSESTree.Parameter[],
+  names: string[],
+): boolean {
+  return params.some((p) => {
+    const ann = paramTypeAnnotation(p);
+    if (!ann) return false;
+    return names.some((name) => containsTypeRef(ann, name));
+  });
+}
+
 export function isUsedAsInputInBody(
   body: TSESTree.TSInterfaceBody | TSESTree.TSTypeLiteral,
   paramName: string,

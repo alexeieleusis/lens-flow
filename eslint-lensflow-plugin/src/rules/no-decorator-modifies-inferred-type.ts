@@ -79,17 +79,65 @@ function getDecoratorFuncName(
   return null;
 }
 
+function keyToString(key: TSESTree.Expression | TSESTree.PrivateIdentifier): string | null {
+  if (key.type === "Identifier") return key.name;
+  if (key.type === "Literal" && typeof key.value === "string") return key.value;
+  if (key.type === "Literal" && typeof key.value === "number") return String(key.value);
+  if (key.type === "PrivateIdentifier") return `#${key.name}`;
+  return null;
+}
+
+function hasKey(
+  member: TSESTree.ClassElement,
+): member is TSESTree.PropertyDefinition |
+  TSESTree.TSAbstractPropertyDefinition |
+  TSESTree.AccessorProperty |
+  TSESTree.MethodDefinition |
+  TSESTree.TSAbstractMethodDefinition {
+  return [
+    "PropertyDefinition", "TSAbstractPropertyDefinition", "AccessorProperty",
+    "MethodDefinition", "TSAbstractMethodDefinition",
+  ].includes(member.type);
+}
+
 function getClassDeclaredProperties(body: TSESTree.ClassBody): Set<string> {
   const declared = new Set<string>();
   for (const member of body.body) {
-    if (member.type === "PropertyDefinition" && member.key.type === "Identifier") {
-      declared.add(member.key.name);
-    }
+    if (!hasKey(member)) continue;
+    const name = keyToString(member.key);
+    if (name === null) continue;
+
     if (
-      member.type === "TSAbstractPropertyDefinition" &&
-      member.key.type === "Identifier"
+      member.type === "PropertyDefinition" ||
+      member.type === "TSAbstractPropertyDefinition" ||
+      member.type === "AccessorProperty"
     ) {
-      declared.add(member.key.name);
+      declared.add(name);
+    }
+
+    if (
+      (member.type === "MethodDefinition" ||
+        member.type === "TSAbstractMethodDefinition") &&
+      member.kind === "constructor" &&
+      member.value
+    ) {
+      declared.add(name);
+      for (const param of member.value.params) {
+        if (
+          param.type === "TSParameterProperty" &&
+          param.parameter.type === "Identifier"
+        ) {
+          declared.add(param.parameter.name);
+        }
+      }
+    }
+
+    if (
+      (member.type === "MethodDefinition" ||
+        member.type === "TSAbstractMethodDefinition") &&
+      member.kind === "method"
+    ) {
+      declared.add(name);
     }
   }
   return declared;
