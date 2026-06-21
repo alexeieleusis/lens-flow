@@ -29,14 +29,16 @@ export default createRule({
 
     return {
       VariableDeclaration(node) {
+        const ancestors = context.sourceCode.getAncestors(node);
         const isModuleLevel =
-          node.parent?.type === "Program" ||
-          (node.parent?.type === "ExportNamedDeclaration" &&
-            node.parent.parent?.type === "Program");
+          ancestors.length === 1 ||
+          (ancestors[ancestors.length - 1].type === "ExportNamedDeclaration" &&
+            ancestors.length === 2);
 
         if (!isModuleLevel) return;
 
-        const directlyExported = node.parent?.type === "ExportNamedDeclaration";
+        const directlyExported =
+          ancestors[ancestors.length - 1].type === "ExportNamedDeclaration";
 
         for (const decl of node.declarations) {
           const init = decl.init;
@@ -58,7 +60,8 @@ export default createRule({
       },
 
       ExportNamedDeclaration(node) {
-        if (node.parent?.type !== "Program") return;
+        const ancestors = context.sourceCode.getAncestors(node);
+        if (ancestors.length !== 1 || ancestors[0].type !== "Program") return;
         if (node.declaration) return;
 
         for (const spec of node.specifiers) {
