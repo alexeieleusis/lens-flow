@@ -7,11 +7,11 @@ export default createRule({
     type: "suggestion",
     docs: {
       description:
-        "Disallow union types with too many members that can slow the TypeScript type checker",
+        "Disallow union types with too many non-literal members (e.g. primitive types, custom types, generic types). Literal-only unions are covered by no-large-literal-union",
     },
     messages: {
       tooManyMembers:
-        "Union type has {{count}} members (max: {{max}}). Consider grouping related variants or using an interface dispatch for large open sets. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T36-trait-objects.md",
+        "Union type has {{count}} non-literal members (max: {{max}}). Large unions of non-literal types (e.g. string | number | CustomType) slow the type checker. Consider grouping related variants or using an interface dispatch. For literal-only unions, see no-large-literal-union. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T36-trait-objects.md",
     },
     schema: [
       {
@@ -33,12 +33,16 @@ export default createRule({
 
     return {
       TSUnionType(node) {
-        if (node.types.length >= maxMembers) {
+        const nonLiteralMembers = node.types.filter(
+          (member) => member.type !== "TSLiteralType",
+        );
+
+        if (nonLiteralMembers.length > maxMembers) {
           context.report({
             node,
             messageId: "tooManyMembers",
             data: {
-              count: String(node.types.length),
+              count: String(nonLiteralMembers.length),
               max: String(maxMembers),
             },
           });

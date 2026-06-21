@@ -41,7 +41,7 @@ export default createRule({
     },
     messages: {
       excessiveNesting:
-        "Conditional type has nesting depth {{depth}} (max: {{max}}). Use a recursive helper with a depth counter instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+        "Conditional type has nesting depth {{depth}} (max: {{max}}). Use a recursive helper with a depth counter instead. See: https://github.com/jpablo/vibe-types/blob/main/plugin/skills/typescript/catalog/T04-generics-bounds.md",
     },
     schema: [
       {
