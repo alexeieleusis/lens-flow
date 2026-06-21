@@ -7,7 +7,7 @@ export default createRule({
     type: "suggestion",
     docs: {
       description:
-        "Disallow discriminated unions with too many members that can slow the TypeScript type checker",
+        "Disallow union types with too many members that can slow the TypeScript type checker",
     },
     messages: {
       tooManyMembers:

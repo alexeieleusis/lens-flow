@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       excessiveChain:
-        "Intersection type has {{count}} members which exceeds the maximum of {{max}}. Decompose into intermediate type aliases for readability. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T02-union-intersection.md",
+        "Intersection type has {{count}} members which exceeds the maximum of {{max}}. Decompose into intermediate type aliases for readability. See: https://github.com/jpablo/vibe-types/blob/main/plugin/skills/typescript/catalog/T02-union-intersection.md",
     },
     schema: [
       {
