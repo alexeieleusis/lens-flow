@@ -33,7 +33,8 @@ export default createRule({
 
     return {
       TSTypeLiteral(node) {
-        const parent = node.parent;
+        const ancestors = context.sourceCode.getAncestors(node);
+        const parent = ancestors[ancestors.length - 1];
         if (parent?.type !== "TSUnionType") return;
 
         const properties = node.members.filter(
