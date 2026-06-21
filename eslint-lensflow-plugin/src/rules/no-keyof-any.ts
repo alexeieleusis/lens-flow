@@ -20,13 +20,7 @@ export default createRule({
   create(context: TSESLint.RuleContext<"keyofAny", []>) {
     return {
       TSTypeOperator(node) {
-        if (
-          node.operator === "keyof" &&
-          node.typeAnnotation &&
-          typeof node.typeAnnotation === "object" &&
-          "type" in node.typeAnnotation &&
-          node.typeAnnotation.type === "TSAnyKeyword"
-        ) {
+        if (node.operator === "keyof" && node.typeAnnotation.type === "TSAnyKeyword") {
           context.report({ node, messageId: "keyofAny" });
         }
       },
