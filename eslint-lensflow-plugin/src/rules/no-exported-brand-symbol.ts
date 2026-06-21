@@ -25,24 +25,22 @@ export default createRule({
         const parent = node.parent;
         if (parent?.type !== "ExportNamedDeclaration") return;
 
-        const hasSymbolInit = node.declarations.some(
-          (decl) =>
+        for (const decl of node.declarations) {
+          if (
             decl.init?.type === "CallExpression" &&
             decl.init.callee.type === "Identifier" &&
-            decl.init.callee.name === "Symbol",
-        );
-        if (!hasSymbolInit) return;
+            decl.init.callee.name === "Symbol"
+          ) {
+            const name =
+              decl.id.type === "Identifier" ? decl.id.name : "<unknown>";
 
-        const name =
-          node.declarations[0]?.id.type === "Identifier"
-            ? node.declarations[0].id.name
-            : "<unknown>";
-
-        context.report({
-          node,
-          messageId: "exportedBrandSymbol",
-          data: { name },
-        });
+            context.report({
+              node: decl,
+              messageId: "exportedBrandSymbol",
+              data: { name },
+            });
+          }
+        }
       },
     };
   },
