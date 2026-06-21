@@ -1,32 +1,82 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
+function getParamTypeAnnotation(p: TSESTree.Parameter): TSESTree.TypeNode | null {
+  if (
+    p.type === "Identifier" ||
+    p.type === "ArrayPattern" ||
+    p.type === "ObjectPattern" ||
+    p.type === "AssignmentPattern" ||
+    p.type === "RestElement"
+  ) {
+    return p.typeAnnotation?.typeAnnotation ?? null;
+  }
+  return null;
+}
+
 function serializeTypeLiteral(node: TSESTree.TSTypeLiteral): string {
   const members: string[] = [];
 
   for (const member of node.members) {
-    if (member.type !== "TSPropertySignature") continue;
+    if (member.type === "TSPropertySignature") {
+      let keyName = "";
+      if (member.key.type === "Identifier") {
+        keyName = member.key.name;
+      } else if (member.key.type === "Literal") {
+        keyName = String(member.key.value);
+      }
 
-    let keyName = "";
-    if (member.key.type === "Identifier") {
-      keyName = member.key.name;
-    } else if (member.key.type === "Literal") {
-      keyName = String(member.key.value);
+      let typeStr = "";
+      if (member.typeAnnotation?.typeAnnotation) {
+        typeStr = serializeType(member.typeAnnotation.typeAnnotation);
+      }
+
+      members.push(`prop:${keyName}:${typeStr}`);
+
+    } else if (member.type === "TSMethodSignature") {
+      const keyName =
+        member.key.type === "Identifier"
+          ? member.key.name
+          : member.key.type === "Literal"
+            ? String(member.key.value)
+            : "";
+      const returnType = member.returnType?.typeAnnotation
+        ? serializeType(member.returnType.typeAnnotation)
+        : "";
+      const params = (member.params ?? []).map((p) => serializeType(getParamTypeAnnotation(p))).join(",");
+      members.push(`method:${keyName}(${params}):${returnType}`);
+
+    } else if (member.type === "TSCallSignatureDeclaration") {
+      const returnType = member.returnType?.typeAnnotation
+        ? serializeType(member.returnType.typeAnnotation)
+        : "";
+      const params = member.params.map((p) => serializeType(getParamTypeAnnotation(p))).join(",");
+      members.push(`call(${params}):${returnType}`);
+
+    } else if (member.type === "TSConstructSignatureDeclaration") {
+      const returnType = member.returnType?.typeAnnotation
+        ? serializeType(member.returnType.typeAnnotation)
+        : "";
+      const params = member.params.map((p) => serializeType(getParamTypeAnnotation(p))).join(",");
+      members.push(`new(${params}):${returnType}`);
+
+    } else if (member.type === "TSIndexSignature") {
+      const indexType = member.parameters[0]
+        ? serializeType(getParamTypeAnnotation(member.parameters[0]))
+        : "";
+      const typeStr = member.typeAnnotation?.typeAnnotation
+        ? serializeType(member.typeAnnotation.typeAnnotation)
+        : "";
+      members.push(`index[${indexType}]:${typeStr}`);
     }
-
-    let typeStr = "";
-    if (member.typeAnnotation?.typeAnnotation) {
-      typeStr = serializeType(member.typeAnnotation.typeAnnotation);
-    }
-
-    members.push(`${keyName}:${typeStr}`);
   }
 
   members.sort((a, b) => a.localeCompare(b));
   return members.join(",");
 }
 
-function serializeType(node: TSESTree.TypeNode): string {
+function serializeType(node: TSESTree.TypeNode | null): string {
+  if (!node) return "any";
   switch (node.type) {
     case "TSBooleanKeyword":
       return "boolean";
