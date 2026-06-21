@@ -150,7 +150,9 @@ export default createRule({
 
         if (
           node.operator !== "===" &&
-          node.operator !== "=="
+          node.operator !== "==" &&
+          node.operator !== "!==" &&
+          node.operator !== "!="
         ) {
           return;
         }
