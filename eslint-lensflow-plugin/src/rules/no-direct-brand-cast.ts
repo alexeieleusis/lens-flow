@@ -2,7 +2,7 @@ import ts from "typescript";
 import { ESLintUtils, type TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
-const URL =
+const DOC_URL =
   "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T26-refinement-types.md";
 
 const SMART_CONSTRUCTOR_RE = /^(parse[A-Z]|tryParse|mustParse)/;
@@ -65,19 +65,17 @@ function isPlainPrimitive(
 function findEnclosingSmartConstructor(node: TSESTree.Node): boolean {
   let current: TSESTree.Node | undefined = node.parent;
   while (current) {
-    if (
-      current.type === "FunctionDeclaration" &&
-      current.id &&
-      SMART_CONSTRUCTOR_RE.test(current.id.name)
-    ) {
-      return true;
+    if (current.type === "FunctionDeclaration") {
+      if (current.id && SMART_CONSTRUCTOR_RE.test(current.id.name)) {
+        return true;
+      }
+      return false;
     }
-    if (
-      current.type === "FunctionExpression" &&
-      current.id &&
-      SMART_CONSTRUCTOR_RE.test(current.id.name)
-    ) {
-      return true;
+    if (current.type === "FunctionExpression") {
+      if (current.id && SMART_CONSTRUCTOR_RE.test(current.id.name)) {
+        return true;
+      }
+      return false;
     }
     if (current.type === "ArrowFunctionExpression") {
       const parent = current.parent;
@@ -88,6 +86,7 @@ function findEnclosingSmartConstructor(node: TSESTree.Node): boolean {
       ) {
         return true;
       }
+      return false;
     }
     current = current.parent;
   }
@@ -144,7 +143,7 @@ export default createRule({
           data: {
             sourceType: checker.typeToString(sourceType),
             brandType: checker.typeToString(castTargetType),
-            url: URL,
+            url: DOC_URL,
           },
         });
       },
