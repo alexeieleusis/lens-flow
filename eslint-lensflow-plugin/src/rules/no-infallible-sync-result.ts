@@ -2,7 +2,7 @@ import ts from "typescript";
 import { ESLintUtils, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
-const URL =
+const RULE_DOC_URL =
   "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T12-effect-tracking.md";
 
 function hasFailureInValue(val: unknown): boolean {
@@ -39,6 +39,9 @@ function hasFailurePath(n: unknown): boolean {
 }
 
 function isSyncBody(body: TSESTree.Node): boolean {
+  // Expression-bodied arrows (non-BlockStatement) are treated as sync with no
+  // failure path. Expression-body specific failure patterns (throw, await)
+  // are handled by early returns in checkFunction before this is called.
   if (body.type !== "BlockStatement") return true;
   const stmts = body.body;
   return !stmts.some((stmt) => hasFailurePath(stmt));
@@ -124,14 +127,16 @@ export default createRule({
       if (node.type === "ArrowFunctionExpression") {
         const body = node.body;
         if (body.type === "AwaitExpression") return;
+        if (body.type === "ThrowStatement") return;
       }
 
+      if (!node.body) return;
       if (!isSyncBody(node.body)) return;
 
       context.report({
         node,
         messageId: "infallibleSyncResult",
-        data: { url: URL },
+        data: { url: RULE_DOC_URL },
       });
     }
 
