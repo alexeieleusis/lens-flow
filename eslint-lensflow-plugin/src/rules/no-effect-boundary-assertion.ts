@@ -1,4 +1,5 @@
 import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
+import type ts from "typescript";
 import { createRule } from "../utils/rule-creator.js";
 
 const DOCS_URL =
@@ -23,22 +24,6 @@ const FIRST_PARAM_SUCCESS = new Set([
   "LazyIO",
   "Task",
 ]);
-
-function parseGenericType(typeStr: string): {
-  name: string;
-  params: string[];
-} | null {
-  const match = /^(\w+)<(.+)>$/.exec(typeStr);
-  if (!match) return null;
-  return {
-    name: match[1],
-    params: match[2].split(",").map((s) => s.trim()),
-  };
-}
-
-function isEffectTypeName(name: string): boolean {
-  return KNOWN_EFFECT_NAMES.has(name);
-}
 
 function isSuccessFromFirstParam(effectName: string): boolean {
   return FIRST_PARAM_SUCCESS.has(effectName);
@@ -70,35 +55,35 @@ export default createRule({
     return {
       TSAsExpression(node) {
         const innerType = parserServices.getTypeAtLocation(node.expression);
-        const innerTypeStr = checker.typeToString(innerType);
 
-        const parsed = parseGenericType(innerTypeStr);
-        if (!parsed) return;
+        // Use checker APIs instead of string parsing to handle nested generics
+        const typeArgs = checker.getTypeArguments(innerType);
+        if (!typeArgs || typeArgs.length < 2) return;
 
-        const { name, params } = parsed;
+        const symbol = innerType.getSymbol() || innerType.getAliasSymbol();
+        if (!symbol) return;
 
-        if (!isEffectTypeName(name)) return;
+        const name = symbol.name;
+        if (!KNOWN_EFFECT_NAMES.has(name)) return;
 
-        if (params.length < 2) return;
-
-        const successParam = isSuccessFromFirstParam(name) ? params[0] : params[1];
+        const successIndex = isSuccessFromFirstParam(name) ? 0 : 1;
+        const successType = typeArgs[successIndex];
 
         const typeNodeTs =
           parserServices.esTreeNodeToTSNodeMap.get(node.typeAnnotation);
         if (!typeNodeTs) return;
 
         const assertedType = checker.getTypeFromTypeNode(
-          typeNodeTs as import("typescript").TypeNode,
+          typeNodeTs as ts.TypeNode,
         );
-        const assertedTypeStr = checker.typeToString(assertedType);
 
-        if (assertedTypeStr === successParam) {
+        if (checker.isTypeAssignableTo(assertedType, successType)) {
           context.report({
             node,
             messageId: "effectBoundaryBypass",
             data: {
-              effectType: innerTypeStr,
-              assertedType: assertedTypeStr,
+              effectType: checker.typeToString(innerType),
+              assertedType: checker.typeToString(assertedType),
               url: DOCS_URL,
             },
           });
