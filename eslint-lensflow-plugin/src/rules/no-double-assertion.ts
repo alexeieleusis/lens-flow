@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       doubleAssertion:
-        "Double assertion `{{fromType}} as {{toType}}` bypasses all structural checks. Use a type guard or runtime validation instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T18-conversions-coercions.md",
+        "Double assertion `{{fromType}} as {{toType}}` bypasses all structural checks. Use a type guard or runtime validation instead.",
     },
     schema: [],
     fixable: undefined,
@@ -40,8 +40,8 @@ export default createRule({
 
         if (!fromType) return;
 
-        let toType = "?";
         const outerTypeAnn = node.typeAnnotation;
+        let toType: string;
         if (
           outerTypeAnn.type === "TSTypeReference" &&
           outerTypeAnn.typeName.type === "Identifier"
@@ -61,7 +61,11 @@ export default createRule({
             TSObjectKeyword: "object",
           };
           const label = kw[outerTypeAnn.type as keyof typeof kw];
-          if (label) toType = label;
+          if (label) {
+            toType = label;
+          } else {
+            toType = context.sourceCode.getText(outerTypeAnn);
+          }
         }
 
         context.report({
