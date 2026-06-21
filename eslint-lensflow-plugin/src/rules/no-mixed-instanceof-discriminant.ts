@@ -43,7 +43,8 @@ export default createRule({
         const propType = checker.getTypeOfSymbolAtLocation(prop, decl);
         const isLiteral =
           (propType.flags & ts.TypeFlags.StringLiteral) !== 0 ||
-          (propType.flags & ts.TypeFlags.NumberLiteral) !== 0;
+          (propType.flags & ts.TypeFlags.NumberLiteral) !== 0 ||
+          (propType.flags & ts.TypeFlags.BooleanLiteral) !== 0;
         if (isLiteral) return true;
       }
       return false;
