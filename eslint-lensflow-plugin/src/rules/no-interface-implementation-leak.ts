@@ -46,15 +46,29 @@ function analyzeInterfaceMembers(node: any) {
 }
 
 function isExposedCollection(typeAnn: any) {
-  if (typeAnn?.type === "TSTypeReference") {
+  if (!typeAnn) return false;
+
+  // Unwrap union, intersection, and parenthesized types recursively
+  if (typeAnn.type === "TSUnionType" || typeAnn.type === "TSIntersectionType") {
+    return typeAnn.types.some(isExposedCollection);
+  }
+  if (typeAnn.type === "TSParenthesizedType") {
+    return isExposedCollection(typeAnn.typeAnnotation);
+  }
+
+  // Check TSTypeReference for Array and internal collections
+  if (typeAnn.type === "TSTypeReference") {
     const name = getTypeName(typeAnn);
-    if (name && INTERNAL_COLLECTIONS.has(name)) {
+    if (name && (INTERNAL_COLLECTIONS.has(name) || name === "Array")) {
       return true;
     }
   }
-  if (typeAnn?.type === "TSArrayType") {
+
+  // Check TSArrayType (e.g., string[])
+  if (typeAnn.type === "TSArrayType") {
     return true;
   }
+
   return false;
 }
 
