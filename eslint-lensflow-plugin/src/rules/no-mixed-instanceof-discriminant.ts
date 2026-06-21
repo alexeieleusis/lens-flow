@@ -70,10 +70,8 @@ export default createRule({
 
           if (isClassType(memberTsType)) {
             hasClassMember = true;
-          } else if (member.type === "TSTypeLiteral") {
-            if (hasLiteralDiscriminant(memberTsType)) {
-              hasLiteralObjectMember = true;
-            }
+          } else if (memberTsType.isObject() && hasLiteralDiscriminant(memberTsType)) {
+            hasLiteralObjectMember = true;
           }
         }
 
