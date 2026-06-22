@@ -71,7 +71,7 @@ export default createRule({
     type: "suggestion",
     docs: {
       description:
-        "Disallow overly complex generic type parameter bounds with deep nesting, many intersection members, or constructor + property mixes",
+        "Disallow overly complex generic type parameter bounds with deep nesting, many intersection members, or construct signatures with deeply nested property types",
     },
     messages: {
       complexIntersection:
@@ -81,7 +81,7 @@ export default createRule({
       deepNesting:
         "Type parameter bound has nesting depth {{depth}} (max: {{max}}). Flatten the constraint. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md",
       complexInterfaceBound:
-        "Interface mixes constructor signatures with deeply nested property types (depth: {{depth}}, nested props: {{props}}). Split into smaller interfaces. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+        "Interface has construct signatures (`new(): T`) alongside deeply nested property types (depth: {{depth}}, nested props: {{props}}). Split into smaller interfaces. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md",
     },
     schema: [
       {
