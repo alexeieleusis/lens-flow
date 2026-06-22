@@ -8,6 +8,7 @@ ruleTester.run("no-object-freeze-without-readonly-annotation", rule, {
     `const x = Object.freeze({ a: 1 }) as Readonly<{ a: number }>;`,
     `Object.freeze({ host: "localhost", port: 8080 });`,
     `const result = someOtherFunction({ host: "localhost" });`,
+    `const wrapper = { data: Object.freeze({ a: 1 }) };`,
   ],
   invalid: [
     {

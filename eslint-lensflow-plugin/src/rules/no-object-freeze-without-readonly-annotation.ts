@@ -88,6 +88,23 @@ export default createRule({
         const declarator = findVariableDeclarator(node);
         if (!declarator) return;
 
+        const init = declarator.init;
+        if (!init) return;
+        let unwrapped = init;
+        while (
+          unwrapped.type === AST_NODE_TYPES.TSAsExpression ||
+          unwrapped.type === AST_NODE_TYPES.TSNonNullExpression ||
+          unwrapped.type === AST_NODE_TYPES.TSSatisfiesExpression
+        ) {
+          unwrapped =
+            unwrapped.type === AST_NODE_TYPES.TSAsExpression
+              ? unwrapped.expression
+              : unwrapped.type === AST_NODE_TYPES.TSNonNullExpression
+                ? unwrapped.expression
+                : unwrapped.expression;
+        }
+        if (unwrapped !== node) return;
+
         if (hasAsConst(declarator) || hasReadonlyAnnotation(declarator)) return;
 
         context.report({
