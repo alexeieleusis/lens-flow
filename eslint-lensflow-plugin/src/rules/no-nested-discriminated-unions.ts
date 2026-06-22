@@ -1,4 +1,4 @@
-import { TSESTree, TSESLint } from "@typescript-eslint/utils";
+import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
 function getPropertyName(key: TSESTree.TSPropertySignature["key"]): string {
