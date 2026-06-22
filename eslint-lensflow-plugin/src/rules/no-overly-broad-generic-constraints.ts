@@ -1,5 +1,6 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+import { containsAny } from "../utils/ts-helpers.js";
 
 export default createRule({
   name: "no-overly-broad-generic-constraints",
@@ -22,7 +23,7 @@ export default createRule({
   create(context: TSESLint.RuleContext<"anyConstraint" | "anyTypeArg", []>) {
     return {
       TSTypeParameter(node) {
-        if (node.constraint?.type === "TSAnyKeyword") {
+        if (node.constraint && containsAny(node.constraint)) {
           context.report({
             node: node.constraint,
             messageId: "anyConstraint",
@@ -32,11 +33,24 @@ export default createRule({
 
       TSTypeParameterInstantiation(node) {
         for (const param of node.params) {
-          if (param.type === "TSAnyKeyword") {
+          if (containsAny(param)) {
             context.report({
               node: param,
               messageId: "anyTypeArg",
             });
+          }
+        }
+      },
+
+      TSTypeReference(node) {
+        if (node.typeArguments) {
+          for (const param of node.typeArguments.params) {
+            if (containsAny(param)) {
+              context.report({
+                node: param,
+                messageId: "anyTypeArg",
+              });
+            }
           }
         }
       },
