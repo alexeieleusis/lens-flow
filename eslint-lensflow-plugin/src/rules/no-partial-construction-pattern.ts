@@ -43,11 +43,12 @@ export default createRule({
           emptyDefaultProps.length >= 2 &&
           partial_methods.length >= 1
         ) {
-          const parent = node.parent;
+          const ancestors = context.sourceCode.getAncestors(node);
+          const classNode = ancestors.find(
+            (a) => a.type === "ClassDeclaration" || a.type === "ClassExpression"
+          );
           const className =
-            parent?.type === "ClassDeclaration"
-              ? parent.id?.name ?? "Anonymous"
-              : "Anonymous";
+            classNode && "id" in classNode && classNode.id?.name ?? "Anonymous";
 
           context.report({
             node,
