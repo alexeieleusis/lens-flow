@@ -5,7 +5,17 @@ function returnTypeReferencesInterface(
   returnType: import("@typescript-eslint/types").TSESTree.TypeNode | null,
   interfaceName: string,
 ): boolean {
-  if (returnType?.type !== "TSTypeReference") return false;
+  if (!returnType) return false;
+
+  if (returnType.type === "TSUnionType" || returnType.type === "TSIntersectionType") {
+    return returnType.types.some((t) => returnTypeReferencesInterface(t, interfaceName));
+  }
+
+  if (returnType.type === "TSParenthesizedType") {
+    return returnTypeReferencesInterface(returnType.typeAnnotation, interfaceName);
+  }
+
+  if (returnType.type !== "TSTypeReference") return false;
   const tn = returnType.typeName;
   if (tn.type === "Identifier" && tn.name === interfaceName) return true;
   if (
@@ -20,12 +30,16 @@ function returnTypeReferencesInterface(
 function getReturnType(
   node:
     | import("@typescript-eslint/types").TSESTree.TSMethodSignature
-    | import("@typescript-eslint/types").TSESTree.TSFunctionType,
+    | import("@typescript-eslint/types").TSESTree.TSFunctionType
+    | import("@typescript-eslint/types").TSESTree.TSConstructorType,
 ): import("@typescript-eslint/types").TSESTree.TypeNode | null {
   if (node.type === "TSMethodSignature") {
     return node.returnType?.typeAnnotation ?? null;
   }
   if (node.type === "TSFunctionType") {
+    return node.returnType?.typeAnnotation ?? null;
+  }
+  if (node.type === "TSConstructorType") {
     return node.returnType?.typeAnnotation ?? null;
   }
   return null;
@@ -77,8 +91,14 @@ export default createRule({
                 getReturnType(member),
                 interfaceName,
               )) ||
-            (member.type === "TSPropertySignature" &&
+ (member.type === "TSPropertySignature" &&
               member.typeAnnotation?.typeAnnotation.type === "TSFunctionType" &&
+              returnTypeReferencesInterface(
+                getReturnType(member.typeAnnotation.typeAnnotation),
+                interfaceName,
+              )) ||
+            (member.type === "TSPropertySignature" &&
+              member.typeAnnotation?.typeAnnotation.type === "TSConstructorType" &&
               returnTypeReferencesInterface(
                 getReturnType(member.typeAnnotation.typeAnnotation),
                 interfaceName,
