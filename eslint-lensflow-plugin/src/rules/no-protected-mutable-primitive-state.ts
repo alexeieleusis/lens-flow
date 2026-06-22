@@ -33,6 +33,7 @@ export default createRule({
         for (const member of node.body) {
           if (member.type !== "PropertyDefinition") continue;
           if (member.accessibility !== "protected") continue;
+          if (member.static) continue;
           if (member.readonly) continue;
 
           if (!member.value && !member.typeAnnotation) continue;
