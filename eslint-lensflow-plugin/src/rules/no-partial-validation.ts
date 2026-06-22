@@ -121,50 +121,65 @@ export default createRule({
 
     const checker = program.getTypeChecker();
 
+    const checkTestExpression = (
+      node: TSESTree.Node,
+      test: TSESTree.Node | null | undefined,
+    ) => {
+      if (!test) return;
+
+      const checks = collectTypeChecks(test);
+      if (checks.length === 0) return;
+
+      const checkedByVar = new Map<string, Set<string>>();
+      for (const check of checks) {
+        if (!checkedByVar.has(check.varName)) {
+          checkedByVar.set(check.varName, new Set());
+        }
+        checkedByVar.get(check.varName)!.add(check.propName);
+      }
+
+      for (const [varName, checkedProps] of checkedByVar) {
+        const varNode = findIdentifierInTree(node, varName);
+        if (!varNode) continue;
+
+        const tsNode =
+          parserServices.esTreeNodeToTSNodeMap.get(varNode);
+        if (!tsNode) continue;
+
+        const varType = checker.getTypeAtLocation(tsNode as ts.Declaration);
+        const allProps = getPropNamesFromType(varType);
+
+        if (allProps.length === 0) continue;
+        if (checkedProps.size >= allProps.length) continue;
+
+        const checkedList = Array.from(checkedProps).join(", ");
+        const total = allProps.length;
+
+        context.report({
+          node,
+          messageId: "partialValidation",
+          data: {
+            varName,
+            checked: checkedList,
+            total: String(total),
+            url: URL,
+          },
+        });
+      }
+    };
+
     return {
       IfStatement(node) {
-        const test = node.test;
-        if (!test) return;
-
-        const checks = collectTypeChecks(test);
-        if (checks.length === 0) return;
-
-        const checkedByVar = new Map<string, Set<string>>();
-        for (const check of checks) {
-          if (!checkedByVar.has(check.varName)) {
-            checkedByVar.set(check.varName, new Set());
-          }
-          checkedByVar.get(check.varName)!.add(check.propName);
-        }
-
-        for (const [varName, checkedProps] of checkedByVar) {
-          const varNode = findIdentifierInTree(node, varName);
-          if (!varNode) continue;
-
-          const tsNode =
-            parserServices.esTreeNodeToTSNodeMap.get(varNode);
-          if (!tsNode) continue;
-
-          const varType = checker.getTypeAtLocation(tsNode as ts.Declaration);
-          const allProps = getPropNamesFromType(varType);
-
-          if (allProps.length === 0) continue;
-          if (checkedProps.size >= allProps.length) continue;
-
-          const checkedList = Array.from(checkedProps).join(", ");
-          const total = allProps.length;
-
-          context.report({
-            node,
-            messageId: "partialValidation",
-            data: {
-              varName,
-              checked: checkedList,
-              total: String(total),
-              url: URL,
-            },
-          });
-        }
+        checkTestExpression(node, node.test);
+      },
+      WhileStatement(node) {
+        checkTestExpression(node, node.test);
+      },
+      DoWhileStatement(node) {
+        checkTestExpression(node, node.test);
+      },
+      ForStatement(node) {
+        checkTestExpression(node, node.test);
       },
     };
   },

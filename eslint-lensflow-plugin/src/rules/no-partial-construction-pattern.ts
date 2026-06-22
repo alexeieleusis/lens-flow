@@ -97,12 +97,6 @@ function has_partial_param(
       }
     }
 
-    if (ta.type === "TSUnionType") {
-      return ta.types.some(
-        (t: TSESTree.TypeNode) => t.type === "TSUndefinedKeyword",
-      );
-    }
-
     return false;
   });
 }
