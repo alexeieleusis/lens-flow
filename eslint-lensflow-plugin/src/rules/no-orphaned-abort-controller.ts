@@ -1,35 +1,6 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
-
-type ASTNode = TSESTree.Node | TSESTree.Statement | TSESTree.Expression;
-
-function isASTNode(
-  obj: unknown,
-): obj is TSESTree.Node | TSESTree.Statement | TSESTree.Expression {
-  return (
-    typeof obj === "object" &&
-    obj !== null &&
-    "type" in obj &&
-    typeof (obj as Record<string, unknown>).type === "string"
-  );
-}
-
-function walkChildren(
-  node: ASTNode,
-  visitor: (n: ASTNode) => void,
-): void {
-  for (const key of Object.keys(node)) {
-    if (key === "parent") continue;
-    const child = (node as unknown as Record<string, unknown>)[key];
-    if (Array.isArray(child)) {
-      for (const item of child) {
-        if (isASTNode(item)) visitor(item);
-      }
-    } else if (isASTNode(child)) {
-      visitor(child);
-    }
-  }
-}
+import { walkNodes } from "../utils/ast-helpers.js";
 
 function passedToFunction(
   body: TSESTree.BlockStatement | null,
@@ -37,41 +8,19 @@ function passedToFunction(
 ): boolean {
   if (!body) return false;
 
-  let found = false;
-
-  function visit(n: ASTNode): void {
-    if (found) return;
-
-    if (
-      n.type === "CallExpression" &&
-      (n.callee.type !== "MemberExpression" ||
-        !(
-          n.callee.object.type === "Identifier" &&
-          n.callee.object.name === varName
-        ))
-    ) {
-      const hasControllerArg = n.arguments.some((arg) => {
-        if (arg.type === "Identifier" && arg.name === varName)
-          return true;
-        if (
-          arg.type === "MemberExpression" &&
-          arg.object.type === "Identifier" &&
-          arg.object.name === varName
-        )
-          return true;
-        return false;
-      });
-      if (hasControllerArg) {
-        found = true;
-        return;
-      }
-    }
-
-    walkChildren(n, visit);
-  }
-
-  visit(body);
-  return found;
+  return walkNodes(body, (node) => {
+    if (node.type !== "CallExpression") return false;
+    return node.arguments.some((arg) => {
+      if (arg.type === "Identifier" && arg.name === varName) return true;
+      if (
+        arg.type === "MemberExpression" &&
+        arg.object.type === "Identifier" &&
+        arg.object.name === varName
+      )
+        return true;
+      return false;
+    });
+  });
 }
 
 function hasAbortCall(
@@ -80,32 +29,20 @@ function hasAbortCall(
 ): boolean {
   if (!body) return false;
 
-  let found = false;
-
-  function visit(n: ASTNode): void {
-    if (found) return;
-
-    if (
-      n.type === "CallExpression" &&
-      n.callee.type === "MemberExpression" &&
-      n.callee.object.type === "Identifier" &&
-      n.callee.object.name === varName &&
-      n.callee.property.type === "Identifier" &&
-      n.callee.property.name === "abort"
-    ) {
-      found = true;
-      return;
-    }
-
-    walkChildren(n, visit);
-  }
-
-  visit(body);
-  return found;
+  return walkNodes(body, (node) => {
+    return (
+      node.type === "CallExpression" &&
+      node.callee.type === "MemberExpression" &&
+      node.callee.object.type === "Identifier" &&
+      node.callee.object.name === varName &&
+      node.callee.property.type === "Identifier" &&
+      node.callee.property.name === "abort"
+    );
+  });
 }
 
 function findEnclosingFunctionBody(
-  node: ASTNode,
+  node: TSESTree.Node,
 ): TSESTree.BlockStatement | null {
   let current: TSESTree.Node | undefined = node;
   while (current) {
