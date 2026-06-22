@@ -99,7 +99,6 @@ function walkForGuard(
 
   if (isGuardCandidate(n)) {
     recordGuardViolation(n.test, n.consequent, stateProps, violations, methodName);
-    return;
   }
 
   for (const key of Object.keys(n)) {
