@@ -16,6 +16,7 @@ function getTypeRefName(
   if (node.type !== "TSTypeReference") return null;
   const tn = node.typeName;
   if (tn.type === "Identifier") return tn.name;
+  if (tn.type === "TSQualifiedName") return tn.right.name;
   return null;
 }
 
