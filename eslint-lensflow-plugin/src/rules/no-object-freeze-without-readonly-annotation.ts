@@ -58,8 +58,18 @@ export default createRule({
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"missingReadonly", []>) {
     function findVariableDeclarator(node: TSESTree.Node): TSESTree.VariableDeclarator | null {
-      return context.sourceCode.getAncestors(node)
-        .find((a): a is TSESTree.VariableDeclarator => a.type === AST_NODE_TYPES.VariableDeclarator) ?? null;
+      const ancestors = context.sourceCode.getAncestors(node);
+      for (const ancestor of ancestors) {
+        if (
+          ancestor.type === AST_NODE_TYPES.FunctionDeclaration ||
+          ancestor.type === AST_NODE_TYPES.FunctionExpression ||
+          ancestor.type === AST_NODE_TYPES.ArrowFunctionExpression
+        ) {
+          return null;
+        }
+        if (ancestor.type === AST_NODE_TYPES.VariableDeclarator) return ancestor;
+      }
+      return null;
     }
 
     return {
