@@ -9,7 +9,6 @@ const ASYNC_FN_NAMES = new Set([
   "setTimeout",
   "setInterval",
   "setImmediate",
-  "process",
 ]);
 
 const ASYNC_MEMBER_METHODS = new Set(["then", "catch", "finally"]);
@@ -21,17 +20,37 @@ function isNarrowingTest(node: TSESTree.Node): {
   if (node.type !== "BinaryExpression") return null;
 
   const { left, right, operator } = node;
-  if (operator !== "!=" && operator !== "!==") return null;
 
-  const nullishLiteral =
-    (right.type === "Identifier" && right.name === "undefined") ||
-    (right.type === "Literal" && right.value === null);
+  // Handle != and !==: var != null, var !== undefined (literal on right)
+  if (operator === "!=" || operator === "!==") {
+    const nullishRight =
+      (right.type === "Identifier" && right.name === "undefined") ||
+      (right.type === "Literal" && right.value === null);
+    if (nullishRight && left.type === "Identifier") {
+      return { varName: left.name, varNode: left };
+    }
+    return null;
+  }
 
-  if (!nullishLiteral) return null;
+  // Handle == and ===: var == null, null == var, var === undefined, undefined === var
+  if (operator === "==" || operator === "===") {
+    const leftIsNullish =
+      (left.type === "Identifier" && left.name === "undefined") ||
+      (left.type === "Literal" && left.value === null);
+    const rightIsNullish =
+      (right.type === "Identifier" && right.name === "undefined") ||
+      (right.type === "Literal" && right.value === null);
 
-  if (left.type !== "Identifier") return null;
+    if (leftIsNullish && right.type === "Identifier") {
+      return { varName: right.name, varNode: right };
+    }
+    if (rightIsNullish && left.type === "Identifier") {
+      return { varName: left.name, varNode: left };
+    }
+    return null;
+  }
 
-  return { varName: left.name, varNode: left };
+  return null;
 }
 
 function collectIdentifiersInNode(
@@ -46,8 +65,14 @@ function collectIdentifiersInNode(
     ids.push(node.name);
   }
 
+  const isFuncBoundary =
+    node.type === "FunctionDeclaration" ||
+    node.type === "FunctionExpression" ||
+    node.type === "ArrowFunctionExpression";
+
   for (const key of Object.keys(node)) {
     if (key === "parent" || key === "loc" || key === "range") continue;
+    if (isFuncBoundary && key === "body") continue;
     const val = (node as unknown as Record<string, unknown>)[key];
     for (const child of collectChildNodes(val)) {
       ids.push(...collectIdentifiersInNode(child, visited));
@@ -127,8 +152,14 @@ function findCallbacks(
     if (cb) callbacks.push(cb);
   }
 
+  const isFuncBoundary =
+    node.type === "FunctionDeclaration" ||
+    node.type === "FunctionExpression" ||
+    node.type === "ArrowFunctionExpression";
+
   for (const key of Object.keys(node)) {
     if (key === "parent" || key === "loc" || key === "range") continue;
+    if (isFuncBoundary && key === "body") continue;
     const val = (node as unknown as Record<string, unknown>)[key];
     if (val && typeof val === "object") {
       for (const child of collectChildNodes(val)) {
@@ -159,14 +190,27 @@ function isLetDeclared(varName: string, scopeNode: TSESTree.Node): boolean {
   const body = (scopeNode as any).body;
   if (!body) return false;
 
-  const bodyStmts = body.type === "BlockStatement" ? body.body : [body];
-  for (const stmt of bodyStmts) {
-    if (stmt.type !== "VariableDeclaration" || stmt.kind !== "let") continue;
-    for (const decl of stmt.declarations) {
-      if (decl.id.type === "Identifier" && decl.id.name === varName) {
-        return true;
+  function searchNode(node: TSESTree.Node): boolean {
+    if (node.type === "VariableDeclaration" && node.kind === "let") {
+      for (const decl of node.declarations) {
+        if (decl.id.type === "Identifier" && decl.id.name === varName) {
+          return true;
+        }
       }
     }
+    for (const key of Object.keys(node)) {
+      if (key === "parent" || key === "loc" || key === "range") continue;
+      const val = (node as unknown as Record<string, unknown>)[key];
+      for (const child of collectChildNodes(val)) {
+        if (searchNode(child)) return true;
+      }
+    }
+    return false;
+  }
+
+  const bodyStmts = body.type === "BlockStatement" ? body.body : [body];
+  for (const stmt of bodyStmts) {
+    if (searchNode(stmt)) return true;
   }
   return false;
 }
@@ -232,6 +276,13 @@ function searchChildrenForIdentifier(
   n: TSESTree.Node,
   varName: string,
 ): TSESTree.Identifier | null {
+  if (
+    n.type === "FunctionDeclaration" ||
+    n.type === "FunctionExpression" ||
+    n.type === "ArrowFunctionExpression"
+  ) {
+    return null;
+  }
   for (const key of Object.keys(n)) {
     if (SKIP_KEYS.has(key)) continue;
     const val = (n as unknown as Record<string, unknown>)[key];
