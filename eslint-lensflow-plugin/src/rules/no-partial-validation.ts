@@ -139,7 +139,7 @@ export default createRule({
       }
 
       for (const [varName, checkedProps] of checkedByVar) {
-        const varNode = findIdentifierInTree(node, varName);
+        const varNode = findIdentifierInTree(test, varName);
         if (!varNode) continue;
 
         const tsNode =
