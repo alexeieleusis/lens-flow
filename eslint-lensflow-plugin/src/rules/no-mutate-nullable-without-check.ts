@@ -105,17 +105,16 @@ function checkBlockForGuard(body: unknown, node: unknown, objName: string, propN
   return true;
 }
 
-function hasNullGuardBefore(node: unknown, objName: string, propName: string): boolean {
-  let current: unknown = (node as { parent?: unknown }).parent;
-  while (current) {
-    if (!current || typeof current !== "object" || !("type" in current)) break;
+function hasNullGuardBefore(ancestors: unknown[], node: unknown, objName: string, propName: string): boolean {
+  for (let i = 0; i < ancestors.length; i++) {
+    const current = ancestors[i];
+    if (!current || typeof current !== "object" || !("type" in current)) continue;
     const cur = current as { type: string; consequent?: unknown };
     if (isBoundaryType(cur.type)) break;
     if (cur.type === "BlockStatement" || cur.type === "IfStatement") {
       const body = cur.type === "IfStatement" ? cur.consequent : current;
       if (!checkBlockForGuard(body, node, objName, propName)) break;
     }
-    current = (cur as { parent?: unknown }).parent;
   }
   return false;
 }
@@ -231,7 +230,7 @@ export default createRule({
         const rhs = node.right;
         if (!hasNonNullAssertionInRhs(rhs, objName, propName)) return;
 
-        if (!hasNullGuardBefore(node, objName, propName)) {
+        if (!hasNullGuardBefore(context.sourceCode.getAncestors(node), node, objName, propName)) {
           context.report({
             node,
             messageId: "mutateNullableWithoutCheck",
