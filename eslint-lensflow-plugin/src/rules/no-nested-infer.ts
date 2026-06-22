@@ -1,7 +1,7 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
-const URL =
+const DOCS_URL =
   "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T49-associated-types.md";
 
 function hasDeeplyNestedInfer(
@@ -54,6 +54,9 @@ function hasDeeplyNestedInfer(
           check(node.falseType, depth)
         );
 
+      case "TSParenthesizedType":
+        return check(node.typeAnnotation, depth);
+
       default:
         return false;
     }
@@ -102,7 +105,7 @@ export default createRule({
             messageId: "deeplyNestedInfer",
             data: {
               depth: String(maxDepth),
-              url: URL,
+              url: DOCS_URL,
             },
           });
         }
