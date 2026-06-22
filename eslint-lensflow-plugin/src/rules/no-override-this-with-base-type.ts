@@ -73,13 +73,15 @@ function reportOverride(
   const retAnn = member.value?.returnType?.typeAnnotation;
   if (retAnn?.type === AST_NODE_TYPES.TSThisType) return;
 
-  const returnTypeStr = getReturnTypeString(retAnn);
+  const returnTypeStr =
+    getReturnTypeString(retAnn) ??
+    context.sourceCode.getText(retAnn);
   context.report({
     node: member,
     messageId: "overrideThisWithBaseType",
     data: {
       methodName: name,
-      returnType: returnTypeStr ?? "non-`this` type",
+      returnType: returnTypeStr,
     },
   });
 }
