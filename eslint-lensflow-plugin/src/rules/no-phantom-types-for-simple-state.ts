@@ -19,6 +19,14 @@ function isPhantomPropertyName(name: string): boolean {
   return false;
 }
 
+function getKeyText(key: Record<string, unknown>): string | null {
+  if (key.type === AST_NODE_TYPES.Identifier)
+    return (key as Record<string, string>).name;
+  if (key.type === AST_NODE_TYPES.Literal && typeof key.value === "string")
+    return key.value;
+  return null;
+}
+
 function isLiteralType(node: unknown): boolean {
   if (!node || typeof node !== "object") return false;
   const n = node as unknown as Record<string, unknown>;
@@ -142,10 +150,9 @@ export default createRule({
         const m = member as unknown as Record<string, unknown>;
         if (m.type !== AST_NODE_TYPES.TSPropertySignature) return false;
         const key = m.key as Record<string, unknown>;
-        if (key.type !== AST_NODE_TYPES.Identifier) return false;
-        return isPhantomPropertyName(
-          (key as Record<string, string>).name
-        );
+        const keyText = getKeyText(key);
+        if (!keyText) return false;
+        return isPhantomPropertyName(keyText);
       });
 
       if (!allMembersPhantom) return;
