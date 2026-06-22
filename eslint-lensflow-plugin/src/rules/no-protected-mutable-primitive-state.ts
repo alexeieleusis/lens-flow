@@ -38,7 +38,7 @@ export default createRule({
           if (member.accessibility !== "protected") continue;
           if (member.readonly) continue;
 
-          if (!member.value) continue;
+          if (!member.value && !member.typeAnnotation) continue;
 
           const typeAnn = member.typeAnnotation?.typeAnnotation;
           if (
@@ -49,7 +49,11 @@ export default createRule({
               isPrimitiveUnion(typeAnn))
           ) {
             const propName =
-              member.key.type === "Identifier" ? member.key.name : "unknown";
+              member.key.type === "Identifier"
+                ? member.key.name
+                : member.key.type === "Literal"
+                  ? String(member.key.value)
+                  : "unknown";
             context.report({
               node: member,
               messageId: "protectedMutablePrimitive",
