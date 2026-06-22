@@ -1,7 +1,7 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
-const URL =
+const DOCS_URL =
   "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T01-algebraic-data-types.md";
 
 type PropEntry = {
@@ -96,7 +96,7 @@ function reportMixedDiscriminants(
       context.report({
         node: entry.sig,
         messageId: "nonLiteralDiscriminant",
-        data: { propName: entry.propName, type: entry.widenedType, url: URL },
+        data: { propName: entry.propName, type: entry.widenedType, url: DOCS_URL },
       });
     }
   }
