@@ -62,7 +62,10 @@ export default createRule({
       }
 
       const paramTsType = checker.getTypeAtLocation(tsParam as ts.Node);
-      const unionTypes = (paramTsType as ts.UnionType).types ?? [paramTsType];
+      const unionTypes =
+        paramTsType.flags === ts.TypeFlags.Union
+          ? (paramTsType as ts.UnionType).types
+          : [paramTsType];
 
       if (unionTypes.length < 2) {
         nonTypeGuardNestDepth++;
