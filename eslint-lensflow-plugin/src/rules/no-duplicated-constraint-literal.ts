@@ -169,7 +169,7 @@ export default createRule({
     },
     messages: {
       duplicatedConstraint:
-        "Duplicated inline constraint literal shared by {{count}} type declarations. Extract into a named type alias. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC04-generic-constraints.md",
+        "Duplicated inline constraint literal shared by {{count}} type declarations. Extract into a named type alias. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC04-generic-constraints.md",
     },
     schema: [
       {

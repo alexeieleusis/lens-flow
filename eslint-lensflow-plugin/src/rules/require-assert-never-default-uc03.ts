@@ -42,11 +42,11 @@ export default createRule({
     },
     messages: {
       missingAssertNever:
-        "Default branch of a discriminant switch must call assertNever instead of returning a fallback value. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC03-exhaustiveness.md",
+        "Default branch of a discriminant switch must call assertNever instead of returning a fallback value. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC03-exhaustiveness.md",
       emptyDefault:
-        "Default branch of a discriminant switch is empty and must call assertNever. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC03-exhaustiveness.md",
+        "Default branch of a discriminant switch is empty and must call assertNever. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC03-exhaustiveness.md",
       breakOnlyDefault:
-        "Default branch of a discriminant switch only has a break statement and must call assertNever. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC03-exhaustiveness.md",
+        "Default branch of a discriminant switch only has a break statement and must call assertNever. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC03-exhaustiveness.md",
     },
     schema: [],
     fixable: undefined,

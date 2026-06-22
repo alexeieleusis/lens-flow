@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       reuseGenerator:
-        "Async generator instance '{{name}}' is reused in a second for await...of loop. Generators are single-use; the second iteration yields nothing. Create a fresh instance per loop. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T64-async-iteration.md",
+        "Async generator instance '{{name}}' is reused in a second for await...of loop. Generators are single-use; the second iteration yields nothing. Create a fresh instance per loop. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T64-async-iteration.md",
     },
     schema: [],
     fixable: undefined,

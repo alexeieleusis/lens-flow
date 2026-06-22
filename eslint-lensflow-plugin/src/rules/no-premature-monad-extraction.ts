@@ -84,7 +84,7 @@ export default createRule({
     },
     messages: {
       prematureExtraction:
-        "Extracting a value from a monadic context mid-pipeline loses type safety and prevents error propagation. Use chain/map and extract only at the final step. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T54-functor-applicative-monad.md",
+        "Extracting a value from a monadic context mid-pipeline loses type safety and prevents error propagation. Use chain/map and extract only at the final step. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T54-functor-applicative-monad.md",
     },
     schema: [],
     fixable: undefined,

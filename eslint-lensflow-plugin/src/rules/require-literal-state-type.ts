@@ -18,7 +18,7 @@ export default createRule({
     },
     messages: {
       bareStringState:
-        "Property `{{name}}` is typed as bare `string`. Use a union of string literal types (e.g. `\"draft\" | \"review\" | \"approved\"`) instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC13-state-machines.md",
+        "Property `{{name}}` is typed as bare `string`. Use a union of string literal types (e.g. `\"draft\" | \"review\" | \"approved\"`) instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC13-state-machines.md",
     },
     schema: [],
     fixable: undefined,

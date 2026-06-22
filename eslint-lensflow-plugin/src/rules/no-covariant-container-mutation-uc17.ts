@@ -8,7 +8,7 @@ import {
 } from "../utils/variance-checker.js";
 
 const KNOWLEDGE_URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC17-variance.md";
+  "https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC17-variance.md";
 
 function findMatchedCovariantParam(
   params: TSESTree.Parameter[],

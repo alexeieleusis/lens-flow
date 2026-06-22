@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       mutableExport:
-        "Mutable export '{{kind}} {{name}}' creates globally reachable state. Use a class or const with private internals instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T21-encapsulation.md",
+        "Mutable export '{{kind}} {{name}}' creates globally reachable state. Use a class or const with private internals instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T21-encapsulation.md",
     },
     schema: [],
     fixable: undefined,

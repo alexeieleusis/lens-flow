@@ -107,7 +107,7 @@ export default createRule({
     },
     messages: {
       publicInternalState:
-        "The field '{{name}}' exposes internal algorithm state as public. Make it private (#{{name}}) to prevent callers from bypassing or corrupting the algorithm. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC10-encapsulation.md",
+        "The field '{{name}}' exposes internal algorithm state as public. Make it private (#{{name}}) to prevent callers from bypassing or corrupting the algorithm. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC10-encapsulation.md",
     },
     schema: [],
     fixable: undefined,

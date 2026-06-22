@@ -2,9 +2,9 @@ import { TSESTree, ESLintUtils, TSESLint } from "@typescript-eslint/utils";
 import ts from "typescript";
 import { createRule } from "../utils/rule-creator.js";
 import { walk, walkNodes } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC19-serialization.md";
+const URL = knowledgeUrl("usecases/UC19-serialization.md");
 
 interface CheckedField {
   varName: string;

@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       tooManyLiteralMembers:
-        "This union type has {{count}} literal members (max: {{max}}). Large literal unions cause combinatorial blowup in template types and slow type checks. Consider extracting to a const object and using `typeof Obj[keyof typeof Obj]` instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T52-literal-types.md",
+        "This union type has {{count}} literal members (max: {{max}}). Large literal unions cause combinatorial blowup in template types and slow type checks. Consider extracting to a const object and using `typeof Obj[keyof typeof Obj]` instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T52-literal-types.md",
     },
     schema: [
       {

@@ -78,7 +78,7 @@ export default createRule({
     },
     messages: {
       phantomTypeOveruse:
-        "Type '{{name}}<{{params}}>' uses phantom type parameter(s) constrained to literal union(s) for simple state. Use a plain literal union type instead. See: https://github.com/alexeieleusis/lens-flow/blob/main/eslint-lensflow-plugin/docs/rules/no-phantom-types-for-simple-state.md",
+        "Type '{{name}}<{{params}}>' uses phantom type parameter(s) constrained to literal union(s) for simple state. Use a plain literal union type instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC01-invalid-states.md",
     },
     schema: [],
   },

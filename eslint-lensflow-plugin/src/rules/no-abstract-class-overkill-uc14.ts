@@ -14,7 +14,7 @@ export default createRule<Options, MessageIds>({
     },
     messages: {
       abstractOverkill:
-        "Abstract class '{{name}}' has {{count}} abstract method(s), no instance fields, and no shared behavior. Use an interface instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC14-extensibility.md",
+        "Abstract class '{{name}}' has {{count}} abstract method(s), no instance fields, and no shared behavior. Use an interface instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC14-extensibility.md",
     },
     schema: [
       {

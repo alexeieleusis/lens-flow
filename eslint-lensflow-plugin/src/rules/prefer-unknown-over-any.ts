@@ -189,7 +189,7 @@ export default createRule({
     },
     messages: {
       preferUnknown:
-        "Parameter `{{name}}` is typed as `any` but is only used in narrowing expressions. Use `unknown` instead, which forces type-safe narrowing. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T47-gradual-typing.md",
+        "Parameter `{{name}}` is typed as `any` but is only used in narrowing expressions. Use `unknown` instead, which forces type-safe narrowing. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T47-gradual-typing.md",
     },
     schema: [],
     fixable: undefined,

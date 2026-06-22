@@ -39,7 +39,7 @@ export default createRule({
     },
     messages: {
       unhandledParse:
-        "Calling .parse() without try/catch can crash on invalid input. Use .safeParse() or wrap in try/catch. See: https://raw.githubusercontent.com/jpablo/vibe-types/786645c333d27418ae273aee1df3f9513b9d4919/plugin/skills/typescript/usecases/UC19-serialization.md",
+        "Calling .parse() without try/catch can crash on invalid input. Use .safeParse() or wrap in try/catch. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC19-serialization.md",
     },
     schema: [
       {

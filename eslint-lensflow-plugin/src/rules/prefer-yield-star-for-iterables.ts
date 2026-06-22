@@ -1,9 +1,9 @@
 import ts from "typescript";
 import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC21-async-concurrency.md";
+const URL = knowledgeUrl("usecases/UC21-async-concurrency.md");
 
 function isArrayOrIterable(checker: ts.TypeChecker, argType: ts.Type): boolean {
   if (checker.isArrayType(argType)) return true;

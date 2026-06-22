@@ -60,7 +60,7 @@ export default createRule({
     },
     messages: {
       magicStringSwitch:
-        "Switch on plain string parameter with namespaced case values ({{values}}). Define a template literal discriminated union type for the parameter instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T63-template-literal-types.md",
+        "Switch on plain string parameter with namespaced case values ({{values}}). Define a template literal discriminated union type for the parameter instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T63-template-literal-types.md",
     },
     schema: [],
     fixable: undefined,

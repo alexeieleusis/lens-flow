@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       doubleAssertion:
-        "Double assertion `{{fromType}} as {{toType}}` bypasses all structural checks. Use a type guard or runtime validation instead.",
+        "Double assertion `{{fromType}} as {{toType}}` bypasses all structural checks. Use a type guard or runtime validation instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T18-conversions-coercions.md",
     },
     schema: [],
     fixable: undefined,

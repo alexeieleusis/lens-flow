@@ -35,7 +35,7 @@ export default createRule({
     },
     messages: {
       redundantReadonly:
-        "`readonly` on `{{name}}` is redundant because `{{type}}` is a primitive and already immutable by value. Remove the `readonly` modifier. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T32-immutability-markers.md",
+        "`readonly` on `{{name}}` is redundant because `{{type}}` is a primitive and already immutable by value. Remove the `readonly` modifier. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T32-immutability-markers.md",
     },
     schema: [],
     fixable: "code",

@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       shallowReadonlyArray:
-        "The property `{{name}}` uses `readonly` on an array type `{{type}}`, which only prevents reassignment but not element mutation. Use `readonly {{type}}` for deep immutability. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T32-immutability-markers.md",
+        "The property `{{name}}` uses `readonly` on an array type `{{type}}`, which only prevents reassignment but not element mutation. Use `readonly {{type}}` for deep immutability. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T32-immutability-markers.md",
     },
     schema: [],
     fixable: undefined,

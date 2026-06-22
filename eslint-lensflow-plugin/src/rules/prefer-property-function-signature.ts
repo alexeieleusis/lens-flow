@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       preferPropertyFunction:
-        "Interface method '{{name}}' uses method signature syntax which is bivariant under --strictFunctionTypes. Use property function syntax (`{{name}}: (...) => ...`) instead to enforce contravariant parameter checking. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T36-trait-objects.md",
+        "Interface method '{{name}}' uses method signature syntax which is bivariant under --strictFunctionTypes. Use property function syntax (`{{name}}: (...) => ...`) instead to enforce contravariant parameter checking. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T36-trait-objects.md",
     },
     schema: [],
     fixable: undefined,

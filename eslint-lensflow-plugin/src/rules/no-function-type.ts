@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       noFunctionType:
-        "Do not use the `Function` type. It accepts any callable and loses parameter and return type information. Use an explicit function type like `(args) => returnType` instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T45-paramspec-variadic.md",
+        "Do not use the `Function` type. It accepts any callable and loses parameter and return type information. Use an explicit function type like `(args) => returnType` instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T45-paramspec-variadic.md",
     },
     schema: [],
     fixable: undefined,

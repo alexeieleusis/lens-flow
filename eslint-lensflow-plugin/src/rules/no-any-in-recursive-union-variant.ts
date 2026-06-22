@@ -1,8 +1,9 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { getChildren } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const DOCS_URL = "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T61-recursive-types.md";
+const URL = knowledgeUrl("catalog/T61-recursive-types.md");
 
 function collectTypeRefNames(node: TSESTree.Node, refs: Set<string>): void {
   if (node.type === "TSTypeReference") {

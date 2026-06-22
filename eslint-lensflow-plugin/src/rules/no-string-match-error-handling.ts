@@ -90,7 +90,7 @@ export default createRule({
     },
     messages: {
       stringMatchOnError:
-        "Do not match error types by string searching on error.message or error.name. Use typed discriminated unions with exhaustive switch instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC08-error-handling.md",
+        "Do not match error types by string searching on error.message or error.name. Use typed discriminated unions with exhaustive switch instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC08-error-handling.md",
     },
     schema: [],
     fixable: undefined,

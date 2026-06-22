@@ -91,7 +91,7 @@ export default createRule({
     },
     messages: {
       parallelCaseEnum:
-        "Enum '{{derived}}' duplicates members of '{{source}}' with transformed casing. Use template literal intrinsic types (e.g., Uppercase<T>) instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T63-template-literal-types.md",
+        "Enum '{{derived}}' duplicates members of '{{source}}' with transformed casing. Use template literal intrinsic types (e.g., Uppercase<T>) instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T63-template-literal-types.md",
     },
     schema: [],
     fixable: undefined,

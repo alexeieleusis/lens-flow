@@ -65,7 +65,7 @@ export default createRule({
     },
     messages: {
       throwInResultFunction:
-        "Function returns a Result/Either type but uses `throw` instead of propagating the error through the Result channel. Return an error variant instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC08-error-handling.md",
+        "Function returns a Result/Either type but uses `throw` instead of propagating the error through the Result channel. Return an error variant instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC08-error-handling.md",
     },
     schema: [],
     fixable: undefined,

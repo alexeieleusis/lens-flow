@@ -67,9 +67,9 @@ export default createRule({
     },
     messages: {
       magicComparison:
-        "Variable '{{variable}}' compared against multiple magic string literals ({{values}}). Use a literal union type for compile-time exhaustiveness. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC02-domain-modeling.md",
+        "Variable '{{variable}}' compared against multiple magic string literals ({{values}}). Use a literal union type for compile-time exhaustiveness. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC02-domain-modeling.md",
       magicSwitch:
-        "Switch on '{{variable}}' with multiple magic string cases. Use a literal union type for compile-time exhaustiveness. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC02-domain-modeling.md",
+        "Switch on '{{variable}}' with multiple magic string cases. Use a literal union type for compile-time exhaustiveness. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC02-domain-modeling.md",
     },
     schema: [],
   },

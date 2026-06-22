@@ -29,7 +29,7 @@ export default createRule({
     },
     messages: {
       leaksPrivateField:
-        "Getter \"{{getterName}}\" returns a #private field directly, leaking mutable internal state. Return a copy or an immutable view instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC10-encapsulation.md",
+        "Getter \"{{getterName}}\" returns a #private field directly, leaking mutable internal state. Return a copy or an immutable view instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC10-encapsulation.md",
     },
     schema: [],
   },

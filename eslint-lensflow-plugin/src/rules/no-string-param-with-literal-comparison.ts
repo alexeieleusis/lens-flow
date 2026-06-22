@@ -76,7 +76,7 @@ export default createRule({
     },
     messages: {
       stringParamWithLiteralComparison:
-        "Parameter '{{name}}' is typed as `string` but compared against literals [{{literals}}]. Consider using a literal union type instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T52-literal-types.md",
+        "Parameter '{{name}}' is typed as `string` but compared against literals [{{literals}}]. Consider using a literal union type instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T52-literal-types.md",
     },
     schema: [],
     fixable: undefined,

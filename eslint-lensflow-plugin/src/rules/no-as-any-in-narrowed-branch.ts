@@ -1,8 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T34-never-bottom.md";
+const URL = knowledgeUrl("catalog/T34-never-bottom.md");
 
 interface TSESTreeWithParent {
   type: string;

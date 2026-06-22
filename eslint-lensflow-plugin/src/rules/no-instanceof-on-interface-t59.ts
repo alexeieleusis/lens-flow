@@ -1,9 +1,9 @@
 import ts from "typescript";
 import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T59-existential-types.md";
+const URL = knowledgeUrl("catalog/T59-existential-types.md");
 
 function isInterfaceType(tsType: ts.Type): boolean {
   const symbol = tsType.getSymbol() || tsType.aliasSymbol;

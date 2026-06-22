@@ -72,7 +72,7 @@ export default createRule({
     },
     messages: {
       preferPrimitive:
-        "Method accepts object `{{param}}` but only extracts `{{property}}`. Prefer `{{property}}: {{type}}` as a primitive parameter instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC10-encapsulation.md",
+        "Method accepts object `{{param}}` but only extracts `{{property}}`. Prefer `{{property}}: {{type}}` as a primitive parameter instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC10-encapsulation.md",
     },
     schema: [],
     fixable: undefined,

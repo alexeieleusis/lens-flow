@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       keyofAny:
-        "`keyof any` resolves to `string | number | symbol`, defeating key-based constraints. Use `keyof T` to constrain to the type's keys instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+        "`keyof any` resolves to `string | number | symbol`, defeating key-based constraints. Use `keyof T` to constrain to the type's keys instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md",
     },
     schema: [],
     fixable: undefined,

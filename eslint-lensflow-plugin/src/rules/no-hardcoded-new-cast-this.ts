@@ -48,7 +48,7 @@ export default createRule({
     },
     messages: {
       hardcodedNewCastThis:
-        "Do not use `new {{className}}() as this` — it hardcodes the concrete class and breaks polymorphism. Use `Object.create(Object.getPrototypeOf(this))` instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T33-self-type.md",
+        "Do not use `new {{className}}() as this` — it hardcodes the concrete class and breaks polymorphism. Use `Object.create(Object.getPrototypeOf(this))` instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T33-self-type.md",
     },
     schema: [],
     fixable: undefined,

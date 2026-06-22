@@ -42,7 +42,7 @@ export default createRule({
     },
     messages: {
       plainStringId:
-        "Parameter \"{{paramName}}\" is a bare `string` ID. Found {{count}} functions in this module with bare-string ID parameters — use branded types to prevent ID confusion. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC10-encapsulation.md",
+        "Parameter \"{{paramName}}\" is a bare `string` ID. Found {{count}} functions in this module with bare-string ID parameters — use branded types to prevent ID confusion. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC10-encapsulation.md",
     },
     schema: [],
     fixable: undefined,

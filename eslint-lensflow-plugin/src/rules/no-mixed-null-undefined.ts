@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       mixedNullUndefined:
-        "Union type mixes both null and undefined. Pick one based on intent: null for explicit absence, undefined for not-yet-provided. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T13-null-safety.md",
+        "Union type mixes both null and undefined. Pick one based on intent: null for explicit absence, undefined for not-yet-provided. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T13-null-safety.md",
     },
     schema: [],
     fixable: undefined,

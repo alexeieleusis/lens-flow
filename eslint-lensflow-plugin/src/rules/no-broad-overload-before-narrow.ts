@@ -3,9 +3,9 @@ import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import type { FnLikeNode } from "../utils/overload-grouping.js";
 import { createOverloadGroupVisitor } from "../utils/overload-grouping.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const DOC_URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T22-callable-typing.md";
+const URL = knowledgeUrl("catalog/T22-callable-typing.md");
 
 function isNarrowerType(
   checker: ts.TypeChecker,

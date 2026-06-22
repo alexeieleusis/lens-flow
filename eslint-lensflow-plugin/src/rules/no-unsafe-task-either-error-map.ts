@@ -2,13 +2,13 @@ import ts from "typescript";
 import { ESLintUtils, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { walk } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 interface ESTreeToTSNodeMap {
   get<K extends TSESTree.Node>(key: K): ts.Node | undefined;
 }
 
-const URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC21-async-concurrency.md";
+const URL = knowledgeUrl("usecases/UC21-async-concurrency.md");
 
 function isTryCatchCall(
   node: TSESTree.CallExpression,

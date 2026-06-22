@@ -160,7 +160,7 @@ export default createRule({
       description: "Disallow `any` or `unknown` inside self-referential recursive types, which defeats type-safe recursion.",
     },
     messages: {
-      anyInRecursive: "Found `{{keyword}}` inside a self-referential recursive type. Replace with a concrete type to preserve type safety. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T61-recursive-types.md",
+      anyInRecursive: "Found `{{keyword}}` inside a self-referential recursive type. Replace with a concrete type to preserve type safety. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T61-recursive-types.md",
     },
     fixable: undefined,
     schema: [],

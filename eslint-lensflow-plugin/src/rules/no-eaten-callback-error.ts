@@ -85,9 +85,9 @@ export default createRule({
     },
     messages: {
       emptyCatch:
-        "The .catch() handler has an empty body and silently swallows errors. Handle the error or rethrow it. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T12-effect-tracking.md",
+        "The .catch() handler has an empty body and silently swallows errors. Handle the error or rethrow it. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T12-effect-tracking.md",
       ignoredParam:
-        "The .catch() handler does not use the error parameter '{{param}}'. Handle the error or rethrow it. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T12-effect-tracking.md",
+        "The .catch() handler does not use the error parameter '{{param}}'. Handle the error or rethrow it. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T12-effect-tracking.md",
     },
     schema: [],
     fixable: undefined,

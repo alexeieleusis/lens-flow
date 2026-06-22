@@ -64,7 +64,7 @@ export default createRule({
     },
     messages: {
       redundantConditional:
-        "This conditional type is a redundant identity distribution. Use a simple type alias instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T49-associated-types.md",
+        "This conditional type is a redundant identity distribution. Use a simple type alias instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T49-associated-types.md",
     },
     schema: [],
     fixable: undefined,

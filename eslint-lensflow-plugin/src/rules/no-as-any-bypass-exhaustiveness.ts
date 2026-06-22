@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       bypassExhaustiveness:
-        "Using `as any` in a switch default branch defeats exhaustiveness checking. Use an assertNever call instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/main/plugin/skills/typescript/catalog/T34-never-bottom.md",
+        "Using `as any` in a switch default branch defeats exhaustiveness checking. Use an assertNever call instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T34-never-bottom.md",
     },
     schema: [],
     fixable: undefined,

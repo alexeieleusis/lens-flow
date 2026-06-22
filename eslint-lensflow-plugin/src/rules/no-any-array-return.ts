@@ -36,7 +36,7 @@ export default createRule({
     },
     messages: {
       anyArrayReturn:
-        "Function returns any[] which discards all information about the output element type. Use a generic type parameter for the return array element type instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T45-paramspec-variadic.md",
+        "Function returns any[] which discards all information about the output element type. Use a generic type parameter for the return array element type instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T45-paramspec-variadic.md",
     },
     schema: [],
     fixable: undefined,

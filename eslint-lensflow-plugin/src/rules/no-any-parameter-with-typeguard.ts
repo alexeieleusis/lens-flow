@@ -98,7 +98,7 @@ export default createRule({
     },
     messages: {
       anyParamWithTypeguard:
-        "Parameter `{{name}}` is typed as `any` but narrowed with {{checkKind}} inside the function body. Use an explicit union type instead of `any`. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T02-union-intersection.md",
+        "Parameter `{{name}}` is typed as `any` but narrowed with {{checkKind}} inside the function body. Use an explicit union type instead of `any`. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T02-union-intersection.md",
     },
     schema: [],
     fixable: undefined,

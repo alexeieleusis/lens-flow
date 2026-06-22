@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       staticOnlyUtility:
-        "Class {{name}} has a private constructor, no instance fields, and only static methods. Replace with plain utility functions in a module namespace. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC10-encapsulation.md",
+        "Class {{name}} has a private constructor, no instance fields, and only static methods. Replace with plain utility functions in a module namespace. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC10-encapsulation.md",
     },
     schema: [],
     fixable: undefined,

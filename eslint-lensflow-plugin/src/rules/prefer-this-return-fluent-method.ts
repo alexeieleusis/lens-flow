@@ -23,7 +23,7 @@ export default createRule({
     },
     messages: {
       preferThis:
-        "Method returns the class's own type ({{className}}) but returns `this` at runtime. Use `this` as the return type to preserve chainability in subclasses. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T33-self-type.md",
+        "Method returns the class's own type ({{className}}) but returns `this` at runtime. Use `this` as the return type to preserve chainability in subclasses. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T33-self-type.md",
     },
     schema: [],
     fixable: undefined,

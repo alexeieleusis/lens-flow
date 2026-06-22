@@ -45,7 +45,7 @@ export default createRule({
     },
     messages: {
       implicitAnyAsyncChain:
-        "Variable derived from `.json()` lacks an explicit type annotation, resulting in implicit `any`. Add a type annotation for null safety. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T13-null-safety.md",
+        "Variable derived from `.json()` lacks an explicit type annotation, resulting in implicit `any`. Add a type annotation for null safety. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T13-null-safety.md",
     },
     schema: [],
   },

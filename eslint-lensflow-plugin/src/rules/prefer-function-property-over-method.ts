@@ -109,7 +109,7 @@ export default createRule({
     },
     messages: {
       preferFunctionProperty:
-        "Method '{{name}}' references generic type parameter(s) in a generic interface. Use a function property type instead to enforce contravariant checking. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T22-callable-typing.md",
+        "Method '{{name}}' references generic type parameter(s) in a generic interface. Use a function property type instead to enforce contravariant checking. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T22-callable-typing.md",
     },
     schema: [],
     fixable: undefined,

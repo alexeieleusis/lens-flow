@@ -93,9 +93,9 @@ export default createRule({
     },
     messages: {
       suggestOut:
-        "Type parameter '{{name}}' is only used in covariant (output) positions. Add `out` variance annotation. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T49-associated-types.md",
+        "Type parameter '{{name}}' is only used in covariant (output) positions. Add `out` variance annotation. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T49-associated-types.md",
       suggestIn:
-        "Type parameter '{{name}}' is only used in contravariant (input) positions. Add `in` variance annotation. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T49-associated-types.md",
+        "Type parameter '{{name}}' is only used in contravariant (input) positions. Add `in` variance annotation. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T49-associated-types.md",
     },
     schema: [],
   },

@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       tooManyMembers:
-        "Interface '{{name}}' has {{count}} members (max {{max}}). Every implementor must provide all of them. Split into smaller focused interfaces or use intersection types. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T59-existential-types.md",
+        "Interface '{{name}}' has {{count}} members (max {{max}}). Every implementor must provide all of them. Split into smaller focused interfaces or use intersection types. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T59-existential-types.md",
     },
     schema: [
       {

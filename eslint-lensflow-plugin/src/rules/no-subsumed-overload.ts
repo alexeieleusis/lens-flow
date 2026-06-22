@@ -2,9 +2,9 @@ import { type TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import type { FnLikeNode } from "../utils/overload-grouping.js";
 import { createOverloadGroupVisitor } from "../utils/overload-grouping.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T22-callable-typing.md";
+const URL = knowledgeUrl("catalog/T22-callable-typing.md");
 
 function getTypeParamNames(node: FnLikeNode): string[] {
   return (node.typeParameters?.params ?? []).map((tp) => tp.name.name);

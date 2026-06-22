@@ -317,7 +317,7 @@ export default createRule({
     },
     messages: {
       unguardedAccess:
-        "The variable `{{name}}` may be `undefined` from optional chaining. Handle it with `??` or a guard before accessing `{{member}}`. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC16-nullability.md",
+        "The variable `{{name}}` may be `undefined` from optional chaining. Handle it with `??` or a guard before accessing `{{member}}`. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC16-nullability.md",
     },
     schema: [],
     fixable: undefined,

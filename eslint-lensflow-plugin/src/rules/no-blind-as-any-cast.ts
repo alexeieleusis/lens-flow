@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       blindAsAnyCast:
-        "Returning a bare `as any` cast without runtime validation makes the type assertion an unchecked lie. Add a guard check before the cast, or use `as unknown as TargetType` instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC13-state-machines.md",
+        "Returning a bare `as any` cast without runtime validation makes the type assertion an unchecked lie. Add a guard check before the cast, or use `as unknown as TargetType` instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC13-state-machines.md",
     },
     schema: [],
     fixable: undefined,

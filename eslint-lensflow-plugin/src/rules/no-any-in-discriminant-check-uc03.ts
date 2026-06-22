@@ -331,9 +331,9 @@ export default createRule({
     },
     messages: {
       ifDiscriminant:
-        "Using `as any` inside a conditional that checks `{{discriminant}}` on `{{base}}`. Use a discriminated union with proper narrowing instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC03-exhaustiveness.md",
+        "Using `as any` inside a conditional that checks `{{discriminant}}` on `{{base}}`. Use a discriminated union with proper narrowing instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC03-exhaustiveness.md",
       switchDiscriminant:
-        "Using `as any` inside a `switch` on `{{base}}.{{discriminant}}`. Use a discriminated union with proper narrowing instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC03-exhaustiveness.md",
+        "Using `as any` inside a `switch` on `{{base}}.{{discriminant}}`. Use a discriminated union with proper narrowing instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC03-exhaustiveness.md",
     },
     schema: [],
     fixable: undefined,

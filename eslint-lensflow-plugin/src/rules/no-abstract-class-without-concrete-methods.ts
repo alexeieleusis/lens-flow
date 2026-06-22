@@ -12,7 +12,7 @@ export default createRule({
     },
     messages: {
       noConcreteMethods:
-        "Abstract class '{{name}}' has no concrete methods — use an interface instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T05-type-classes.md",
+        "Abstract class '{{name}}' has no concrete methods — use an interface instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T05-type-classes.md",
     },
     schema: [],
     fixable: undefined,

@@ -2,14 +2,14 @@ import ts from "typescript";
 import { TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { createFunctionBodyVisitor } from "../utils/visitor-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import {
   getComparisonInfo,
   findIfChainStarts,
   ComparisonInfo,
 } from "../utils/ast-helpers.js";
 
-const URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC03-exhaustiveness.md";
+const URL = knowledgeUrl("usecases/UC03-exhaustiveness.md");
 
 function reportIfMissing(
   varName: string,

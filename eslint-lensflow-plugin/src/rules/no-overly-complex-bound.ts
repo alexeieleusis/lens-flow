@@ -75,13 +75,13 @@ export default createRule({
     },
     messages: {
       complexIntersection:
-        "Type parameter bound has {{count}} intersection members (max: {{max}}). Split into smaller interfaces. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+        "Type parameter bound has {{count}} intersection members (max: {{max}}). Split into smaller interfaces. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md",
       complexTypeLiteral:
-        "Type literal in bound has {{count}} properties (max: {{max}}). Extract into a separate interface. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+        "Type literal in bound has {{count}} properties (max: {{max}}). Extract into a separate interface. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md",
       deepNesting:
-        "Type parameter bound has nesting depth {{depth}} (max: {{max}}). Flatten the constraint. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+        "Type parameter bound has nesting depth {{depth}} (max: {{max}}). Flatten the constraint. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md",
       complexInterfaceBound:
-        "Interface mixes constructor signatures with deeply nested property types (depth: {{depth}}, nested props: {{props}}). Split into smaller interfaces. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+        "Interface mixes constructor signatures with deeply nested property types (depth: {{depth}}, nested props: {{props}}). Split into smaller interfaces. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md",
     },
     schema: [
       {

@@ -84,7 +84,7 @@ export default createRule({
     },
     messages: {
       silentDefault:
-        "The default branch silently ignores unhandled variants. Add a case for every variant or call assertNever() in the default. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T01-algebraic-data-types.md",
+        "The default branch silently ignores unhandled variants. Add a case for every variant or call assertNever() in the default. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T01-algebraic-data-types.md",
     },
     schema: [],
     fixable: undefined,

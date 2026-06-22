@@ -111,9 +111,9 @@ export default createRule({
     },
     messages: {
       internalName:
-        "Interface exposes implementation-detail property name(s): {{names}}. Use abstract method names instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T21-encapsulation.md",
+        "Interface exposes implementation-detail property name(s): {{names}}. Use abstract method names instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T21-encapsulation.md",
       exposedCollection:
-        "Interface exposes internal collection type(s) on property/properties: {{names}}. Expose abstract accessors instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T21-encapsulation.md",
+        "Interface exposes internal collection type(s) on property/properties: {{names}}. Expose abstract accessors instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T21-encapsulation.md",
     },
     schema: [],
   },

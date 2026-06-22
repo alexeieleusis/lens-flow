@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       selfBoundedGeneric:
-        "Class uses self-bounded generic `T extends {{className}}<T>` which requires unsafe `as T` casts. Use polymorphic `this` return type instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T33-self-type.md",
+        "Class uses self-bounded generic `T extends {{className}}<T>` which requires unsafe `as T` casts. Use polymorphic `this` return type instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T33-self-type.md",
     },
     schema: [],
     fixable: undefined,

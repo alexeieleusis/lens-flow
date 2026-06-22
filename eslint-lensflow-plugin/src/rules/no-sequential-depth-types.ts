@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       sequentialDepthType:
-        "Type {{name}} is part of a sequential depth chain ({{chain}}) that should be a single recursive type. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T61-recursive-types.md",
+        "Type {{name}} is part of a sequential depth chain ({{chain}}) that should be a single recursive type. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T61-recursive-types.md",
     },
     schema: [],
     fixable: undefined,

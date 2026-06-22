@@ -29,9 +29,9 @@ export default createRule({
     },
     messages: {
       jsdocConstraint:
-        "Do not document value constraints in JSDoc comments. Encode the constraint as a literal type union or discriminated union instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC01-invalid-states.md",
+        "Do not document value constraints in JSDoc comments. Encode the constraint as a literal type union or discriminated union instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC01-invalid-states.md",
       jsdocConditionalField:
-        "Do not document conditional field requirements in comments. Use a discriminated union with literal types instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC01-invalid-states.md",
+        "Do not document conditional field requirements in comments. Use a discriminated union with literal types instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC01-invalid-states.md",
     },
     schema: [],
     fixable: undefined,

@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       anyArrayChildren:
-        "Property \"{{propName}}\" uses `any[]` for a nested structure. Use a self-referential type (e.g. `{{parentName}}[]`) for structural type safety. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T61-recursive-types.md",
+        "Property \"{{propName}}\" uses `any[]` for a nested structure. Use a self-referential type (e.g. `{{parentName}}[]`) for structural type safety. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T61-recursive-types.md",
     },
     schema: [],
     fixable: undefined,

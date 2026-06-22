@@ -365,9 +365,9 @@ export default createRule({
     },
     messages: {
       outUsedAsInput:
-        "Type parameter '{{paramName}}' is marked 'out' but is used as an input parameter. Consider using 'in out' or removing 'out'. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T08-variance-subtyping.md",
+        "Type parameter '{{paramName}}' is marked 'out' but is used as an input parameter. Consider using 'in out' or removing 'out'. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T08-variance-subtyping.md",
       inUsedAsOutput:
-        "Type parameter '{{paramName}}' is marked 'in' but is used as a return type. Consider using 'in out' or removing 'in'. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T08-variance-subtyping.md",
+        "Type parameter '{{paramName}}' is marked 'in' but is used as a return type. Consider using 'in out' or removing 'in'. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T08-variance-subtyping.md",
     },
     schema: [],
   },

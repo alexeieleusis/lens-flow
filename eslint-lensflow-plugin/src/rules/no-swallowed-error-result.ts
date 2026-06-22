@@ -51,9 +51,9 @@ export default createRule({
     },
     messages: {
       emptyElse:
-        "Error branch is empty — the error is silently ignored. Handle the error or rethrow it. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC08-error-handling.md",
+        "Error branch is empty — the error is silently ignored. Handle the error or rethrow it. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC08-error-handling.md",
       trivialLog:
-        "Error branch only logs a bare string — the actual error value is lost. Inspect and handle the error properly. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC08-error-handling.md",
+        "Error branch only logs a bare string — the actual error value is lost. Inspect and handle the error properly. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC08-error-handling.md",
     },
     schema: [],
   },

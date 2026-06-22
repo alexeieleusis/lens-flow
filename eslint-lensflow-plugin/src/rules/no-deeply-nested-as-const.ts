@@ -57,7 +57,7 @@ export default createRule({
     },
     messages: {
       deeplyNested:
-        "`as const` on an object/array with nesting depth {{depth}} locks everything recursively including transient data. Split into separate const declarations for static config parts. See: https://raw.githubusercontent.com/jpablo/vibe-types/main/plugin/skills/typescript/catalog/T32-immutability-markers.md",
+        "`as const` on an object/array with nesting depth {{depth}} locks everything recursively including transient data. Split into separate const declarations for static config parts. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T32-immutability-markers.md",
     },
     schema: [
       {

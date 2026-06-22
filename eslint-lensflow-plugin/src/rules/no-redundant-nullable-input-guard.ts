@@ -2,7 +2,7 @@ import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
 const KNOWLEDGE_URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T26-refinement-types.md";
+  "https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T26-refinement-types.md";
 
 const PRIMITIVE_KEYWORDS = new Set([
   "TSStringKeyword",

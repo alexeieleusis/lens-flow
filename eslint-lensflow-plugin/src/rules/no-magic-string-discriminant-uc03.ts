@@ -35,7 +35,7 @@ export default createRule({
     },
     messages: {
       magicStringDiscriminant:
-        "Parameter \"{{param}}\" is compared against {{count}} distinct string literals (\"{{literals}}\"). Use a literal union type instead of plain string for compile-time exhaustiveness. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC03-exhaustiveness.md",
+        "Parameter \"{{param}}\" is compared against {{count}} distinct string literals (\"{{literals}}\"). Use a literal union type instead of plain string for compile-time exhaustiveness. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC03-exhaustiveness.md",
     },
     schema: [],
     fixable: undefined,

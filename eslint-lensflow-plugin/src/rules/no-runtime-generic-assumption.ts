@@ -102,11 +102,11 @@ export default createRule({
     },
     messages: {
       runtimeMetadataAccess:
-        "Accessing {{property}} on generic parameter {{paramName}} which has no runtime type information. Use instanceof or type guards instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+        "Accessing {{property}} on generic parameter {{paramName}} which has no runtime type information. Use instanceof or type guards instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md",
       unsafeCastOnGeneric:
-        "Casting generic parameter {{paramName}} to a specific type {{castType}} assumes runtime type information that does not exist. Use type guards instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+        "Casting generic parameter {{paramName}} to a specific type {{castType}} assumes runtime type information that does not exist. Use type guards instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md",
       runtimeMetadataOnCall:
-        "Accessing {{property}} on the result of generic function {{funcName}}. Generic type T is erased at runtime. Use instanceof or type guards instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+        "Accessing {{property}} on the result of generic function {{funcName}}. Generic type T is erased at runtime. Use instanceof or type guards instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md",
     },
     schema: [],
     fixable: undefined,

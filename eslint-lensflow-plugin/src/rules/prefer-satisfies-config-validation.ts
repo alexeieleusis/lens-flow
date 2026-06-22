@@ -169,7 +169,7 @@ export default createRule({
     },
     messages: {
       preferSatisfies:
-        "Found {{count}} runtime property checks on `any`-typed parameter '{{paramName}}'. Use the `satisfies` operator for compile-time shape validation instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC09-builder-config.md",
+        "Found {{count}} runtime property checks on `any`-typed parameter '{{paramName}}'. Use the `satisfies` operator for compile-time shape validation instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC09-builder-config.md",
     },
     schema: [],
     fixable: undefined,

@@ -12,7 +12,7 @@ export default createRule({
     },
     messages: {
       tooManyOptionalFields:
-        "Found {{count}} optional field(s) ({{fields}}) out of {{total}} total. Using optional fields to represent partial initialization creates invalid states the type system cannot prevent. Consider using a discriminated union instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC01-invalid-states.md",
+        "Found {{count}} optional field(s) ({{fields}}). Using optional fields to represent partial initialization creates invalid states the type system cannot prevent. Consider using a discriminated union instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC01-invalid-states.md",
     },
     schema: [
       {

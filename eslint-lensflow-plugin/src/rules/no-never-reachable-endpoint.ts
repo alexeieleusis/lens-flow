@@ -82,7 +82,7 @@ export default createRule({
     },
     messages: {
       reachableEnd:
-        "A function returning 'never' must not have a reachable endpoint. Every code path must throw, loop infinitely, or call another never-returning function. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T34-never-bottom.md",
+        "A function returning 'never' must not have a reachable endpoint. Every code path must throw, loop infinitely, or call another never-returning function. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T34-never-bottom.md",
     },
     schema: [],
     fixable: undefined,

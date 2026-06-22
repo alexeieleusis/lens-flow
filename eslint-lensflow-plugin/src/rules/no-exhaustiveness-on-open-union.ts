@@ -2,9 +2,9 @@ import ts from "typescript";
 import { ESLintUtils, type TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const DOCS_URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T14-type-narrowing.md";
+const URL = knowledgeUrl("catalog/T14-type-narrowing.md");
 
 function hasNeverCast(stmt: TSESTree.Statement): boolean {
   return walkNodes(

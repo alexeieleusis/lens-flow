@@ -12,7 +12,7 @@ export default createRule({
     },
     messages: {
       tooManyBooleanFlags:
-        "Found {{count}} boolean state flags ({{flags}}) in {{kind}}. Model mutually exclusive states with a discriminated union instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC13-state-machines.md",
+        "Found {{count}} boolean state flags ({{flags}}) in {{kind}}. Model mutually exclusive states with a discriminated union instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC13-state-machines.md",
     },
     schema: [
       {

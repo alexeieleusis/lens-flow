@@ -63,11 +63,11 @@ export default createRule({
     },
     messages: {
       anyInVarAnnotation:
-        "Using `any` as variable type annotation disables type safety. Use `unknown` for external data boundaries. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T18-conversions-coercions.md",
+        "Using `any` as variable type annotation disables type safety. Use `unknown` for external data boundaries. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T18-conversions-coercions.md",
       anyInAsExpression:
-        "Casting to `any` disables type safety. Use `unknown` for external data boundaries. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T18-conversions-coercions.md",
+        "Casting to `any` disables type safety. Use `unknown` for external data boundaries. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T18-conversions-coercions.md",
       anyInFunctionType:
-        "Using `any` in function parameter or return type disables type safety. Use `unknown` for external data boundaries. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T18-conversions-coercions.md",
+        "Using `any` in function parameter or return type disables type safety. Use `unknown` for external data boundaries. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T18-conversions-coercions.md",
     },
     schema: [],
     fixable: undefined,

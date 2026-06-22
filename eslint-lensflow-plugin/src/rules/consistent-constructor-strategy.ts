@@ -1,8 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T26-refinement-types.md";
+const URL = knowledgeUrl("catalog/T26-refinement-types.md");
 
 function isBrandedIntersection(typeNode: TSESTree.TypeNode): boolean {
   if (typeNode.type !== "TSIntersectionType") return false;

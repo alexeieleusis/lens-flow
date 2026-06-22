@@ -15,9 +15,9 @@ export default createRule({
     },
     messages: {
       anyParam:
-        "Parameter '{{name}}' is typed as `any`. Use a generic or explicit type to preserve type information. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T22-callable-typing.md",
+        "Parameter '{{name}}' is typed as `any`. Use a generic or explicit type to preserve type information. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T22-callable-typing.md",
       anyReturn:
-        "Return type is `any`. Use a generic or explicit return type to preserve type information. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T22-callable-typing.md",
+        "Return type is `any`. Use a generic or explicit return type to preserve type information. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T22-callable-typing.md",
     },
     schema: [],
     fixable: undefined,

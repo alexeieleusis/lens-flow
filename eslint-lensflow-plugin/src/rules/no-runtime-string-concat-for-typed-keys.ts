@@ -28,7 +28,7 @@ export default createRule({
     },
     messages: {
       runtimeStringConcatKey:
-        "Property key constructed from untyped string parameter '{{param}}' at runtime. Use a literal union type for the parameter and a compile-time template literal type for the key. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T63-template-literal-types.md",
+        "Property key constructed from untyped string parameter '{{param}}' at runtime. Use a literal union type for the parameter and a compile-time template literal type for the key. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T63-template-literal-types.md",
     },
     schema: [
       {

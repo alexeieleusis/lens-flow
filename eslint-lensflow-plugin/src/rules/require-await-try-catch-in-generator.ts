@@ -20,7 +20,7 @@ export default createRule({
     },
     messages: {
       missingTryCatch:
-        "await in async generator must be wrapped in try/catch to prevent unhandled rejection and silent generator exit. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T64-async-iteration.md",
+        "await in async generator must be wrapped in try/catch to prevent unhandled rejection and silent generator exit. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T64-async-iteration.md",
     },
     schema: [],
   },

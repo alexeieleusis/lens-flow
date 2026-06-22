@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       tooManyFields:
-        "Union variant has {{count}} fields (max {{max}}). Extract into a nested type. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T01-algebraic-data-types.md",
+        "Union variant has {{count}} fields (max {{max}}). Extract into a nested type. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T01-algebraic-data-types.md",
     },
     schema: [
       {

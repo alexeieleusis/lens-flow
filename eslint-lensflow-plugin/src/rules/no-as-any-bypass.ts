@@ -11,9 +11,9 @@ export default createRule({
     },
     messages: {
       anyCast:
-        "Casting to `any` defeats type safety. Avoid using `as any`. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC01-invalid-states.md",
+        "Casting to `any` defeats type safety. Avoid using `as any`. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC01-invalid-states.md",
       doubleCastBypass:
-        "Double-cast through `any` bypasses validation, defeating branded types and illegal-state prevention. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC01-invalid-states.md",
+        "Double-cast through `any` bypasses validation, defeating branded types and illegal-state prevention. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC01-invalid-states.md",
     },
     schema: [],
     fixable: undefined,

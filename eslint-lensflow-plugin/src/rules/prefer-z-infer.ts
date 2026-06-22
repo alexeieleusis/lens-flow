@@ -64,7 +64,7 @@ export default createRule({
     },
     messages: {
       preferInfer:
-        "Type alias `{{typeName}}` duplicates schema `{{schemaName}}`. Use `type {{typeName}} = z.infer<typeof {{schemaName}}>` instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T06-derivation.md",
+        "Type alias `{{typeName}}` duplicates schema `{{schemaName}}`. Use `type {{typeName}} = z.infer<typeof {{schemaName}}>` instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T06-derivation.md",
     },
     schema: [],
     fixable: undefined,

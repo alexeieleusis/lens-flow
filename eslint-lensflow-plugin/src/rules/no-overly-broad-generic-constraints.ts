@@ -12,9 +12,9 @@ export default createRule({
     },
     messages: {
       anyTypeArg:
-        "Using `any` as a generic type argument removes type safety. Provide a concrete type instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T49-associated-types.md",
+        "Using `any` as a generic type argument removes type safety. Provide a concrete type instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T49-associated-types.md",
       anyConstraint:
-        "Using `any` as a type parameter constraint defeats the purpose of constraining. Use a meaningful bound instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T49-associated-types.md",
+        "Using `any` as a type parameter constraint defeats the purpose of constraining. Use a meaningful bound instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T49-associated-types.md",
     },
     schema: [],
     fixable: undefined,

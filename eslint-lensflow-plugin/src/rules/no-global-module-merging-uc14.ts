@@ -37,9 +37,9 @@ export default createRule({
     },
     messages: {
       globalNamespacePollution:
-        "`declare global` pollutes the global type namespace across all modules. Scope augmentations to a specific module instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC14-extensibility.md",
+        "`declare global` pollutes the global type namespace across all modules. Scope augmentations to a specific module instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC14-extensibility.md",
       builtInInterfaceAugmentation:
-        `Augmenting built-in interface "{{interface}}" in a module declaration pollutes the global namespace. Scope the augmentation more narrowly. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC14-extensibility.md`,
+        `Augmenting built-in interface "{{interface}}" in a module declaration pollutes the global namespace. Scope the augmentation more narrowly. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC14-extensibility.md`,
     },
     schema: [],
     fixable: undefined,

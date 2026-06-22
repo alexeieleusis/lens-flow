@@ -93,7 +93,7 @@ export default createRule({
     },
     messages: {
       stateCascade:
-        "Found {{count}} consecutive if/else-if branches comparing {{member}} against string literals. Use a switch statement with exhaustive matching instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC13-state-machines.md",
+        "Found {{count}} consecutive if/else-if branches comparing {{member}} against string literals. Use a switch statement with exhaustive matching instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC13-state-machines.md",
     },
     schema: [
       {

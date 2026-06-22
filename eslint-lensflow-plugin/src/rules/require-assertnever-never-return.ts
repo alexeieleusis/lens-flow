@@ -23,9 +23,9 @@ export default createRule({
     },
     messages: {
       missingNeverReturn:
-        "The `{{name}}` function must return `never` to satisfy control flow in exhaustive switch statements. Add a `: never` return type annotation. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T34-never-bottom.md",
+        "The `{{name}}` function must return `never` to satisfy control flow in exhaustive switch statements. Add a `: never` return type annotation. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T34-never-bottom.md",
       wrongReturnType:
-        "The `{{name}}` function returns `{{actual}}` but must return `never`. Change the return type to `never`. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T34-never-bottom.md",
+        "The `{{name}}` function returns `{{actual}}` but must return `never`. Change the return type to `never`. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T34-never-bottom.md",
     },
     schema: [],
     fixable: undefined,

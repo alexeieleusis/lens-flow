@@ -21,7 +21,7 @@ export default createRule({
     },
     messages: {
       manualTypeGuard:
-        "Manual type guard with {{count}} runtime checks. Use a schema validator (e.g., Zod) as the single source of truth instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC19-serialization.md",
+        "Manual type guard with {{count}} runtime checks. Use a schema validator (e.g., Zod) as the single source of truth instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC19-serialization.md",
     },
     schema: [
       {

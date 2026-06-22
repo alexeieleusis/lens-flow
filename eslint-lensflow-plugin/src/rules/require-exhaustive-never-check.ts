@@ -5,13 +5,13 @@ import {
   nodeHasAssertNeverOrThrow,
   getLiteralFromExpr,
 } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import {
   extractLiteralValues,
   checkSwitchExhaustiveness,
 } from "../utils/ts-helpers.js";
 
-const URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC13-state-machines.md";
+const URL = knowledgeUrl("usecases/UC13-state-machines.md");
 
 interface IfChainInfo {
   discriminantVar: string;

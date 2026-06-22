@@ -35,7 +35,7 @@ export default createRule({
     },
     messages: {
       mutableStateObject:
-        "{{name}} is a plain {{kind}} with mutable state properties ({{props}}). Use a class with private fields and controlled mutation methods instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC10-encapsulation.md",
+        "{{name}} is a plain {{kind}} with mutable state properties ({{props}}). Use a class with private fields and controlled mutation methods instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC10-encapsulation.md",
     },
     schema: [],
     fixable: undefined,

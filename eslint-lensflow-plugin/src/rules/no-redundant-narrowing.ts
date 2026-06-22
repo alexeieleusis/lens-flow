@@ -42,7 +42,7 @@ export default createRule({
     },
     messages: {
       redundantNarrowing:
-        "This narrowing check is redundant because an outer block already performed the same check. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T14-type-narrowing.md",
+        "This narrowing check is redundant because an outer block already performed the same check. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T14-type-narrowing.md",
     },
     schema: [],
     fixable: undefined,

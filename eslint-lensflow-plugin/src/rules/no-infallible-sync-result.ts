@@ -1,10 +1,9 @@
 import ts from "typescript";
 import { ESLintUtils, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
-import { walkNodes } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const RULE_DOC_URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T12-effect-tracking.md";
+const URL = knowledgeUrl("catalog/T12-effect-tracking.md");
 
 function hasFailurePath(node: TSESTree.Node): boolean {
   return node.type === "AwaitExpression" ||

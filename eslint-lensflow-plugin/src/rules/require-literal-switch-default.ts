@@ -1,7 +1,7 @@
 import { createSwitchExhaustivenessRule } from "../utils/switch-exhaustiveness-rule.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T52-literal-types.md";
+const URL = knowledgeUrl("catalog/T52-literal-types.md");
 
 export default createSwitchExhaustivenessRule({
   name: "require-literal-switch-default",

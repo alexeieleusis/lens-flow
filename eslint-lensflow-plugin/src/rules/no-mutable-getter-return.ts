@@ -41,11 +41,11 @@ export default createRule({
     },
     messages: {
       mutableArray:
-        "Getter returns mutable array type {{returnType}}. Use readonly array to preserve encapsulation. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T21-encapsulation.md",
+        "Getter returns mutable array type {{returnType}}. Use readonly array to preserve encapsulation. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T21-encapsulation.md",
       mutableCollection:
-        "Getter returns mutable collection type {{returnType}}. Use {{suggestion}} to preserve encapsulation. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T21-encapsulation.md",
+        "Getter returns mutable collection type {{returnType}}. Use {{suggestion}} to preserve encapsulation. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T21-encapsulation.md",
       mutableObject:
-        "Getter returns mutable object type. Return a copy or use a readonly type to preserve encapsulation. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T21-encapsulation.md",
+        "Getter returns mutable object type. Return a copy or use a readonly type to preserve encapsulation. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T21-encapsulation.md",
     },
     schema: [],
   },

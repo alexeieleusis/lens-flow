@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       noCommonShape:
-        "Union members share no common properties, so no property is safely accessible without narrowing. Add a common discriminant or restructure the union. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T02-union-intersection.md",
+        "Union members share no common properties, so no property is safely accessible without narrowing. Add a common discriminant or restructure the union. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T02-union-intersection.md",
     },
     schema: [],
     fixable: undefined,

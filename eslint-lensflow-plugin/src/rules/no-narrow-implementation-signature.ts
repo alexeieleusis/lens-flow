@@ -3,9 +3,9 @@ import { ESLintUtils, type TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import type { FnLikeNode } from "../utils/overload-grouping.js";
 import { createOverloadGroupVisitor } from "../utils/overload-grouping.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const KNOWLEDGE_URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T22-callable-typing.md";
+const URL = knowledgeUrl("catalog/T22-callable-typing.md");
 
 function getFnName(node: FnLikeNode): string | null {
   if (node.id?.type === "Identifier") {

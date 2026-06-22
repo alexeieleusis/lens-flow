@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       runtimeInitGuard:
-        "Runtime null check with throw to enforce initialization should be a compile-time type error via typestate. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T57-typestate.md",
+        "Runtime null check with throw to enforce initialization should be a compile-time type error via typestate. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T57-typestate.md",
     },
     schema: [],
     fixable: undefined,

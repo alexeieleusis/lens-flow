@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       primitiveAlias:
-        "Type alias \"{{name}}\" is a transparent alias for \"{{primitive}}\". Use the primitive directly or a branded type for nominal distinction. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T23-type-aliases.md",
+        "Type alias \"{{name}}\" is a transparent alias for \"{{primitive}}\". Use the primitive directly or a branded type for nominal distinction. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T23-type-aliases.md",
     },
     schema: [],
     fixable: undefined,

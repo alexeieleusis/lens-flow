@@ -106,7 +106,7 @@ export default createRule({
     },
     messages: {
       selfReferential:
-        "Self-referential conditional type may exceed type instantiation depth on long inputs. Consider accumulating results in an additional type parameter. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T45-paramspec-variadic.md",
+        "Self-referential conditional type may exceed type instantiation depth on long inputs. Consider accumulating results in an additional type parameter. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T45-paramspec-variadic.md",
     },
     schema: [],
     fixable: undefined,

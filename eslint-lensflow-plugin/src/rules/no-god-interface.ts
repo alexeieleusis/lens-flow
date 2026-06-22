@@ -11,9 +11,9 @@ export default createRule({
     },
     messages: {
       tooManyOptional:
-        "Type '{{name}}' has {{optionalCount}} optional properties (max {{maxOptional}}). Consider splitting into smaller, focused types. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC05-structural-contracts.md",
+        "Type '{{name}}' has {{optionalCount}} optional properties (max {{maxOptional}}). Consider splitting into smaller, focused types. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC05-structural-contracts.md",
       tooManyTotal:
-        "Type '{{name}}' has {{totalCount}} total properties (max {{maxTotal}}). Consider splitting into smaller, focused types. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC05-structural-contracts.md",
+        "Type '{{name}}' has {{totalCount}} total properties (max {{maxTotal}}). Consider splitting into smaller, focused types. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC05-structural-contracts.md",
     },
     schema: [
       {

@@ -162,7 +162,7 @@ export default createRule({
     },
     messages: {
       mutateCallbackArg:
-        "Mutating {{prop}} on the iteration callback parameter '{{param}}'. Return a new object instead of mutating the original. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC06-immutability.md",
+        "Mutating {{prop}} on the iteration callback parameter '{{param}}'. Return a new object instead of mutating the original. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC06-immutability.md",
     },
     schema: [],
   },

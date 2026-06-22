@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       missingDiscriminant:
-        "Union of object types has no member with a literal-typed discriminant property. Add a discriminant (e.g. `kind: \"circle\"`) to enable exhaustive narrowing. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T07-structural-typing.md",
+        "Union of object types has no member with a literal-typed discriminant property. Add a discriminant (e.g. `kind: \"circle\"`) to enable exhaustive narrowing. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T07-structural-typing.md",
     },
     schema: [],
     fixable: undefined,

@@ -127,7 +127,7 @@ export default createRule({
     },
     messages: {
       callbackPyramid:
-        "Found {{depth}} levels of nested callbacks. Refactor using async/await and Promise.all instead.",
+        "Found {{depth}} levels of nested callbacks. Refactor using async/await and Promise.all instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC21-async-concurrency.md",
     },
     schema: [
       {

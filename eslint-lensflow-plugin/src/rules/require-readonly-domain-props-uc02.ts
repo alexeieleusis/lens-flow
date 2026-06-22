@@ -20,7 +20,7 @@ export default createRule({
     },
     messages: {
       mutableDomainProp:
-        "Property `{{name}}` is mutable. Domain object properties should be `readonly` to enforce immutable transformation. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC02-domain-modeling.md",
+        "Property `{{name}}` is mutable. Domain object properties should be `readonly` to enforce immutable transformation. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC02-domain-modeling.md",
     },
     schema: [
       {

@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       repeatedGuard:
-        "Type guard `{{guardName}}` is called in {{count}} functions. Consider using a branded type validated once upstream instead of repeating the guard in each function. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T26-refinement-types.md",
+        "Type guard `{{guardName}}` is called in {{count}} functions. Consider using a branded type validated once upstream instead of repeating the guard in each function. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T26-refinement-types.md",
     },
     schema: [
       {

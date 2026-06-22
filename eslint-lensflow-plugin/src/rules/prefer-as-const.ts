@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       preferAsConst:
-        "Prefer `as const` instead of explicit object type assertion on an object literal. This preserves literal types without manual annotation. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T18-conversions-coercions.md",
+        "Prefer `as const` instead of explicit object type assertion on an object literal. This preserves literal types without manual annotation. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T18-conversions-coercions.md",
     },
     schema: [],
     fixable: undefined,

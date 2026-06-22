@@ -15,7 +15,7 @@ export default createRule({
     },
     messages: {
       mutableArrayParam:
-        'Parameter "{{name}}" uses mutable array type "{{type}}". Use "readonly T[]" or "ReadonlyArray<T>" to prevent unsound covariant assignment. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T08-variance-subtyping.md',
+        "Parameter \"{{name}}\" uses mutable array type \"{{type}}\". Use \"readonly T[]\" or \"ReadonlyArray<T>\" to prevent unsound covariant assignment. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T08-variance-subtyping.md",
     },
     schema: [],
     fixable: undefined,

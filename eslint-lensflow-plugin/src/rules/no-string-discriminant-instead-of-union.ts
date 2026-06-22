@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       stringDiscriminant:
-        "Interface '{{name}}' uses a string-literal-union discriminant ('{{discriminant}}') with other fields. Use a discriminated union type instead to get compile-time exhaustiveness checking. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC14-extensibility.md",
+        "Interface '{{name}}' uses a string-literal-union discriminant ('{{discriminant}}') with other fields. Use a discriminated union type instead to get compile-time exhaustiveness checking. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC14-extensibility.md",
     },
     schema: [],
     fixable: undefined,

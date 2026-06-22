@@ -55,7 +55,7 @@ export default createRule({
     },
     messages: {
       selfReferencingMethods:
-        "Interface '{{name}}' has {{count}} methods returning itself with substituted generics. Extract high-order operations into separate types to avoid deeply nested generics. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC14-extensibility.md",
+        "Interface '{{name}}' has {{count}} methods returning itself with substituted generics. Extract high-order operations into separate types to avoid deeply nested generics. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC14-extensibility.md",
     },
     schema: [
       {

@@ -29,7 +29,7 @@ export default createRule({
     },
     messages: {
       lazyAny:
-        "Function uses `any` for all parameters and return type. Replace with proper types instead of deferring typing work. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T47-gradual-typing.md",
+        "Function uses `any` for all parameters and return type. Replace with proper types instead of deferring typing work. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T47-gradual-typing.md",
     },
     schema: [],
     fixable: undefined,

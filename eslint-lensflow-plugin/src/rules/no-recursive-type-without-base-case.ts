@@ -170,9 +170,9 @@ export default createRule({
     },
     messages: {
       noStructuralReduction:
-        "Recursive type '{{name}}' references itself without structurally reducing the input type parameter, risking excessive depth errors. Use an 'infer' clause to narrow the recursive argument. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T61-recursive-types.md",
+        "Recursive type '{{name}}' references itself without structurally reducing the input type parameter, risking excessive depth errors. Use an 'infer' clause to narrow the recursive argument. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T61-recursive-types.md",
       noTerminatingBranch:
-        "Recursive type '{{name}}' has self-references in both the true and false branches of a conditional type, meaning no branch terminates the recursion. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T61-recursive-types.md",
+        "Recursive type '{{name}}' has self-references in both the true and false branches of a conditional type, meaning no branch terminates the recursion. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T61-recursive-types.md",
     },
     schema: [],
   },

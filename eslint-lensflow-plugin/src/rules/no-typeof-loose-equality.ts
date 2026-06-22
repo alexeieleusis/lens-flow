@@ -11,9 +11,9 @@ export default createRule({
     },
     messages: {
       looseTypeofEq:
-        "Use '===' instead of '==' with typeof for proper type narrowing. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T14-type-narrowing.md",
+        "Use '===' instead of '==' with typeof for proper type narrowing. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T14-type-narrowing.md",
       looseTypeofNeq:
-        "Use '!==' instead of '!=' with typeof for proper type narrowing. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T14-type-narrowing.md",
+        "Use '!==' instead of '!=' with typeof for proper type narrowing. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T14-type-narrowing.md",
     },
     schema: [],
     fixable: "code",

@@ -19,7 +19,7 @@ export default createRule({
     },
     messages: {
       noEffect:
-        "{{transform}} has no effect on the wide `string` type — it produces `string` unchanged. Use a string literal type or constrain the generic with `extends string`.",
+        "{{transform}} has no effect on the wide `string` type — it produces `string` unchanged. Use a string literal type or constrain the generic with `extends string`. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T63-template-literal-types.md",
     },
     schema: [],
     fixable: undefined,

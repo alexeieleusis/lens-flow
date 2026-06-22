@@ -41,9 +41,9 @@ export default createRule({
     },
     messages: {
       anyParam:
-        "Utility function uses `any` for parameter '{{name}}'. Use a generic type parameter to preserve type safety. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+        "Utility function uses `any` for parameter '{{name}}'. Use a generic type parameter to preserve type safety. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md",
       anyReturn:
-        "Utility function uses `any` for return type. Use a generic type parameter to preserve type safety. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+        "Utility function uses `any` for return type. Use a generic type parameter to preserve type safety. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md",
     },
     schema: [],
     fixable: undefined,

@@ -157,9 +157,9 @@ export default createRule({
     },
     messages: {
       decoratorModifiesInferredType:
-        "Decorator adds property '{{property}}' via Object.defineProperty that TypeScript cannot infer. Declare the property on the class instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T17-macros-metaprogramming.md",
+        "Decorator adds property '{{property}}' via Object.defineProperty that TypeScript cannot infer. Declare the property on the class instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T17-macros-metaprogramming.md",
       decoratorModifiesMultipleProperties:
-        "Decorator adds properties {{properties}} via Object.defineProperty that TypeScript cannot infer. Declare them on the class instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T17-macros-metaprogramming.md",
+        "Decorator adds properties {{properties}} via Object.defineProperty that TypeScript cannot infer. Declare them on the class instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T17-macros-metaprogramming.md",
     },
     schema: [],
     fixable: undefined,

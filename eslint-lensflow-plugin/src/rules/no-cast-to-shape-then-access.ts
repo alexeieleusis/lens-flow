@@ -26,7 +26,7 @@ export default createRule({
     },
     messages: {
       castToShapeThenAccess:
-        "Casting to an inline shape `as { ... }` then accessing a property indicates a missing generic constraint. Use `T extends { ... }` on the function instead. See: https://github.com/jpablo/vibe-types/blob/main/plugin/skills/typescript/usecases/UC04-generic-constraints.md",
+        "Casting to an inline shape `as { ... }` then accessing a property indicates a missing generic constraint. Use `T extends { ... }` on the function instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC04-generic-constraints.md",
     },
     schema: [],
     fixable: undefined,

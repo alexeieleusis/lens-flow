@@ -36,7 +36,7 @@ export default createRule({
     },
     messages: {
       stringBrandForgery:
-        "String-literal brand '{{brandName}}' can be forged via `as` cast. Use a `unique symbol` brand instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T03-newtypes-opaque.md",
+        "String-literal brand '{{brandName}}' can be forged via `as` cast. Use a `unique symbol` brand instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T03-newtypes-opaque.md",
     },
     schema: [],
     fixable: undefined,

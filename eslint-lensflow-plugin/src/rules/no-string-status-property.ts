@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       stringStatusField:
-        "Property `{{name}}` is typed as plain `string`. Use a literal union (e.g. `\"OK\" | \"ERROR\"`) to constrain valid values. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T52-literal-types.md",
+        "Property `{{name}}` is typed as plain `string`. Use a literal union (e.g. `\"OK\" | \"ERROR\"`) to constrain valid values. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T52-literal-types.md",
     },
     schema: [
       {

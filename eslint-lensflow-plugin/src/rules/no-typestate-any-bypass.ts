@@ -24,7 +24,7 @@ export default createRule({
     },
     messages: {
       typestateBypass:
-        "Casting a method-chain result to `any` defeats compile-time enforcement of required builder stages. Complete the typestate chain instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC09-builder-config.md",
+        "Casting a method-chain result to `any` defeats compile-time enforcement of required builder stages. Complete the typestate chain instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC09-builder-config.md",
     },
     schema: [],
     fixable: undefined,

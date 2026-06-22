@@ -87,9 +87,9 @@ export default createRule({
     },
     messages: {
       undiscriminatedError:
-        "Error type '{{name}}' has no discriminant property. Add a 'kind', 'tag', 'code', or 'type' property with a literal type to enable exhaustive pattern matching. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC08-error-handling.md",
+        "Error type '{{name}}' has no discriminant property. Add a 'kind', 'tag', 'code', or 'type' property with a literal type to enable exhaustive pattern matching. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC08-error-handling.md",
       singleMessageProperty:
-        "Type '{{name}}' has only a 'message: string' property, making it an undiscriminated error type. Consider using a discriminated union for different error kinds. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC08-error-handling.md",
+        "Type '{{name}}' has only a 'message: string' property, making it an undiscriminated error type. Consider using a discriminated union for different error kinds. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC08-error-handling.md",
     },
     schema: [],
     fixable: undefined,

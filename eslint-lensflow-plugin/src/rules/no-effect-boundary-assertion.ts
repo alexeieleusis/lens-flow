@@ -1,9 +1,9 @@
 import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
 import type ts from "typescript";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const DOCS_URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T12-effect-tracking.md";
+const URL = knowledgeUrl("catalog/T12-effect-tracking.md");
 
 const KNOWN_EFFECT_NAMES = new Set([
   "Result",

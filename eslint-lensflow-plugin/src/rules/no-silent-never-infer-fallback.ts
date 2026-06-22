@@ -1,9 +1,9 @@
 import { ESLintUtils, type TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { collectChildTypes } from "../utils/ts-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T49-associated-types.md";
+const URL = knowledgeUrl("catalog/T49-associated-types.md");
 
 function hasInfer(node: TSESTree.TypeNode): boolean {
   if (node.type === "TSInferType") return true;

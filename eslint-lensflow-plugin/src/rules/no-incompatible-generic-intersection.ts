@@ -1,13 +1,13 @@
 import * as ts from "typescript";
 import { ESLintUtils, type TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 interface ESTreeToTSNodeMap {
   get<K extends TSESTree.Node>(key: K): ts.Node | undefined;
 }
 
-const URL =
-  "https://github.com/jpablo/vibe-types/blob/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T02-union-intersection.md";
+const URL = knowledgeUrl("catalog/T02-union-intersection.md");
 
 function getBaseName(
   typeName: TSESTree.Identifier | TSESTree.TSTypeParameter,

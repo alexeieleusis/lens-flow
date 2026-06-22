@@ -137,7 +137,7 @@ export default createRule({
     },
     messages: {
       noValidation:
-        "Smart constructor casts to {{brand}} without any validation logic. Add input validation before the cast. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC09-builder-config.md",
+        "Smart constructor casts to {{brand}} without any validation logic. Add input validation before the cast. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC09-builder-config.md",
     },
     schema: [],
   },

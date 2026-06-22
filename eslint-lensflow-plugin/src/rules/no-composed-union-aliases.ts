@@ -1,9 +1,9 @@
 import ts from "typescript";
 import { ESLintUtils, type TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const RULE_URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T02-union-intersection.md";
+const URL = knowledgeUrl("catalog/T02-union-intersection.md");
 
 export default createRule({
   name: "no-composed-union-aliases",

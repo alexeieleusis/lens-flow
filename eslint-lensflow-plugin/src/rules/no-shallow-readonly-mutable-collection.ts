@@ -106,11 +106,11 @@ export default createRule({
     },
     messages: {
       mutableArray:
-        "Property {{name}} is marked readonly but holds a mutable array type. Use readonly {{element}}[] instead of {{element}}[]. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T21-encapsulation.md",
+        "Property {{name}} is marked readonly but holds a mutable array type. Use readonly {{element}}[] instead of {{element}}[]. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T21-encapsulation.md",
       mutableMapSet:
-        "Property {{name}} is marked readonly but holds a mutable {{collection}} type. Use Readonly{{collection}} instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T21-encapsulation.md",
+        "Property {{name}} is marked readonly but holds a mutable {{collection}} type. Use Readonly{{collection}} instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T21-encapsulation.md",
       mutableIntersection:
-        "Property {{name}} is marked readonly but its type includes a mutable collection. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T21-encapsulation.md",
+        "Property {{name}} is marked readonly but its type includes a mutable collection. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T21-encapsulation.md",
     },
     schema: [],
     fixable: undefined,

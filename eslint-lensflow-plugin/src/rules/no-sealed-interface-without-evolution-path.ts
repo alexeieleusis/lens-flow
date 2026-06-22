@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       sealedNoEvolution:
-        "Interface '{{name}}' uses a sealed symbol but has no optional members for backward-compatible evolution. Add optional members or use a class. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC10-encapsulation.md",
+        "Interface '{{name}}' uses a sealed symbol but has no optional members for backward-compatible evolution. Add optional members or use a class. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC10-encapsulation.md",
     },
     schema: [],
     fixable: undefined,

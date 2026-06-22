@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       emptyObjectPhantomType:
-        "Type alias '{{name}}' is an empty object literal ({}), providing no structural distinction between states. Use a unique symbol brand instead (e.g., {{name}} = { readonly _state: unique symbol }). See: https://raw.githubusercontent.com/jpablo/vibe-types/1ba7934d4f1224d69e63b846105b199863421c80/plugin/skills/typescript/catalog/T57-typestate.md",
+        "Type alias '{{name}}' is an empty object literal ({}), providing no structural distinction between states. Use a unique symbol brand instead (e.g., {{name}} = { readonly _state: unique symbol }). See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T57-typestate.md",
     },
     schema: [],
     fixable: undefined,

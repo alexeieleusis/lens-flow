@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       preferConst:
-        "Use `const` instead of `let` to preserve the literal type `{{literalType}}` instead of widening to `{{widenedType}}`. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T52-literal-types.md",
+        "Use `const` instead of `let` to preserve the literal type `{{literalType}}` instead of widening to `{{widenedType}}`. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T52-literal-types.md",
     },
     schema: [],
     fixable: "code",

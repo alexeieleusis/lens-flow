@@ -28,7 +28,7 @@ export default createRule({
      },
     messages: {
       widen:
-        "Object literal assigned to '{{varName}}' without type narrowing. The property '{{discriminant}}' will widen from a string literal to `string`. Use `as const`, `satisfies`, or an explicit type annotation. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T01-algebraic-data-types.md",
+        "Object literal assigned to discriminated-union variable '{{varName}}' without type narrowing. The discriminant '{{discriminant}}' will widen to a broader type. Use `as const`, `satisfies`, or an explicit type annotation. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T01-algebraic-data-types.md",
     },
     schema: [],
     fixable: undefined,

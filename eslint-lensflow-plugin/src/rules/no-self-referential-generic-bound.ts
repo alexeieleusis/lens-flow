@@ -169,7 +169,7 @@ export default createRule({
     },
     messages: {
       selfReferentialBound:
-        "Type parameter '{{name}}' references itself in its constraint '{{constraint}}'. This creates a self-referential F-bound that confuses type inference. Separate the element type from the container type. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+        "Type parameter '{{name}}' references itself in its constraint '{{constraint}}'. This creates a self-referential F-bound that confuses type inference. Separate the element type from the container type. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md",
     },
     schema: [],
     fixable: undefined,

@@ -1,9 +1,9 @@
 import ts from "typescript";
 import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T26-refinement-types.md";
+const URL = knowledgeUrl("catalog/T26-refinement-types.md");
 
 function hasLengthAccess(node: any, paramName: string): boolean {
   if (!node || typeof node !== "object") return false;

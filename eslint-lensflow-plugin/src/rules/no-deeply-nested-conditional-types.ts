@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       deepNesting:
-        "Conditional type nested {{depth}} levels deep. Extract intermediate levels into named type aliases for readability. See: https://raw.githubusercontent.com/jpablo/vibe-types/66eaf514cd2bd8bf79b2c3c64d9d43786b3dc174/plugin/skills/typescript/catalog/T17-macros-metaprogramming.md",
+        "Conditional type nested {{depth}} levels deep. Extract intermediate levels into named type aliases for readability. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T17-macros-metaprogramming.md",
     },
     schema: [
       {

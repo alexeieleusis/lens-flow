@@ -39,7 +39,7 @@ export default createRule({
      },
     messages: {
       mutableInnerType:
-        "The type '{{typeName}}' inside this readonly collection contains mutable members (writable properties or methods). Use a fully immutable inner type. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC06-immutability.md",
+        "The type '{{typeName}}' inside this readonly collection contains mutable members (writable properties or methods). Use a fully immutable inner type. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC06-immutability.md",
     },
     schema: [],
     fixable: undefined,

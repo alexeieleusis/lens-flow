@@ -69,7 +69,7 @@ export default createRule({
     },
     messages: {
       magicStringStateComparison:
-        "Comparing this.{{prop}} against a magic string literal (\"{{value}}\") to gate a state transition. Use typestate to encode valid transitions at the type level. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T57-typestate.md",
+        "Comparing this.{{prop}} against a magic string literal (\"{{value}}\") to gate a state transition. Use typestate to encode valid transitions at the type level. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T57-typestate.md",
     },
     schema: [],
     fixable: undefined,

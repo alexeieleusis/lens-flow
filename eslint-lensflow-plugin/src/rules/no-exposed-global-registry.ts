@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       exposedRegistry:
-        "Exported {{collection}} instance '{{name}}' creates a global mutable registry. Encapsulate behind a controlled API instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/main/plugin/skills/typescript/usecases/UC10-encapsulation.md",
+        "Exported {{collection}} instance '{{name}}' creates a global mutable registry. Encapsulate behind a controlled API instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC10-encapsulation.md",
     },
     schema: [],
     fixable: undefined,

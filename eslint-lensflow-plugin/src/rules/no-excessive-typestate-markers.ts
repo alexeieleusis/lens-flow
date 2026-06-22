@@ -12,7 +12,7 @@ export default createRule({
     },
     messages: {
       excessiveMarkers:
-        "Found {{count}} typestate marker types ({{markers}}). This creates 2^{{count}} = {{combinations}} possible states. Use Partial<T> + spread instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC09-builder-config.md",
+        "Found {{count}} typestate marker types ({{markers}}). This creates 2^{{count}} = {{combinations}} possible states. Use Partial<T> + spread instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC09-builder-config.md",
     },
     schema: [
       {

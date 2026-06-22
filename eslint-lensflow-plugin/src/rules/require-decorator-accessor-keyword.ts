@@ -74,9 +74,9 @@ export default createRule({
     },
     messages: {
       missingAccessorKeyword:
-        "Property '{{name}}' is decorated with an accessor-context decorator but is missing the `accessor` keyword. Add `accessor` to the property declaration. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T17-macros-metaprogramming.md",
+        "Property '{{name}}' is decorated with an accessor-context decorator but is missing the `accessor` keyword. Add `accessor` to the property declaration. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T17-macros-metaprogramming.md",
       extraAccessorKeyword:
-        "Property '{{name}}' uses the `accessor` keyword but is decorated with a field-context decorator. Remove `accessor` or use an accessor-context decorator instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T17-macros-metaprogramming.md",
+        "Property '{{name}}' uses the `accessor` keyword but is decorated with a field-context decorator. Remove `accessor` or use an accessor-context decorator instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T17-macros-metaprogramming.md",
     },
     schema: [],
   },

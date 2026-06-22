@@ -1,9 +1,9 @@
 import ts from "typescript";
 import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC16-nullability.md";
+const URL = knowledgeUrl("usecases/UC16-nullability.md");
 
 function getObjAndProp(node: unknown): { obj: unknown; prop: string } | null {
   if (!node || typeof node !== "object" || !("type" in node)) return null;

@@ -17,9 +17,9 @@ export default createRule({
     },
     messages: {
       suggestIn:
-        "Type parameter '{{paramName}}' is only used in input (parameter) positions. Add the `in` variance annotation to make contravariant intent explicit. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC17-variance.md",
+        "Type parameter '{{paramName}}' is only used in input (parameter) positions. Add the `in` variance annotation to make contravariant intent explicit. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC17-variance.md",
       suggestOut:
-        "Type parameter '{{paramName}}' is only used in output (return) positions. Add the `out` variance annotation to make covariant intent explicit. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC17-variance.md",
+        "Type parameter '{{paramName}}' is only used in output (return) positions. Add the `out` variance annotation to make covariant intent explicit. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC17-variance.md",
     },
     schema: [],
   },
