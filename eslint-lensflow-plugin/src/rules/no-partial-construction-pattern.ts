@@ -1,5 +1,5 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 export default createRule({
   name: "no-partial-construction-pattern",
@@ -64,49 +64,33 @@ export default createRule({
   },
 });
 
-function is_empty_string_literal(value: unknown): boolean {
-  if (!value || typeof value !== "object") return false;
-  const v = value as { type: string; value?: string };
-  return v.type === "Literal" && v.value === "";
+function is_empty_string_literal(value: TSESTree.Expression): boolean {
+  return value.type === "Literal" && value.value === "";
 }
 
-function is_empty_array_literal(value: unknown): boolean {
-  if (!value || typeof value !== "object") return false;
-  const v = value as { type: string; elements?: unknown[] };
-  return v.type === "ArrayExpression" && Array.isArray(v.elements) && v.elements.length === 0;
+function is_empty_array_literal(value: TSESTree.Expression): boolean {
+  return value.type === "ArrayExpression" && value.elements.length === 0;
 }
 
-function is_null_literal(value: unknown): boolean {
-  if (!value || typeof value !== "object") return false;
-  const v = value as { type: string; value?: unknown };
-  return v.type === "Identifier" === false && v.type === "Literal" && v.value === null;
+function is_null_literal(value: TSESTree.Expression): boolean {
+  return value.type === "Literal" && value.value === null;
 }
 
-function has_partial_param(method: unknown): boolean {
-  if (!method || typeof method !== "object") return false;
-  const m = method as {
-    params?: Array<{
-      typeAnnotation?: {
-        typeAnnotation?: {
-          type: string;
-          typeName?: { type: string; name?: string };
-          types?: Array<{ type: string }>;
-        };
-      };
-    }>;
-  };
-  if (!Array.isArray(m.params)) return false;
-
-  return m.params.some((param) => {
+function has_partial_param(
+  method:
+    | TSESTree.FunctionExpression
+    | TSESTree.ArrowFunctionExpression
+    | TSESTree.TSEmptyBodyFunctionExpression,
+): boolean {
+  return method.params.some((param) => {
+    if (param.type === "TSParameterProperty") return false;
     const ta = param.typeAnnotation?.typeAnnotation;
     if (!ta) return false;
 
     if (ta.type === "TSTypeReference") {
       const typeName = ta.typeName;
       if (
-        typeName &&
-        typeof typeName === "object" &&
-        "name" in typeName &&
+        typeName.type === "Identifier" &&
         typeName.name === "Partial"
       ) {
         return true;
@@ -114,7 +98,9 @@ function has_partial_param(method: unknown): boolean {
     }
 
     if (ta.type === "TSUnionType") {
-      return ta.types?.some((t) => t.type === "TSUndefinedKeyword");
+      return ta.types.some(
+        (t: TSESTree.TypeNode) => t.type === "TSUndefinedKeyword",
+      );
     }
 
     return false;
