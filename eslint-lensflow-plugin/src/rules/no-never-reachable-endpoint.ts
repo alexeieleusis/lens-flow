@@ -10,6 +10,10 @@ function isTerminating(
   neverFunctions: Set<string>,
 ): boolean {
   switch (stmt.type) {
+    case "FunctionDeclaration":
+    case "FunctionExpression":
+    case "ArrowFunctionExpression":
+      return false;
     case "ReturnStatement":
     case "ThrowStatement":
       return true;
