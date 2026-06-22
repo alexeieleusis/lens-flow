@@ -1,14 +1,19 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
+function getPropertyName(key: TSESTree.TSPropertySignature["key"]): string {
+  if (key.type === "Identifier") return key.name;
+  if (key.type === "Literal" && typeof key.value === "string") return String(key.value);
+  return "";
+}
+
 function hasKindProperty(typeNode: TSESTree.TypeNode): boolean {
   if (typeNode.type !== "TSTypeLiteral") return false;
   return typeNode.members.some(
     (member) =>
       member.type === "TSPropertySignature" &&
       !member.computed &&
-      member.key.type === "Identifier" &&
-      member.key.name === "kind",
+      getPropertyName(member.key) === "kind",
   );
 }
 
