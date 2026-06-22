@@ -8,6 +8,7 @@ function containsInfer(node: TSESTree.TypeNode): boolean {
   if (node.type === "TSUnionType") return node.types.some(containsInfer);
   if (node.type === "TSIntersectionType") return node.types.some(containsInfer);
   if (node.type === "TSConditionalType") return containsInfer(node.checkType) || containsInfer(node.extendsType);
+  if (node.type === "TSParenthesizedType") return containsInfer(node.typeAnnotation);
   if (isNodeWithTypeAnnotation(node)) return containsInfer(node.typeAnnotation);
   if (isNodeWithElementType(node)) return containsInfer(node.elementType);
   if (isNodeWithTypesArray(node)) return getTypesArray(node).some(containsInfer);
