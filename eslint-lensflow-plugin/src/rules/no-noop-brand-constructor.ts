@@ -17,7 +17,23 @@ function isBrandedType(node: TSESTree.TypeNode): boolean {
   const hasBrandLiteral = node.types.some(
     (m) =>
       m.type === "TSTypeLiteral" &&
-      m.members.length > 0,
+      m.members.some((member) => {
+        if (member.type !== "TSPropertySignature" || !member.key) return false;
+        const key = member.key;
+        if (key.type !== "Identifier" && key.type !== "Literal") return false;
+        const name =
+          key.type === "Identifier"
+            ? key.name
+            : typeof key.value === "string"
+              ? key.value
+              : null;
+        if (!name) return false;
+        return (
+          name === "_brand" ||
+          name === "__brand" ||
+          name.endsWith("Brand")
+        );
+      }),
   );
 
   return hasPrimitive && hasBrandLiteral;
