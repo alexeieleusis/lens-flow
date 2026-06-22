@@ -10,6 +10,10 @@ function containsInfer(node: TSESTree.TypeNode): boolean {
   if (node.type === "TSConditionalType") return containsInfer(node.checkType) || containsInfer(node.extendsType);
   if (node.type === "TSParenthesizedType") return containsInfer(node.typeAnnotation);
   if (node.type === "TSTypeOperator") return containsInfer(node.typeAnnotation);
+  if (node.type === "TSConstructorType") {
+    return node.parameters.some((p) => p.typeAnnotation && containsInfer(p.typeAnnotation)) ||
+      containsInfer(node.returnType);
+  }
   if (isNodeWithTypeAnnotation(node)) return containsInfer(node.typeAnnotation);
   if (isNodeWithElementType(node)) return containsInfer(node.elementType);
   if (isNodeWithTypesArray(node)) return getTypesArray(node).some(containsInfer);
@@ -40,7 +44,8 @@ function getTypesArray(node: TSESTree.TypeNode): TSESTree.TypeNode[] {
 }
 
 function hasTemplateInferExtendsType(node: TSESTree.TSConditionalType): boolean {
-  const ext = node.extendsType;
+  let ext = node.extendsType;
+  while (ext.type === "TSParenthesizedType") ext = ext.typeAnnotation;
   return (
     ext.type === "TSTemplateLiteralType" &&
     ext.types.some((q) => containsInfer(q))
