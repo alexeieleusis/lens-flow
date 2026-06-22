@@ -58,9 +58,8 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ minSelfReferencingMethods: 2 }],
-  create(context: TSESLint.RuleContext<"selfReferencingMethods", [{ minSelfReferencingMethods: number }]>) {
-    const opts = context.options[0] || { minSelfReferencingMethods: 2 };
-    const { minSelfReferencingMethods } = opts;
+  create(context: TSESLint.RuleContext<"selfReferencingMethods", [{ minSelfReferencingMethods?: number }]>) {
+    const { minSelfReferencingMethods = 2 } = context.options[0] ?? {};
 
     return {
       TSInterfaceDeclaration(node) {
