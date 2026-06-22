@@ -31,28 +31,42 @@ function extractParamNames(
     .map((p) => p.name);
 }
 
+function getRootIdentifier(
+  node: TSESTree.Node
+): TSESTree.Identifier | null {
+  while (node.type === "MemberExpression") {
+    node = node.object;
+  }
+  if (node.type === "Identifier") return node;
+  return null;
+}
+
 function isAssignmentMutation(
   node: TSESTree.Node,
   paramNames: string[]
 ): node is TSESTree.AssignmentExpression {
-  return (
+  if (
     node.type === "AssignmentExpression" &&
-    node.left.type === "MemberExpression" &&
-    node.left.object.type === "Identifier" &&
-    paramNames.includes(node.left.object.name)
-  );
+    node.left.type === "MemberExpression"
+  ) {
+    const root = getRootIdentifier(node.left);
+    if (root && paramNames.includes(root.name)) return true;
+  }
+  return false;
 }
 
 function isUpdateMutation(
   node: TSESTree.Node,
   paramNames: string[]
 ): node is TSESTree.UpdateExpression {
-  return (
+  if (
     node.type === "UpdateExpression" &&
-    node.argument.type === "MemberExpression" &&
-    node.argument.object.type === "Identifier" &&
-    paramNames.includes(node.argument.object.name)
-  );
+    node.argument.type === "MemberExpression"
+  ) {
+    const root = getRootIdentifier(node.argument);
+    if (root && paramNames.includes(root.name)) return true;
+  }
+  return false;
 }
 
 function findMutations(
@@ -82,7 +96,18 @@ function getPropertyName(prop: TSESTree.Node): string {
 function getParamNameFromMemberExpression(
   member: TSESTree.MemberExpression
 ): string {
-  return member.object.type === "Identifier" ? member.object.name : "?";
+  const root = getRootIdentifier(member);
+  return root ? root.name : "?";
+}
+
+function buildPropertyPath(member: TSESTree.MemberExpression): string {
+  const parts: string[] = [];
+  let current: TSESTree.Node = member;
+  while (current.type === "MemberExpression") {
+    parts.unshift(getPropertyName(current.property));
+    current = current.object;
+  }
+  return parts.join(".");
 }
 
 function extractMutationInfo(
@@ -93,7 +118,7 @@ function extractMutationInfo(
     mutation.left.type === "MemberExpression"
   ) {
     return {
-      propName: getPropertyName(mutation.left.property),
+      propName: buildPropertyPath(mutation.left),
       paramName: getParamNameFromMemberExpression(mutation.left),
     };
   }
@@ -103,7 +128,7 @@ function extractMutationInfo(
     mutation.argument.type === "MemberExpression"
   ) {
     return {
-      propName: getPropertyName(mutation.argument.property),
+      propName: buildPropertyPath(mutation.argument),
       paramName: getParamNameFromMemberExpression(mutation.argument),
     };
   }
@@ -130,6 +155,7 @@ export default createRule({
   name: "no-mutate-iteration-callback-argument",
   meta: {
     type: "problem",
+    fixable: undefined,
     docs: {
       description:
         "Disallow mutating properties of the callback parameter inside array iteration methods",
