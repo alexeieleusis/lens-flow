@@ -11,10 +11,79 @@ export type MutableArrayParam = {
   elemText: string;
 };
 
+function extractMutableArrayInfo(
+  typeNode: TSESTree.TypeNode,
+  sourceCode: TSESLint.SourceCode,
+): MutableArrayParamInfo | null {
+  if (typeNode.type === "TSArrayType") {
+    return {
+      typeText: sourceCode.getText(typeNode),
+      elemText: sourceCode.getText(typeNode.elementType),
+    };
+  }
+
+  if (
+    typeNode.type === "TSTypeReference" &&
+    typeNode.typeName.type === "Identifier" &&
+    typeNode.typeName.name === "Array"
+  ) {
+    const elem =
+      typeNode.typeArguments && typeNode.typeArguments.params.length > 0
+        ? sourceCode.getText(typeNode.typeArguments.params[0])
+        : "T";
+    return {
+      typeText: sourceCode.getText(typeNode),
+      elemText: elem,
+    };
+  }
+
+  return null;
+}
+
+type MutableArrayParamInfo = {
+  typeText: string;
+  elemText: string;
+};
+
+function findMutableArrays(
+  typeNode: TSESTree.TypeNode,
+  sourceCode: TSESLint.SourceCode,
+): MutableArrayParamInfo[] {
+  const results: MutableArrayParamInfo[] = [];
+
+  const info = extractMutableArrayInfo(typeNode, sourceCode);
+  if (info) {
+    results.push(info);
+    return results;
+  }
+
+  {
+    const parenType = "TSParenthesizedType";
+    if (typeNode.type === parenType) {
+      return findMutableArrays(
+        (typeNode as unknown as { typeAnnotation: TSESTree.TypeNode }).typeAnnotation,
+        sourceCode,
+      );
+    }
+  }
+
+  if (
+    typeNode.type === "TSUnionType" ||
+    typeNode.type === "TSIntersectionType"
+  ) {
+    for (const inner of typeNode.types) {
+      results.push(...findMutableArrays(inner, sourceCode));
+    }
+    return results;
+  }
+
+  return results;
+}
+
 export function checkMutableArrayParam(
   param: TSESTree.Parameter,
   sourceCode: TSESLint.SourceCode,
-): MutableArrayParam | null {
+): MutableArrayParam[] | null {
   const inner = param.type === "TSParameterProperty" ? param.parameter : param;
   const typeAnn = inner.typeAnnotation?.typeAnnotation;
   if (!typeAnn) return null;
@@ -24,33 +93,15 @@ export function checkMutableArrayParam(
     paramName = inner.name;
   }
 
-  if (typeAnn.type === "TSArrayType") {
-    return {
-      node: param,
-      paramName,
-      typeText: sourceCode.getText(typeAnn),
-      elemText: sourceCode.getText(typeAnn.elementType),
-    };
-  }
+  const arrays = findMutableArrays(typeAnn, sourceCode);
+  if (arrays.length === 0) return null;
 
-  if (
-    typeAnn.type === "TSTypeReference" &&
-    typeAnn.typeName.type === "Identifier" &&
-    typeAnn.typeName.name === "Array"
-  ) {
-    const elem =
-      typeAnn.typeArguments && typeAnn.typeArguments.params.length > 0
-        ? sourceCode.getText(typeAnn.typeArguments.params[0])
-        : "T";
-    return {
-      node: param,
-      paramName,
-      typeText: sourceCode.getText(typeAnn),
-      elemText: elem,
-    };
-  }
-
-  return null;
+  return arrays.map((info) => ({
+    node: param,
+    paramName,
+    typeText: info.typeText,
+    elemText: info.elemText,
+  }));
 }
 
 export function createFunctionParamVisitor(
@@ -77,8 +128,14 @@ export function createFunctionParamVisitor(
     },
     MethodDefinition(node) {
       const fn = (node as TSESTree.MethodDefinition).value;
-      if (fn && fn.body) {
-        fn.params.forEach(checkParam);
+      if (fn) {
+        (fn as { params: TSESTree.Parameter[] }).params.forEach(checkParam);
+      }
+    },
+    TSAbstractMethodDefinition(node) {
+      const fn = (node as TSESTree.TSAbstractMethodDefinition).value;
+      if (fn) {
+        (fn as { params: TSESTree.Parameter[] }).params.forEach(checkParam);
       }
     },
   };

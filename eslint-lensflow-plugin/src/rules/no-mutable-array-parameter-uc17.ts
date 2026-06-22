@@ -15,7 +15,7 @@ export default createRule({
     },
     messages: {
       mutableArrayParam:
-        'Parameter "{{name}}" uses mutable array type "{{type}}". Use `readonly {{elem}}[]` or `ReadonlyArray<{{elem}}>`. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC17-variance.md',
+        'Parameter "{{name}}" uses mutable array type "{{type}}". Use `readonly {{elem}}[]` or `ReadonlyArray<{{elem}}>`. See: https://raw.githubusercontent.com/jpablo/vibe-types/2ca1a34bfe2368958929fb3f9c2a33f40847ab20/plugin/skills/typescript/usecases/UC17-variance.md',
     },
     schema: [],
     fixable: undefined,
