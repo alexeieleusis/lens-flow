@@ -85,21 +85,8 @@ export default createRule({
 
     const checker = program.getTypeChecker();
 
-    function checkNeverAssignment(
-      node: TSESTree.VariableDeclarator | TSESTree.TSParameterProperty,
-    ) {
-      // Only check nodes with a type annotation that is `never`
-      let typeAnnotation: TSESTree.TSTypeAnnotation | undefined;
-      let initExpr: TSESTree.Expression | undefined | null;
-
-      if (node.type === "VariableDeclarator") {
-        typeAnnotation = node.id.typeAnnotation;
-        initExpr = node.init;
-      } else {
-        typeAnnotation = node.parameter.typeAnnotation;
-        initExpr = undefined;
-      }
-
+    function checkNeverAssignment(node: TSESTree.VariableDeclarator) {
+      const typeAnnotation = node.id.typeAnnotation;
       if (!typeAnnotation) return;
       if (typeAnnotation.typeAnnotation.type !== "TSNeverKeyword") return;
 
@@ -107,10 +94,7 @@ export default createRule({
       if (isInsideDefaultSwitchCase(node)) return;
       if (isInsideElseBlock(node)) return;
 
-      // For parameter properties, there's no init to check against
-      if (node.type === "TSParameterProperty") return;
-
-      // No init means no value to compare
+      const initExpr = node.init;
       if (!initExpr) return;
 
       const tsInitNode = parserServices.esTreeNodeToTSNodeMap.get(initExpr);
@@ -133,7 +117,6 @@ export default createRule({
 
     return {
       VariableDeclarator: checkNeverAssignment,
-      TSParameterProperty: checkNeverAssignment,
     };
   },
 });
