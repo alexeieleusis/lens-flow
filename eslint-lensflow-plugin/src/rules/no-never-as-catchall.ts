@@ -3,7 +3,7 @@ import { ESLintUtils, type TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { getChildren } from "../utils/ast-helpers.js";
 
-const URL =
+const DOCS_URL =
   "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T34-never-bottom.md";
 
 function isInsideDefaultSwitchCase(node: TSESTree.Node): boolean {
@@ -109,7 +109,7 @@ export default createRule({
           messageId: "neverAsCatchall",
           data: {
             type: typeName,
-            url: URL,
+            url: DOCS_URL,
           },
         });
       }
