@@ -1,8 +1,8 @@
 import ts from "typescript";
-import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
+import { ESLintUtils, TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
-const URL =
+const DOCS_URL =
   "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T14-type-narrowing.md";
 
 type TypeGuardCtx = {
@@ -10,32 +10,37 @@ type TypeGuardCtx = {
   checker: ts.TypeChecker;
 };
 
+type TypeGuardFunction =
+  | TSESTree.FunctionDeclaration
+  | TSESTree.FunctionExpression
+  | TSESTree.ArrowFunctionExpression;
+
 export default createRule({
   name: "no-non-discriminative-type-guard",
   meta: {
     type: "problem",
     docs: {
       description:
-        "Disallow using the 'in' operator to check a property that exists on all union members in a type guard function, which makes the guard always true and unable to narrow.",
+        "Disallow using the 'in' operator to check a property that exists on all union members in a type guard function, which does not narrow the union type.",
      },
     messages: {
       nonDiscriminative:
-        "The property '{{property}}' exists on all members of the union type, so '\"{{property}}\" in value' is always true and cannot narrow the type. Use a property that uniquely identifies the target member. See: {{url}}",
+         "The property '{{property}}' exists on all members of the union type, so '\"{{property}}\" in value' cannot distinguish union members. Use a property that uniquely identifies the target member. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"nonDiscriminative", []>) {
-    const parserServices = ESLintUtils.getParserServices(context, { allowNoProject: true });
+    const parserServices = ESLintUtils.getParserServices(context, true);
     const program = parserServices.program;
-    if (!program) return {};
+     if (!program) return {};
 
     const checker = program.getTypeChecker();
 
     let typeGuardCtx: TypeGuardCtx | null = null;
 
-    function enterTypeGuard(node: { returnType?: any; params: any[] }) {
+    function enterTypeGuard(node: TypeGuardFunction) {
       const returnAnn = node.returnType?.typeAnnotation;
       if (returnAnn?.type !== "TSTypePredicate") return;
       if (node.params.length === 0) return;
@@ -56,7 +61,7 @@ export default createRule({
       typeGuardCtx = null;
     }
 
-    function checkInExpression(node: any) {
+    function checkInExpression(node: TSESTree.BinaryExpression) {
       if (node.operator !== "in") return;
       if (!typeGuardCtx) return;
 
@@ -73,7 +78,7 @@ export default createRule({
         left.quasis.length === 1 &&
         left.expressions.length === 0
       ) {
-        propertyName = left.quasis[0].value.cooked;
+        propertyName = left.quasis[0].value.cooked ?? undefined;
       }
 
       if (!propertyName) return;
@@ -87,12 +92,12 @@ export default createRule({
         context.report({
           node,
           messageId: "nonDiscriminative",
-          data: { property: propertyName, url: URL },
+          data: { property: propertyName, url: DOCS_URL },
         });
       }
     }
 
-    const fnEnter = (node: any) => enterTypeGuard(node);
+    const fnEnter = (node: TypeGuardFunction) => enterTypeGuard(node);
     const fnLeave = () => leaveTypeGuard();
 
     return {
