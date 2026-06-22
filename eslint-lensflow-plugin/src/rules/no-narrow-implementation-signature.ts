@@ -100,7 +100,7 @@ function isParamTypeNarrow(
   return !checker.isTypeAssignableTo(overloadParamType, implParamType);
 }
 
-function checkParamsCompatibility(
+function hasIncompatibleParams(
   impl: FnLikeNode,
   overload: FnLikeNode,
   checker: ts.TypeChecker,
@@ -159,7 +159,7 @@ function hasNarrowImplementation(
   tsImplNode: ts.FunctionDeclaration,
 ): boolean {
   for (const overload of overloads) {
-    if (checkParamsCompatibility(impl, overload, checker, esTreeNodeToTSNodeMap)) {
+    if (hasIncompatibleParams(impl, overload, checker, esTreeNodeToTSNodeMap)) {
       return true;
     }
     if (checkReturnTypeCompatibility(impl, overload, tsImplNode, checker, esTreeNodeToTSNodeMap)) {
