@@ -51,6 +51,62 @@ function hasValidCall(body: TSESTree.BlockStatement): boolean {
   });
 }
 
+function bodyHasValidation(body: TSESTree.BlockStatement): boolean {
+  return body.body.some((stmt) => {
+    if (stmt.type === AST_NODE_TYPES.ThrowStatement) return true;
+    if (stmt.type === AST_NODE_TYPES.ReturnStatement) return true;
+    if (
+      stmt.type === AST_NODE_TYPES.ExpressionStatement &&
+      stmt.expression.type === AST_NODE_TYPES.CallExpression
+    ) {
+      return isValidationCall(stmt.expression);
+    }
+    return false;
+  });
+}
+
+function isValidationGuard(node: TSESTree.IfStatement): boolean {
+  if (node.consequent.type === AST_NODE_TYPES.BlockStatement) {
+    if (bodyHasValidation(node.consequent)) return true;
+  }
+  if (
+    node.consequent.type === AST_NODE_TYPES.ThrowStatement ||
+    node.consequent.type === AST_NODE_TYPES.ReturnStatement
+  ) {
+    return true;
+  }
+  if (
+    node.consequent.type === AST_NODE_TYPES.ExpressionStatement &&
+    node.consequent.expression.type === AST_NODE_TYPES.CallExpression
+  ) {
+    if (isValidationCall(node.consequent.expression)) return true;
+  }
+  if (node.alternate && node.alternate.type === AST_NODE_TYPES.BlockStatement) {
+    if (bodyHasValidation(node.alternate)) return true;
+  }
+  if (
+    node.alternate &&
+    (node.alternate.type === AST_NODE_TYPES.ThrowStatement ||
+      node.alternate.type === AST_NODE_TYPES.ReturnStatement)
+  ) {
+    return true;
+  }
+  if (
+    node.alternate &&
+    node.alternate.type === AST_NODE_TYPES.ExpressionStatement &&
+    node.alternate.expression.type === AST_NODE_TYPES.CallExpression
+  ) {
+    if (isValidationCall(node.alternate.expression)) return true;
+  }
+  if (
+    node.alternate &&
+    node.alternate.type === AST_NODE_TYPES.IfStatement
+  ) {
+    return isValidationGuard(node.alternate);
+  }
+  return false;
+}
+
 export default createRule({
   name: "no-private-constructor-unvalidated-factory",
   meta: {
@@ -101,23 +157,32 @@ export default createRule({
           const methodName =
             method.key.type === AST_NODE_TYPES.Identifier
               ? method.key.name
-              : "unknown";
+              : method.key.type === AST_NODE_TYPES.Literal
+                ? String(method.key.value)
+                : "unknown";
           const body = method.value.body;
 
           const hasValidation =
-            body.body.some((stmt) => stmt.type === AST_NODE_TYPES.IfStatement) ||
-            body.body.some(
-              (stmt) => stmt.type === AST_NODE_TYPES.ThrowStatement,
-            ) ||
-            hasValidCall(body);
+            walkNodes(body, (node) => {
+              if (node.type === AST_NODE_TYPES.ThrowStatement) return true;
+              if (
+                node.type === AST_NODE_TYPES.IfStatement &&
+                isValidationGuard(node)
+              )
+                return true;
+              return false;
+            }) || hasValidCall(body);
 
-          const hasDirectNew = body.body.some(
-            (stmt) =>
-              stmt.type === AST_NODE_TYPES.ReturnStatement &&
-              stmt.argument?.type === AST_NODE_TYPES.NewExpression &&
-              stmt.argument.callee.type === AST_NODE_TYPES.Identifier &&
-              stmt.argument.callee.name === className,
-          );
+          const hasDirectNew = walkNodes(body, (node) => {
+            if (node.type !== AST_NODE_TYPES.ReturnStatement) return false;
+            if (
+              node.argument?.type === AST_NODE_TYPES.NewExpression &&
+              node.argument.callee.type === AST_NODE_TYPES.Identifier &&
+              node.argument.callee.name === className
+            )
+              return true;
+            return false;
+          });
 
           if (!hasValidation && hasDirectNew) {
             context.report({
