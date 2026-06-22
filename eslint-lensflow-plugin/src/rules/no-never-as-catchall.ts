@@ -34,7 +34,7 @@ function isInsideElseBlock(node: TSESTree.Node): boolean {
       if (cur.alternate && containsNode(cur.alternate, node)) {
         return true;
       }
-      return false;
+      continue;
     }
     if (
       cur.type === "FunctionDeclaration" ||
