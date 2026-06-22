@@ -102,7 +102,6 @@ import noLargeLiteralUnion from "./rules/no-large-literal-union.js";
 import noLazyAny from "./rules/no-lazy-any.js";
 import noLeakyFactoryReturnT59 from "./rules/no-leaky-factory-return-t59.js";
 import noLiteralWideningOnConstruct from "./rules/no-literal-widening-on-construct.js";
-import noMagicStringDiscriminantUc03 from "./rules/no-magic-string-discriminant-uc03.js";
 import noMagicStringStateComparison from "./rules/no-magic-string-state-comparison.js";
 import noMagicStringStateUc02 from "./rules/no-magic-string-state-uc02.js";
 import noMagicStringSwitch from "./rules/no-magic-string-switch.js";
@@ -131,7 +130,6 @@ import noNestedDiscriminatedUnions from "./rules/no-nested-discriminated-unions.
 import noNestedEffectTypes from "./rules/no-nested-effect-types.js";
 import noNestedGenericsWithoutExtractionUc14 from "./rules/no-nested-generics-without-extraction-uc14.js";
 import noNestedInfer from "./rules/no-nested-infer.js";
-import noNestedResultReturn from "./rules/no-nested-result-return.js";
 import noNeverAsCatchall from "./rules/no-never-as-catchall.js";
 import noNeverReachableEndpoint from "./rules/no-never-reachable-endpoint.js";
 import noNonDiscriminativeTypeGuard from "./rules/no-non-discriminative-type-guard.js";
@@ -396,7 +394,6 @@ const plugin: {
     "no-lazy-any": noLazyAny,
     "no-leaky-factory-return-t59": noLeakyFactoryReturnT59,
     "no-literal-widening-on-construct": noLiteralWideningOnConstruct,
-    "no-magic-string-discriminant-uc03": noMagicStringDiscriminantUc03,
     "no-magic-string-state-comparison": noMagicStringStateComparison,
     "no-magic-string-state-uc02": noMagicStringStateUc02,
     "no-magic-string-switch": noMagicStringSwitch,
@@ -425,8 +422,7 @@ const plugin: {
     "no-nested-effect-types": noNestedEffectTypes,
     "no-nested-generics-without-extraction-uc14": noNestedGenericsWithoutExtractionUc14,
     "no-nested-infer": noNestedInfer,
-    "no-nested-result-return": noNestedResultReturn,
-    "no-never-as-catchall": noNeverAsCatchall,
+     "no-never-as-catchall": noNeverAsCatchall,
     "no-never-reachable-endpoint": noNeverReachableEndpoint,
     "no-non-discriminative-type-guard": noNonDiscriminativeTypeGuard,
     "no-non-literal-discriminant": noNonLiteralDiscriminant,
