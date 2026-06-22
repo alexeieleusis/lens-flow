@@ -1,4 +1,6 @@
 import { createRule } from "../utils/rule-creator.js";
+import { hasThrow, walk } from "../utils/ast-helpers.js";
+import { TSESTree } from "@typescript-eslint/utils";
 import type { TSESLint } from "@typescript-eslint/utils";
 
 function isStringLiteralUnion(node: any): node is { types: any[] } {
@@ -11,14 +13,6 @@ function isStringLiteralUnion(node: any): node is { types: any[] } {
         typeof t.literal.value === "string",
     )
   );
-}
-
-function hasThrowStatement(node: any): boolean {
-  if (node.type === "ThrowStatement") return true;
-  if (node.type === "BlockStatement") {
-    return node.body.some((child: any) => hasThrowStatement(child));
-  }
-  return false;
 }
 
 function getStatePropertyFromBinaryExpr(expr: any, stateProps: string[]): string | null {
@@ -69,7 +63,7 @@ function collectStateProps(member: any): string | null {
   return null;
 }
 
-function isGuardCandidate(n: any): boolean {
+function isGuardCandidate(n: any): n is TSESTree.IfStatement {
   if (n.type !== "IfStatement") return false;
   if (n.test.type !== "BinaryExpression") return false;
   const op = n.test.operator;
@@ -79,39 +73,34 @@ function isGuardCandidate(n: any): boolean {
 function recordGuardViolation(
   expr: any,
   consequent: any,
+  alternate: any,
   stateProps: string[],
   violations: { stateProp: string; methodName: string }[],
   methodName: string,
 ): void {
   const matchedProp = getStatePropertyFromBinaryExpr(expr, stateProps);
-  if (matchedProp && hasThrowStatement(consequent)) {
-    violations.push({ stateProp: matchedProp, methodName });
+  if (matchedProp) {
+    const consequentThrows = consequent ? hasThrow(consequent) : false;
+    const alternateThrows = alternate ? hasThrow(alternate) : false;
+    if (consequentThrows || alternateThrows) {
+      violations.push({ stateProp: matchedProp, methodName });
+    }
   }
 }
 
 function walkForGuard(
-  n: any,
+  root: any,
   stateProps: string[],
   violations: { stateProp: string; methodName: string }[],
   methodName: string,
 ): void {
-  if (!n || typeof n !== "object") return;
+  if (!root) return;
 
-  if (isGuardCandidate(n)) {
-    recordGuardViolation(n.test, n.consequent, stateProps, violations, methodName);
-  }
-
-  for (const key of Object.keys(n)) {
-    if (key === "parent" || key === "range" || key === "loc") continue;
-    const child = n[key];
-    if (Array.isArray(child)) {
-      for (const item of child) {
-        walkForGuard(item, stateProps, violations, methodName);
-      }
-    } else if (child && typeof child === "object" && child.type) {
-      walkForGuard(child, stateProps, violations, methodName);
+  walk(root, (n) => {
+    if (isGuardCandidate(n)) {
+      recordGuardViolation(n.test, n.consequent, n.alternate, stateProps, violations, methodName);
     }
-  }
+  });
 }
 
 function walkMethodBodies(
