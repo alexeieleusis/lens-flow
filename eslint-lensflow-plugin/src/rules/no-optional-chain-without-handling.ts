@@ -4,7 +4,6 @@ import { createRule } from "../utils/rule-creator.js";
 
 function typeIncludesUndefined(type: ts.Type): boolean {
   if ((type.flags & ts.TypeFlags.Undefined) !== 0) return true;
-  if ((type.flags & ts.TypeFlags.Unknown) !== 0) return true;
   if ((type.flags & ts.TypeFlags.Any) !== 0) return false;
   if (type.isUnion()) {
     return type.types.some(typeIncludesUndefined);
