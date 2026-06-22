@@ -17,7 +17,7 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow optional chaining (`?.`) without handling the undefined case via `??`",
+        "Disallow optional chaining (`?.`) without handling the undefined case via `??` (in variable declarations)",
      },
     messages: {
       bareOptionalChain:
