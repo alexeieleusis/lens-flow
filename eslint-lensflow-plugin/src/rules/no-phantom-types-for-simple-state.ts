@@ -80,6 +80,10 @@ function isTypeRefToParam(node: unknown, paramName: string): boolean {
   if (typeName?.type === AST_NODE_TYPES.Identifier) {
     return (typeName as Record<string, string>).name === paramName;
   }
+  if (typeName?.type === AST_NODE_TYPES.TSQualifiedName) {
+    const right = typeName.right as Record<string, string>;
+    return right.name === paramName;
+  }
   return false;
 }
 
@@ -99,6 +103,7 @@ function getParamNames(params: unknown[]): string {
 export default createRule({
   name: "no-phantom-types-for-simple-state",
   meta: {
+    fixable: undefined,
     type: "suggestion",
     docs: {
       description:
