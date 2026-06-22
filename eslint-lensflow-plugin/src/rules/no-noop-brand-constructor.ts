@@ -73,11 +73,11 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow smart constructors that cast to a branded type without performing any validation logic.",
+        "Disallow functions that return a branded type by simply casting a parameter without validation.",
     },
     messages: {
       noopBrandConstructor:
-        "Constructor '{{name}}' performs no validation — it simply casts to the branded type. Either add a predicate check or use the primitive type directly. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T26-refinement-types.md",
+        "Function '{{name}}' performs no validation — it simply casts a parameter to the branded type. Either add a predicate check or use the primitive type directly. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T26-refinement-types.md",
     },
     schema: [],
     fixable: undefined,

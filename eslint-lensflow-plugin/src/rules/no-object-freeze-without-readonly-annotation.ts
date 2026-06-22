@@ -1,24 +1,10 @@
-import { AST_NODE_TYPES, TSESLint } from "@typescript-eslint/utils";
+import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
+import { AST_NODE_TYPES } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
-function findVariableDeclarator(node: unknown): unknown {
-  let current: unknown = node;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  while (current) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const n = current as any;
-    if (n.type === AST_NODE_TYPES.VariableDeclarator) return n;
-    current = n?.parent;
-  }
-  return null;
-}
-
-function hasAsConst(node: unknown): boolean {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const declarator = node as any;
+function hasAsConst(declarator: TSESTree.VariableDeclarator): boolean {
   const init = declarator.init;
   if (!init) return false;
-  // Check: const x = ... as const  (parsed as TSTypeReference to "const")
   if (
     init.type === AST_NODE_TYPES.TSAsExpression &&
     init.typeAnnotation.type === AST_NODE_TYPES.TSTypeReference &&
@@ -30,12 +16,8 @@ function hasAsConst(node: unknown): boolean {
   return false;
 }
 
-function hasReadonlyAnnotation(node: unknown): boolean {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const declarator = node as any;
-  // Check direct type annotation: const x: Readonly<...> = ...
+function hasReadonlyAnnotation(declarator: TSESTree.VariableDeclarator): boolean {
   if (declarator.id?.typeAnnotation) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const ann = declarator.id.typeAnnotation;
     if (
       ann.typeAnnotation?.type === AST_NODE_TYPES.TSTypeReference &&
@@ -45,7 +27,6 @@ function hasReadonlyAnnotation(node: unknown): boolean {
       return true;
     }
   }
-  // Check: const x = ... as Readonly<...>
   if (declarator.init) {
     const init = declarator.init;
     if (
@@ -76,10 +57,14 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"missingReadonly", []>) {
+    function findVariableDeclarator(node: TSESTree.Node): TSESTree.VariableDeclarator | null {
+      return context.sourceCode.getAncestors(node)
+        .find((a): a is TSESTree.VariableDeclarator => a.type === AST_NODE_TYPES.VariableDeclarator) ?? null;
+    }
+
     return {
       CallExpression(node) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const callee = node.callee as any;
+        const callee = node.callee;
         if (
           callee.type !== AST_NODE_TYPES.MemberExpression ||
           callee.object?.type !== AST_NODE_TYPES.Identifier ||
