@@ -48,7 +48,9 @@ export default createRule({
         if (typeRefs.length >= minIntersectionMembers) {
           const names = typeRefs
             .map((m) => {
-              return m.typeName.type === "Identifier" ? m.typeName.name : "?";
+              if (m.typeName.type === "Identifier") return m.typeName.name;
+              if (m.typeName.type === "TSQualifiedName") return m.typeName.right.name;
+              return "?";
             })
             .join(", ");
 
