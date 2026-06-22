@@ -1,8 +1,24 @@
-import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
+import ts from "typescript";
+import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
+import type { TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
 const DOCS_URL =
   "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T01-algebraic-data-types.md";
+
+const DISCRIMINANT_NAMES = new Set([
+  "kind",
+  "type",
+  "status",
+  "tag",
+  "code",
+  "discriminant",
+  "dtype",
+  "t",
+  "variant",
+  "case",
+  "flavor",
+]);
 
 type PropEntry = {
   sig: TSESTree.TSPropertySignature;
@@ -10,12 +26,6 @@ type PropEntry = {
   isWidened: boolean;
   widenedType: string;
 };
-
-function extractPropName(key: TSESTree.TSPropertySignature["key"]): string | null {
-  if (key?.type === "Identifier") return key.name;
-  if (key?.type === "Literal") return String(key.value);
-  return null;
-}
 
 function isWidenedType(typeAnn: TSESTree.TypeNode): boolean {
   return typeAnn.type === "TSStringKeyword" || typeAnn.type === "TSNumberKeyword";
@@ -25,90 +35,13 @@ function widenedTypeName(typeAnn: TSESTree.TypeNode): string {
   return typeAnn.type === "TSStringKeyword" ? "string" : "number";
 }
 
-function addEntry(
-  propMap: Map<string, PropEntry[]>,
-  propName: string,
-  entry: PropEntry,
-) {
-  const existing = propMap.get(propName);
-  if (existing) {
-    existing.push(entry);
-  } else {
-    propMap.set(propName, [entry]);
-  }
-}
-
-function propEntryFromSignature(
-  sig: TSESTree.TSPropertySignature,
-  propName: string,
-  typeAnn: TSESTree.TypeNode,
-): PropEntry | null {
-  if (isWidenedType(typeAnn)) {
-    return {
-      sig,
-      propName,
-      isWidened: true,
-      widenedType: widenedTypeName(typeAnn),
-    };
-  }
-  if (typeAnn.type === "TSLiteralType") {
-    return {
-      sig,
-      propName,
-      isWidened: false,
-      widenedType: "",
-    };
-  }
-  return null;
-}
-
-function processLiteralMembers(
-  literals: TSESTree.TSTypeLiteral[],
-  propMap: Map<string, PropEntry[]>,
-) {
-  for (const member of literals) {
-    for (const m of member.members) {
-      if (m.type !== "TSPropertySignature") continue;
-      if (!m.typeAnnotation) continue;
-
-      const propName = extractPropName(m.key);
-      if (!propName) continue;
-
-      const entry = propEntryFromSignature(m, propName, m.typeAnnotation.typeAnnotation);
-      if (entry) {
-        addEntry(propMap, propName, entry);
-      }
-    }
-  }
-}
-
-function reportMixedDiscriminants(
-  propMap: Map<string, PropEntry[]>,
-  context: TSESLint.RuleContext<string, unknown[]>,
-) {
-  for (const [, entries] of propMap) {
-    const hasLiteral = entries.some((e) => !e.isWidened);
-    const hasWidened = entries.some((e) => e.isWidened);
-    if (!hasLiteral || !hasWidened) continue;
-
-    for (const entry of entries) {
-      if (!entry.isWidened) continue;
-      context.report({
-        node: entry.sig,
-        messageId: "nonLiteralDiscriminant",
-        data: { propName: entry.propName, type: entry.widenedType, url: DOCS_URL },
-      });
-    }
-  }
-}
-
 export default createRule({
   name: "no-non-literal-discriminant",
   meta: {
     type: "problem",
     docs: {
       description:
-        "Disallow union discriminant fields that use widened types (string, number) instead of literal types.",
+        "Disallow discriminant-named properties (kind, type, status, etc.) in unions that use widened types (string, number) in some members while using literal types in others, when the property is present in all union members.",
     },
     messages: {
       nonLiteralDiscriminant:
@@ -119,16 +52,80 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"nonLiteralDiscriminant", []>) {
+    const parserServices = ESLintUtils.getParserServices(context, { allowNoProject: true });
+    const program = parserServices.program;
+    if (!program) return {};
+
+    const checker = program.getTypeChecker();
+
     return {
       TSUnionType(node) {
-        const literals = node.types.filter(
-          (t): t is TSESTree.TSTypeLiteral => t.type === "TSTypeLiteral",
-        );
-        if (literals.length < 2) return;
+        const members = node.types;
+        if (members.length < 2) return;
 
         const propMap = new Map<string, PropEntry[]>();
-        processLiteralMembers(literals, propMap);
-        reportMixedDiscriminants(propMap, context);
+
+        for (const member of members) {
+          const memberTsType = parserServices.getTypeAtNode(member);
+          const props = memberTsType.getProperties();
+
+          for (const prop of props) {
+            const propName = prop.escapedName as string;
+            const decl = prop.valueDeclaration;
+            if (!decl) continue;
+
+            const propType = checker.getTypeOfSymbolAtLocation(prop, decl);
+
+            const isWidened =
+              (propType.flags & ts.TypeFlags.StringKeyword) !== 0 ||
+              (propType.flags & ts.TypeFlags.NumberKeyword) !== 0;
+
+            const isLiteral =
+              (propType.flags & ts.TypeFlags.StringLiteral) !== 0 ||
+              (propType.flags & ts.TypeFlags.NumberLiteral) !== 0;
+
+            if (!isWidened && !isLiteral) continue;
+
+            const sigNode = parserServices.esTreeNodeToTSNodeMap.get(
+              members[0],
+            ) as TSESTree.TSPropertySignature;
+
+            const entry: PropEntry = {
+              sig: isWidened ? (decl as TSESTree.TSPropertySignature) : sigNode,
+              propName,
+              isWidened,
+              widenedType: isWidened
+                ? (propType.flags & ts.TypeFlags.StringKeyword) !== 0
+                  ? "string"
+                  : "number"
+                : "",
+            };
+
+            const existing = propMap.get(propName);
+            if (existing) {
+              existing.push(entry);
+            } else {
+              propMap.set(propName, [entry]);
+            }
+          }
+        }
+
+        for (const [propName, entries] of propMap) {
+          if (!DISCRIMINANT_NAMES.has(propName)) continue;
+          if (entries.length < members.length) continue;
+          const hasLiteral = entries.some((e) => !e.isWidened);
+          const hasWidened = entries.some((e) => e.isWidened);
+          if (!hasLiteral || !hasWidened) continue;
+
+          for (const entry of entries) {
+            if (!entry.isWidened) continue;
+            context.report({
+              node: entry.sig,
+              messageId: "nonLiteralDiscriminant",
+              data: { propName: entry.propName, type: entry.widenedType, url: DOCS_URL },
+            });
+          }
+        }
       },
     };
   },
