@@ -137,7 +137,6 @@ import noNonLiteralDiscriminant from "./rules/no-non-literal-discriminant.js";
 import noNoopBrandConstructor from "./rules/no-noop-brand-constructor.js";
 import noObjectFreezeWithoutReadonlyAnnotation from "./rules/no-object-freeze-without-readonly-annotation.js";
 import noOptionalChainWithoutHandling from "./rules/no-optional-chain-without-handling.js";
-import noOptionalFieldsInvalidStates from "./rules/no-optional-fields-invalid-states.js";
 import noOrOrForDefaultValues from "./rules/no-or-or-for-default-values.js";
 import noOrphanedAbortController from "./rules/no-orphaned-abort-controller.js";
 import noOverBrandingUc02 from "./rules/no-over-branding-uc02.js";
@@ -429,7 +428,6 @@ const plugin: {
     "no-noop-brand-constructor": noNoopBrandConstructor,
     "no-object-freeze-without-readonly-annotation": noObjectFreezeWithoutReadonlyAnnotation,
     "no-optional-chain-without-handling": noOptionalChainWithoutHandling,
-    "no-optional-fields-invalid-states": noOptionalFieldsInvalidStates,
     "no-or-or-for-default-values": noOrOrForDefaultValues,
     "no-orphaned-abort-controller": noOrphanedAbortController,
     "no-over-branding-uc02": noOverBrandingUc02,

@@ -19,6 +19,33 @@ ruleTester.run("no-parallel-optional-fields-uc01", rule, {
       value: string;
       label?: string;
     };`,
+    {
+      code: `interface Payment {
+        amount: number;
+        txId?: string;
+      }`,
+      options: [{ minOptionalFields: 2, minTotalFields: 3 }],
+    },
+    {
+      code: `type Payment = {
+        amount: number;
+        txId?: string;
+      };`,
+      options: [{ minOptionalFields: 2, minTotalFields: 3 }],
+    },
+    {
+      code: `interface Fine {
+        isPending: boolean;
+        isComplete: boolean;
+      }`,
+      options: [{ minOptionalFields: 2, minTotalFields: 3 }],
+    },
+    {
+      code: `type State = {
+        kind: "pending";
+      };`,
+      options: [{ minOptionalFields: 2, minTotalFields: 3 }],
+    },
   ],
   invalid: [
     {
@@ -45,6 +72,24 @@ ruleTester.run("no-parallel-optional-fields-uc01", rule, {
         language?: string;
         fontSize?: number;
       };`,
+      errors: [{ messageId: "tooManyOptionalFields" }],
+    },
+    {
+      code: `interface Payment {
+        amount: number;
+        txId?: string;
+        refundAt?: Date;
+      }`,
+      options: [{ minOptionalFields: 2, minTotalFields: 3 }],
+      errors: [{ messageId: "tooManyOptionalFields" }],
+    },
+    {
+      code: `type Payment = {
+        amount: number;
+        txId?: string;
+        refundAt?: Date;
+      };`,
+      options: [{ minOptionalFields: 2, minTotalFields: 3 }],
       errors: [{ messageId: "tooManyOptionalFields" }],
     },
   ],
