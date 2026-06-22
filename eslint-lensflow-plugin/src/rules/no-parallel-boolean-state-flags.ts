@@ -41,6 +41,7 @@ export default createRule({
       typeAnnotation: { typeAnnotation: TSESTree.TypeNode };
     } =>
       member.type === "TSPropertySignature" &&
+      member.key.type === "Identifier" &&
       member.typeAnnotation?.typeAnnotation.type === "TSBooleanKeyword";
 
     return createBooleanFlagChecker(minCount, isBooleanFlag, "tooManyBooleanFlags")(context);
