@@ -1,6 +1,9 @@
-import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
+import type { TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
-import { createFunctionParamVisitor } from "../utils/visitor-helpers.js";
+import {
+  createFunctionParamVisitor,
+  checkMutableArrayParam,
+} from "../utils/visitor-helpers.js";
 
 export default createRule({
   name: "no-mutable-array-parameter",
@@ -12,44 +15,21 @@ export default createRule({
     },
     messages: {
       mutableArrayParam:
-        "Parameter \"{{name}}\" uses mutable array type \"{{type}}\". Use \"readonly T[]\" or \"ReadonlyArray<T>\" to prevent unsound covariant assignment. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T08-variance-subtyping.md",
+        'Parameter "{{name}}" uses mutable array type "{{type}}". Use "readonly T[]" or "ReadonlyArray<T>" to prevent unsound covariant assignment. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T08-variance-subtyping.md',
     },
     schema: [],
     fixable: undefined,
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"mutableArrayParam", []>) {
+  create(context) {
     function checkParameter(param: TSESTree.Parameter) {
-      if (param.type !== "Identifier") return;
-      if (!param.typeAnnotation) return;
-
-      const typeAnn = param.typeAnnotation.typeAnnotation;
-      const paramName = param.name;
-
-      // Check T[] (TSArrayType)
-      // Note: readonly T[] produces TSReadonlyType, so this only matches mutable arrays
-      if (typeAnn.type === "TSArrayType") {
-        context.report({
-          node: param,
-          messageId: "mutableArrayParam",
-          data: { name: paramName, type: "T[]" },
-        });
-        return;
-      }
-
-      // Check Array<T> (TSTypeReference with typeName "Array")
-      // ReadonlyArray<T> has typeName "ReadonlyArray", so it won't match
-      if (
-        typeAnn.type === "TSTypeReference" &&
-        typeAnn.typeName.type === "Identifier" &&
-        typeAnn.typeName.name === "Array"
-      ) {
-        context.report({
-          node: param,
-          messageId: "mutableArrayParam",
-          data: { name: paramName, type: "Array<T>" },
-        });
-      }
+      const result = checkMutableArrayParam(param, context.sourceCode);
+      if (!result) return;
+      context.report({
+        node: result.node,
+        messageId: "mutableArrayParam",
+        data: { name: result.paramName, type: result.typeText },
+      });
     }
 
     return createFunctionParamVisitor(checkParameter);

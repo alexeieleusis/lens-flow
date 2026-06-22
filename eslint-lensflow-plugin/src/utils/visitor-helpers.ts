@@ -4,6 +4,55 @@ import type ts from "typescript";
 
 type ParameterCheckCallback = (param: TSESTree.Parameter) => void;
 
+export type MutableArrayParam = {
+  node: TSESTree.Parameter;
+  paramName: string;
+  typeText: string;
+  elemText: string;
+};
+
+export function checkMutableArrayParam(
+  param: TSESTree.Parameter,
+  sourceCode: TSESLint.SourceCode,
+): MutableArrayParam | null {
+  const inner = param.type === "TSParameterProperty" ? param.parameter : param;
+  const typeAnn = inner.typeAnnotation?.typeAnnotation;
+  if (!typeAnn) return null;
+
+  let paramName = "?";
+  if (inner.type === "Identifier") {
+    paramName = inner.name;
+  }
+
+  if (typeAnn.type === "TSArrayType") {
+    return {
+      node: param,
+      paramName,
+      typeText: sourceCode.getText(typeAnn),
+      elemText: sourceCode.getText(typeAnn.elementType),
+    };
+  }
+
+  if (
+    typeAnn.type === "TSTypeReference" &&
+    typeAnn.typeName.type === "Identifier" &&
+    typeAnn.typeName.name === "Array"
+  ) {
+    const elem =
+      typeAnn.typeArguments && typeAnn.typeArguments.params.length > 0
+        ? sourceCode.getText(typeAnn.typeArguments.params[0])
+        : "T";
+    return {
+      node: param,
+      paramName,
+      typeText: sourceCode.getText(typeAnn),
+      elemText: elem,
+    };
+  }
+
+  return null;
+}
+
 export function createFunctionParamVisitor(
   checkParam: ParameterCheckCallback,
 ): Record<string, (node: TSESTree.Node) => void> {
