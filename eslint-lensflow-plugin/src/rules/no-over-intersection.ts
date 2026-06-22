@@ -23,9 +23,9 @@ export default createRule({
     },
     messages: {
       tooManyDirect:
-        "Intersection type has {{count}} direct members (max: {{max}}). Consider breaking it into smaller composed types. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC05-structural-contracts.md",
+        "Intersection type has {{count}} direct members (max: {{max}}). Consider breaking it into smaller composed types. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC05-structural-contracts.md",
       tooManyFlattened:
-        "Intersection type flattens to {{count}} members (max: {{max}}). Deep nesting makes types unreadable. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC05-structural-contracts.md",
+        "Intersection type flattens to {{count}} members (max: {{max}}). Deep nesting makes types unreadable. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC05-structural-contracts.md",
     },
     schema: [
       {
