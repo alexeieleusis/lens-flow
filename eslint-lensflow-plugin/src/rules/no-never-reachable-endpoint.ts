@@ -5,8 +5,12 @@ function isLiteralTrue(node: TSESTree.Expression | null | undefined): boolean {
   return node?.type === "Literal" && node.value === true;
 }
 
-function isTerminating(stmt: TSESTree.Statement): boolean {
+function isTerminating(
+  stmt: TSESTree.Statement,
+  neverFunctions: Set<string>,
+): boolean {
   switch (stmt.type) {
+    case "ReturnStatement":
     case "ThrowStatement":
       return true;
     case "WhileStatement":
@@ -19,14 +23,17 @@ function isTerminating(stmt: TSESTree.Statement): boolean {
       );
     case "IfStatement":
       if (!stmt.alternate) return false;
-      return isTerminating(stmt.consequent) && isTerminating(stmt.alternate);
+      return (
+        isTerminating(stmt.consequent, neverFunctions) &&
+        isTerminating(stmt.alternate, neverFunctions)
+      );
     case "SwitchStatement": {
       const hasDefault = stmt.cases.some((c) => c.test === null);
       if (!hasDefault) return false;
       const cases = stmt.cases;
       const caseTerminates = cases.map((c) => {
         const last = c.consequent[c.consequent.length - 1];
-        return last ? isTerminating(last) : false;
+        return last ? isTerminating(last, neverFunctions) : false;
       });
       let nextTerminates = false;
       for (let i = cases.length - 1; i >= 0; i--) {
@@ -36,10 +43,21 @@ function isTerminating(stmt: TSESTree.Statement): boolean {
       return true;
     }
     case "LabeledStatement":
-      return isTerminating(stmt.body);
+      return isTerminating(stmt.body, neverFunctions);
     case "BlockStatement": {
       const last = stmt.body[stmt.body.length - 1];
-      return last ? isTerminating(last) : false;
+      return last ? isTerminating(last, neverFunctions) : false;
+    }
+    case "ExpressionStatement": {
+      const expr = stmt.expression;
+      if (
+        expr.type === "CallExpression" &&
+        expr.callee.type === "Identifier" &&
+        neverFunctions.has(expr.callee.name)
+      ) {
+        return true;
+      }
+      return false;
     }
     default:
       return false;
@@ -67,18 +85,15 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"reachableEnd", []>) {
-    function checkFunction(
+    const neverFunctions = new Set<string>();
+
+    function checkFunctionBody(
       node:
         | TSESTree.FunctionDeclaration
         | TSESTree.FunctionExpression
         | TSESTree.ArrowFunctionExpression,
     ): void {
-      const returnType = node.returnType?.typeAnnotation;
-      if (!returnType || !isNeverReturnType(returnType)) return;
-
-      if (!node.body) return;
-
-      if (node.body.type !== "BlockStatement") return;
+      if (!node.body || node.body.type !== "BlockStatement") return;
 
       const { body } = node.body;
       if (body.length === 0) {
@@ -87,15 +102,55 @@ export default createRule({
       }
 
       const lastStmt = body[body.length - 1];
-      if (!isTerminating(lastStmt)) {
+      if (!isTerminating(lastStmt, neverFunctions)) {
         context.report({ node, messageId: "reachableEnd" });
       }
     }
 
     return {
-      FunctionDeclaration: checkFunction,
-      FunctionExpression: checkFunction,
-      ArrowFunctionExpression: checkFunction,
+      FunctionDeclaration(node) {
+        const returnType = node.returnType?.typeAnnotation;
+        if (
+          node.id &&
+          returnType &&
+          isNeverReturnType(returnType)
+        ) {
+          neverFunctions.add(node.id.name);
+        }
+        checkFunctionBody(node);
+      },
+      FunctionExpression(node) {
+        const returnType = node.returnType?.typeAnnotation;
+        if (returnType && isNeverReturnType(returnType)) {
+          const parent = context.sourceCode.getParent
+            ? context.sourceCode.getParent(node)
+            : node.parent;
+          if (
+            parent &&
+            parent.type === "VariableDeclarator" &&
+            parent.id.type === "Identifier"
+          ) {
+            neverFunctions.add(parent.id.name);
+          }
+        }
+        checkFunctionBody(node);
+      },
+      ArrowFunctionExpression(node) {
+        const returnType = node.returnType?.typeAnnotation;
+        if (returnType && isNeverReturnType(returnType)) {
+          const parent = context.sourceCode.getParent
+            ? context.sourceCode.getParent(node)
+            : node.parent;
+          if (
+            parent &&
+            parent.type === "VariableDeclarator" &&
+            parent.id.type === "Identifier"
+          ) {
+            neverFunctions.add(parent.id.name);
+          }
+        }
+        checkFunctionBody(node);
+      },
     };
   },
 });
