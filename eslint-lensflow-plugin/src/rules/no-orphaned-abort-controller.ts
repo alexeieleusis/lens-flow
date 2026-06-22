@@ -2,6 +2,45 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
 
+const SIGNAL_ACCEPTING_FUNCTIONS = new Set([
+  // Network / stream APIs that accept { signal }
+  "fetch",
+  "open", // XMLHttpRequest.open
+  "pipeTo",
+  "pipeThrough",
+  "cancel", // AbortSignal.abort's sibling
+  "waitFor", // common in test runners
+  "race", // Promise.race (commonly used with timeout patterns)
+  "any", // Promise.any
+  "all", // Promise.all
+  "allSettled", // Promise.allSettled
+  // Event / timer APIs
+  "addEventListener",
+  "setTimeout",
+  "setInterval",
+  // Common patterns
+  "subscribe",
+  "on",
+  "once",
+]);
+
+function isSignalAcceptingCallee(
+  callee: TSESTree.Expression,
+): boolean {
+  if (
+    callee.type === "Identifier" &&
+    SIGNAL_ACCEPTING_FUNCTIONS.has(callee.name)
+  )
+    return true;
+  if (
+    callee.type === "MemberExpression" &&
+    callee.property.type === "Identifier" &&
+    SIGNAL_ACCEPTING_FUNCTIONS.has(callee.property.name)
+  )
+    return true;
+  return false;
+}
+
 function passedToFunction(
   body: TSESTree.BlockStatement | null,
   varName: string,
@@ -10,12 +49,17 @@ function passedToFunction(
 
   return walkNodes(body, (node) => {
     if (node.type !== "CallExpression") return false;
+    if (!isSignalAcceptingCallee(node.callee)) return false;
     return node.arguments.some((arg) => {
+      // Direct: passed as `controller` to a signal-accepting function
       if (arg.type === "Identifier" && arg.name === varName) return true;
+      // Via signal: passed as `controller.signal`
       if (
         arg.type === "MemberExpression" &&
         arg.object.type === "Identifier" &&
-        arg.object.name === varName
+        arg.object.name === varName &&
+        arg.property.type === "Identifier" &&
+        arg.property.name === "signal"
       )
         return true;
       return false;
