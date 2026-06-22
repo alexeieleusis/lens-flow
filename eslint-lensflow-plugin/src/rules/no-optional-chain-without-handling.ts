@@ -31,7 +31,7 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"undefinedType" | "bareOptionalChain", []>) {
-    const parserServices = ESLintUtils.getParserServices(context);
+    const parserServices = ESLintUtils.getParserServices(context, true);
     const program = parserServices.program;
     if (!program) return {};
     const checker = program.getTypeChecker();
@@ -56,6 +56,7 @@ export default createRule({
           node.id.type === "Identifier" ? node.id.name : "<pattern>";
 
         const tsNode = parserServices.esTreeNodeToTSNodeMap.get(init);
+        if (!tsNode) return;
         const type = checker.getTypeAtLocation(tsNode);
         const hasUndefined = typeIncludesUndefined(type);
 
