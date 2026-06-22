@@ -89,9 +89,9 @@ function nullGuardIfContainsNode(stmt: unknown, node: unknown, objName: string, 
   const s = stmt as { type: string; test?: unknown; consequent?: unknown; alternate?: unknown };
   if (s.type !== "IfStatement" || !s.test) return false;
   if (!matchesNullCheck(s.test, objName, propName)) return false;
-  if (s.consequent && bodyOfBlockContains(s.consequent, node)) return false;
-  if (s.alternate && bodyOfBlockContains(s.alternate, node)) return false;
-  return true;
+  if (s.consequent && bodyOfBlockContains(s.consequent, node)) return true;
+  if (s.alternate && bodyOfBlockContains(s.alternate, node)) return true;
+  return false;
 }
 
 function checkBlockForGuard(body: unknown, node: unknown, objName: string, propName: string): boolean {
