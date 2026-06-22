@@ -4,7 +4,7 @@ import { createRule } from "../utils/rule-creator.js";
 import type { FnLikeNode } from "../utils/overload-grouping.js";
 import { createOverloadGroupVisitor } from "../utils/overload-grouping.js";
 
-const URL =
+const KNOWLEDGE_URL =
   "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T22-callable-typing.md";
 
 function getFnName(node: FnLikeNode): string | null {
@@ -210,7 +210,7 @@ export default createRule({
         context.report({
           node: impl,
           messageId: "narrowImpl",
-          data: { fnName, url: URL },
+          data: { fnName, url: KNOWLEDGE_URL },
         });
       }
     });
