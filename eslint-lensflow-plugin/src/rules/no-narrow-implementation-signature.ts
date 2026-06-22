@@ -16,18 +16,12 @@ function getFnName(node: FnLikeNode): string | null {
 
 function getTypedParam(
   param: TSESTree.Parameter,
-): { identifier: TSESTree.Identifier; typeNode: TSESTree.TypeNode } | null {
+): TSESTree.TypeNode | null {
   if (
     "typeAnnotation" in param &&
     param.typeAnnotation?.typeAnnotation
   ) {
-    if (param.type === "Identifier") {
-      return { identifier: param, typeNode: param.typeAnnotation.typeAnnotation };
-    }
-    return {
-      identifier: param as unknown as TSESTree.Identifier,
-      typeNode: param.typeAnnotation.typeAnnotation,
-    };
+    return param.typeAnnotation.typeAnnotation;
   }
   return null;
 }
@@ -36,8 +30,7 @@ function getParamTypeNode(
   node: FnLikeNode,
   index: number,
 ): TSESTree.TypeNode | null {
-  const info = getTypedParam(node.params[index]);
-  return info ? info.typeNode : null;
+  return getTypedParam(node.params[index]);
 }
 
 function getParamIdentifier(
@@ -65,25 +58,44 @@ function isParamTypeNarrow(
   esTreeNodeToTSNodeMap: { get: (node: TSESTree.Node) => ts.Node | undefined },
 ): boolean {
   const overloadTyped = getTypedParam(overload.params[index]);
-  const overloadParamType = overloadTyped
-    ? checker.getTypeFromTypeNode(
-        esTreeNodeToTSNodeMap.get(overloadTyped.typeNode) as ts.TypeNode,
-      )
-    : checker.getUnknownType();
+  let overloadParamType: ts.Type;
+  if (!overloadTyped) {
+    overloadParamType = checker.getUnknownType();
+  } else {
+    const tsNode = esTreeNodeToTSNodeMap.get(overloadTyped);
+    if (!tsNode) {
+      overloadParamType = checker.getUnknownType();
+    } else {
+      overloadParamType = checker.getTypeFromTypeNode(tsNode as ts.TypeNode);
+    }
+  }
 
   const implTyped = getTypedParam(impl.params[index]);
-  const implParamType = implTyped
-    ? checker.getTypeFromTypeNode(
-        esTreeNodeToTSNodeMap.get(implTyped.typeNode) as ts.TypeNode,
-      )
-    : (() => {
-        const implParamId = getParamIdentifier(impl, index);
-        if (!implParamId) return checker.getAnyType();
-        const tsParam = esTreeNodeToTSNodeMap.get(
-          implParamId,
-        ) as ts.Identifier;
-        return checker.getTypeAtLocation(tsParam);
-      })();
+  let implParamType: ts.Type;
+  if (!implTyped) {
+    const implParamId = getParamIdentifier(impl, index);
+    if (!implParamId) {
+      implParamType = checker.getAnyType();
+    } else {
+      implParamType = checker.getTypeAtLocation(
+        esTreeNodeToTSNodeMap.get(implParamId) as ts.Identifier,
+      );
+    }
+  } else {
+    const tsNode = esTreeNodeToTSNodeMap.get(implTyped);
+    if (!tsNode) {
+      const implParamId = getParamIdentifier(impl, index);
+      if (!implParamId) {
+        implParamType = checker.getAnyType();
+      } else {
+        implParamType = checker.getTypeAtLocation(
+          esTreeNodeToTSNodeMap.get(implParamId) as ts.Identifier,
+        );
+      }
+    } else {
+      implParamType = checker.getTypeFromTypeNode(tsNode as ts.TypeNode);
+    }
+  }
 
   return !checker.isTypeAssignableTo(overloadParamType, implParamType);
 }
@@ -117,14 +129,18 @@ function checkReturnTypeCompatibility(
   const overloadRetTypeNode = getReturnTypeNode(overload);
   if (!overloadRetTypeNode) return false;
 
+  const overloadTsNode = esTreeNodeToTSNodeMap.get(overloadRetTypeNode);
+  if (!overloadTsNode) return false;
   const overloadRetType = checker.getTypeFromTypeNode(
-    esTreeNodeToTSNodeMap.get(overloadRetTypeNode) as ts.TypeNode,
+    overloadTsNode as ts.TypeNode,
   );
 
   const implRetTypeNode = getReturnTypeNode(impl);
   if (implRetTypeNode) {
+    const implTsNode = esTreeNodeToTSNodeMap.get(implRetTypeNode);
+    if (!implTsNode) return false;
     const implRetType = checker.getTypeFromTypeNode(
-      esTreeNodeToTSNodeMap.get(implRetTypeNode) as ts.TypeNode,
+      implTsNode as ts.TypeNode,
     );
     return !checker.isTypeAssignableTo(overloadRetType, implRetType);
   }
@@ -170,7 +186,7 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"narrowImpl", []>) {
-    const parserServices = ESLintUtils.getParserServices(context);
+    const parserServices = ESLintUtils.getParserServices(context, { allowSingleFile: true });
     const program = parserServices.program;
     if (!program) return {};
 
