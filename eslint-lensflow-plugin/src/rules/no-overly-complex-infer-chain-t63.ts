@@ -16,7 +16,6 @@ function containsInfer(node: TSESTree.TypeNode): boolean {
   }
   if (isNodeWithTypeAnnotation(node)) return containsInfer(node.typeAnnotation);
   if (isNodeWithElementType(node)) return containsInfer(node.elementType);
-  if (isNodeWithTypesArray(node)) return getTypesArray(node).some(containsInfer);
   return false;
 }
 
@@ -30,17 +29,6 @@ function isNodeWithElementType(
   node: TSESTree.TypeNode,
 ): node is TSESTree.TypeNode & { elementType: TSESTree.TypeNode } {
   return "elementType" in node && !!node.elementType;
-}
-
-function isNodeWithTypesArray(node: TSESTree.TypeNode): boolean {
-  return (
-    "types" in node &&
-    Array.isArray((node as unknown as Record<string, unknown>).types)
-  );
-}
-
-function getTypesArray(node: TSESTree.TypeNode): TSESTree.TypeNode[] {
-  return ((node as unknown as Record<string, unknown>).types as TSESTree.TypeNode[]);
 }
 
 function hasTemplateInferExtendsType(node: TSESTree.TSConditionalType): boolean {
