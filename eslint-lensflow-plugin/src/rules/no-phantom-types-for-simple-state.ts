@@ -15,7 +15,7 @@ const PHANTOM_NAMES = new Set([
 
 function isPhantomPropertyName(name: string): boolean {
   if (PHANTOM_NAMES.has(name)) return true;
-  if (name.startsWith("_") || name.startsWith("__")) return true;
+  if (name.startsWith("_")) return true;
   return false;
 }
 
