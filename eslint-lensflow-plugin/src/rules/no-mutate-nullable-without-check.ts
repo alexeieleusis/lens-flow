@@ -77,7 +77,7 @@ function hasNonNullAssertionInRhs(rhs: unknown, objName: string, propName: strin
 }
 
 function isBoundaryType(type: string): boolean {
-  return type === "Function" || type === "ArrowFunctionExpression" || type === "ClassBody" || type === "Program";
+  return type === "FunctionDeclaration" || type === "FunctionExpression" || type === "ArrowFunctionExpression" || type === "ClassBody" || type === "Program";
 }
 
 function stmtBlockContainsNode(stmt: unknown, node: unknown): boolean {
