@@ -46,11 +46,10 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ maxMembers: 4, maxFlattenedMembers: 6 }],
-  create(context: TSESLint.RuleContext<"tooManyDirect" | "tooManyFlattened", [{ maxMembers: number, maxFlattenedMembers: number }]>) {
-    const [{ maxMembers, maxFlattenedMembers } = {}] =
-      context.options ?? [];
-    const thresholdDirect = maxMembers ?? 4;
-    const thresholdFlattened = maxFlattenedMembers ?? 6;
+  create(context: TSESLint.RuleContext<"tooManyDirect" | "tooManyFlattened", [{ maxMembers?: number; maxFlattenedMembers?: number }]>) {
+    const { maxMembers = 4, maxFlattenedMembers = 6 } = context.options[0];
+    const thresholdDirect = maxMembers;
+    const thresholdFlattened = maxFlattenedMembers;
 
     return {
       TSIntersectionType(node) {
