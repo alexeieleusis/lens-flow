@@ -17,6 +17,11 @@ function hasKindProperty(typeNode: TSESTree.TypeNode): boolean {
   );
 }
 
+function unwrapParenthesized(node: TSESTree.TypeNode): TSESTree.TypeNode {
+  while (node.type === "TSParenthesizedType") node = node.typeAnnotation;
+  return node;
+}
+
 function isNestedDiscriminatedUnion(typeNode: TSESTree.TypeNode): boolean {
   if (typeNode.type === "TSUnionType") {
     return typeNode.types.some(
@@ -34,7 +39,7 @@ export default createRule({
     type: "suggestion",
     docs: {
       description:
-        "Disallow deeply nested discriminated unions where a union member's field is itself a union or has a nested kind field",
+        "Disallow deeply nested discriminated unions where a union member's field is itself a discriminated union",
     },
     messages: {
       nestedDiscriminatedUnion:
@@ -59,7 +64,7 @@ export default createRule({
             )
               continue;
 
-            const annotation = prop.typeAnnotation.typeAnnotation;
+            const annotation = unwrapParenthesized(prop.typeAnnotation.typeAnnotation);
             if (isNestedDiscriminatedUnion(annotation)) {
               if (!reported) {
                 context.report({
