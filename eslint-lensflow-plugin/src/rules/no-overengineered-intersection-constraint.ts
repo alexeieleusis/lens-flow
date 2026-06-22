@@ -35,9 +35,13 @@ export default createRule({
     return {
       TSTypeParameter(node) {
         if (!node.constraint) return;
-        if (node.constraint.type !== "TSIntersectionType") return;
+        const constraint =
+          node.constraint.type === "TSParenthesizedType"
+            ? node.constraint.typeAnnotation
+            : node.constraint;
+        if (constraint.type !== "TSIntersectionType") return;
 
-        const typeRefs = node.constraint.types.filter(
+        const typeRefs = constraint.types.filter(
           (member) => member.type === "TSTypeReference",
         );
 
