@@ -39,20 +39,15 @@ export default createRule({
 
     return {
       "Program:exit"() {
-        for (const branded of brandedAliases) {
-          const sameGroup = brandedAliases.filter(
-            (b) => b.primitive === branded.primitive,
-          );
-          if (sameGroup.length > maxBrandsPerPrimitive) {
-            context.report({
-              node: branded.node,
-              messageId: "overBranding",
-              data: {
-                count: String(sameGroup.length),
-                primitive: branded.primitive,
-                max: String(maxBrandsPerPrimitive),
-              },
-            });
+        const byPrimitive = new Map<"string" | "number", typeof brandedAliases>();
+        for (const b of brandedAliases) {
+          byPrimitive.set(b.primitive, [...(byPrimitive.get(b.primitive) || []), b]);
+        }
+        for (const [primitive, group] of byPrimitive) {
+          if (group.length > maxBrandsPerPrimitive) {
+            for (const branded of group) {
+              context.report({ node: branded.node, messageId: "overBranding", data: { count: String(group.length), primitive, max: String(maxBrandsPerPrimitive) } });
+            }
           }
         }
       },
