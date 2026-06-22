@@ -38,31 +38,52 @@ export default createRule({
 
     const checker = program.getTypeChecker();
 
-    let typeGuardCtx: TypeGuardCtx | null = null;
+    const typeGuardStack: TypeGuardCtx[] = [];
+    let nonTypeGuardNestDepth = 0;
 
-    function enterTypeGuard(node: TypeGuardFunction) {
+    function enterFunction(node: TypeGuardFunction) {
       const returnAnn = node.returnType?.typeAnnotation;
-      if (returnAnn?.type !== "TSTypePredicate") return;
-      if (node.params.length === 0) return;
+      const isTypeGuard = returnAnn?.type === "TSTypePredicate";
+
+      if (!isTypeGuard) {
+        nonTypeGuardNestDepth++;
+        return;
+      }
+      if (node.params.length === 0) {
+        nonTypeGuardNestDepth++;
+        return;
+      }
 
       const firstParam = node.params[0];
       const tsParam = parserServices.esTreeNodeToTSNodeMap.get(firstParam);
-      if (!tsParam) return;
+      if (!tsParam) {
+        nonTypeGuardNestDepth++;
+        return;
+      }
 
       const paramTsType = checker.getTypeAtLocation(tsParam as ts.Node);
       const unionTypes = (paramTsType as ts.UnionType).types ?? [paramTsType];
 
-      if (unionTypes.length < 2) return;
+      if (unionTypes.length < 2) {
+        nonTypeGuardNestDepth++;
+        return;
+      }
 
-      typeGuardCtx = { unionTypes, checker };
+      typeGuardStack.push({ unionTypes, checker });
     }
 
-    function leaveTypeGuard() {
-      typeGuardCtx = null;
+    function leaveFunction() {
+      if (nonTypeGuardNestDepth > 0) {
+        nonTypeGuardNestDepth--;
+      } else {
+        typeGuardStack.pop();
+      }
     }
 
     function checkInExpression(node: TSESTree.BinaryExpression) {
       if (node.operator !== "in") return;
+      if (nonTypeGuardNestDepth > 0) return;
+      const typeGuardCtx = typeGuardStack[typeGuardStack.length - 1];
       if (!typeGuardCtx) return;
 
       const left = node.left;
@@ -97,16 +118,13 @@ export default createRule({
       }
     }
 
-    const fnEnter = (node: TypeGuardFunction) => enterTypeGuard(node);
-    const fnLeave = () => leaveTypeGuard();
-
     return {
-      FunctionDeclaration: fnEnter,
-      "FunctionDeclaration:exit": fnLeave,
-      FunctionExpression: fnEnter,
-      "FunctionExpression:exit": fnLeave,
-      ArrowFunctionExpression: fnEnter,
-      "ArrowFunctionExpression:exit": fnLeave,
+      FunctionDeclaration: enterFunction,
+      "FunctionDeclaration:exit": leaveFunction,
+      FunctionExpression: enterFunction,
+      "FunctionExpression:exit": leaveFunction,
+      ArrowFunctionExpression: enterFunction,
+      "ArrowFunctionExpression:exit": leaveFunction,
       BinaryExpression: checkInExpression,
     };
   },
