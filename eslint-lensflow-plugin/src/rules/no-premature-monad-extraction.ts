@@ -26,22 +26,26 @@ const NS_EXTRACT_METHODS = new Set([
 ]);
 
 function isExtractionCall(node: TSESTree.CallExpression): boolean {
-  if (node.callee.type === "MemberExpression") {
-    const prop = node.callee.property;
+  let callee = node.callee;
+  if (callee.type === "ChainExpression") {
+    callee = callee.expression;
+  }
+  if (callee.type === "MemberExpression") {
+    const prop = callee.property;
     if (prop.type === "Identifier" && EXTRACT_METHODS.has(prop.name)) {
       return true;
     }
     if (
-      node.callee.object.type === "Identifier" &&
-      node.callee.property.type === "Identifier"
+      callee.object.type === "Identifier" &&
+      callee.property.type === "Identifier"
     ) {
-      const nsKey = `${node.callee.object.name}.${node.callee.property.name}`;
+      const nsKey = `${callee.object.name}.${callee.property.name}`;
       if (NS_EXTRACT_METHODS.has(nsKey)) {
         return true;
       }
     }
   }
-  if (node.callee.type === "Identifier" && EXTRACT_METHODS.has(node.callee.name)) {
+  if (callee.type === "Identifier" && EXTRACT_METHODS.has(callee.name)) {
     return true;
   }
   return false;
