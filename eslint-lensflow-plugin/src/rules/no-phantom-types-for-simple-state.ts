@@ -1,4 +1,4 @@
-import { AST_NODE_TYPES, TSESLint } from "@typescript-eslint/utils";
+import { AST_NODE_TYPES, TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
 const PHANTOM_NAMES = new Set([
@@ -19,85 +19,52 @@ function isPhantomPropertyName(name: string): boolean {
   return false;
 }
 
-function getKeyText(key: Record<string, unknown>): string | null {
-  if (key.type === AST_NODE_TYPES.Identifier)
-    return (key as Record<string, string>).name;
+function getKeyText(key: TSESTree.PropertyName | TSESTree.PrivateIdentifier): string | null {
+  if (key.type === AST_NODE_TYPES.Identifier) return key.name;
   if (key.type === AST_NODE_TYPES.Literal && typeof key.value === "string")
     return key.value;
   return null;
 }
 
-function isLiteralType(node: unknown): boolean {
-  if (!node || typeof node !== "object") return false;
-  const n = node as unknown as Record<string, unknown>;
+function isLiteralType(node: TSESTree.Node): boolean {
   return (
-    n.type === AST_NODE_TYPES.TSLiteralType ||
-    n.type === AST_NODE_TYPES.TSStringKeyword ||
-    n.type === AST_NODE_TYPES.TSNumberKeyword
+    node.type === AST_NODE_TYPES.TSLiteralType ||
+    node.type === AST_NODE_TYPES.TSStringKeyword ||
+    node.type === AST_NODE_TYPES.TSNumberKeyword
   );
 }
 
-function isLiteralUnion(node: unknown): boolean {
-  if (!node || typeof node !== "object") return false;
-  const n = node as unknown as Record<string, unknown>;
-  if (n.type !== AST_NODE_TYPES.TSUnionType) return false;
-  const types = n.types as unknown[];
-  return types.length > 0 && types.every(isLiteralType);
+function isLiteralUnion(node: TSESTree.Node): boolean {
+  if (node.type !== AST_NODE_TYPES.TSUnionType) return false;
+  return node.types.length > 0 && node.types.every(isLiteralType);
 }
 
-function findTypeParamNames(node: unknown): Set<string> {
-  if (!node || typeof node !== "object") return new Set();
-  const n = node as unknown as Record<string, unknown>;
+function findTypeParamNames(node: TSESTree.TSTypeParameterDeclaration): Set<string> {
   const result = new Set<string>();
-
-  if (n.type === AST_NODE_TYPES.TSTypeParameterDeclaration) {
-    const params = n.params as unknown[];
-    for (const p of params) {
-      const pobj = p as Record<string, unknown>;
-      if (pobj.type === AST_NODE_TYPES.TSTypeParameter && pobj.name) {
-        const nameNode = pobj.name as unknown as Record<string, unknown>;
-        if (nameNode.type === AST_NODE_TYPES.Identifier) {
-          result.add((nameNode as Record<string, string>).name);
-        }
-      }
-    }
+  for (const p of node.params) {
+    result.add(p.name.name);
   }
   return result;
 }
 
-function checkConstraintIsLiteralUnion(param: unknown): boolean {
-  if (!param || typeof param !== "object") return false;
-  const p = param as unknown as Record<string, unknown>;
-  const constraint = p.constraint;
-  return isLiteralUnion(constraint);
+function checkConstraintIsLiteralUnion(param: TSESTree.TSTypeParameter): boolean {
+  if (!param.constraint) return false;
+  return isLiteralUnion(param.constraint);
 }
 
-function isTypeRefToParam(node: unknown, paramName: string): boolean {
-  if (!node || typeof node !== "object") return false;
-  const n = node as unknown as Record<string, unknown>;
-  if (n.type !== AST_NODE_TYPES.TSTypeReference) return false;
-  const typeName = n.typeName as Record<string, unknown>;
-  if (typeName?.type === AST_NODE_TYPES.Identifier) {
-    return (typeName as Record<string, string>).name === paramName;
+function isTypeRefToParam(node: TSESTree.Node | undefined, paramName: string): boolean {
+  if (!node || node.type !== AST_NODE_TYPES.TSTypeReference) return false;
+  if (node.typeName.type === AST_NODE_TYPES.Identifier) {
+    return node.typeName.name === paramName;
   }
-  if (typeName?.type === AST_NODE_TYPES.TSQualifiedName) {
-    const right = typeName.right as Record<string, string>;
-    return right.name === paramName;
+  if (node.typeName.type === AST_NODE_TYPES.TSQualifiedName) {
+    return node.typeName.right.name === paramName;
   }
   return false;
 }
 
-function getParamNames(params: unknown[]): string {
-  return params
-    .map((p) => {
-     const pobj = p as Record<string, unknown>;
-      const nameNode = (pobj as unknown as Record<string, unknown>).name as Record<
-        string,
-        string
-      >;
-      return nameNode?.name || "?";
-    })
-    .join(", ");
+function getParamNames(params: TSESTree.TSTypeParameter[]): string {
+  return params.map((p) => p.name.name).join(", ");
 }
 
 export default createRule({
@@ -111,51 +78,35 @@ export default createRule({
     },
     messages: {
       phantomTypeOveruse:
-        "Type '{{name}}<{{params}}>' uses phantom type parameter(s) constrained to literal union(s) for simple state. Use a plain literal union type instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC01-invalid-states.md",
+        "Type '{{name}}<{{params}}>' uses phantom type parameter(s) constrained to literal union(s) for simple state. Use a plain literal union type instead. See: https://github.com/alexeieleusis/lens-flow/blob/main/eslint-lensflow-plugin/docs/rules/no-phantom-types-for-simple-state.md",
     },
     schema: [],
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"phantomTypeOveruse", []>) {
+ create(context: TSESLint.RuleContext<"phantomTypeOveruse", []>) {
     function checkDeclaration(
-      node:
-        | import("@typescript-eslint/types").TSESTree.TSTypeAliasDeclaration
-        | import("@typescript-eslint/types").TSESTree.TSInterfaceDeclaration
+      node: TSESTree.TSTypeAliasDeclaration | TSESTree.TSInterfaceDeclaration
     ) {
       if (!node.typeParameters) return;
-      const params = node.typeParameters.params as unknown[];
-      const phantomParams = params.filter((p) => {
-     const pobj = p as Record<string, unknown>;
-        return (
-          pobj.type === AST_NODE_TYPES.TSTypeParameter &&
-          checkConstraintIsLiteralUnion(pobj)
-        );
-      });
+      const params = node.typeParameters.params;
+      const phantomParams = params.filter((p) =>
+        checkConstraintIsLiteralUnion(p)
+      );
       if (phantomParams.length === 0) return;
 
       const paramNameSet = findTypeParamNames(node.typeParameters);
-      const nodeAny = node as unknown as Record<string, unknown>;
-      const typeAnnObj = nodeAny.typeAnnotation && typeof nodeAny.typeAnnotation === "object"
-        ? nodeAny.typeAnnotation
-        : undefined;
-      const bodyOrTypeAnn = nodeAny.body && typeof nodeAny.body === "object"
-        ? nodeAny.body
-        : typeAnnObj;
-      const membersArr =
-        bodyOrTypeAnn && typeof bodyOrTypeAnn === "object"
-          ? ((bodyOrTypeAnn as Record<string, unknown>).body ||
-              (bodyOrTypeAnn as Record<string, unknown>).members)
-          : undefined;
 
-      const members = membersArr as unknown[] | undefined;
+      const members =
+        "body" in node && node.body
+          ? node.body.members
+          : node.typeAnnotation?.type === AST_NODE_TYPES.TSTypeLiteral
+            ? node.typeAnnotation.body
+            : undefined;
       if (!members || members.length === 0) return;
 
       const allMembersPhantom = members.every((member) => {
-        if (!member || typeof member !== "object") return false;
-        const m = member as unknown as Record<string, unknown>;
-        if (m.type !== AST_NODE_TYPES.TSPropertySignature) return false;
-        const key = m.key as Record<string, unknown>;
-        const keyText = getKeyText(key);
+        if (member.type !== AST_NODE_TYPES.TSPropertySignature) return false;
+        const keyText = getKeyText(member.key);
         if (!keyText) return false;
         return isPhantomPropertyName(keyText);
       });
@@ -163,15 +114,11 @@ export default createRule({
       if (!allMembersPhantom) return;
 
       const hasPhantomTypeRef = members.some((member) => {
-        if (!member || typeof member !== "object") return false;
-        const m = member as unknown as Record<string, unknown>;
-        if (m.type !== AST_NODE_TYPES.TSPropertySignature) return false;
-        const typeAnn = m.typeAnnotation as
-          | Record<string, unknown>
-          | undefined;
-        if (!typeAnn?.typeAnnotation) return false;
+        if (member.type !== AST_NODE_TYPES.TSPropertySignature) return false;
+        const typeAnn = member.typeAnnotation?.typeAnnotation;
+        if (!typeAnn) return false;
         return [...paramNameSet].some((pn) =>
-          isTypeRefToParam(typeAnn.typeAnnotation, pn)
+          isTypeRefToParam(typeAnn, pn)
         );
       });
 

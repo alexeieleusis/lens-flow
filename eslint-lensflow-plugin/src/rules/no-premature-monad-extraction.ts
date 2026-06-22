@@ -47,28 +47,25 @@ function isExtractionCall(node: TSESTree.CallExpression): boolean {
   return false;
 }
 
-function findPipeCall(node: TSESTree.CallExpression): TSESTree.CallExpression | null {
-  let current = node;
-  while (current) {
+function findPipeCall(
+  node: TSESTree.CallExpression,
+  context: TSESLint.RuleContext<string, []>,
+): TSESTree.CallExpression | null {
+  const ancestors = context.sourceCode.getAncestors(node);
+  let target: TSESTree.Node = node;
+
+  for (const ancestor of ancestors) {
+    if (ancestor.type !== "CallExpression") return null;
+    const idx = ancestor.arguments.indexOf(target as TSESTree.Expression);
+    if (idx === -1) return null;
+
     if (
-      current.type === "CallExpression" &&
-      current.callee.type === "Identifier" &&
-      current.callee.name === "pipe"
+      ancestor.callee.type === "Identifier" &&
+      ancestor.callee.name === "pipe"
     ) {
-      return current;
+      return ancestor;
     }
-    const parent = (current as any).parent;
-    if (!parent) return null;
-    if (parent.type === "CallExpression") {
-      const idx = parent.arguments.indexOf(current);
-      if (idx === -1) {
-        return null;
-      } else {
-        current = parent;
-      }
-    } else {
-      return null;
-    }
+    target = ancestor;
   }
   return null;
 }
@@ -94,7 +91,7 @@ export default createRule({
       CallExpression(node) {
         if (!isExtractionCall(node)) return;
 
-        const pipeCall = findPipeCall(node);
+        const pipeCall = findPipeCall(node, context);
         if (pipeCall) {
           const lastArg = pipeCall.arguments[pipeCall.arguments.length - 1];
           if (lastArg !== node) {
