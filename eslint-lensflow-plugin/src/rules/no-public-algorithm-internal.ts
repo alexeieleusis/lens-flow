@@ -2,7 +2,7 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
 const INTERNAL_NAME_PATTERN =
-  /^(?:buffer|cache|state|internal|_internal|accumulator|_pool)$/i;
+  /^(?:buffer|cache|state|internal|_internal|accumulator|_pool)$/;
 
 const COLLECTION_TYPES = new Set(["Map", "Set", "WeakMap", "WeakSet"]);
 
