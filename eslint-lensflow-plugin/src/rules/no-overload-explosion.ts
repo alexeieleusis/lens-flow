@@ -14,7 +14,7 @@ export default createRule({
     },
     messages: {
       tooManyOverloads:
-        "Function '{{name}}' has {{count}} overload signatures, which makes the API hard to maintain. Consider using a discriminated union input instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC07-callable-contracts.md",
+        "Function '{{name}}' has {{count}} overload signatures, which makes the API hard to maintain. Consider using a discriminated union input instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC07-callable-contracts.md",
     },
     schema: [
       {
