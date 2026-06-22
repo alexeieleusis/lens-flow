@@ -32,7 +32,7 @@ export default createRule({
   },
   defaultOptions: [{ maxOverloads: 5 }],
   create(context: TSESLint.RuleContext<"tooManyOverloads", [{ maxOverloads: number }]>) {
-    const [{ maxOverloads } = { maxOverloads: 5 }] = context.options ?? [];
+    const { maxOverloads = 5 } = context.options[0];
     const fnGroups = new Map<
       string,
       { nodes: FnLikeNode[]; overloads: number }
