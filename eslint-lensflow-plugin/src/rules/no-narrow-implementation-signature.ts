@@ -145,9 +145,9 @@ function checkReturnTypeCompatibility(
     return !checker.isTypeAssignableTo(overloadRetType, implRetType);
   }
 
-  const inferredRetType = checker.getReturnTypeOfSignature(
-    checker.getTypeAtLocation(tsImplNode).getCallSignatures()[0],
-  );
+  const callSigs = checker.getTypeAtLocation(tsImplNode).getCallSignatures();
+  if (callSigs.length === 0) return false;
+  const inferredRetType = checker.getReturnTypeOfSignature(callSigs[0]);
   return !checker.isTypeAssignableTo(overloadRetType, inferredRetType);
 }
 

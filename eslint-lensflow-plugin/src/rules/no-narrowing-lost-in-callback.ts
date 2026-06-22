@@ -24,8 +24,7 @@ function isNarrowingTest(node: TSESTree.Node): {
   if (operator !== "!=" && operator !== "!==") return null;
 
   const nullishLiteral =
-    (right.type === "Identifier" &&
-      (right.name === "null" || right.name === "undefined")) ||
+    (right.type === "Identifier" && right.name === "undefined") ||
     (right.type === "Literal" && right.value === null);
 
   if (!nullishLiteral) return null;
