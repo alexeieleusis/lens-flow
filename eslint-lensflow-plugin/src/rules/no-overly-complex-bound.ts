@@ -1,31 +1,14 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
-function getMemberTypeAnnotation(member: TSESTree.TypeElement): TSESTree.TypeNode | null {
-  if (member.type === "TSPropertySignature" && member.typeAnnotation) {
-    return member.typeAnnotation.typeAnnotation;
-  }
-  if (member.type === "TSMethodSignature" && member.returnType) {
-    return member.returnType.typeAnnotation;
-  }
-  if (member.type === "TSCallSignatureDeclaration" && member.returnType) {
-    return member.returnType.typeAnnotation;
-  }
-  if (member.type === "TSConstructSignatureDeclaration" && member.returnType) {
-    return member.returnType.typeAnnotation;
-  }
-  if (member.type === "TSIndexSignature" && member.typeAnnotation) {
-    return member.typeAnnotation.typeAnnotation;
-  }
-  return null;
-}
-
 function getMaxPropertyDepth(members: TSESTree.TypeElement[]): number {
   let maxDepth = 0;
   for (const member of members) {
-    const typeNode = getMemberTypeAnnotation(member);
-    if (typeNode) {
-      const depth = getNestingDepth(typeNode);
+    if (
+      member.type === "TSPropertySignature" &&
+      member.typeAnnotation
+    ) {
+      const depth = getNestingDepth(member.typeAnnotation.typeAnnotation);
       if (depth > maxDepth) maxDepth = depth;
     }
   }
@@ -48,30 +31,13 @@ function getNestingDepth(node: TSESTree.TypeNode): number {
   if (node.type === "TSIntersectionType") {
     return getMaxIntersectionDepth(node.types);
   }
-  if (node.type === "TSParenthesizedType") {
-    return getNestingDepth(node.typeAnnotation);
-  }
-  if (node.type === "TSUnionType") {
-    let maxDepth = 0;
-    for (const member of node.types) {
-      const depth = getNestingDepth(member);
-      if (depth > maxDepth) maxDepth = depth;
-    }
-    return maxDepth;
-  }
   return 0;
 }
 
-const typeElementKinds = new Set([
-  "TSPropertySignature",
-  "TSMethodSignature",
-  "TSCallSignatureDeclaration",
-  "TSConstructSignatureDeclaration",
-  "TSIndexSignature",
-]);
-
 function countProperties(node: TSESTree.TSTypeLiteral): number {
-  return node.members.filter((m) => typeElementKinds.has(m.type)).length;
+  return node.members.filter(
+    (m) => m.type === "TSPropertySignature",
+  ).length;
 }
 
 function calcInterfaceMemberMetrics(
@@ -80,12 +46,18 @@ function calcInterfaceMemberMetrics(
   let maxDepth = 0;
   let maxNestedProps = 0;
   for (const member of members) {
-    const typeNode = getMemberTypeAnnotation(member);
-    if (typeNode) {
-      const depth = getNestingDepth(typeNode);
+    if (
+      member.type === "TSPropertySignature" &&
+      member.typeAnnotation
+    ) {
+      const depth = getNestingDepth(member.typeAnnotation.typeAnnotation);
       if (depth > maxDepth) maxDepth = depth;
-      if (typeNode.type === "TSTypeLiteral") {
-        const props = countProperties(typeNode);
+      if (
+        member.typeAnnotation.typeAnnotation.type === "TSTypeLiteral"
+      ) {
+        const props = countProperties(
+          member.typeAnnotation.typeAnnotation,
+        );
         if (props > maxNestedProps) maxNestedProps = props;
       }
     }
@@ -152,7 +124,7 @@ export default createRule({
       reportNode: TSESTree.TypeNode,
     ) {
       const props = countProperties(literal);
-      if (props > options.maxProperties) {
+      if (props >= options.maxProperties) {
         context.report({
           node: literal,
           messageId: "complexTypeLiteral",
@@ -164,7 +136,7 @@ export default createRule({
       }
 
       const depth = getNestingDepth(literal);
-      if (depth > options.maxNestingDepth) {
+      if (depth >= options.maxNestingDepth) {
         context.report({
           node: reportNode,
           messageId: "deepNesting",
@@ -180,7 +152,7 @@ export default createRule({
       constraint: TSESTree.TSIntersectionType,
       reportNode: TSESTree.TSTypeParameter,
     ) {
-      if (constraint.types.length > options.maxIntersectionMembers) {
+      if (constraint.types.length >= options.maxIntersectionMembers) {
         context.report({
           node: reportNode,
           messageId: "complexIntersection",
@@ -195,18 +167,6 @@ export default createRule({
         if (member.type === "TSTypeLiteral") {
           checkTypeLiteral(member, member);
         }
-      }
-
-      const depth = getNestingDepth(constraint);
-      if (depth > options.maxNestingDepth) {
-        context.report({
-          node: reportNode,
-          messageId: "deepNesting",
-          data: {
-            depth: String(depth),
-            max: String(options.maxNestingDepth),
-          },
-        });
       }
     }
 
@@ -241,8 +201,8 @@ export default createRule({
           calcInterfaceMemberMetrics(node.body);
 
         if (
-          maxDepth > options.maxNestingDepth ||
-          maxNestedProps > options.maxProperties
+          maxDepth >= options.maxNestingDepth ||
+          maxNestedProps >= options.maxProperties
         ) {
           context.report({
             node,
