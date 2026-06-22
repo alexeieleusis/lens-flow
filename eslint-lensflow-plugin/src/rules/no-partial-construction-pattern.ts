@@ -23,6 +23,8 @@ export default createRule({
         const emptyDefaultProps = node.body.filter(
           (member) =>
             member.type === "PropertyDefinition" &&
+            member.accessibility !== "private" &&
+            member.accessibility !== "protected" &&
             member.value !== null &&
             member.value !== undefined &&
             (is_empty_string_literal(member.value) ||
