@@ -1,5 +1,18 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const brandPattern = /^(.*[_]*brand|brand.*)$/i;
+
+function hasBrandMarker(member: TSESTree.TypeNode): boolean {
+  if (member.type !== "TSTypeLiteral") return false;
+  return member.members.some((m) => {
+    if (m.type !== "TSPropertySignature") return false;
+    const key = m.key;
+    if (key.type === "Identifier") return brandPattern.test(key.name);
+    if (key.type === "Literal" && typeof key.value === "string") return brandPattern.test(key.value);
+    return false;
+  });
+}
 
 export default createRule({
   name: "no-over-branding-uc02",
@@ -33,7 +46,7 @@ export default createRule({
       context.options ?? [{ maxBrandsPerPrimitive: 3 }];
 
     const brandedAliases: Array<{
-      node: import("@typescript-eslint/types").TSESTree.TSTypeAliasDeclaration;
+      node: TSESTree.TSTypeAliasDeclaration;
       primitive: "string" | "number";
     }> = [];
 
@@ -70,7 +83,7 @@ export default createRule({
           }
         }
 
-        if (primitive && members.length >= 2) {
+        if (primitive && members.length >= 2 && members.some(hasBrandMarker)) {
           brandedAliases.push({ node, primitive });
         }
       },

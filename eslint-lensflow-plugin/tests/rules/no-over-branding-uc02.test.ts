@@ -16,6 +16,10 @@ type Rating    = number & { readonly __brand: "Rating" };
 type Age       = number & { readonly __brand: "Age" };`,
     `type Name = string;
 type Age = number;`,
+    `type Foo = string & { readonly foo: number };
+type Bar = string & { readonly bar: string };
+type Baz = string & { readonly baz: boolean };
+type Qux = string & { readonly qux: symbol };`,
   ],
   invalid: [
     {
@@ -45,11 +49,11 @@ type Quantity = number & { readonly __brand: "Quantity" };`,
       ],
     },
     {
-      code: `type A = string & { __b: "A" };
-type B = string & { __b: "B" };
-type C = string & { __b: "C" };
-type D = string & { __b: "D" };
-type E = string & { __b: "E" };`,
+      code: `type A = string & { __brand: "A" };
+type B = string & { __brand: "B" };
+type C = string & { __brand: "C" };
+type D = string & { __brand: "D" };
+type E = string & { __brand: "E" };`,
       errors: [
         { messageId: "overBranding" },
         { messageId: "overBranding" },
