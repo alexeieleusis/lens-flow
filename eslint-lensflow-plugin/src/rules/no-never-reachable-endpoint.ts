@@ -23,7 +23,17 @@ function isTerminating(stmt: TSESTree.Statement): boolean {
     case "SwitchStatement": {
       const hasDefault = stmt.cases.some((c) => c.test === null);
       if (!hasDefault) return false;
-      return stmt.cases.every((c) => c.consequent.every(isTerminating));
+      const cases = stmt.cases;
+      const caseTerminates = cases.map((c) => {
+        const last = c.consequent[c.consequent.length - 1];
+        return last ? isTerminating(last) : false;
+      });
+      let nextTerminates = false;
+      for (let i = cases.length - 1; i >= 0; i--) {
+        if (!caseTerminates[i] && !nextTerminates) return false;
+        nextTerminates = caseTerminates[i] || nextTerminates;
+      }
+      return true;
     }
     case "LabeledStatement":
       return isTerminating(stmt.body);
