@@ -67,7 +67,7 @@ export default createRule({
     },
     messages: {
       complexInferChain:
-        "Found a recursive conditional type with `infer` nested {{depth}} levels deep (max allowed: {{maxDepth}}). Consider simplifying or using a function-based approach. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T63-template-literal-types.md",
+        "Found a recursive conditional type with `infer` nested {{depth}} levels deep (max allowed: {{maxDepth}}). Consider simplifying or using a function-based approach. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T63-template-literal-types.md",
     },
     schema: [
       {
@@ -84,7 +84,7 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ maxDepth: 3 }],
-  create(context: TSESLint.RuleContext<"complexInferChain", [{ maxDepth: number }]>) {
+  create(context: TSESLint.RuleContext<"complexInferChain", [{ maxDepth?: number }]>) {
     const [{ maxDepth } = { maxDepth: 3 }] = context.options ?? [];
 
     return {

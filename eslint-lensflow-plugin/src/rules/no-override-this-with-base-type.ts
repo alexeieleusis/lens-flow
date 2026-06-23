@@ -11,7 +11,7 @@ export default createRule({
     },
     messages: {
       overrideThisWithBaseType:
-        "Method \"{{methodName}}\" overrides a base method returning `this` with return type `{{returnType}}`. Use `this` to preserve polymorphism. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T33-self-type.md",
+        "Method \"{{methodName}}\" overrides a base method returning `this` with return type `{{returnType}}`. Use `this` to preserve polymorphism. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T33-self-type.md",
     },
     schema: [],
     fixable: undefined,
@@ -46,19 +46,28 @@ export default createRule({
   },
 });
 
-function methodReturnsThis(member: TSESTree.ClassElement): member is TSESTree.MethodDefinition & { value: TSESTree.FunctionExpression & { returnType: { typeAnnotation: TSESTree.TSThisType } } } {
-  return (
-    member.type === AST_NODE_TYPES.MethodDefinition &&
-    !member.static &&
-    member.value?.returnType?.typeAnnotation?.type === AST_NODE_TYPES.TSThisType
-  );
+function methodReturnsThis(member: TSESTree.ClassElement): boolean {
+  if (member.type === AST_NODE_TYPES.MethodDefinition) {
+    return (
+      !member.static &&
+      member.value?.returnType?.typeAnnotation?.type === AST_NODE_TYPES.TSThisType
+    );
+  }
+  if (member.type === AST_NODE_TYPES.TSAbstractMethodDefinition) {
+    return (
+      !member.static &&
+      (member as TSESTree.TSAbstractMethodDefinition & { returnType?: TSESTree.TSTypeAnnotation }).returnType?.typeAnnotation?.type === AST_NODE_TYPES.TSThisType
+    );
+  }
+  return false;
 }
 
 function collectThisMethods(body: TSESTree.ClassBody): Set<string> {
   const names = new Set<string>();
   for (const member of body.body) {
     if (methodReturnsThis(member)) {
-      const name = getKeyName(member.key);
+      const methodLike = member as TSESTree.MethodDefinition | TSESTree.TSAbstractMethodDefinition;
+      const name = getKeyName(methodLike.key);
       if (name) names.add(name);
     }
   }
