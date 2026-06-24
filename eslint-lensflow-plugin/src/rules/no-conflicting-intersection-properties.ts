@@ -11,7 +11,7 @@ const PRIMITIVE_TYPES = new Set([
   "TSNeverKeyword",
 ]);
 
-type PropEntry = { typeAnnotation: TSESTree.TSType };
+type PropEntry = { typeAnnotation: TSESTree.TypeNode };
 
 function literalValueEquals(a: unknown, b: unknown): boolean {
   if (typeof a !== typeof b) return false;
@@ -43,7 +43,7 @@ function literalMatchesPrimitive(litVal: unknown, primType: string): boolean {
   }
 }
 
-function isConflictingTypes(a: TSESTree.TSType, b: TSESTree.TSType): boolean {
+function isConflictingTypes(a: TSESTree.TypeNode, b: TSESTree.TypeNode): boolean {
   const typeA = a.type;
   const typeB = b.type;
 
@@ -54,17 +54,20 @@ function isConflictingTypes(a: TSESTree.TSType, b: TSESTree.TSType): boolean {
   if (typeA === "TSLiteralType" && typeB === "TSLiteralType") {
     const litA = (a as TSESTree.TSLiteralType).literal;
     const litB = (b as TSESTree.TSLiteralType).literal;
+    if (litA.type !== "Literal" || litB.type !== "Literal") return false;
     return !literalValueEquals(litA.value, litB.value);
   }
 
   if (PRIMITIVE_TYPES.has(typeA) && typeB === "TSLiteralType") {
-    const litVal = (b as TSESTree.TSLiteralType).literal.value;
-    return !literalMatchesPrimitive(litVal, typeA);
+    const lit = (b as TSESTree.TSLiteralType).literal;
+    if (lit.type !== "Literal") return false;
+    return !literalMatchesPrimitive(lit.value, typeA);
   }
 
   if (typeA === "TSLiteralType" && PRIMITIVE_TYPES.has(typeB)) {
-    const litVal = (a as TSESTree.TSLiteralType).literal.value;
-    return !literalMatchesPrimitive(litVal, typeB);
+    const lit = (a as TSESTree.TSLiteralType).literal;
+    if (lit.type !== "Literal") return false;
+    return !literalMatchesPrimitive(lit.value, typeB);
   }
 
   if (typeA === "TSTypeLiteral" && typeB === "TSTypeLiteral") {

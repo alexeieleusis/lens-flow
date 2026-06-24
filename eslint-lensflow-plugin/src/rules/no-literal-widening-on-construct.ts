@@ -1,5 +1,5 @@
 import ts from "typescript";
-import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
+import { ESLintUtils, TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
 const DISCRIMINANT_NAMES = new Set([
@@ -39,7 +39,7 @@ export default createRule({
     if (!parserServices.program) return {};
 
     return {
-      VariableDeclarator(node: TSESLint.TSESTree.VariableDeclarator) {
+      VariableDeclarator(node: TSESTree.VariableDeclarator) {
         if (node.init?.type !== "ObjectExpression") return;
         if (node.id.type !== "Identifier") return;
 
@@ -47,8 +47,7 @@ export default createRule({
         if (node.id.typeAnnotation) return;
 
         // Skip if wrapped in `satisfies`
-        if (node.parent?.type === "VariableDeclarator" &&
-            node.init.parent?.type === "TSSatisfiesExpression") {
+        if (node.init.parent?.type === "TSSatisfiesExpression") {
           return;
         }
 
@@ -77,7 +76,7 @@ export default createRule({
             const propName =
               prop.key.type === "Identifier"
                 ? prop.key.name
-                : typeof prop.key.value === "string"
+                : prop.key.type === "Literal" && typeof prop.key.value === "string"
                   ? prop.key.value
                   : null;
             if (propName === null) continue;

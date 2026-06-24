@@ -59,8 +59,6 @@ function findKeyword(node: TSESTree.TypeNode): "any" | "unknown" | null {
       if (found === "any") return "any";
       if (found === "unknown") return "unknown";
     }
-  } else if (node.type === "TSParenthesizedType") {
-    return findKeyword(node.typeAnnotation);
   }
   return null;
 }

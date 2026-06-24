@@ -11,12 +11,9 @@ function isTerminating(
 ): boolean {
   switch (stmt.type) {
     case "FunctionDeclaration":
-    case "FunctionExpression":
-    case "ArrowFunctionExpression":
       return false;
     case "ReturnStatement":
       return !stmt.argument;
-    case "ThrowStatement":
     case "ThrowStatement":
       return true;
     case "WhileStatement":
@@ -128,9 +125,7 @@ export default createRule({
       FunctionExpression(node) {
         const returnType = node.returnType?.typeAnnotation;
         if (returnType && isNeverReturnType(returnType)) {
-          const parent = context.sourceCode.getParent
-            ? context.sourceCode.getParent(node)
-            : node.parent;
+          const parent = node.parent;
           if (
             parent &&
             parent.type === "VariableDeclarator" &&
@@ -144,9 +139,7 @@ export default createRule({
       ArrowFunctionExpression(node) {
         const returnType = node.returnType?.typeAnnotation;
         if (returnType && isNeverReturnType(returnType)) {
-          const parent = context.sourceCode.getParent
-            ? context.sourceCode.getParent(node)
-            : node.parent;
+          const parent = node.parent;
           if (
             parent &&
             parent.type === "VariableDeclarator" &&

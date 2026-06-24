@@ -3,13 +3,15 @@ import { createRule } from "../utils/rule-creator.js";
 
 const BUILTIN_INTERFACES = new Set(["Window", "Document", "NodeJS.Global", "NodeJS"]);
 
-function resolveExprName(node: TSESTree.TSExpressionWithTypeArguments["expression"]): string | null {
-  if (node.type === "Identifier") return node.name;
-  if (node.type === "Literal" && typeof node.value === "string") return String(node.value);
-  if (node.type === "TSQualifiedName") {
-    const left = resolveExprName(node.left);
-    const right = node.right.name;
-    return left ? `${left}.${right}` : right;
+function resolveExprName(type: TSESTree.TSInterfaceHeritage): string | null {
+  if (!type.expression) return null;
+  const expr = type.expression;
+  if (expr.type === "Identifier") return expr.name;
+  const exprAny = expr as unknown as TSESTree.TSQualifiedName;
+  if (exprAny.type === "TSQualifiedName") {
+    const leftName = resolveExprName({ expression: exprAny.left as typeof expr, type: "TSInterfaceHeritage" } as unknown as TSESTree.TSInterfaceHeritage);
+    const right = exprAny.right.name;
+    return leftName ? `${leftName}.${right}` : right;
   }
   return null;
 }
@@ -19,7 +21,7 @@ function isExtendingBuiltin(node: TSESTree.Statement): string | null {
   const extendsList = node.extends;
   if (!extendsList || extendsList.length === 0) return null;
   for (const ext of extendsList) {
-    const name = ext.expression ? resolveExprName(ext.expression) : ext.name;
+    const name = resolveExprName(ext);
     if (name && BUILTIN_INTERFACES.has(name)) {
       return name;
     }

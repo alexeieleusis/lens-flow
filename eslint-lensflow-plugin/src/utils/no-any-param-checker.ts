@@ -8,12 +8,24 @@ type ParamsNode = TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | T
  */
 function getParamTypeAnnotation(param: TSESTree.Parameter): TSESTree.TypeNode | undefined {
   if (param.type === "AssignmentPattern") {
-    return param.left.typeAnnotation?.typeAnnotation;
+    if (param.left.type === "Identifier") {
+      return param.left.typeAnnotation?.typeAnnotation;
+    }
+    return;
   }
   if (param.type === "RestElement") {
-    return param.typeAnnotation?.typeAnnotation || param.argument.typeAnnotation?.typeAnnotation;
+    if (param.typeAnnotation?.typeAnnotation) {
+      return param.typeAnnotation.typeAnnotation;
+    }
+    if (param.argument.type === "Identifier") {
+      return param.argument.typeAnnotation?.typeAnnotation;
+    }
+    return;
   }
-  return param.typeAnnotation?.typeAnnotation;
+  if (param.type === "Identifier") {
+    return param.typeAnnotation?.typeAnnotation;
+  }
+  return;
 }
 
 /**
@@ -85,10 +97,6 @@ export function containsAnyType(node: TSESTree.TypeNode): boolean {
     return containsAnyType(node.typeAnnotation);
   }
 
-  if (node.type === "TSParenthesizedType") {
-    return containsAnyType(node.typeAnnotation);
-  }
-
   if (node.type === "TSTypeLiteral") {
     return node.members.some((member) => {
       if (member.type === "TSPropertySignature" && member.typeAnnotation?.typeAnnotation) {
@@ -129,11 +137,11 @@ export function checkAnyParams(
     }
 
     if (typeNode && containsAnyType(typeNode)) {
-      let inner: TSESTree.Parameter = param;
+      let inner: TSESTree.Node = param;
       if (param.type === "AssignmentPattern") inner = param.left;
       if (inner.type === "RestElement") inner = inner.argument;
       const paramName =
-        "name" in inner && typeof inner.name === "string" ? inner.name : context.sourceCode.getText(param);
+        inner.type === "Identifier" ? inner.name : context.sourceCode.getText(param);
       context.report({
         node: param,
         messageId,
@@ -161,11 +169,10 @@ export function createNoAnyParamChecker(messageId: string) {
         checkAnyParams(node.params, context, messageId);
       },
       TSParameterProperty(node) {
-        if (node.parameter.typeAnnotation?.typeAnnotation && containsAnyType(node.parameter.typeAnnotation.typeAnnotation)) {
-          const paramName =
-            "name" in node.parameter && typeof node.parameter.name === "string"
-              ? node.parameter.name
-              : context.sourceCode.getText(node.parameter);
+        const inner = node.parameter;
+        if (inner.type !== "Identifier") return;
+        if (inner.typeAnnotation?.typeAnnotation && containsAnyType(inner.typeAnnotation.typeAnnotation)) {
+          const paramName = inner.name;
           context.report({
             node,
             messageId,

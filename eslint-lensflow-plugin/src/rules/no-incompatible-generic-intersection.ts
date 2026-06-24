@@ -1,5 +1,5 @@
 import * as ts from "typescript";
-import { ESLintUtils, type TSESTree } from "@typescript-eslint/utils";
+import { ESLintUtils, type TSESTree, type TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
@@ -52,7 +52,7 @@ function typesOverlap(typeA: ts.Type, typeB: ts.Type): boolean {
     return (typeA as ts.NumberLiteralType).value === (typeB as ts.NumberLiteralType).value;
   }
   if ((typeA.flags & ts.TypeFlags.BooleanLiteral) && (typeB.flags & ts.TypeFlags.BooleanLiteral)) {
-    return (typeA as ts.BooleanLiteralType).value === (typeB as ts.BooleanLiteralType).value;
+    return (typeA as ts.LiteralType).value === (typeB as ts.LiteralType).value;
   }
 
   // Different primitive types don't overlap
@@ -78,13 +78,13 @@ function checkPairIncompatible(
   const typeB = checker.getTypeFromTypeNode(tsNodeB as ts.TypeNode);
 
   // Get symbol name from either symbol or alias symbol
-  const symA = typeA.getSymbol() || typeA.getAliasSymbol();
-  const symB = typeB.getSymbol() || typeB.getAliasSymbol();
+  const symA = typeA.getSymbol() || typeA.aliasSymbol;
+  const symB = typeB.getSymbol() || typeB.aliasSymbol;
   if (!symA || !symB || symA.name !== symB.name) return false;
 
   // Get type arguments using checker API (works for both built-in and user-defined generics)
-  const argsA = checker.getTypeArguments(typeA);
-  const argsB = checker.getTypeArguments(typeB);
+  const argsA = checker.getTypeArguments(typeA as ts.TypeReference);
+  const argsB = checker.getTypeArguments(typeB as ts.TypeReference);
   if (!argsA || !argsB) return false;
   if (argsA.length !== argsB.length || argsA.length === 0) return false;
 

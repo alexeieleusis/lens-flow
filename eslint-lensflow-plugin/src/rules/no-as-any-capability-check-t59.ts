@@ -19,7 +19,7 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"capabilityProbe", []>) {
-    const parserServices = ESLintUtils.getParserServices(context, { allowNoProject: true });
+    const parserServices = ESLintUtils.getParserServices(context, true);
     const program = parserServices.program;
     if (!program) return {};
 

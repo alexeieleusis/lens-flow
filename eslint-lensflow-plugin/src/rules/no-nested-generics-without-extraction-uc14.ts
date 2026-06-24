@@ -11,10 +11,6 @@ function returnTypeReferencesInterface(
     return returnType.types.some((t) => returnTypeReferencesInterface(t, interfaceName));
   }
 
-  if (returnType.type === "TSParenthesizedType") {
-    return returnTypeReferencesInterface(returnType.typeAnnotation, interfaceName);
-  }
-
   if (returnType.type !== "TSTypeReference") return false;
   const tn = returnType.typeName;
   if (tn.type === "Identifier" && tn.name === interfaceName) return true;

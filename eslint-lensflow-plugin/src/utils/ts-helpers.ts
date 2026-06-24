@@ -42,9 +42,6 @@ export function containsAny(typeNode: TSESTree.TypeNode): boolean {
     if (paramAny) return true;
     if (typeNode.returnType) return containsAny(typeNode.returnType.typeAnnotation);
   }
-  if (typeNode.type === "TSParenthesizedType") {
-    return containsAny(typeNode.typeAnnotation);
-  }
   if (typeNode.type === "TSConditionalType") {
     return (
       containsAny(typeNode.checkType) ||
@@ -113,9 +110,6 @@ export function containsUnknown(typeNode: TSESTree.TypeNode): boolean {
     });
     if (paramUnknown) return true;
     if (typeNode.returnType) return containsUnknown(typeNode.returnType.typeAnnotation);
-  }
-  if (typeNode.type === "TSParenthesizedType") {
-    return containsUnknown(typeNode.typeAnnotation);
   }
   if (typeNode.type === "TSConditionalType") {
     return (

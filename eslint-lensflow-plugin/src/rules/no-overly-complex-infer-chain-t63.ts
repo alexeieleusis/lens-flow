@@ -8,14 +8,19 @@ function containsInfer(node: TSESTree.TypeNode): boolean {
   if (node.type === "TSUnionType") return node.types.some(containsInfer);
   if (node.type === "TSIntersectionType") return node.types.some(containsInfer);
   if (node.type === "TSConditionalType") return containsInfer(node.checkType) || containsInfer(node.extendsType);
-  if (node.type === "TSParenthesizedType") return containsInfer(node.typeAnnotation);
-  if (node.type === "TSTypeOperator") return containsInfer(node.typeAnnotation);
+  if (node.type === "TSTypeOperator") return node.typeAnnotation ? containsInfer(node.typeAnnotation) : false;
   if (node.type === "TSConstructorType") {
-    return node.parameters.some((p) => p.typeAnnotation && containsInfer(p.typeAnnotation)) ||
-      containsInfer(node.returnType);
+    const ctor = node as unknown as TSESTree.TSConstructorType;
+    const params = ctor.params ?? [];
+    return params.some((p: TSESTree.Parameter) => {
+      const inner = p.type === "TSParameterProperty" ? p.parameter : p;
+      const ta = inner.typeAnnotation?.typeAnnotation;
+      return ta ? containsInfer(ta) : false;
+    }) ||
+      ctor.returnType && ctor.returnType.typeAnnotation ? containsInfer((ctor.returnType as TSESTree.TSTypeAnnotation).typeAnnotation) : false;
   }
-  if (isNodeWithTypeAnnotation(node)) return containsInfer(node.typeAnnotation);
-  if (isNodeWithElementType(node)) return containsInfer(node.elementType);
+  if (isNodeWithTypeAnnotation(node)) return node.typeAnnotation ? containsInfer(node.typeAnnotation) : false;
+  if (isNodeWithElementType(node)) return node.elementType ? containsInfer(node.elementType) : false;
   return false;
 }
 
@@ -33,7 +38,6 @@ function isNodeWithElementType(
 
 function hasTemplateInferExtendsType(node: TSESTree.TSConditionalType): boolean {
   let ext = node.extendsType;
-  while (ext.type === "TSParenthesizedType") ext = ext.typeAnnotation;
   return (
     ext.type === "TSTemplateLiteralType" &&
     ext.types.some((q) => containsInfer(q))
@@ -85,20 +89,21 @@ export default createRule({
   },
   defaultOptions: [{ maxDepth: 3 }],
   create(context: TSESLint.RuleContext<"complexInferChain", [{ maxDepth?: number }]>) {
-    const [{ maxDepth } = { maxDepth: 3 }] = context.options ?? [];
+    const [{ maxDepth } = { maxDepth: 3 }] = context.options ?? [{ maxDepth: 3 }];
+    const effectiveMaxDepth = maxDepth ?? 3;
 
     return {
       TSConditionalType(node) {
         if (!hasTemplateInferExtendsType(node)) return;
 
         const depth = measureDepth(node);
-        if (depth > maxDepth) {
+        if (depth > effectiveMaxDepth) {
           context.report({
             node,
             messageId: "complexInferChain",
             data: {
               depth: String(depth),
-              maxDepth: String(maxDepth),
+              maxDepth: String(effectiveMaxDepth),
             },
           });
         }

@@ -63,40 +63,45 @@ export default createRule({
         if (!KNOWN_EFFECT_NAMES.has(name)) return;
 
         // Get type arguments from the declaration's type reference node
-        // (checker.getTypeArguments doesn't work for type aliases)
         const exprTsNode = parserServices.esTreeNodeToTSNodeMap.get(
           node.expression,
         );
         const exprSym = checker.getSymbolAtLocation(exprTsNode);
         const decl = exprSym?.valueDeclaration;
 
-        let typeRef: ts.TypeNode | undefined;
+        let typeRef: ts.TypeReferenceNode | undefined;
 
-        if (decl?.type) {
-          // Explicit type annotation: declare const either: Either<AppError, User>
-          typeRef = decl.type;
-        } else if (
-          decl?.initializer &&
-          ts.isCallExpression(decl.initializer)
-        ) {
-          // Inferred from function call: const task = fetchUser(1)
-          const sig = checker.getResolvedSignature(decl.initializer);
-          const retDecl = sig?.getDeclaration();
-          if (retDecl?.type) {
-            typeRef = retDecl.type;
+        if (decl && ts.isVariableDeclaration(decl)) {
+          if (decl.type && ts.isTypeReferenceNode(decl.type)) {
+            // Explicit type annotation: declare const either: Either<AppError, User>
+            typeRef = decl.type;
+          } else if (decl.initializer && ts.isCallExpression(decl.initializer)) {
+            // Inferred from function call: const task = fetchUser(1)
+            const sig = checker.getResolvedSignature(decl.initializer);
+            if (sig) {
+              const dec = sig.getDeclaration();
+              if (ts.isFunctionDeclaration(dec) || ts.isMethodDeclaration(dec)) {
+                if (dec.type && ts.isTypeReferenceNode(dec.type)) {
+                  typeRef = dec.type;
+                }
+              } else if (ts.isFunctionTypeNode(dec)) {
+                if (dec.type && ts.isTypeReferenceNode(dec.type)) {
+                  typeRef = dec.type;
+                }
+              }
+            }
           }
         }
 
         if (
           !typeRef ||
-          typeRef.kind !== ts.SyntaxKind.TypeReference ||
           !typeRef.typeArguments ||
           typeRef.typeArguments.length < 2
         ) {
           return;
         }
 
-        const typeArgs = typeRef.typeArguments.map((ta) =>
+        const typeArgs = typeRef.typeArguments.map((ta: ts.TypeNode) =>
           checker.getTypeFromTypeNode(ta),
         );
         const successIndex = isSuccessFromFirstParam(name) ? 0 : 1;

@@ -18,7 +18,7 @@ const DISCRIMINANT_NAMES = new Set([
   "flavor",
 ]);
 
-function getPropertyName(key: TSESTree.EntityNamePattern | TSESTree.Expression): string | null {
+function getPropertyName(key: TSESTree.Expression): string | null {
   if (key.type === "Identifier") return key.name;
   if (key.type === "Literal" && typeof key.value === "string") return key.value;
   if (key.type === "Literal" && typeof key.value === "number") return String(key.value);

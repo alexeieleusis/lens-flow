@@ -48,8 +48,8 @@ function extractDefinePropertyCalls(
       callee.property.name === "defineProperties")
   ) {
     if (callee.property.name === "defineProperty") {
-      const propArg = node.arguments[1];
-      const name = extractKeyname(propArg);
+      const propArg = node.arguments[1] as TSESTree.Expression | undefined;
+      const name = propArg ? extractKeyname(propArg) : null;
       if (name !== null) return [name];
     } else {
       const descArg = node.arguments[1];

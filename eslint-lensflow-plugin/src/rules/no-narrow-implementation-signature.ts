@@ -186,7 +186,7 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"narrowImpl", []>) {
-    const parserServices = ESLintUtils.getParserServices(context, { allowSingleFile: true });
+    const parserServices = ESLintUtils.getParserServices(context, true);
     const program = parserServices.program;
     if (!program) return {};
 

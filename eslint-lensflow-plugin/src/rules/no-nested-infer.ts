@@ -54,9 +54,6 @@ function hasDeeplyNestedInfer(
           check(node.falseType, depth)
         );
 
-      case "TSParenthesizedType":
-        return check(node.typeAnnotation, depth);
-
       default:
         return false;
     }

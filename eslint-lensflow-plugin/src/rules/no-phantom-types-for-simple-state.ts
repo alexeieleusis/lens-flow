@@ -97,8 +97,8 @@ export default createRule({
       const paramNameSet = findTypeParamNames(node.typeParameters);
 
       const members =
-        node.type === AST_NODE_TYPES.TSInterfaceDeclaration && node.body
-          ? node.body.body
+        node.type === AST_NODE_TYPES.TSInterfaceDeclaration
+          ? node.body?.body
           : node.typeAnnotation?.type === AST_NODE_TYPES.TSTypeLiteral
             ? node.typeAnnotation.members
             : undefined;

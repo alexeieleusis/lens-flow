@@ -17,11 +17,6 @@ function hasKindProperty(typeNode: TSESTree.TypeNode): boolean {
   );
 }
 
-function unwrapParenthesized(node: TSESTree.TypeNode): TSESTree.TypeNode {
-  while (node.type === "TSParenthesizedType") node = node.typeAnnotation;
-  return node;
-}
-
 function isNestedDiscriminatedUnion(typeNode: TSESTree.TypeNode): boolean {
   if (typeNode.type === "TSUnionType") {
     return typeNode.types.some(
@@ -64,7 +59,7 @@ export default createRule({
             )
               continue;
 
-            const annotation = unwrapParenthesized(prop.typeAnnotation.typeAnnotation);
+            const annotation = prop.typeAnnotation.typeAnnotation;
             if (isNestedDiscriminatedUnion(annotation)) {
               if (!reported) {
                 context.report({

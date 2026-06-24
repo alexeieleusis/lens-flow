@@ -56,16 +56,6 @@ function findMutableArrays(
     return results;
   }
 
-  {
-    const parenType = "TSParenthesizedType";
-    if (typeNode.type === parenType) {
-      return findMutableArrays(
-        (typeNode as unknown as { typeAnnotation: TSESTree.TypeNode }).typeAnnotation,
-        sourceCode,
-      );
-    }
-  }
-
   if (
     typeNode.type === "TSUnionType" ||
     typeNode.type === "TSIntersectionType"

@@ -17,12 +17,12 @@ function normalizeParam(param: TSESTree.Parameter): TSESTree.Node {
   return param;
 }
 
-function getStringParamIdent(param: TSESTree.Parameter): TSESTree.Identifier & { typeAnnotation: TSESTree.TSTypeAnnotation } | null {
+function getStringParamIdent(param: TSESTree.Parameter): (TSESTree.Identifier & { typeAnnotation: TSESTree.TSTypeAnnotation }) | null {
   const inner = normalizeParam(param);
   if (inner.type !== "Identifier") return null;
   if (!inner.typeAnnotation) return null;
   if (inner.typeAnnotation.typeAnnotation.type !== "TSStringKeyword") return null;
-  return inner;
+  return inner as TSESTree.Identifier & { typeAnnotation: TSESTree.TSTypeAnnotation };
 }
 
 export default createRule({

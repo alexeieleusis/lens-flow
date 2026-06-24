@@ -31,8 +31,7 @@ export default createRule({
   create(context: TSESLint.RuleContext<"primitiveAlias", []>) {
     return {
       TSTypeAliasDeclaration(node) {
-        const ann = node.typeAnnotation;
-        const unwrapped = ann.type === "TSParenthesizedType" ? ann.typeAnnotation : ann;
+        const unwrapped = node.typeAnnotation;
         if (primitiveTypes.has(unwrapped.type)) {
           const primitiveName = unwrapped.type.replace("TS", "").replace("Keyword", "").toLowerCase();
           context.report({

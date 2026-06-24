@@ -1,5 +1,5 @@
 import ts from "typescript";
-import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
+import { ESLintUtils, TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
@@ -32,7 +32,7 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"mixed", []>) {
-    const parserServices = ESLintUtils.getParserServices(context, { allowNoProject: true });
+    const parserServices = ESLintUtils.getParserServices(context, true);
     const program = parserServices.program;
     if (!program) return {};
 
@@ -55,10 +55,11 @@ export default createRule({
 
     return {
       TSTypeAliasDeclaration(node) {
-        let typeAnnotation = node.typeAnnotation;
-        while (typeAnnotation.type === "TSParenthesizedType") {
-          typeAnnotation = typeAnnotation.typeAnnotation;
+        let typeAnnotation: TSESTree.TypeNode | undefined | null = node.typeAnnotation;
+        while (typeAnnotation && "typeAnnotation" in typeAnnotation && typeAnnotation.typeAnnotation) {
+          typeAnnotation = typeAnnotation.typeAnnotation as TSESTree.TypeNode;
         }
+        if (!typeAnnotation) return;
         if (typeAnnotation.type !== "TSUnionType") return;
 
         const unionNode = typeAnnotation;

@@ -37,8 +37,6 @@ export default createRule({
         if (params?.length !== 1) return;
 
         let typeParam = params[0];
-        if (typeParam.type === "TSParenthesizedType")
-          typeParam = typeParam.typeAnnotation;
         if (typeParam.type !== "TSStringKeyword") return;
 
         context.report({

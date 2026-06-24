@@ -100,9 +100,11 @@ function serializeType(node: TSESTree.TypeNode | null): string {
     case "TSLiteralType":
       return `literal:${JSON.stringify(node.literal)}`;
     case "TSTypeReference": {
-      const name = node.typeName.type === "Identifier" ? node.typeName.name : "complex";
-      const params = node.typeParameters
-        ? `[${node.typeParameters.params.map(serializeType).join(",")}]`
+      const ref = node as TSESTree.TSTypeReference;
+      const name = ref.typeName.type === "Identifier" ? ref.typeName.name : "complex";
+      const tp = (ref as unknown as { typeParameters?: { params: TSESTree.TypeNode[] } })?.typeParameters;
+      const params = tp?.params[0]
+        ? `[${tp.params.map(serializeType).join(",")}]`
         : "";
       return `ref:${name}${params}`;
     }

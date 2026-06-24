@@ -53,11 +53,12 @@ export default createRule({
       returnType: TSESTree.TypeNode | undefined
     ) {
       if (!nameNode) return;
-      const name = nameNode.type === "Identifier" ? nameNode.name : String(nameNode.value ?? "");
+      if (nameNode.type !== "Identifier" && nameNode.type !== "Literal" && nameNode.type !== "PrivateIdentifier") return;
+      const name = nameNode.type === "Identifier" ? nameNode.name : nameNode.type === "Literal" ? String(nameNode.value ?? "") : nameNode.name;
       if (!NAME_PATTERN.test(name)) return;
       if (returnType?.type === "TSBooleanKeyword") {
         context.report({
-          node: nameNode.type === "Identifier" ? nameNode : nameNode,
+          node: nameNode,
           messageId: "booleanParseReturn",
           data: { name },
         });
@@ -80,7 +81,10 @@ export default createRule({
       },
       // TSMethodSignature: `interface P { parse(): boolean; }` — name on node.key
       TSMethodSignature(node: TSESTree.TSMethodSignature) {
-        checkTypedSignature(node.key, node.returnType?.typeAnnotation);
+        const key = node.key;
+        if (key.type === "Identifier" || key.type === "Literal") {
+          checkTypedSignature(key, node.returnType?.typeAnnotation);
+        }
       },
       // TSFunctionType and TSCallSignatureDeclaration are intentionally NOT visited.
       // These represent anonymous type-level signatures (e.g. `type Fn = () => boolean`

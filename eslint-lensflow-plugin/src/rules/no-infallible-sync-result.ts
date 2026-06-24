@@ -103,7 +103,6 @@ export default createRule({
       if (node.type === "ArrowFunctionExpression") {
         const body = node.body;
         if (body.type === "AwaitExpression") return;
-        if (body.type === "ThrowStatement") return;
       }
 
       if (!node.body) return;
