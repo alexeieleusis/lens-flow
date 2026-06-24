@@ -64,6 +64,7 @@ export default createRule({
   ) {
     const { minComparisons = 1 } = context.options[0] || {};
     const scopeStack: FuncScope[] = [];
+    const sourceCode = context.sourceCode;
 
     function enterFunction(fn: TSESTree.FunctionLike) {
       const params: ParamScope[] = [];
@@ -106,7 +107,7 @@ export default createRule({
     function resolveParamScope(
       identifier: TSESTree.Identifier,
     ): ParamScope | undefined {
-      const scope = context.getScope(identifier);
+      const scope = sourceCode.getScope(identifier);
       const binding = scope.set.get(identifier.name);
       if (!binding || binding.kind !== "param") return undefined;
       const current = currentScope();
