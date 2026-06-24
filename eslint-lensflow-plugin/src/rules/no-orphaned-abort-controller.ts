@@ -2,16 +2,6 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
 
-const FUNCTION_BOUNDARY_TYPES = new Set([
-  "FunctionDeclaration",
-  "FunctionExpression",
-  "ArrowFunctionExpression",
-]);
-
-function isFunctionBoundary(node: TSESTree.Node): boolean {
-  return FUNCTION_BOUNDARY_TYPES.has(node.type);
-}
-
 function isSameVariable(
   ident: TSESTree.Identifier,
   target: TSESLint.Scope.Variable,
