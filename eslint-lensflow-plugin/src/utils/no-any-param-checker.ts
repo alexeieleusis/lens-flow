@@ -25,6 +25,9 @@ function getParamTypeAnnotation(param: TSESTree.Parameter): TSESTree.TypeNode | 
   if (param.type === "Identifier") {
     return param.typeAnnotation?.typeAnnotation;
   }
+  if (param.type === "ObjectPattern" || param.type === "ArrayPattern") {
+    return param.typeAnnotation?.typeAnnotation;
+  }
   return;
 }
 
