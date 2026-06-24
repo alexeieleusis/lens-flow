@@ -64,6 +64,12 @@ export default createRule({
       LogicalExpression(node) {
         if (node.operator !== "??") return;
 
+        const ancestors = context.sourceCode.getAncestors(node);
+        const parentIsCoalesce = ancestors.length > 0 &&
+          ancestors[ancestors.length - 1].type === "LogicalExpression" &&
+          (ancestors[ancestors.length - 1] as TSESTree.LogicalExpression).operator === "??";
+        if (parentIsCoalesce) return;
+
         const fallbackCount = countNullishCoalesces(node);
 
         let leftmost: TSESTree.Expression = node;

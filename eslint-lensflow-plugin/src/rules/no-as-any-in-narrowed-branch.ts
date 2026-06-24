@@ -96,7 +96,8 @@ function isDescendantOrSelf(
 function findSwitchStatement(
   ancestors: TSESTree.Node[],
 ): TSESTree.SwitchStatement | null {
-  for (const ancestor of ancestors) {
+  for (let i = ancestors.length - 1; i >= 0; i--) {
+    const ancestor = ancestors[i];
     if (ancestor.type === "SwitchStatement") return ancestor;
     if (
       ancestor.type === "ArrowFunctionExpression" ||
@@ -111,18 +112,16 @@ function findSwitchStatement(
 
 function handleIfStatement(
   ancestors: TSESTree.Node[],
-  parent: TSESTree.Node,
+  ifStmt: TSESTree.IfStatement,
 ): TSESTree.Identifier | null {
-  const ifStmt = parent as TSESTree.IfStatement;
   if (!isDescendantOrSelf(ancestors, ifStmt.consequent)) return null;
   return extractNarrowedVariableFromIfTest(ifStmt.test);
 }
 
 function handleSwitchCase(
   ancestors: TSESTree.Node[],
-  parent: TSESTree.Node,
+  sc: TSESTree.SwitchCase,
 ): TSESTree.Identifier | null {
-  const sc = parent as TSESTree.SwitchCase;
   if (sc.test === null) return null;
   const switchStmt = findSwitchStatement(ancestors);
   if (!switchStmt) return null;
@@ -130,15 +129,12 @@ function handleSwitchCase(
 }
 
 function resolveVariable(
-  scopeManager: NonNullable<TSESLint.SourceCode["scopeManager"]>,
+  scopes: unknown[],
   identifier: TSESTree.Identifier,
 ): TSESLint.Scope.Variable | null {
-  const scopes = (scopeManager as { scopes: unknown[] }).scopes;
-  if (!scopes) return null;
-
-  let innermost: { block: TSESTree.Node } | null = null;
+  let innermost: { block: TSESTree.Node; references: unknown[]; upper: unknown } | null = null;
   for (const scope of scopes) {
-    const s = scope as { block: TSESTree.Node };
+    const s = scope as { block: TSESTree.Node; references: unknown[]; upper: unknown };
     const block = s.block;
     if (!block?.range) continue;
     if (
@@ -150,25 +146,18 @@ function resolveVariable(
   }
   if (!innermost) return null;
 
-  let current: { references: unknown[]; upper: unknown } | null =
-    innermost as unknown as { references: unknown[]; upper: unknown };
+  let current = innermost;
   while (current) {
-    const refs = current.references;
-    if (refs) {
-      for (const ref of refs) {
-        const r = ref as {
-          identifier: TSESTree.Node;
-          resolved: TSESLint.Scope.Variable | null;
-        };
-        if (r.identifier === identifier && r.resolved) {
-          return r.resolved;
-        }
+    for (const ref of current.references || []) {
+      const r = ref as {
+        identifier: TSESTree.Node;
+        resolved: TSESLint.Scope.Variable | null;
+      };
+      if (r.identifier === identifier && r.resolved) {
+        return r.resolved;
       }
     }
-    current = current.upper as {
-      references: unknown[];
-      upper: unknown;
-    } | null;
+    current = current.upper as typeof innermost;
   }
   return null;
 }
@@ -176,9 +165,12 @@ function resolveVariable(
 function findNarrowedVariable(
   ancestors: TSESTree.Node[],
   castedId: TSESTree.Identifier,
-  scopeManager: NonNullable<TSESLint.SourceCode["scopeManager"]>,
+  scopes: unknown[],
 ): TSESTree.Identifier | null {
-  for (let i = 0; i < ancestors.length; i++) {
+  const castedVar = resolveVariable(scopes, castedId);
+  if (!castedVar) return null;
+
+  for (let i = ancestors.length - 1; i >= 0; i--) {
     const parent = ancestors[i];
 
     if (
@@ -192,18 +184,15 @@ function findNarrowedVariable(
     let candidate: TSESTree.Identifier | null = null;
 
     if (parent.type === "IfStatement") {
-      candidate = handleIfStatement(ancestors.slice(0, i), parent);
+      candidate = handleIfStatement(ancestors, parent as TSESTree.IfStatement);
     }
 
     if (parent.type === "SwitchCase") {
-      candidate = handleSwitchCase(ancestors.slice(0, i), parent);
+      candidate = handleSwitchCase(ancestors, parent as TSESTree.SwitchCase);
     }
 
-    if (candidate) {
-      const castedVar = resolveVariable(scopeManager, castedId);
-      if (castedVar && resolveVariable(scopeManager, candidate) === castedVar) {
-        return candidate;
-      }
+    if (candidate && resolveVariable(scopes, candidate) === castedVar) {
+      return candidate;
     }
   }
 
@@ -239,8 +228,11 @@ export default createRule({
         const scopeManager = sourceCode.scopeManager;
         if (!scopeManager) return;
 
+        const scopes = (scopeManager as { scopes: unknown[] }).scopes;
+        if (!scopes) return;
+
         const ancestors = sourceCode.getAncestors(node);
-        const narrowedId = findNarrowedVariable(ancestors, castedId, scopeManager);
+        const narrowedId = findNarrowedVariable(ancestors, castedId, scopes);
         if (!narrowedId) return;
 
         context.report({
