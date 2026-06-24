@@ -61,23 +61,13 @@ export default createRule({
     const [{ minDepth } = { minDepth: 2 }] = context.options ?? [];
 
     return {
-      VariableDeclarator(node) {
-        if (!node.init) return;
+      LogicalExpression(node) {
+        if (node.operator !== "??") return;
 
-        if (
-          node.init.type !== "LogicalExpression" ||
-          node.init.operator !== "??"
-        ) {
-          return;
-        }
+        const fallbackCount = countNullishCoalesces(node);
 
-        const fallbackCount = countNullishCoalesces(node.init);
-
-        let leftmost: TSESTree.Expression = node.init;
-        while (
-          isLogicalExpression(leftmost) &&
-          leftmost.operator === "??"
-        ) {
+        let leftmost: TSESTree.Expression = node;
+        while (isLogicalExpression(leftmost) && leftmost.operator === "??") {
           leftmost = leftmost.left;
         }
 
@@ -85,7 +75,7 @@ export default createRule({
 
         if (depth >= minDepth || fallbackCount >= 2) {
           context.report({
-            node: node.init,
+            node,
             messageId: "deepChain",
             data: {
               depth: String(depth),
