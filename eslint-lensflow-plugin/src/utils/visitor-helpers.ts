@@ -5,7 +5,6 @@ import type ts from "typescript";
 type ParameterCheckCallback = (param: TSESTree.Parameter) => void;
 
 export type MutableArrayParam = {
-  node: TSESTree.Parameter;
   paramName: string;
   typeText: string;
   elemText: string;
@@ -83,7 +82,7 @@ function findMutableArrays(
 export function checkMutableArrayParam(
   param: TSESTree.Parameter,
   sourceCode: TSESLint.SourceCode,
-): MutableArrayParam[] | null {
+): MutableArrayParam | null {
   const inner = param.type === "TSParameterProperty" ? param.parameter : param;
   const typeAnn = inner.typeAnnotation?.typeAnnotation;
   if (!typeAnn) return null;
@@ -96,12 +95,11 @@ export function checkMutableArrayParam(
   const arrays = findMutableArrays(typeAnn, sourceCode);
   if (arrays.length === 0) return null;
 
-  return arrays.map((info) => ({
-    node: param,
+  return {
     paramName,
-    typeText: info.typeText,
-    elemText: info.elemText,
-  }));
+    typeText: arrays[0].typeText,
+    elemText: arrays[0].elemText,
+  };
 }
 
 export function createFunctionParamVisitor(

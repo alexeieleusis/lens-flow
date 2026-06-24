@@ -51,6 +51,15 @@ function typesOverlap(typeA: ts.Type, typeB: ts.Type): boolean {
   if ((typeA.flags & ts.TypeFlags.NumberLiteral) && (typeB.flags & ts.TypeFlags.NumberLiteral)) {
     return (typeA as ts.NumberLiteralType).value === (typeB as ts.NumberLiteralType).value;
   }
+  if ((typeA.flags & ts.TypeFlags.BooleanLiteral) && (typeB.flags & ts.TypeFlags.BooleanLiteral)) {
+    return (typeA as ts.BooleanLiteralType).value === (typeB as ts.BooleanLiteralType).value;
+  }
+
+  // Different primitive types don't overlap
+  const primitiveFlags = ts.TypeFlags.String | ts.TypeFlags.Number | ts.TypeFlags.Boolean;
+  if ((typeA.flags & primitiveFlags) && (typeB.flags & primitiveFlags)) {
+    return typeA.flags === typeB.flags;
+  }
 
   return true;
 }
@@ -68,29 +77,24 @@ function checkPairIncompatible(
   const typeA = checker.getTypeFromTypeNode(tsNodeA as ts.TypeNode);
   const typeB = checker.getTypeFromTypeNode(tsNodeB as ts.TypeNode);
 
-  // Check if both reference the same generic with type arguments — test for type-argument overlap
-  if (
-    typeA.aliasSymbol &&
-    typeB.aliasSymbol &&
-    typeA.aliasSymbol === typeB.aliasSymbol &&
-    typeA.aliasTypeArguments &&
-    typeB.aliasTypeArguments
-  ) {
-    const argsA = typeA.aliasTypeArguments;
-    const argsB = typeB.aliasTypeArguments;
-    if (argsA.length === argsB.length && argsA.length > 0) {
-      for (let i = 0; i < argsA.length; i++) {
-        if (!typesOverlap(argsA[i], argsB[i])) {
-          return true;
-        }
-      }
-      return false;
+  // Get symbol name from either symbol or alias symbol
+  const symA = typeA.getSymbol() || typeA.getAliasSymbol();
+  const symB = typeB.getSymbol() || typeB.getAliasSymbol();
+  if (!symA || !symB || symA.name !== symB.name) return false;
+
+  // Get type arguments using checker API (works for both built-in and user-defined generics)
+  const argsA = checker.getTypeArguments(typeA);
+  const argsB = checker.getTypeArguments(typeB);
+  if (!argsA || !argsB) return false;
+  if (argsA.length !== argsB.length || argsA.length === 0) return false;
+
+  // Check if any corresponding type arguments are incompatible
+  for (let i = 0; i < argsA.length; i++) {
+    if (!typesOverlap(argsA[i], argsB[i])) {
+      return true;
     }
   }
-
-  // For other cases, check if the intersection resolves to `never`
-  const intersection = checker.createIntersectionType([typeA, typeB]);
-  return !!(intersection.flags & ts.TypeFlags.Never);
+  return false;
 }
 
 function checkGroupForIncompatibility(

@@ -174,14 +174,14 @@ export default createRule({
             context.report({
               node: prop,
               messageId: "anyOrUnknownInRecursiveVariant",
-              data: { keyword: "any", url: DOCS_URL },
+              data: { keyword: "any", url: URL },
             });
           }
           for (const prop of unknownProps) {
             context.report({
               node: prop,
               messageId: "anyOrUnknownInRecursiveVariant",
-              data: { keyword: "unknown", url: DOCS_URL },
+              data: { keyword: "unknown", url: URL },
             });
           }
         }

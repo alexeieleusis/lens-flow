@@ -13,13 +13,14 @@ function checkCallableBody(
   context: TSESLint.RuleContext<"leakedInternals", []>,
   node: CallableBody,
 ) {
-  const hasCallSignature = node.body.some(
+  const members = node.type === "TSInterfaceBody" ? node.body : node.members;
+  const hasCallSignature = members.some(
     (member) => member.type === "TSCallSignatureDeclaration",
   );
 
   if (!hasCallSignature) return;
 
-  const underscoreProps = node.body
+  const underscoreProps = members
     .filter(
       (member): member is TSESTree.TSPropertySignature =>
         member.type === "TSPropertySignature",

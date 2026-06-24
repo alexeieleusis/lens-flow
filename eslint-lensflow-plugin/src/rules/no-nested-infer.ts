@@ -105,7 +105,7 @@ export default createRule({
             messageId: "deeplyNestedInfer",
             data: {
               depth: String(maxDepth),
-              url: DOCS_URL,
+              url: URL,
             },
           });
         }

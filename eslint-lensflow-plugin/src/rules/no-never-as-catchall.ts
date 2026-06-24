@@ -109,7 +109,7 @@ export default createRule({
           messageId: "neverAsCatchall",
           data: {
             type: typeName,
-            url: DOCS_URL,
+            url: URL,
           },
         });
       }

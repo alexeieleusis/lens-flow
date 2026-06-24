@@ -109,7 +109,7 @@ export default createRule({
           context.report({
             node: overloads[i + 1].node,
             messageId: "broadBeforeNarrow",
-            data: { fnName: name, url: DOC_URL },
+            data: { fnName: name, url: URL },
           });
           break;
         }

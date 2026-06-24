@@ -7,10 +7,13 @@ type ParamsNode = TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | T
  * AssignmentPattern and RestElement wrappers.
  */
 function getParamTypeAnnotation(param: TSESTree.Parameter): TSESTree.TypeNode | undefined {
-  let inner: TSESTree.Parameter = param;
-  if (param.type === "AssignmentPattern") inner = param.left;
-  if (inner.type === "RestElement") inner = inner.argument;
-  return inner.typeAnnotation?.typeAnnotation;
+  if (param.type === "AssignmentPattern") {
+    return param.left.typeAnnotation?.typeAnnotation;
+  }
+  if (param.type === "RestElement") {
+    return param.typeAnnotation?.typeAnnotation || param.argument.typeAnnotation?.typeAnnotation;
+  }
+  return param.typeAnnotation?.typeAnnotation;
 }
 
 /**
@@ -120,6 +123,10 @@ export function checkAnyParams(
     if (param.type === "TSParameterProperty") continue;
 
     const typeNode = getParamTypeAnnotation(param);
+
+    if (typeNode && (typeNode.type === "TSFunctionType" || typeNode.type === "TSConstructorType")) {
+      continue;
+    }
 
     if (typeNode && containsAnyType(typeNode)) {
       let inner: TSESTree.Parameter = param;

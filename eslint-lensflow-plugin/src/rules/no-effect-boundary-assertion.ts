@@ -1,5 +1,5 @@
 import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
-import type ts from "typescript";
+import ts from "typescript";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
@@ -56,16 +56,49 @@ export default createRule({
       TSAsExpression(node) {
         const innerType = parserServices.getTypeAtLocation(node.expression);
 
-        // Use checker APIs instead of string parsing to handle nested generics
-        const typeArgs = checker.getTypeArguments(innerType);
-        if (!typeArgs || typeArgs.length < 2) return;
-
-        const symbol = innerType.getSymbol() || innerType.getAliasSymbol();
+        const symbol = innerType.aliasSymbol || innerType.getSymbol();
         if (!symbol) return;
 
         const name = symbol.name;
         if (!KNOWN_EFFECT_NAMES.has(name)) return;
 
+        // Get type arguments from the declaration's type reference node
+        // (checker.getTypeArguments doesn't work for type aliases)
+        const exprTsNode = parserServices.esTreeNodeToTSNodeMap.get(
+          node.expression,
+        );
+        const exprSym = checker.getSymbolAtLocation(exprTsNode);
+        const decl = exprSym?.valueDeclaration;
+
+        let typeRef: ts.TypeNode | undefined;
+
+        if (decl?.type) {
+          // Explicit type annotation: declare const either: Either<AppError, User>
+          typeRef = decl.type;
+        } else if (
+          decl?.initializer &&
+          ts.isCallExpression(decl.initializer)
+        ) {
+          // Inferred from function call: const task = fetchUser(1)
+          const sig = checker.getResolvedSignature(decl.initializer);
+          const retDecl = sig?.getDeclaration();
+          if (retDecl?.type) {
+            typeRef = retDecl.type;
+          }
+        }
+
+        if (
+          !typeRef ||
+          typeRef.kind !== ts.SyntaxKind.TypeReference ||
+          !typeRef.typeArguments ||
+          typeRef.typeArguments.length < 2
+        ) {
+          return;
+        }
+
+        const typeArgs = typeRef.typeArguments.map((ta) =>
+          checker.getTypeFromTypeNode(ta),
+        );
         const successIndex = isSuccessFromFirstParam(name) ? 0 : 1;
         const successType = typeArgs[successIndex];
 
@@ -84,7 +117,7 @@ export default createRule({
             data: {
               effectType: checker.typeToString(innerType),
               assertedType: checker.typeToString(assertedType),
-              url: DOCS_URL,
+              url: URL,
             },
           });
         }

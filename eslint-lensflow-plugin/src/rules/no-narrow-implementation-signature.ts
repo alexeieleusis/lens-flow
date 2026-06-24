@@ -210,7 +210,7 @@ export default createRule({
         context.report({
           node: impl,
           messageId: "narrowImpl",
-          data: { fnName, url: KNOWLEDGE_URL },
+          data: { fnName, url: URL },
         });
       }
     });

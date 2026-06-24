@@ -41,6 +41,22 @@ function isSignalAcceptingCallee(
   return false;
 }
 
+function isSignalArg(
+  arg: TSESTree.Node,
+  varName: string,
+): boolean {
+  if (arg.type === "Identifier" && arg.name === varName) return true;
+  if (
+    arg.type === "MemberExpression" &&
+    arg.object.type === "Identifier" &&
+    arg.object.name === varName &&
+    arg.property.type === "Identifier" &&
+    arg.property.name === "signal"
+  )
+    return true;
+  return false;
+}
+
 function passedToFunction(
   body: TSESTree.BlockStatement | null,
   varName: string,
@@ -50,21 +66,8 @@ function passedToFunction(
   return walkNodes(body, (node) => {
     if (node.type !== "CallExpression") return false;
     if (!isSignalAcceptingCallee(node.callee)) return false;
-    return node.arguments.some((arg) => {
-      // Direct: passed as `controller` to a signal-accepting function
-      if (arg.type === "Identifier" && arg.name === varName) return true;
-      // Via signal: passed as `controller.signal`
-      if (
-        arg.type === "MemberExpression" &&
-        arg.object.type === "Identifier" &&
-        arg.object.name === varName &&
-        arg.property.type === "Identifier" &&
-        arg.property.name === "signal"
-      )
-        return true;
-      return false;
-    });
-  });
+    return node.arguments.some((arg) => isSignalArg(arg, varName));
+  }, { stopAtFunctionBoundaries: false });
 }
 
 function hasAbortCall(
@@ -82,7 +85,7 @@ function hasAbortCall(
       node.callee.property.type === "Identifier" &&
       node.callee.property.name === "abort"
     );
-  });
+  }, { stopAtFunctionBoundaries: false });
 }
 
 function findEnclosingFunctionBody(

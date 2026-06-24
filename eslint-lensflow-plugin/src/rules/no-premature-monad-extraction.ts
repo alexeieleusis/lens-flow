@@ -59,7 +59,7 @@ function findPipeCall(
   let target: TSESTree.Node = node;
 
   for (const ancestor of ancestors) {
-    if (ancestor.type !== "CallExpression") return null;
+    if (ancestor.type !== "CallExpression") continue;
     const idx = ancestor.arguments.indexOf(target as TSESTree.Expression);
     if (idx === -1) return null;
 

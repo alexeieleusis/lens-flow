@@ -37,7 +37,7 @@ export default createRule({
           (member) =>
             member.type === "TSPropertySignature" && member.optional,
         );
-        if (optionalProps.length > maxOptional) {
+        if (optionalProps.length >= maxOptional) {
           const decl = node.parent;
           const name =
             decl?.type === "TSInterfaceDeclaration" && decl?.id

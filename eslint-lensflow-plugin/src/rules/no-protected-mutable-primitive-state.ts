@@ -36,7 +36,7 @@ export default createRule({
           if (member.static) continue;
           if (member.readonly) continue;
 
-          if (!member.value && !member.typeAnnotation) continue;
+          if (!member.value) continue;
 
           const typeAnn = member.typeAnnotation?.typeAnnotation;
           if (

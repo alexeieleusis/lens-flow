@@ -97,10 +97,10 @@ export default createRule({
       const paramNameSet = findTypeParamNames(node.typeParameters);
 
       const members =
-        "body" in node && node.body
-          ? node.body.members
+        node.type === AST_NODE_TYPES.TSInterfaceDeclaration && node.body
+          ? node.body.body
           : node.typeAnnotation?.type === AST_NODE_TYPES.TSTypeLiteral
-            ? node.typeAnnotation.body
+            ? node.typeAnnotation.members
             : undefined;
       if (!members || members.length === 0) return;
 

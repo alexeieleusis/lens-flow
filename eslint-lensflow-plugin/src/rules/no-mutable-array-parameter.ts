@@ -26,7 +26,7 @@ export default createRule({
       const result = checkMutableArrayParam(param, context.sourceCode);
       if (!result) return;
       context.report({
-        node: result.node,
+        node: param,
         messageId: "mutableArrayParam",
         data: { name: result.paramName, type: result.typeText },
       });

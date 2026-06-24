@@ -70,11 +70,11 @@ export default createRule({
         let hasLiteralObjectMember = false;
 
         for (const member of members) {
-          const memberTsType = parserServices.getTypeAtNode(member);
+          const memberTsType = parserServices.getTypeAtLocation(member);
 
           if (isClassType(memberTsType)) {
             hasClassMember = true;
-          } else if (memberTsType.isObject() && hasLiteralDiscriminant(memberTsType)) {
+          } else if ((memberTsType.flags & ts.TypeFlags.Object) !== 0 && hasLiteralDiscriminant(memberTsType)) {
             hasLiteralObjectMember = true;
           }
         }
@@ -83,7 +83,7 @@ export default createRule({
           context.report({
             node,
             messageId: "mixed",
-            data: { url: DOCS_URL },
+            data: { url: URL },
           });
         }
       },

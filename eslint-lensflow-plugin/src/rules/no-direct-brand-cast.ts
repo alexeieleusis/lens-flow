@@ -36,8 +36,8 @@ function isBrandedPrimitiveType(
       if (
         props.some(
           (p) => {
-            const name = p.escapedName.toString();
-            return name === "_brand" || name === "__brand" || name.endsWith("Brand");
+            const name = p.escapedName.toString().toLowerCase();
+            return name.includes("brand");
           },
         )
       ) {
@@ -77,7 +77,7 @@ function findEnclosingSmartConstructor(
       return !!(current.id && SMART_CONSTRUCTOR_RE.test(current.id.name));
     }
     if (current.type === "ArrowFunctionExpression") {
-      const declarator = ancestors[i + 1];
+      const declarator = ancestors[i - 1];
       if (
         declarator &&
         declarator.type === "VariableDeclarator" &&
@@ -142,7 +142,7 @@ export default createRule({
           data: {
             sourceType: checker.typeToString(sourceType),
             brandType: checker.typeToString(castTargetType),
-            url: DOC_URL,
+            url: URL,
           },
         });
       },

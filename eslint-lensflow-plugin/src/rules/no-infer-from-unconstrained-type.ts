@@ -37,7 +37,7 @@ export default createRule({
     messages: {
       inferFromUnconstrained:
         "Using `infer` on unconstrained type parameter '{{paramName}}' (pattern `{{paramName}} extends infer {{inferName}} ? {{inferName}} : ...`) produces an identity mapping. Constrain the type parameter so inference targets a meaningful structure. See: " +
-        DOCS_URL,
+        URL,
     },
     schema: [],
     fixable: undefined,

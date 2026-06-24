@@ -48,7 +48,7 @@ export default createRule({
             (a) => a.type === "ClassDeclaration" || a.type === "ClassExpression"
           );
           const className =
-            classNode && "id" in classNode && classNode.id?.name ?? "Anonymous";
+            (classNode && "id" in classNode && classNode.id?.name) ?? "Anonymous";
 
           context.report({
             node,

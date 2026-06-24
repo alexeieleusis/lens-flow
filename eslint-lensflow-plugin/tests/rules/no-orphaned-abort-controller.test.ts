@@ -35,10 +35,10 @@ ruleTester.run("no-orphaned-abort-controller", rule, {
   }
 }`,
 
-    // AbortController signal passed to another function (external cleanup)
+    // AbortController signal passed as direct arg to signal-accepting function (external cleanup)
     `async function search(query: string): Promise<void> {
   const controller = new AbortController();
-  executeWithTimeout(controller.signal, () => fetch('/api', { signal: controller.signal }));
+  fetch('/api', controller.signal);
 }`,
 
     // Not an AbortController

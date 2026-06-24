@@ -61,7 +61,7 @@ export default createRule({
             messageId: "composed",
             data: {
               name: node.id.name,
-              url: RULE_URL,
+              url: URL,
             },
           });
         }

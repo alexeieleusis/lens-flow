@@ -15,6 +15,8 @@ function isTerminating(
     case "ArrowFunctionExpression":
       return false;
     case "ReturnStatement":
+      return !stmt.argument;
+    case "ThrowStatement":
     case "ThrowStatement":
       return true;
     case "WhileStatement":

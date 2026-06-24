@@ -41,22 +41,43 @@ export default createRule({
       }
     }
 
+    const paramChecker = createNoAnyParamChecker("anyParam")(context);
+    const typeParamChecker = createNoAnyParamTypeChecker("anyParam")(context);
+
     return {
-      ...createNoAnyParamChecker("anyParam")(context),
-      ...createNoAnyParamTypeChecker("anyParam")(context),
+      ...typeParamChecker,
+      FunctionDeclaration(node: TSESTree.FunctionDeclaration) {
+        paramChecker.FunctionDeclaration?.(node);
+        checkReturn(node);
+      },
+      FunctionExpression(node: TSESTree.FunctionExpression) {
+        paramChecker.FunctionExpression?.(node);
+        checkReturn(node);
+      },
+      ArrowFunctionExpression(node: TSESTree.ArrowFunctionExpression) {
+        paramChecker.ArrowFunctionExpression?.(node);
+        checkReturn(node);
+      },
+      TSParameterProperty(node) {
+        paramChecker.TSParameterProperty?.(node);
+      },
       TSFunctionType(node: TSESTree.TSFunctionType) {
+        typeParamChecker.TSFunctionType?.(node);
         checkReturn(node);
       },
       TSConstructorType(node: TSESTree.TSConstructorType) {
+        typeParamChecker.TSConstructorType?.(node);
         checkReturn(node);
       },
       TSMethodSignature(node: TSESTree.TSMethodSignature) {
+        typeParamChecker.TSMethodSignature?.(node);
         checkReturn(node);
       },
       TSDeclareFunction(node: TSESTree.TSDeclareFunction) {
         checkReturn(node);
       },
       TSCallSignatureDeclaration(node: TSESTree.TSCallSignatureDeclaration) {
+        typeParamChecker.TSCallSignatureDeclaration?.(node);
         checkReturn(node);
       },
     };

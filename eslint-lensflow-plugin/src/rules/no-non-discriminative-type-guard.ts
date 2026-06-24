@@ -116,7 +116,7 @@ export default createRule({
         context.report({
           node,
           messageId: "nonDiscriminative",
-          data: { property: propertyName, url: DOCS_URL },
+          data: { property: propertyName, url: URL },
         });
       }
     }

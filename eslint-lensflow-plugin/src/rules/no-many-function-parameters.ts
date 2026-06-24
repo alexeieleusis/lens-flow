@@ -36,7 +36,7 @@ export default createRule({
       const lastParam = params[params.length - 1];
       let count = params.length - (lastParam?.type === "RestElement" ? 1 : 0);
 
-      if (count > maxParams) {
+      if (count >= maxParams) {
         context.report({
           node,
           messageId: "tooManyParams",

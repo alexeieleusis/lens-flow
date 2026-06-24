@@ -71,7 +71,7 @@ export default createRule({
     messages: {
       castToConcreteImpl:
         "Casting an interface-typed value to a concrete implementing class bypasses the existential abstraction. Only use members declared on the interface. See: " +
-        KNOWLEDGE_URL,
+        URL,
     },
     schema: [],
     fixable: undefined,

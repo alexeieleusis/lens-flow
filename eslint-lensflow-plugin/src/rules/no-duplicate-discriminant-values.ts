@@ -11,7 +11,7 @@ function extractLiteralValue(literal: TSESTree.TypeNode | undefined): string | n
   if (!literal) return null;
   if (literal.type !== "TSLiteralType") return null;
 
-  const lit = typeAnn.literal;
+  const lit = literal.literal;
   if (lit.type === "Literal") return String(lit.value);
   if (lit.type === "TemplateLiteral" && lit.quasis.length === 1) {
     return lit.quasis[0].value.cooked ?? null;

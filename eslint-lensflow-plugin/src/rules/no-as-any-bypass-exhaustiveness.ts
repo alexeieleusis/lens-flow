@@ -23,13 +23,9 @@ export default createRule({
         if (node.typeAnnotation.type !== "TSAnyKeyword") return;
 
         const ancestors = context.sourceCode.getAncestors(node);
-        for (const ancestor of ancestors) {
-          if (ancestor.type === "SwitchCase") {
-            if ((ancestor as TSESTree.SwitchCase).test === null) {
-              context.report({ node, messageId: "bypassExhaustiveness" });
-            }
-            break;
-          }
+        const innermostSwitchCase = [...ancestors].reverse().find((a) => a.type === "SwitchCase");
+        if (innermostSwitchCase && (innermostSwitchCase as TSESTree.SwitchCase).test === null) {
+          context.report({ node, messageId: "bypassExhaustiveness" });
         }
       },
     };

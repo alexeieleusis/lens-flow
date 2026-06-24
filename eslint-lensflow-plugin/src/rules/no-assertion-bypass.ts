@@ -122,7 +122,7 @@ export default createRule({
             data: {
               targetType: checker.typeToString(targetType),
               excessProps: excessProps.map((p) => `"${p}"`).join(", "),
-              url: CATALOG_URL,
+              url: URL,
             },
           });
         }

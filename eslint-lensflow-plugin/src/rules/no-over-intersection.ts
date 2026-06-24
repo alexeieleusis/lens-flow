@@ -47,7 +47,7 @@ export default createRule({
   },
   defaultOptions: [{ maxMembers: 4, maxFlattenedMembers: 6 }],
   create(context: TSESLint.RuleContext<"tooManyDirect" | "tooManyFlattened", [{ maxMembers?: number; maxFlattenedMembers?: number }]>) {
-    const { maxMembers = 4, maxFlattenedMembers = 6 } = context.options[0];
+    const { maxMembers = 4, maxFlattenedMembers = 6 } = context.options[0] ?? {};
     const thresholdDirect = maxMembers;
     const thresholdFlattened = maxFlattenedMembers;
 
@@ -55,7 +55,7 @@ export default createRule({
       TSIntersectionType(node) {
         const directCount = node.types.length;
 
-        if (directCount > thresholdDirect) {
+        if (directCount >= thresholdDirect) {
           context.report({
             node,
             messageId: "tooManyDirect",
@@ -68,7 +68,7 @@ export default createRule({
 
         const flattenedCount = countFlattenedMembers(node);
 
-        if (flattenedCount > thresholdFlattened) {
+        if (flattenedCount >= thresholdFlattened) {
           context.report({
             node,
             messageId: "tooManyFlattened",

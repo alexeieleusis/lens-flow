@@ -92,7 +92,7 @@ export default createRule({
           messageId: "leak",
           data: {
             brandType: brandTypeName,
-            url: DOCS_URL,
+            url: URL,
           },
         });
       },

@@ -31,18 +31,20 @@ export default createRule({
         }
       },
 
-      TSTypeParameterInstantiation(node) {
-        for (const param of node.params) {
-          if (containsAny(param)) {
-            context.report({
-              node: param,
-              messageId: "anyTypeArg",
-            });
+      TSTypeReference(node) {
+        if (node.typeArguments) {
+          for (const param of node.typeArguments.params) {
+            if (containsAny(param)) {
+              context.report({
+                node: param,
+                messageId: "anyTypeArg",
+              });
+            }
           }
         }
       },
 
-      TSTypeReference(node) {
+      TSClassImplements(node) {
         if (node.typeArguments) {
           for (const param of node.typeArguments.params) {
             if (containsAny(param)) {

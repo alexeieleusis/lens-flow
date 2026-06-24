@@ -2,6 +2,7 @@ import ts from "typescript";
 import { ESLintUtils, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
+import { walkNodes } from "../utils/ast-helpers.js";
 
 const URL = knowledgeUrl("catalog/T12-effect-tracking.md");
 
@@ -111,7 +112,7 @@ export default createRule({
       context.report({
         node,
         messageId: "infallibleSyncResult",
-        data: { url: RULE_DOC_URL },
+        data: { url: URL },
       });
     }
 
