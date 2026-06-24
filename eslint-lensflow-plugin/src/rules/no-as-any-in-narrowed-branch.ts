@@ -4,11 +4,6 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const URL = knowledgeUrl("catalog/T34-never-bottom.md");
 
-interface TSESTreeWithParent {
-  type: string;
-  parent?: TSESTreeWithParent;
-}
-
 function getBaseIdentifierNode(node: TSESTree.Node): TSESTree.Identifier | null {
   if (node.type === "Identifier") return node;
   if (node.type === "MemberExpression") return getBaseIdentifierNode(node.object);
@@ -92,56 +87,46 @@ function extractNarrowedVariableFromSwitch(
 }
 
 function isDescendantOrSelf(
-  child: TSESTreeWithParent,
+  ancestors: TSESTree.Node[],
   ancestor: TSESTree.Node,
 ): boolean {
-  let current: TSESTreeWithParent | undefined = child;
-  while (current) {
-    if (current === ancestor) return true;
-    current = current.parent;
-  }
-  return false;
+  return ancestors.includes(ancestor);
 }
 
 function findSwitchStatement(
-  startFrom: TSESTreeWithParent,
-): TSESTreeWithParent | null {
-  let current: TSESTreeWithParent | undefined = startFrom;
-  while (current) {
-    const next: TSESTreeWithParent | undefined = current.parent;
-    if (!next) return null;
-    if (next.type === "SwitchStatement") return next;
+  ancestors: TSESTree.Node[],
+): TSESTree.SwitchStatement | null {
+  for (const ancestor of ancestors) {
+    if (ancestor.type === "SwitchStatement") return ancestor;
     if (
-      next.type === "ArrowFunctionExpression" ||
-      next.type === "FunctionExpression" ||
-      next.type === "FunctionDeclaration"
+      ancestor.type === "ArrowFunctionExpression" ||
+      ancestor.type === "FunctionExpression" ||
+      ancestor.type === "FunctionDeclaration"
     ) {
       return null;
     }
-    current = next;
   }
   return null;
 }
 
 function handleIfStatement(
-  current: TSESTreeWithParent,
-  parent: TSESTreeWithParent,
+  ancestors: TSESTree.Node[],
+  parent: TSESTree.Node,
 ): TSESTree.Identifier | null {
-  const ifStmt = parent as unknown as TSESTree.IfStatement;
-  if (!isDescendantOrSelf(current, ifStmt.consequent)) return null;
+  const ifStmt = parent as TSESTree.IfStatement;
+  if (!isDescendantOrSelf(ancestors, ifStmt.consequent)) return null;
   return extractNarrowedVariableFromIfTest(ifStmt.test);
 }
 
 function handleSwitchCase(
-  parent: TSESTreeWithParent,
+  ancestors: TSESTree.Node[],
+  parent: TSESTree.Node,
 ): TSESTree.Identifier | null {
-  const sc = parent as unknown as TSESTree.SwitchCase;
+  const sc = parent as TSESTree.SwitchCase;
   if (sc.test === null) return null;
-  const switchStmt = findSwitchStatement(parent);
+  const switchStmt = findSwitchStatement(ancestors);
   if (!switchStmt) return null;
-  return extractNarrowedVariableFromSwitch(
-    (switchStmt as unknown as TSESTree.SwitchStatement).discriminant,
-  );
+  return extractNarrowedVariableFromSwitch(switchStmt.discriminant);
 }
 
 function resolveVariable(
@@ -151,7 +136,6 @@ function resolveVariable(
   const scopes = (scopeManager as { scopes: unknown[] }).scopes;
   if (!scopes) return null;
 
-  // Find the innermost scope containing the identifier.
   let innermost: { block: TSESTree.Node } | null = null;
   for (const scope of scopes) {
     const s = scope as { block: TSESTree.Node };
@@ -166,9 +150,6 @@ function resolveVariable(
   }
   if (!innermost) return null;
 
-  // Walk up the scope chain looking for the reference to this identifier.
-  // The reference may be in an outer scope (e.g., switch discriminant `m`
-  // has its reference in the function scope, not the switch scope).
   let current: { references: unknown[]; upper: unknown } | null =
     innermost as unknown as { references: unknown[]; upper: unknown };
   while (current) {
@@ -193,16 +174,12 @@ function resolveVariable(
 }
 
 function findNarrowedVariable(
-  node: TSESTree.BaseNode,
+  ancestors: TSESTree.Node[],
   castedId: TSESTree.Identifier,
   scopeManager: NonNullable<TSESLint.SourceCode["scopeManager"]>,
 ): TSESTree.Identifier | null {
-  let current: TSESTreeWithParent | undefined =
-    node as unknown as TSESTreeWithParent;
-
-  while (current) {
-    const parent: TSESTreeWithParent | undefined = current.parent;
-    if (!parent) return null;
+  for (let i = 0; i < ancestors.length; i++) {
+    const parent = ancestors[i];
 
     if (
       parent.type === "ArrowFunctionExpression" ||
@@ -215,11 +192,11 @@ function findNarrowedVariable(
     let candidate: TSESTree.Identifier | null = null;
 
     if (parent.type === "IfStatement") {
-      candidate = handleIfStatement(current, parent);
+      candidate = handleIfStatement(ancestors.slice(0, i), parent);
     }
 
     if (parent.type === "SwitchCase") {
-      candidate = handleSwitchCase(parent);
+      candidate = handleSwitchCase(ancestors.slice(0, i), parent);
     }
 
     if (candidate) {
@@ -228,8 +205,6 @@ function findNarrowedVariable(
         return candidate;
       }
     }
-
-    current = parent;
   }
 
   return null;
@@ -264,7 +239,8 @@ export default createRule({
         const scopeManager = sourceCode.scopeManager;
         if (!scopeManager) return;
 
-        const narrowedId = findNarrowedVariable(node, castedId, scopeManager);
+        const ancestors = sourceCode.getAncestors(node);
+        const narrowedId = findNarrowedVariable(ancestors, castedId, scopeManager);
         if (!narrowedId) return;
 
         context.report({

@@ -23,9 +23,37 @@ function setMode(mode: Mode) {
 }`,
     // Arrow function with no literal comparison
     `const fn = (x: string) => x.toUpperCase();`,
-    // Only !== comparison (not ===)
-    `function check(mode: string) {
+    // Only one literal comparison with minComparisons: 2
+    {
+      code: `function check(mode: string) {
+  if (mode === "dark") { /* ... */ }
+}`,
+      options: [{ minComparisons: 2 }],
+    },
+    // Only one distinct literal compared twice
+    {
+      code: `function route(action: string) {
+  if (action === "create") {
+    if (action === "create") {
+      console.log("creating");
+    }
+  }
+}`,
+      options: [{ minComparisons: 2 }],
+    },
+    // Single != comparison with minComparisons: 2
+    {
+      code: `function check(mode: string) {
   if (mode !== "dark") { /* ... */ }
+}`,
+      options: [{ minComparisons: 2 }],
+    },
+    // Nested function - inner function's param, not outer's
+    `function outer(x: string) {
+  const handler = (y: string) => {
+    if (y === "a") return true;
+    if (y === "b") return false;
+  };
 }`,
   ],
   invalid: [
@@ -61,15 +89,61 @@ function setMode(mode: Mode) {
 }`,
       errors: [{ messageId: "stringParamWithLiteralComparison" }],
     },
-    // Nested comparisons (inside if blocks)
+    // !== comparison (now detected)
     {
-      code: `function route(action: string) {
-  if (action === "create") {
-    if (action === "create") {
-      console.log("creating");
-    }
-  }
+      code: `function check(mode: string) {
+  if (mode !== "dark") { /* ... */ }
 }`,
+      errors: [{ messageId: "stringParamWithLiteralComparison" }],
+    },
+    // Loose equality == 
+    {
+      code: `function process(type: string) {
+  if (type == "create") return;
+  if (type == "update") return;
+}`,
+      errors: [{ messageId: "stringParamWithLiteralComparison" }],
+    },
+    // != operator
+    {
+      code: `function filter(kind: string) {
+  if (kind != "skip") return;
+  if (kind != "pass") return;
+}`,
+      errors: [{ messageId: "stringParamWithLiteralComparison" }],
+    },
+    // Mixed operators
+    {
+      code: `function classify(category: string) {
+  if (category === "a") return 1;
+  if (category !== "b") return 2;
+}`,
+      errors: [{ messageId: "stringParamWithLiteralComparison" }],
+    },
+    // Default parameter with string type
+    {
+      code: `function greet(name: string = "world") {
+  if (name === "alice") return "hi alice";
+  if (name === "bob") return "hi bob";
+  return "hello";
+}`,
+      errors: [{ messageId: "stringParamWithLiteralComparison" }],
+    },
+    // Single literal with minComparisons: 1 (default)
+    {
+      code: `function check(mode: string) {
+  if (mode === "dark") { /* ... */ }
+}`,
+      errors: [{ messageId: "stringParamWithLiteralComparison" }],
+    },
+    // Multiple distinct literals with minComparisons: 2
+    {
+      code: `function statusIcon(status: string) {
+  if (status === "pending") return "pending";
+  if (status === "shipped") return "shipped";
+  return "unknown";
+}`,
+      options: [{ minComparisons: 2 }],
       errors: [{ messageId: "stringParamWithLiteralComparison" }],
     },
   ],
