@@ -2,6 +2,41 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
 
+const FUNCTION_BOUNDARY_TYPES = new Set([
+  "FunctionDeclaration",
+  "FunctionExpression",
+  "ArrowFunctionExpression",
+]);
+
+function isFunctionBoundary(node: TSESTree.Node): boolean {
+  return FUNCTION_BOUNDARY_TYPES.has(node.type);
+}
+
+function isSameVariable(
+  ident: TSESTree.Identifier,
+  target: TSESLint.Scope.Variable,
+  sourceCode: TSESLint.SourceCode,
+): boolean {
+  const scope = sourceCode.getScope(ident);
+  let current: TSESLint.Scope.Scope | null = scope;
+  while (current) {
+    for (const v of current.variables) {
+      if (v.name === ident.name) return v === target;
+    }
+    current = current.upper;
+  }
+  return false;
+}
+
+function isSameVariableMemberExpression(
+  me: TSESTree.MemberExpression,
+  target: TSESLint.Scope.Variable,
+  sourceCode: TSESLint.SourceCode,
+): boolean {
+  if (me.object.type !== "Identifier") return false;
+  return isSameVariable(me.object, target, sourceCode);
+}
+
 const SIGNAL_ACCEPTING_FUNCTIONS = new Set([
   // Network / stream APIs that accept { signal }
   "fetch",
@@ -43,15 +78,19 @@ function isSignalAcceptingCallee(
 
 function isSignalArg(
   arg: TSESTree.Node,
-  varName: string,
+  controllerVar: TSESLint.Scope.Variable,
+  sourceCode: TSESLint.SourceCode,
 ): boolean {
-  if (arg.type === "Identifier" && arg.name === varName) return true;
+  if (
+    arg.type === "Identifier" &&
+    isSameVariable(arg, controllerVar, sourceCode)
+  )
+    return true;
   if (
     arg.type === "MemberExpression" &&
-    arg.object.type === "Identifier" &&
-    arg.object.name === varName &&
     arg.property.type === "Identifier" &&
-    arg.property.name === "signal"
+    arg.property.name === "signal" &&
+    isSameVariableMemberExpression(arg, controllerVar, sourceCode)
   )
     return true;
   return false;
@@ -59,20 +98,24 @@ function isSignalArg(
 
 function passedToFunction(
   body: TSESTree.BlockStatement | null,
-  varName: string,
+  controllerVar: TSESLint.Scope.Variable,
+  sourceCode: TSESLint.SourceCode,
 ): boolean {
   if (!body) return false;
 
   return walkNodes(body, (node) => {
     if (node.type !== "CallExpression") return false;
     if (!isSignalAcceptingCallee(node.callee)) return false;
-    return node.arguments.some((arg) => isSignalArg(arg, varName));
+    return node.arguments.some((arg) =>
+      isSignalArg(arg, controllerVar, sourceCode),
+    );
   }, { stopAtFunctionBoundaries: false });
 }
 
 function hasAbortCall(
   body: TSESTree.BlockStatement | null,
-  varName: string,
+  controllerVar: TSESLint.Scope.Variable,
+  sourceCode: TSESLint.SourceCode,
 ): boolean {
   if (!body) return false;
 
@@ -80,10 +123,13 @@ function hasAbortCall(
     return (
       node.type === "CallExpression" &&
       node.callee.type === "MemberExpression" &&
-      node.callee.object.type === "Identifier" &&
-      node.callee.object.name === varName &&
       node.callee.property.type === "Identifier" &&
-      node.callee.property.name === "abort"
+      node.callee.property.name === "abort" &&
+      isSameVariableMemberExpression(
+        node.callee,
+        controllerVar,
+        sourceCode,
+      )
     );
   }, { stopAtFunctionBoundaries: false });
 }
@@ -131,6 +177,8 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"orphanedAbortController", []>) {
+    const sourceCode = context.sourceCode;
+
     return {
       NewExpression(node: TSESTree.NewExpression): void {
         if (
@@ -150,14 +198,23 @@ export default createRule({
         }
 
         const varName = decl.id.name;
+
+        const controllerVars = sourceCode.getDeclaredVariables(decl);
+        const controllerVar = controllerVars.find(
+          (v: TSESLint.Scope.Variable) => v.name === varName,
+        );
+        if (!controllerVar) {
+          return;
+        }
+
         const body = findEnclosingFunctionBody(node);
 
         if (!body) {
           return;
         }
 
-        const hasAbort = hasAbortCall(body, varName);
-        const passedOut = passedToFunction(body, varName);
+        const hasAbort = hasAbortCall(body, controllerVar, sourceCode);
+        const passedOut = passedToFunction(body, controllerVar, sourceCode);
 
         if (!hasAbort && !passedOut) {
           context.report({

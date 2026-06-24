@@ -1,5 +1,6 @@
+import ts from "typescript";
+import { ESLintUtils, type TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESTree } from "@typescript-eslint/utils";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const URL = knowledgeUrl("catalog/T01-algebraic-data-types.md");
@@ -25,21 +26,6 @@ function getPropertyName(key: TSESTree.Expression): string | null {
   return null;
 }
 
-function isWidenedKeyword(typeAnn: TSESTree.TypeNode | undefined): "string" | "number" | null {
-  if (!typeAnn) return null;
-  if (typeAnn.type === "TSStringKeyword") return "string";
-  if (typeAnn.type === "TSNumberKeyword") return "number";
-  return null;
-}
-
-function isLiteralType(typeAnn: TSESTree.TypeNode | undefined): boolean {
-  if (!typeAnn) return false;
-  if (typeAnn.type === "TSLiteralType") return true;
-  if (typeAnn.type === "TSStringKeyword") return false;
-  if (typeAnn.type === "TSNumberKeyword") return false;
-  return false;
-}
-
 export default createRule({
   name: "no-non-literal-discriminant",
   meta: {
@@ -56,53 +42,171 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [],
-  create(context) {
+  create(context: TSESLint.RuleContext<"nonLiteralDiscriminant", []>) {
+    const parserServices = ESLintUtils.getParserServices(
+      context,
+      true,
+    );
+    const program = parserServices.program;
+    const hasTypeChecker = !!program;
+    const checker = hasTypeChecker ? program!.getTypeChecker() : null;
+
     return {
       TSUnionType(node) {
         const members = node.types;
         if (members.length < 2) return;
 
-        const typeLiterals = members.filter(
-          (m): m is TSESTree.TSTypeLiteral => m.type === "TSTypeLiteral",
-        );
-        if (typeLiterals.length < 2) return;
-
-        const propMap = new Map<
-          string,
-          {
-            widened: "string" | "number" | null;
-            sig: TSESTree.TSPropertySignature;
-          }[]
-        >();
-
-        for (const tl of typeLiterals) {
-          for (const member of tl.members) {
-            if (member.type !== "TSPropertySignature") continue;
-            const propName = getPropertyName(member.key);
-            if (!propName) continue;
-
-            const widened = isWidenedKeyword(member.typeAnnotation?.typeAnnotation);
-            const entry = { widened, sig: member };
-
-            const existing = propMap.get(propName);
-            if (existing) {
-              existing.push(entry);
-            } else {
-              propMap.set(propName, [entry]);
-            }
-          }
+        interface PropEntry {
+          sig: TSESTree.TSPropertySignature;
+          widened: "string" | "number" | null;
+          hasLiteral: boolean;
         }
+
+        const processType = (
+          typeNode: TSESTree.TypeNode,
+          visited: Set<TSESTree.TSTypeReference>,
+          out: TSESTree.TSTypeLiteral[],
+          propMap: Map<string, PropEntry[]>,
+        ) => {
+          if (typeNode.type === "TSTypeLiteral") {
+            out.push(typeNode);
+            for (const member of typeNode.members) {
+              if (member.type !== "TSPropertySignature") continue;
+              const propName = getPropertyName(member.key);
+              if (!propName) continue;
+              const typeAnn = member.typeAnnotation?.typeAnnotation;
+              if (!typeAnn) continue;
+
+              const widened: "string" | "number" | null =
+                typeAnn.type === "TSStringKeyword"
+                  ? "string"
+                  : typeAnn.type === "TSNumberKeyword"
+                    ? "number"
+                    : null;
+
+              const existing = propMap.get(propName);
+              if (existing) {
+                existing.push({
+                  sig: member,
+                  widened,
+                  hasLiteral: typeAnn.type === "TSLiteralType",
+                });
+              } else {
+                propMap.set(propName, [
+                  {
+                    sig: member,
+                    widened,
+                    hasLiteral: typeAnn.type === "TSLiteralType",
+                  },
+                ]);
+              }
+            }
+          } else if (typeNode.type === "TSTypeReference") {
+            if (visited.has(typeNode)) return;
+
+            if (hasTypeChecker && checker) {
+              const tsNode = parserServices.esTreeNodeToTSNodeMap.get(typeNode);
+              const symbol = checker.getSymbolAtLocation(tsNode);
+              const decl = symbol?.declarations?.[0];
+
+              if (
+                decl &&
+                decl.kind === ts.SyntaxKind.TypeAliasDeclaration
+              ) {
+                const declType = (decl as ts.TypeAliasDeclaration).type;
+                if (declType) {
+                  const memberType = checker.getTypeAtLocation(tsNode);
+                  const props = checker.getPropertiesOfType(memberType);
+                  for (const prop of props) {
+                    const propType = checker.getTypeOfSymbolAtLocation(
+                      prop,
+                      tsNode,
+                    );
+                    const propName = prop.getName();
+                    if (!DISCRIMINANT_NAMES.has(propName)) continue;
+
+                    const isWidenedStr =
+                      (propType.flags & ts.TypeFlags.String) !== 0 &&
+                      (propType.flags & ts.TypeFlags.StringLiteral) === 0;
+                    const isWidenedNum =
+                      (propType.flags & ts.TypeFlags.Number) !== 0 &&
+                      (propType.flags & ts.TypeFlags.NumberLiteral) === 0;
+                    const isLiteralStr =
+                      (propType.flags & ts.TypeFlags.StringLiteral) !== 0;
+                    const isLiteralNum =
+                      (propType.flags & ts.TypeFlags.NumberLiteral) !== 0;
+
+                    if (
+                      !isWidenedStr &&
+                      !isWidenedNum &&
+                      !isLiteralStr &&
+                      !isLiteralNum
+                    )
+                      continue;
+
+                    if (!prop.valueDeclaration) continue;
+                    const estreeNode = parserServices.tsNodeToESTreeNodeMap.get(
+                      prop.valueDeclaration,
+                    ) as TSESTree.TSPropertySignature | undefined;
+                    if (!estreeNode) continue;
+
+                    const widened: "string" | "number" | null =
+                      isWidenedStr
+                        ? "string"
+                        : isWidenedNum
+                          ? "number"
+                          : null;
+                    const hasLiteral = isLiteralStr || isLiteralNum;
+
+                    const existing = propMap.get(propName);
+                    if (existing) {
+                      existing.push({
+                        sig: estreeNode,
+                        widened,
+                        hasLiteral,
+                      });
+                    } else {
+                      propMap.set(propName, [
+                        {
+                          sig: estreeNode,
+                          widened,
+                          hasLiteral,
+                        },
+                      ]);
+                    }
+                  }
+                  return;
+                }
+              }
+            }
+
+            visited = new Set(visited);
+            visited.add(typeNode);
+          } else if (typeNode.type === "TSIntersectionType") {
+            for (const intersectMember of typeNode.types) {
+              processType(intersectMember, visited, out, propMap);
+            }
+            return;
+          }
+        };
+
+        const propMap = new Map<string, PropEntry[]>();
+        for (const member of members) {
+          processType(member, new Set<TSESTree.TSTypeReference>(), [], propMap);
+        }
+
+        const allLiterals: TSESTree.TSTypeLiteral[] = [];
+        for (const member of members) {
+          processType(member, new Set<TSESTree.TSTypeReference>(), allLiterals, new Map());
+        }
+        const totalCount = allLiterals.length;
 
         for (const [propName, entries] of propMap) {
           if (!DISCRIMINANT_NAMES.has(propName)) continue;
-          if (entries.length < members.length) continue;
+          if (entries.length < totalCount) continue;
 
           const hasWidened = entries.some((e) => e.widened !== null);
-          const hasLiteral = entries.some(
-            (e) =>
-              e.widened === null &&
-              isLiteralType(e.sig.typeAnnotation?.typeAnnotation),
-          );
+          const hasLiteral = entries.some((e) => e.hasLiteral);
 
           if (!hasLiteral || !hasWidened) continue;
 
