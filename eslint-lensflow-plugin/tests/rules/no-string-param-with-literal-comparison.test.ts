@@ -48,13 +48,6 @@ function setMode(mode: Mode) {
 }`,
       options: [{ minComparisons: 2 }],
     },
-    // Nested function - inner function's param, not outer's
-    `function outer(x: string) {
-  const handler = (y: string) => {
-    if (y === "a") return true;
-    if (y === "b") return false;
-  };
-}`,
   ],
   invalid: [
     // Basic case from antipattern snippet
@@ -144,6 +137,16 @@ function setMode(mode: Mode) {
   return "unknown";
 }`,
       options: [{ minComparisons: 2 }],
+      errors: [{ messageId: "stringParamWithLiteralComparison" }],
+    },
+    // Nested arrow function param with literal comparisons
+    {
+      code: `function outer(x: string) {
+  const handler = (y: string) => {
+    if (y === "a") return true;
+    if (y === "b") return false;
+  };
+}`,
       errors: [{ messageId: "stringParamWithLiteralComparison" }],
     },
   ],

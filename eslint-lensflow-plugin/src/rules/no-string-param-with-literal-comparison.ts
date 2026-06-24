@@ -55,7 +55,7 @@ export default createRule({
     ],
     fixable: undefined,
   },
-  defaultOptions: [],
+  defaultOptions: [{}],
   create(
     context: TSESLint.RuleContext<
       "stringParamWithLiteralComparison",
@@ -109,10 +109,10 @@ export default createRule({
     ): ParamScope | undefined {
       const scope = sourceCode.getScope(identifier);
       const binding = scope.set.get(identifier.name);
-      if (!binding || binding.kind !== "param") return undefined;
+      if (!binding || binding.defs.length === 0 || binding.defs[0].type !== "Parameter") return undefined;
       const current = currentScope();
       if (!current) return undefined;
-      return current.params.find((p) => p.paramIdent === binding.ident);
+      return current.params.find((p) => p.paramIdent === binding.defs[0].name);
     }
 
     return {
