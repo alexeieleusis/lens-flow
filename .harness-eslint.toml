@@ -1,5 +1,5 @@
 # dotharness configuration — DO NOT COMMIT this file
-# Add .harness.toml to your global gitignore
+# Add .harness-eslint.toml to your global gitignore
 
 [harness]
 backend = "opencode"               # "opencode" or "claude"
@@ -21,6 +21,7 @@ review_knowledge_file = "/home/alexeieleusis/scripts/review_stack/data/feedback.
 [repo]
 name = "alexeieleusis/lens-flow"
 working_dir = "/home/alexeieleusis/second_ssd/development/lensflow"
+opencode_dir = "/home/alexeieleusis/second_ssd/development/lensflow/eslint-lensflow-plugin"
 
 [vibe_heal]
 enabled = true
