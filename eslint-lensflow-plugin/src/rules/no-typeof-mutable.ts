@@ -12,6 +12,21 @@ function getExprNameIdentifier(node: TSESTree.TSTypeQuery): string | null {
   return null;
 }
 
+function findVariable(
+  scope: TSESLint.Scope.Scope,
+  name: string,
+): TSESLint.Scope.Variable | null {
+  let current: TSESLint.Scope.Scope | null = scope;
+  while (current) {
+    const found = current.variables.find(
+      (v) => v.name === name && v.defs.length > 0,
+    );
+    if (found) return found;
+    current = current.upper ?? null;
+  }
+  return null;
+}
+
 function hasAsConst(init: TSESTree.Expression | null): boolean {
   if (init?.type !== "TSAsExpression") return false;
   const ta = init.typeAnnotation;
@@ -49,9 +64,7 @@ export default createRule({
         if (!varName) return;
 
         const scope = context.sourceCode.getScope(node);
-        const found = scope.variables.find(
-          (v) => v.name === varName && v.defs.length > 0,
-        );
+        const found = findVariable(scope, varName);
 
         if (!found) return;
 
