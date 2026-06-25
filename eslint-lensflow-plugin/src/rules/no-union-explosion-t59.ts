@@ -37,7 +37,7 @@ export default createRule({
         const objectLike = members.filter(
           (m) => m.type === "TSTypeLiteral" || m.type === "TSTypeReference",
         );
-        if (objectLike.length >= maxVariants && objectLike.length === members.length) {
+        if (objectLike.length > maxVariants && objectLike.length === members.length) {
           context.report({
             node,
             messageId: "tooManyVariants",
