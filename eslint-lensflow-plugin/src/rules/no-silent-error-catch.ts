@@ -4,28 +4,6 @@ import type { TSESLint } from "@typescript-eslint/utils";
 import { TSESTree } from "@typescript-eslint/utils";
 
 /**
- * Walk up parent chain to find an ancestor matching the predicate.
- */
-function findAncestor(
-  node: { parent?: unknown },
-  predicate: (n: { type: string }) => boolean,
-): { type: string } | null {
-  let current: unknown = node.parent;
-  while (current != null) {
-    const obj = current as Record<string, unknown>;
-    if (
-      typeof obj === "object" &&
-      "type" in obj &&
-      predicate(obj as { type: string })
-    ) {
-      return obj as { type: string };
-    }
-    current = (obj as { parent?: unknown }).parent;
-  }
-  return null;
-}
-
-/**
  * Check whether any descendant of the given node is an Identifier with the specified name.
  * Stops at function boundaries to avoid crossing scope.
  */
@@ -41,19 +19,24 @@ function nodeContainsIdentifier(
 /**
  * Check whether an Identifier reference is used inside a console.* call.
  */
-function isInsideConsoleCall(node: { parent?: unknown }): boolean {
-  const call = findAncestor(node, (n) => n.type === "CallExpression");
-  if (!call) return false;
-  const callee = (call as { callee?: unknown }).callee;
-  if (
-    callee != null &&
-    typeof callee === "object" &&
-    (callee as { type?: string }).type === "MemberExpression"
-  ) {
-    const member = callee as { object?: { type?: string; name?: string } };
-    return (
-      member.object?.type === "Identifier" && member.object?.name === "console"
-    );
+function isInsideConsoleCall(
+  sourceCode: TSESLint.SourceCode,
+  node: TSESTree.Node,
+): boolean {
+  const ancestors = sourceCode.getAncestors(node);
+  for (let i = ancestors.length - 1; i >= 0; i--) {
+    if (ancestors[i].type === "CallExpression") {
+      const call = ancestors[i] as TSESTree.CallExpression;
+      const callee = call.callee;
+      if (
+        callee.type === "MemberExpression" &&
+        callee.object.type === "Identifier" &&
+        callee.object.name === "console"
+      ) {
+        return true;
+      }
+      return false;
+    }
   }
   return false;
 }
@@ -96,7 +79,8 @@ export default createRule({
         if (errorRefs.length === 0) return;
 
         // All references must be inside console.* calls.
-        if (!errorRefs.every((ref) => isInsideConsoleCall(ref))) return;
+        const sourceCode = context.sourceCode;
+        if (!errorRefs.every((ref) => isInsideConsoleCall(sourceCode, ref))) return;
 
         // There must be a ThrowStatement with `new Error(...)` that does NOT
         // include the caught error parameter in its arguments.
