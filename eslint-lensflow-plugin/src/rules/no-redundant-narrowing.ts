@@ -6,15 +6,9 @@ function testsEqual(
   a: TSESTree.Node,
   b: TSESTree.Node,
 ): boolean {
-  if (a.type !== "BinaryExpression" || b.type !== "BinaryExpression") return false;
+  if (a.type !== b.type) return false;
 
-  return (
-    a.operator === b.operator &&
-    a.left.type === b.left.type &&
-    a.right.type === b.right.type &&
-    context.sourceCode.getText(a.left) === context.sourceCode.getText(b.left) &&
-    context.sourceCode.getText(a.right) === context.sourceCode.getText(b.right)
-  );
+  return context.sourceCode.getText(a) === context.sourceCode.getText(b);
 }
 
 export default createRule({
@@ -23,7 +17,7 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow redundant type narrowing checks that repeat an outer block's identical check",
+        "Disallow redundant narrowing checks that repeat an outer block's identical check (binary comparisons, typeof, instanceof, truthiness, and call expressions)",
     },
     messages: {
       redundantNarrowing:
