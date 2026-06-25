@@ -39,11 +39,10 @@ function extractClassMethods(
         member.type === "TSAbstractMethodDefinition") &&
       member.key.type === "Identifier"
     ) {
-      const value = member.value;
-      if (
-        value.returnType &&
-        typeNodeHasThisReturnType(value.returnType.typeAnnotation)
-      ) {
+      const returnType = member.type === "TSAbstractMethodDefinition"
+        ? (member as TSESTree.TSAbstractMethodDefinition & { returnType?: TSESTree.TSTypeAnnotation }).returnType
+        : member.value?.returnType;
+      if (returnType && typeNodeHasThisReturnType(returnType.typeAnnotation)) {
         methodsWithThis.add(member.key.name);
       }
     }
