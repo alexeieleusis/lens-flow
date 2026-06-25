@@ -85,16 +85,27 @@ function isBranded(checker: ts.TypeChecker, tsType: ts.Type): boolean {
   const constituents = (apparent as ts.IntersectionType)?.types;
   if (!constituents || constituents.length <= 1) return false;
 
+  const brandNamePattern = /^__(brand|type|mark)$|^__\w+_brand$/;
+
   for (const constituent of constituents) {
     const props = constituent.getProperties();
     for (const prop of props) {
+      const propName = prop.escapedName as string;
       const propType = checker.getTypeOfSymbolAtLocation(
         prop,
         prop.valueDeclaration!,
       );
+
       if (
         (propType.flags & ts.TypeFlags.UniqueESSymbol) !== 0 &&
         propType.symbol
+      ) {
+        return true;
+      }
+
+      if (
+        brandNamePattern.test(propName) &&
+        (propType.flags & ts.TypeFlags.StringLiteral) !== 0
       ) {
         return true;
       }
