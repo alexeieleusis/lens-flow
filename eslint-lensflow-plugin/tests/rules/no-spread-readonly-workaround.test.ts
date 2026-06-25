@@ -48,5 +48,32 @@ const items: ReadonlyArray<string> = ["a", "b"];
 concat([...items]);`,
       errors: [{ messageId: "spreadReadonlyArray" }],
     },
+    // TSNonNullExpression wrapper: [...arr!]
+    {
+      code: `function sum(numbers: Array<number>): number {
+  return numbers.reduce((a, b) => a + b, 0);
+}
+const arr: readonly number[] = [1];
+sum([...arr!]);`,
+      errors: [{ messageId: "spreadReadonlyArray" }],
+    },
+    // ChainExpression wrapper: [...obj?.items]
+    {
+      code: `function sum(numbers: Array<number>): number {
+  return numbers.reduce((a, b) => a + b, 0);
+}
+const obj: { items?: readonly number[] } = {};
+if (obj.items) sum([...obj?.items]);`,
+      errors: [{ messageId: "spreadReadonlyArray" }],
+    },
+    // MemberExpression: [...obj.readonlyItems]
+    {
+      code: `function sum(numbers: Array<number>): number {
+  return numbers.reduce((a, b) => a + b, 0);
+}
+const obj: { readonlyItems: readonly number[] } = { readonlyItems: [1] };
+sum([...obj.readonlyItems]);`,
+      errors: [{ messageId: "spreadReadonlyArray" }],
+    },
   ],
 });
