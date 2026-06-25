@@ -12,10 +12,16 @@ function isLiteralType(node: TSESTree.TypeNode): boolean {
   return node.type === AST_NODE_TYPES.TSLiteralType;
 }
 
+function getKeyName(key: TSESTree.PropertyName): string | undefined {
+  if (key.type === AST_NODE_TYPES.Identifier) return key.name;
+  if (key.type === AST_NODE_TYPES.Literal && typeof key.value === "string") return key.value;
+  return undefined;
+}
+
 function hasDiscriminant(members: TSESTree.TSPropertySignature[]): boolean {
   return members.some((member) => {
     if (!member.typeAnnotation) return false;
-    const name = member.key.type === AST_NODE_TYPES.Identifier ? member.key.name : undefined;
+    const name = getKeyName(member.key);
     if (name == null || !DISCRIMINANT_PATTERN.test(name)) return false;
     return isLiteralType(member.typeAnnotation.typeAnnotation);
   });
@@ -94,7 +100,7 @@ export default createRule({
       if (
         members.length === 1 &&
         isStringProperty(members[0]) &&
-        (members[0].key as TSESTree.Identifier).name === "message"
+        getKeyName(members[0].key) === "message"
       ) {
         context.report({
           node,
@@ -109,9 +115,7 @@ export default createRule({
       if (
         members.length === 1 &&
         isStringProperty(members[0]) &&
-        (["message", "error"] as string[]).includes(
-          (members[0].key as TSESTree.Identifier).name ?? "",
-        ) &&
+        (["message", "error"] as string[]).includes(getKeyName(members[0].key) ?? "") &&
         declName != null &&
         ERROR_NAME_PATTERN.test(declName)
       ) {
