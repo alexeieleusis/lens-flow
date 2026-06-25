@@ -23,6 +23,7 @@ export default createRule({
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"shadowedTypeParam", []>) {
     const scopeStack: string[][] = [];
+    const activeNames = new Set<string>();
 
     function enterWithParams(
       node:
@@ -39,10 +40,9 @@ export default createRule({
       if (!typeParams || typeParams.params.length === 0) return;
 
       const names = typeParams.params.map((p) => p.name.name);
-      const outerNames = new Set(scopeStack.flat());
 
       for (let i = 0; i < names.length; i++) {
-        if (outerNames.has(names[i])) {
+        if (activeNames.has(names[i])) {
           context.report({
             node: typeParams.params[i],
             messageId: "shadowedTypeParam",
@@ -51,6 +51,7 @@ export default createRule({
         }
       }
 
+      for (const name of names) activeNames.add(name);
       scopeStack.push(names);
     }
 
@@ -66,7 +67,10 @@ export default createRule({
         | TSESTree.TSTypeAliasDeclaration,
     ) {
       if (node.typeParameters && node.typeParameters.params.length > 0) {
-        scopeStack.pop();
+        const names = scopeStack.pop();
+        if (names) {
+          for (const name of names) activeNames.delete(name);
+        }
       }
     }
 
@@ -75,10 +79,9 @@ export default createRule({
       if (!typeParams || typeParams.params.length === 0) return;
 
       const names = typeParams.params.map((p: TSESTree.TSTypeParameter) => p.name.name);
-      const outerNames = new Set(scopeStack.flat());
 
       for (let i = 0; i < names.length; i++) {
-        if (outerNames.has(names[i])) {
+        if (activeNames.has(names[i])) {
           context.report({
             node: typeParams.params[i],
             messageId: "shadowedTypeParam",
@@ -87,13 +90,17 @@ export default createRule({
         }
       }
 
+      for (const name of names) activeNames.add(name);
       scopeStack.push(names);
     }
 
     function exitConditionalType(node: TSESTree.TSConditionalType) {
       const typeParams = (node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters;
       if (typeParams && typeParams.params.length > 0) {
-        scopeStack.pop();
+        const names = scopeStack.pop();
+        if (names) {
+          for (const name of names) activeNames.delete(name);
+        }
       }
     }
 
@@ -103,9 +110,8 @@ export default createRule({
 
       const nameParam = typeParam.name;
       const name = typeof nameParam === "string" ? nameParam : nameParam.name;
-      const outerNames = new Set(scopeStack.flat());
 
-      if (outerNames.has(name)) {
+      if (activeNames.has(name)) {
         context.report({
           node: typeParam.name,
           messageId: "shadowedTypeParam",
@@ -113,12 +119,16 @@ export default createRule({
         });
       }
 
+      activeNames.add(name);
       scopeStack.push([name]);
     }
 
     function exitMappedType(node: TSESTree.TSMappedType) {
       if (node.typeParameter) {
-        scopeStack.pop();
+        const names = scopeStack.pop();
+        if (names) {
+          for (const name of names) activeNames.delete(name);
+        }
       }
     }
 
@@ -127,10 +137,9 @@ export default createRule({
       if (!typeParams || typeParams.params.length === 0) return;
 
       const names = typeParams.params.map((p: TSESTree.TSTypeParameter) => p.name.name);
-      const outerNames = new Set(scopeStack.flat());
 
       for (let i = 0; i < names.length; i++) {
-        if (outerNames.has(names[i])) {
+        if (activeNames.has(names[i])) {
           context.report({
             node: typeParams.params[i],
             messageId: "shadowedTypeParam",
@@ -139,13 +148,17 @@ export default createRule({
         }
       }
 
+      for (const name of names) activeNames.add(name);
       scopeStack.push(names);
     }
 
     function exitMethodSignature(node: TSESTree.TSMethodSignature) {
       const typeParams = (node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters;
       if (typeParams && typeParams.params.length > 0) {
-        scopeStack.pop();
+        const names = scopeStack.pop();
+        if (names) {
+          for (const name of names) activeNames.delete(name);
+        }
       }
     }
 
@@ -154,10 +167,9 @@ export default createRule({
       if (!typeParams || typeParams.params.length === 0) return;
 
       const names = typeParams.params.map((p: TSESTree.TSTypeParameter) => p.name.name);
-      const outerNames = new Set(scopeStack.flat());
 
       for (let i = 0; i < names.length; i++) {
-        if (outerNames.has(names[i])) {
+        if (activeNames.has(names[i])) {
           context.report({
             node: typeParams.params[i],
             messageId: "shadowedTypeParam",
@@ -166,13 +178,17 @@ export default createRule({
         }
       }
 
+      for (const name of names) activeNames.add(name);
       scopeStack.push(names);
     }
 
     function exitMethodDefinition(node: TSESTree.MethodDefinition) {
       const typeParams = (node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters;
       if (typeParams && typeParams.params.length > 0) {
-        scopeStack.pop();
+        const names = scopeStack.pop();
+        if (names) {
+          for (const name of names) activeNames.delete(name);
+        }
       }
     }
 
