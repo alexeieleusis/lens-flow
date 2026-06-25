@@ -28,8 +28,8 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ maxProduct: 20 }],
-  create(context: TSESLint.RuleContext<"cartesianProduct", [{ maxProduct: number }]>) {
-    const { maxProduct } = context.options[0] ?? { maxProduct: 20 };
+  create(context: TSESLint.RuleContext<"cartesianProduct", [{ maxProduct?: number }]>) {
+    const { maxProduct = 20 } = context.options[0] ?? {};
 
     const typeAliasMap = new Map<string, number>();
 
@@ -54,7 +54,11 @@ export default createRule({
         for (const t of node.types) {
           if (t.type === "TSTypeReference") {
             const typeName =
-              t.typeName.type === "Identifier" ? t.typeName.name : null;
+              t.typeName.type === "Identifier"
+                ? t.typeName.name
+                : t.typeName.type === "TSQualifiedName"
+                  ? t.typeName.right.name
+                  : null;
             if (typeName && typeAliasMap.has(typeName)) {
               counts.push(typeAliasMap.get(typeName)!);
             }
