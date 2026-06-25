@@ -4,6 +4,17 @@ import type { TSESLint } from "@typescript-eslint/utils";
 const statefulEntityPattern =
   /account|wallet|balance|counter|state|inventory|cart|session|store|registry|pool|cache|buffer|accumulator|collector/i;
 
+function isArrayType(node: any): boolean {
+  if (node.type === "TSArrayType") return true;
+  if (
+    node.type === "TSTypeReference" &&
+    node.typeName.type === "Identifier" &&
+    node.typeName.name === "Array"
+  )
+    return true;
+  return false;
+}
+
 function hasMutableStateType(typeAnnotation: any): boolean {
   if (!typeAnnotation) return false;
 
@@ -11,14 +22,14 @@ function hasMutableStateType(typeAnnotation: any): boolean {
 
   if (type === "TSNumberKeyword" || type === "TSStringKeyword") return true;
 
-  if (type === "TSArrayType") return true;
+  if (isArrayType(typeAnnotation)) return true;
 
   if (type === "TSUnionType") {
     return typeAnnotation.types.some(
       (t: any) =>
         t.type === "TSNumberKeyword" ||
         t.type === "TSStringKeyword" ||
-        t.type === "TSArrayType",
+        isArrayType(t),
     );
   }
 
