@@ -32,7 +32,7 @@ function visitFunction(
 
   if (isUnknown || isAny) {
     context.report({
-      node,
+      node: firstParam,
       messageId: "unknownTypePredicate",
       data: {
         paramName: getParamName(firstParam),
@@ -55,7 +55,7 @@ function visitFunction(
 
   if (typeStr === "unknown" || typeStr === "any") {
     context.report({
-      node,
+      node: firstParam,
       messageId: "unknownTypePredicate",
       data: {
         paramName: getParamName(firstParam),
