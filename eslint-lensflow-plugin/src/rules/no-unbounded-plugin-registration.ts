@@ -114,6 +114,32 @@ export default createRule({
           });
         }
       },
+      PropertyDefinition(node) {
+        let propName: string | null = null;
+        if (node.key.type === "Identifier") {
+          propName = node.key.name;
+        } else if (node.key.type === "Literal" && typeof node.key.value === "string") {
+          propName = node.key.value;
+        }
+        if (propName !== "register") return;
+
+        if (!node.value) return;
+
+        const fn = node.value;
+        if (fn.type !== "ArrowFunctionExpression" && fn.type !== "FunctionExpression") return;
+
+        const body = fn.body;
+        if (body.type !== "BlockStatement") return;
+
+        const result = analyzeBody(body);
+
+        if (result.hasPush && !result.hasDuplicateCheck) {
+          context.report({
+            node: node.value,
+            messageId: "unboundedRegister",
+          });
+        }
+      },
     };
   },
 });
