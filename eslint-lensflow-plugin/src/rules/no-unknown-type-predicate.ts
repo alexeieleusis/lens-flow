@@ -79,6 +79,11 @@ export default createRule({
       ArrowFunctionExpression: handler,
       TSFunctionType: handler,
       TSEmptyBodyFunctionExpression: handler,
+      TSMethodSignature: handler,
+      TSDeclareFunction: handler,
+      TSAbstractMethodDefinition: handler,
+      MethodDefinition: handler,
+      TSPropertySignature: handler,
     };
   },
 });
