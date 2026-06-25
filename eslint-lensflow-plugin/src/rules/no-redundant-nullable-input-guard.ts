@@ -45,6 +45,10 @@ function referencesParam(expr: TSESTree.Expression | TSESTree.PrivateIdentifier 
     return referencesParam(expr.left, paramName) || referencesParam(expr.right, paramName);
   if (expr.type === "LogicalExpression")
     return referencesParam(expr.left, paramName) || referencesParam(expr.right, paramName);
+  if (expr.type === "TSNonNullExpression") return referencesParam(expr.expression, paramName);
+  if (expr.type === "TSAsExpression") return referencesParam(expr.expression, paramName);
+  if (expr.type === "TSSatisfiesExpression") return referencesParam(expr.expression, paramName);
+  if (expr.type === "TSTypeAssertion") return referencesParam(expr.expression, paramName);
   return false;
 }
 
@@ -91,6 +95,14 @@ function normalizeGuardPattern(test: TSESTree.Expression, paramName: string): st
       walk(node.right);
     } else if (node.type === "Identifier" && node.name === paramName) {
       parts.push("param");
+    } else if (node.type === "TSNonNullExpression") {
+      walk(node.expression);
+    } else if (node.type === "TSAsExpression") {
+      walk(node.expression);
+    } else if (node.type === "TSSatisfiesExpression") {
+      walk(node.expression);
+    } else if (node.type === "TSTypeAssertion") {
+      walk(node.expression);
     }
   }
 
