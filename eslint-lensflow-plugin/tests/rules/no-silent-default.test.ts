@@ -1,7 +1,7 @@
 import { ruleTester } from "../helpers/rule-tester.js";
-import rule from "../../src/rules/no-silent-exhaustive-default.js";
+import rule from "../../src/rules/no-silent-default.js";
 
-ruleTester.run("no-silent-exhaustive-default", rule, {
+ruleTester.run("no-silent-default", rule, {
   valid: [
     // default with assertNever — the correct pattern
     `type Event = { kind: "click"; x: number } | { kind: "scroll"; top: number };

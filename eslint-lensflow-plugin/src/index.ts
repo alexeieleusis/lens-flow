@@ -188,7 +188,7 @@ import noShallowReadonlyArray from "./rules/no-shallow-readonly-array.js";
 import noShallowReadonlyMutableCollection from "./rules/no-shallow-readonly-mutable-collection.js";
 import noSilentEffectAbsorption from "./rules/no-silent-effect-absorption.js";
 import noSilentErrorCatch from "./rules/no-silent-error-catch.js";
-import noSilentExhaustiveDefault from "./rules/no-silent-exhaustive-default.js";
+import noSilentDefault from "./rules/no-silent-default.js";
 import noSilentNeverInferFallback from "./rules/no-silent-never-infer-fallback.js";
 import noSpreadReadonlyWorkaround from "./rules/no-spread-readonly-workaround.js";
 import noStaticAsyncGenerator from "./rules/no-static-async-generator.js";
@@ -477,7 +477,7 @@ const plugin: {
     "no-shallow-readonly-mutable-collection": noShallowReadonlyMutableCollection,
     "no-silent-effect-absorption": noSilentEffectAbsorption,
     "no-silent-error-catch": noSilentErrorCatch,
-    "no-silent-exhaustive-default": noSilentExhaustiveDefault,
+    "no-silent-default": noSilentDefault,
     "no-silent-never-infer-fallback": noSilentNeverInferFallback,
     "no-spread-readonly-workaround": noSpreadReadonlyWorkaround,
     "no-static-async-generator": noStaticAsyncGenerator,
