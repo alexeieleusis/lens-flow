@@ -105,48 +105,107 @@ function findChains(members: AliasEntry[]): AliasEntry[][] {
 }
 
 function getNextRef(node: TSESTree.TSTypeAliasDeclaration): string | null {
-  const typeAnn = node.typeAnnotation;
-  if (typeAnn?.type !== "TSTypeLiteral") return null;
+  const typeLiterals = unwrapTSTypeLiteral(node.typeAnnotation);
+  if (typeLiterals.length === 0) return null;
 
-  for (const member of typeAnn.members) {
-    if (member.type !== "TSPropertySignature") continue;
-    const typeAnnotation = member.typeAnnotation?.typeAnnotation;
-    if (!typeAnnotation) continue;
+  for (const typeLiteral of typeLiterals) {
+    for (const member of typeLiteral.members) {
+      if (member.type !== "TSPropertySignature") continue;
+      const propType = member.typeAnnotation?.typeAnnotation;
+      if (!propType) continue;
 
-    const refs = extractTypeRefs(typeAnnotation);
-    for (const ref of refs) {
-      const typeName = getRefName(ref.typeName);
-      if (typeName) return typeName;
+      if (propType.type === "TSArrayType") {
+        const refs = extractTypeRefs(propType.elementType);
+        for (const ref of refs) {
+          const typeName = getRefName(ref.typeName);
+          if (typeName) return typeName;
+        }
+      }
     }
   }
+
+  for (const typeLiteral of typeLiterals) {
+    for (const member of typeLiteral.members) {
+      if (member.type !== "TSPropertySignature") continue;
+      const propType = member.typeAnnotation?.typeAnnotation;
+      if (!propType) continue;
+
+      if (propType.type === "TSArrayType") continue;
+
+      const refs = extractTypeRefs(propType);
+      for (const ref of refs) {
+        const typeName = getRefName(ref.typeName);
+        if (typeName) return typeName;
+      }
+    }
+  }
+
   return null;
+}
+
+function unwrapTSTypeLiteral(
+  type: TSESTree.TypeNode | null | undefined,
+): TSESTree.TSTypeLiteral[] {
+  if (!type) return [];
+
+  if (type.type === "TSTypeLiteral") {
+    return [type];
+  }
+
+  if (type.type === "TSIntersectionType") {
+    const results: TSESTree.TSTypeLiteral[] = [];
+    for (const t of type.types) {
+      results.push(...unwrapTSTypeLiteral(t));
+    }
+    return results;
+  }
+
+  if (type.type === "TSUnionType") {
+    const results: TSESTree.TSTypeLiteral[] = [];
+    for (const t of type.types) {
+      results.push(...unwrapTSTypeLiteral(t));
+    }
+    return results;
+  }
+
+  {
+    const raw = type as unknown as Record<string, unknown>;
+    if (raw.type === "TSParenthesizedType") {
+      return unwrapTSTypeLiteral(raw.typeAnnotation as TSESTree.TypeNode);
+    }
+  }
+
+  return [];
 }
 
 function extractTypeRefs(type: TSESTree.TypeNode): TSESTree.TSTypeReference[] {
   const results: TSESTree.TSTypeReference[] = [];
 
-  switch (type.type) {
-    case "TSTypeReference":
-      results.push(type);
-      break;
-    case "TSArrayType":
-      results.push(...extractTypeRefs(type.elementType));
-      break;
-    case "TSUnionType":
-      for (const unionType of type.types) {
-        results.push(...extractTypeRefs(unionType));
-      }
-      break;
-    case "TSIntersectionType":
-      for (const intersectType of type.types) {
-        results.push(...extractTypeRefs(intersectType));
-      }
-      break;
-    case "TSTypeOperator":
-      if (type.typeAnnotation) {
-        results.push(...extractTypeRefs(type.typeAnnotation));
-      }
-      break;
+  if (type.type === "TSTypeReference") {
+    results.push(type);
+    return results;
+  }
+
+  if (type.type === "TSArrayType") {
+    return extractTypeRefs(type.elementType);
+  }
+
+  if (type.type === "TSUnionType") {
+    for (const unionType of type.types) {
+      results.push(...extractTypeRefs(unionType));
+    }
+    return results;
+  }
+
+  if (type.type === "TSIntersectionType") {
+    for (const intersectType of type.types) {
+      results.push(...extractTypeRefs(intersectType));
+    }
+    return results;
+  }
+
+  if (type.type === "TSTypeOperator" && type.typeAnnotation) {
+    return extractTypeRefs(type.typeAnnotation);
   }
 
   return results;
