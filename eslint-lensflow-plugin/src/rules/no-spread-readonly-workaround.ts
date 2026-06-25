@@ -15,20 +15,32 @@ function unwrapTSExpressions(node: TSESTree.Expression): TSESTree.Expression {
   return current;
 }
 
+function unwrapTypeNode(node: TSESTree.TypeNode): TSESTree.TypeNode[] {
+  if (node.type === "TSUnionType") {
+    return node.types.flatMap(unwrapTypeNode);
+  }
+  if (node.type === "TSIntersectionType") {
+    return node.types.flatMap(unwrapTypeNode);
+  }
+  return [node];
+}
+
 function isReadonlyTypeAnnotation(node: TSESTree.TypeNode): boolean {
-  // readonly T[] → TSTypeOperator { operator: "readonly" }
-  if (node.type === "TSTypeOperator" && node.operator === "readonly")
-    return true;
+  return unwrapTypeNode(node).some((unwrapped) => {
+    // readonly T[] → TSTypeOperator { operator: "readonly" }
+    if (unwrapped.type === "TSTypeOperator" && unwrapped.operator === "readonly")
+      return true;
 
-  // ReadonlyArray<T>
-  if (
-    node.type === "TSTypeReference" &&
-    node.typeName.type === "Identifier" &&
-    node.typeName.name === "ReadonlyArray"
-  )
-    return true;
+    // ReadonlyArray<T>
+    if (
+      unwrapped.type === "TSTypeReference" &&
+      unwrapped.typeName.type === "Identifier" &&
+      unwrapped.typeName.name === "ReadonlyArray"
+    )
+      return true;
 
-  return false;
+    return false;
+  });
 }
 
 function getTypeAnnotationFromDef(
