@@ -52,7 +52,7 @@ export default createRule({
     },
     messages: {
       silentErrorCatch:
-        "Error is only logged to console and replaced with a generic Error, losing original error details. Preserve or rethrow the original error. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC21-async-concurrency.md",
+        "Error is only logged to console and replaced with a generic Error, losing original error details. Preserve or rethrow the original error.",
     },
     schema: [],
   },
