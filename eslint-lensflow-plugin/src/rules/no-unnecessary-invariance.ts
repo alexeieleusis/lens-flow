@@ -3,79 +3,15 @@ import type { TSESTree } from "@typescript-eslint/types";
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 import {
-  containsTypeRef,
   containsTypeRefInOutput,
-  paramTypeAnnotation,
+  isUsedAsInputInBody,
 } from "../utils/variance-checker.js";
 
-// --- Input-position walker (parameter types) ---
-
-function checksParamsForTypeRef(
-  params: TSESTree.Parameter[],
-  paramName: string,
-): boolean {
-  for (const p of params) {
-    const tp = paramTypeAnnotation(p);
-    if (tp && containsTypeRef(tp, paramName)) return true;
-  }
-  return false;
-}
-
-function methodHasInputRef(
-  member: TSESTree.TSMethodSignature,
-  paramName: string,
-): boolean {
-  return checksParamsForTypeRef(member.params, paramName);
-}
-
-function propertyHasInputRef(
-  member: TSESTree.TSPropertySignature,
-  paramName: string,
-): boolean {
-  const ta = member.typeAnnotation?.typeAnnotation;
-  if (!ta) return false;
-  return propTypeHasInput(ta, paramName);
-}
-
 function hasTypeRefInInput(
-  members: TSESTree.TypeElement[],
+  body: TSESTree.TSInterfaceBody | TSESTree.TSTypeLiteral,
   paramName: string,
 ): boolean {
-  for (const member of members) {
-    if (member.type === AST_NODE_TYPES.TSMethodSignature) {
-      if (methodHasInputRef(member as TSESTree.TSMethodSignature, paramName))
-        return true;
-    } else if (member.type === AST_NODE_TYPES.TSPropertySignature) {
-      if (
-        propertyHasInputRef(
-          member as TSESTree.TSPropertySignature,
-          paramName,
-        )
-      )
-        return true;
-    }
-  }
-  return false;
-}
-
-// For property types: function types contribute params as input positions;
-// non-function property types are NOT input positions.
-function propTypeHasInput(node: TSESTree.Node, paramName: string): boolean {
-  if (node.type === AST_NODE_TYPES.TSFunctionType) {
-    for (const p of node.params) {
-      const tp = paramTypeAnnotation(p);
-      if (tp && containsTypeRef(tp, paramName)) return true;
-    }
-    return false;
-  }
-  if (node.type === AST_NODE_TYPES.TSConstructorType) {
-    for (const p of node.params) {
-      const tp = paramTypeAnnotation(p);
-      if (tp && containsTypeRef(tp, paramName)) return true;
-    }
-    return false;
-  }
-  return false;
+  return isUsedAsInputInBody(body, paramName);
 }
 
 export default createRule({
@@ -102,17 +38,20 @@ export default createRule({
       const typeParams = node.typeParameters;
       if (!typeParams) return;
 
+      let body: TSESTree.TSInterfaceBody | TSESTree.TSTypeLiteral;
       let members: TSESTree.TypeElement[];
       if (node.type === AST_NODE_TYPES.TSInterfaceDeclaration) {
         if (!node.body) return;
-        members = node.body.body;
+        body = node.body;
+        members = body.body;
       } else {
         const decl = node;
         if (
           decl.typeAnnotation.type !== AST_NODE_TYPES.TSTypeLiteral
         )
           return;
-        members = decl.typeAnnotation.members;
+        body = decl.typeAnnotation;
+        members = body.members;
       }
 
       for (const tp of typeParams.params) {
@@ -124,7 +63,7 @@ export default createRule({
           members,
           paramName,
         );
-        const inInput = hasTypeRefInInput(members, paramName);
+        const inInput = hasTypeRefInInput(body, paramName);
 
         if (inOutput && !inInput) {
           context.report({
