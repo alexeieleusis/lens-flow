@@ -30,7 +30,7 @@ export default createRule({
         const propertySets = typeLiterals.map((member) => {
           const names = new Set<string>();
           for (const m of member.members) {
-            if (m.type === "TSPropertySignature") {
+            if (m.type === "TSPropertySignature" || m.type === "TSMethodSignature") {
               if (m.key.type === "Identifier") {
                 names.add(m.key.name);
               } else if (m.key.type === "Literal" && typeof m.key.value === "string") {
