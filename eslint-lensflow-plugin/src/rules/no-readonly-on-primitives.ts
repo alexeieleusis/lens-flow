@@ -13,7 +13,11 @@ const PRIMITIVE_TYPE_NODES = new Set([
 function isPrimitiveLiteralType(node: TSESTree.Node): boolean {
   if (node.type !== "TSLiteralType") return false;
   const { literal } = node;
-  return literal.type === "Literal" && typeof literal.value !== "object";
+  if (literal.type !== "Literal") return false;
+  const val = literal.value;
+  if (typeof val === "object") return false;
+  if (typeof val === "boolean") return false;
+  return true;
 }
 
 function unwrapParens(node: TSESTree.TypeNode): TSESTree.TypeNode {
@@ -72,7 +76,10 @@ export default createRule({
       let typeName: string = unwrapped.type;
       if (unwrapped.type === "TSLiteralType") {
         const lit = unwrapped as unknown as { literal: { value?: unknown } };
-        typeName = typeof lit.literal.value === "number" ? "number" : "string";
+        const v = lit.literal.value;
+        if (typeof v === "number") typeName = "number";
+        else if (typeof v === "boolean") typeName = "boolean";
+        else typeName = "string";
       }
 
       context.report({
