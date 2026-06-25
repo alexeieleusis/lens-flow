@@ -46,6 +46,16 @@ function isMutableCollectionType(node: unknown): node is { type: MutableCollecti
     return interNode.types?.some((t) => isMutableCollectionType(t)) ?? false;
   }
 
+  if (typedNode.type === AST_NODE_TYPES.TSUnionType) {
+    const unionNode = typedNode as { type: string; types?: unknown[] };
+    return unionNode.types?.some((t) => isMutableCollectionType(t)) ?? false;
+  }
+
+  if (typedNode.type === AST_NODE_TYPES.TSParenthesizedType) {
+    const parenNode = typedNode as { type: string; typeAnnotation?: unknown };
+    return parenNode.typeAnnotation ? isMutableCollectionType(parenNode.typeAnnotation) : false;
+  }
+
   return false;
 }
 
