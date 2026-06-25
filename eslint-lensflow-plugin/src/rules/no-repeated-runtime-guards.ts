@@ -112,6 +112,15 @@ function extractGuards(
     if (seen.has(node)) return;
     seen.add(node);
 
+    // Stop at function boundaries — ESLint visits nested functions separately
+    if (
+      node.type === "FunctionDeclaration" ||
+      node.type === "FunctionExpression" ||
+      node.type === "ArrowFunctionExpression"
+    ) {
+      return;
+    }
+
     if (node.type === "BinaryExpression") {
       extractBinaryGuard(node, paramNames);
     }
