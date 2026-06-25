@@ -1,5 +1,22 @@
+import ts from "typescript";
+import { ESLintUtils, type TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+
+function extractPropsFromLiteral(
+  literal: import("@typescript-eslint/types").TSESTree.TSTypeLiteral,
+): Set<string> {
+  const names = new Set<string>();
+  for (const m of literal.members) {
+    if (m.type === "TSPropertySignature" || m.type === "TSMethodSignature") {
+      if (m.key.type === "Identifier") {
+        names.add(m.key.name);
+      } else if (m.key.type === "Literal" && typeof m.key.value === "string") {
+        names.add(m.key.value);
+      }
+    }
+  }
+  return names;
+}
 
 export default createRule({
   name: "no-union-without-common-shape",
@@ -18,28 +35,59 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"noCommonShape", []>) {
+    let parserServices: ReturnType<typeof ESLintUtils.getParserServices> | null =
+      null;
+    let checker: ts.TypeChecker | null = null;
+
+    try {
+      parserServices = ESLintUtils.getParserServices(context);
+      const program = parserServices.program;
+      if (program) {
+        checker = program.getTypeChecker();
+      }
+    } catch {
+      // No type information available
+    }
+
     return {
       TSUnionType(node) {
-        const typeLiterals = node.types.filter(
-          (t): t is import("@typescript-eslint/types").TSESTree.TSTypeLiteral =>
-            t.type === "TSTypeLiteral",
-        );
+        const propertySets: Set<string>[] = [];
 
-        if (typeLiterals.length < 2) return;
+        for (const member of node.types) {
+          if (checker && parserServices) {
+            const tsNode = parserServices.esTreeNodeToTSNodeMap.get(member);
+            if (!tsNode) continue;
 
-        const propertySets = typeLiterals.map((member) => {
-          const names = new Set<string>();
-          for (const m of member.members) {
-            if (m.type === "TSPropertySignature" || m.type === "TSMethodSignature") {
-              if (m.key.type === "Identifier") {
-                names.add(m.key.name);
-              } else if (m.key.type === "Literal" && typeof m.key.value === "string") {
-                names.add(m.key.value);
-              }
+            const memberType = checker.getTypeAtLocation(tsNode);
+
+            if (
+              (memberType.flags &
+                (ts.TypeFlags.Any |
+                  ts.TypeFlags.Unknown |
+                  ts.TypeFlags.Never |
+                  ts.TypeFlags.String |
+                  ts.TypeFlags.Number |
+                  ts.TypeFlags.Boolean |
+                  ts.TypeFlags.ESSymbol |
+                  ts.TypeFlags.Undefined |
+                  ts.TypeFlags.Null |
+                  ts.TypeFlags.Void)) !== 0
+            ) {
+              continue;
             }
+
+            const props = checker.getPropertiesOfType(memberType);
+            const names = new Set(props.map((p) => p.getName()));
+
+            if (names.size > 0) {
+              propertySets.push(names);
+            }
+          } else if (member.type === "TSTypeLiteral") {
+            propertySets.push(extractPropsFromLiteral(member));
           }
-          return names;
-        });
+        }
+
+        if (propertySets.length < 2) return;
 
         const intersection = propertySets.reduce<Set<string>>(
           (acc, set) => new Set([...acc].filter((x) => set.has(x))),
