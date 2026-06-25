@@ -1,6 +1,7 @@
 import type { TSESTree } from "@typescript-eslint/types";
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+import { getKeys } from "eslint-visitor-keys";
 
 const DUPLICATE_CHECK_METHODS = new Set([
   "has",
@@ -32,67 +33,46 @@ function isDuplicateCheckCall(
   return false;
 }
 
-function containsCallExpression(node: TSESTree.Node): TSESTree.CallExpression | null {
-  if (node.type === "CallExpression") return node;
-  if ("expression" in node && node.expression) {
-    return containsCallExpression(node.expression as TSESTree.Node);
+function collectCallExpressions(node: TSESTree.Node): TSESTree.CallExpression[] {
+  const calls: TSESTree.CallExpression[] = [];
+  if (node.type === "CallExpression") {
+    calls.push(node);
   }
-  if ("left" in node && node.left) {
-    const found = containsCallExpression(node.left as TSESTree.Node);
-    if (found) return found;
-  }
-  if ("right" in node && node.right) {
-    const found = containsCallExpression(node.right as TSESTree.Node);
-    if (found) return found;
-  }
-  if ("test" in node && node.test) {
-    return containsCallExpression(node.test as TSESTree.Node);
-  }
-  if ("consequent" in node && node.consequent) {
-    const consequent = node.consequent as TSESTree.Node;
-    if ("body" in consequent && Array.isArray((consequent as any).body)) {
-      for (const child of (consequent as any).body) {
-        const found = containsCallExpression(child);
-        if (found) return found;
+
+  for (const key of getKeys(node)) {
+    const child = (node as any)[key];
+    if (Array.isArray(child)) {
+      for (const item of child) {
+        if (item && typeof item === "object" && "type" in item) {
+          calls.push(...collectCallExpressions(item as TSESTree.Node));
+        }
       }
-    } else {
-      return containsCallExpression(consequent);
+    } else if (child && typeof child === "object" && "type" in child) {
+      calls.push(...collectCallExpressions(child as TSESTree.Node));
     }
   }
-  return null;
+
+  return calls;
 }
 
-function hasDuplicateCheckInNode(node: TSESTree.Node): boolean {
-  const call = containsCallExpression(node);
-  if (call) return isDuplicateCheckCall(call.callee);
-  return false;
-}
-
-function analyzeStatement(stmt: TSESTree.Statement): {
+function analyzeBody(body: TSESTree.BlockStatement): {
   hasPush: boolean;
   hasDuplicateCheck: boolean;
 } {
-  if (stmt.type === "IfStatement") {
-    const checkInCondition = hasDuplicateCheckInNode(stmt.test);
-    const checkInBody = hasDuplicateCheckInNode(stmt.consequent);
-    return { hasPush: false, hasDuplicateCheck: checkInCondition || checkInBody };
+  const calls = collectCallExpressions(body);
+  let hasPush = false;
+  let hasDuplicateCheck = false;
+
+  for (const call of calls) {
+    if (isPushCall(call.callee)) {
+      hasPush = true;
+    }
+    if (isDuplicateCheckCall(call.callee)) {
+      hasDuplicateCheck = true;
+    }
   }
 
-  if (stmt.type === "ThrowStatement") {
-    return { hasPush: false, hasDuplicateCheck: false };
-  }
-
-  if (
-    stmt.type === "ExpressionStatement" &&
-    stmt.expression.type === "CallExpression"
-  ) {
-    const callee = stmt.expression.callee;
-    const push = isPushCall(callee);
-    const check = isDuplicateCheckCall(callee);
-    return { hasPush: push, hasDuplicateCheck: check };
-  }
-
-  return { hasPush: false, hasDuplicateCheck: false };
+  return { hasPush, hasDuplicateCheck };
 }
 
 export default createRule({
@@ -114,23 +94,20 @@ export default createRule({
   create(context: TSESLint.RuleContext<"unboundedRegister", []>) {
     return {
       MethodDefinition(node) {
-        const methodName =
-          node.key.type === "Identifier" ? node.key.name : null;
+        let methodName: string | null = null;
+        if (node.key.type === "Identifier") {
+          methodName = node.key.name;
+        } else if (node.key.type === "Literal" && typeof node.key.value === "string") {
+          methodName = node.key.value;
+        }
         if (methodName !== "register") return;
 
         const body = node.value.body;
         if (body?.type !== "BlockStatement") return;
 
-        let hasPush = false;
-        let hasDuplicateCheck = false;
+        const result = analyzeBody(body);
 
-        for (const stmt of body.body) {
-          const result = analyzeStatement(stmt);
-          hasPush = hasPush || result.hasPush;
-          hasDuplicateCheck = hasDuplicateCheck || result.hasDuplicateCheck;
-        }
-
-        if (hasPush && !hasDuplicateCheck) {
+        if (result.hasPush && !result.hasDuplicateCheck) {
           context.report({
             node: node.value,
             messageId: "unboundedRegister",
