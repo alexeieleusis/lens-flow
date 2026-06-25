@@ -1,5 +1,32 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+function isSealedSymbolMember(member: TSESTree.TSInterfaceBody["body"][number]): boolean {
+  if (member.type !== "TSIndexSignature" || member.parameters.length === 0) {
+    return false;
+  }
+
+  const param = member.parameters[0];
+  if (param.type !== "Identifier") return false;
+
+  const paramType = param.typeAnnotation?.typeAnnotation;
+  if (!paramType) return false;
+
+  // [Brand: unique symbol]: void -> TSTypeOperator { operator: "unique", typeAnnotation: TSSymbolKeyword }
+  if (
+    paramType.type === "TSTypeOperator" &&
+    paramType.operator === "unique"
+  ) {
+    return true;
+  }
+
+  // [S: typeof someSymbol]: void -> TSTypeQuery
+  if (paramType.type === "TSTypeQuery") {
+    return true;
+  }
+
+  return false;
+}
 
 export default createRule({
   name: "no-sealed-interface-without-evolution-path",
@@ -23,14 +50,7 @@ export default createRule({
         const body = node.body;
         const members = body.body;
 
-        // Check for sealed-symbol property: computed key with Identifier starting with underscore
-        const hasSealedSymbol = members.some(
-          (member) =>
-            member.type === "TSPropertySignature" &&
-            member.computed === true &&
-            member.key.type === "Identifier" &&
-            member.key.name.startsWith("_"),
-        );
+        const hasSealedSymbol = members.some(isSealedSymbolMember);
 
         if (!hasSealedSymbol) return;
 
