@@ -1,16 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { collectChildTypes } from "../utils/ts-helpers.js";
 
 type TypeNode = TSESTree.TypeNode;
-
-type TSParenthesizedTypeNode = { type: "TSParenthesizedType"; typeAnnotation: TypeNode };
-
-function getParenthesizedInner(node: TypeNode): TypeNode | undefined {
-  if ((node as unknown as { type: string }).type === "TSParenthesizedType") {
-    return (node as unknown as TSParenthesizedTypeNode).typeAnnotation;
-  }
-  return undefined;
-}
 
 function findSelfReferences(
   node: TypeNode,
@@ -18,9 +10,7 @@ function findSelfReferences(
 ): TSESTree.TSTypeReference[] {
   const results: TSESTree.TSTypeReference[] = [];
 
-  function walk(n: TypeNode | undefined): void {
-    if (!n) return;
-
+  function walk(n: TypeNode): void {
     if (n.type === "TSTypeReference") {
       const typeName = n.typeName;
       if (typeName.type === "Identifier" && typeName.name === aliasName) {
@@ -28,52 +18,9 @@ function findSelfReferences(
       }
     }
 
-    switch (n.type) {
-      case "TSConditionalType":
-        walk(n.checkType);
-        walk(n.extendsType);
-        walk(n.trueType);
-        walk(n.falseType);
-        break;
-      case "TSUnionType":
-        n.types.forEach(walk);
-        break;
-      case "TSIntersectionType":
-        n.types.forEach(walk);
-        break;
-      case "TSTypeReference":
-        if (n.typeArguments?.params) {
-          n.typeArguments.params.forEach(walk);
-        }
-        break;
-      case "TSArrayType":
-        walk(n.elementType);
-        break;
-      case "TSTupleType":
-        n.elementTypes.forEach(walk);
-        break;
-      case "TSMappedType":
-        walk(n.constraint);
-        walk(n.typeAnnotation);
-        if (n.nameType) walk(n.nameType);
-        break;
-      case "TSIndexedAccessType":
-        walk(n.objectType);
-        walk(n.indexType);
-        break;
-      case "TSTemplateLiteralType":
-        n.types.forEach(walk);
-        break;
-      case "TSRestType":
-      case "TSOptionalType":
-        walk(n.typeAnnotation);
-        break;
-      case "TSTypeOperator":
-        walk(n.typeAnnotation);
-        break;
+    for (const child of collectChildTypes(n)) {
+      walk(child);
     }
-
-    walk(getParenthesizedInner(n));
   }
 
   walk(node);
@@ -83,59 +30,14 @@ function findSelfReferences(
 function collectInferNames(node: TypeNode): Set<string> {
   const names = new Set<string>();
 
-  function walk(n: TypeNode | undefined): void {
-    if (!n) return;
-
+  function walk(n: TypeNode): void {
     if (n.type === "TSInferType") {
       names.add(n.typeParameter.name.name);
     }
 
-    switch (n.type) {
-      case "TSConditionalType":
-        walk(n.checkType);
-        walk(n.extendsType);
-        walk(n.trueType);
-        walk(n.falseType);
-        break;
-      case "TSIntersectionType":
-        n.types.forEach(walk);
-        break;
-      case "TSTypeReference":
-        if (n.typeArguments?.params) {
-          n.typeArguments.params.forEach(walk);
-        }
-        break;
-      case "TSArrayType":
-        walk(n.elementType);
-        break;
-      case "TSUnionType":
-        n.types.forEach(walk);
-        break;
-      case "TSTupleType":
-        n.elementTypes.forEach(walk);
-        break;
-      case "TSMappedType":
-        walk(n.constraint);
-        walk(n.typeAnnotation);
-        if (n.nameType) walk(n.nameType);
-        break;
-      case "TSIndexedAccessType":
-        walk(n.objectType);
-        walk(n.indexType);
-        break;
-      case "TSTemplateLiteralType":
-        n.types.forEach(walk);
-        break;
-      case "TSRestType":
-      case "TSOptionalType":
-        walk(n.typeAnnotation);
-        break;
-      case "TSTypeOperator":
-        walk(n.typeAnnotation);
-        break;
+    for (const child of collectChildTypes(n)) {
+      walk(child);
     }
-
-    walk(getParenthesizedInner(n));
   }
 
   walk(node);
@@ -149,9 +51,8 @@ function hasStructuralReduction(
 ): boolean {
   let current: TypeNode = typeParam;
 
-  let inner: TypeNode | undefined;
-  while ((inner = getParenthesizedInner(current))) {
-    current = inner;
+  while ((current as unknown as { type: string }).type === "TSParenthesizedType") {
+    current = (current as unknown as { typeAnnotation: TypeNode }).typeAnnotation;
   }
 
   if (current.type === "TSInferType") return true;

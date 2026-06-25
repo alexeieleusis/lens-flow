@@ -228,7 +228,7 @@ export function collectChildTypes(type: TSESTree.TypeNode): TSESTree.TypeNode[] 
     case "TSIndexedAccessType":
       return [type.objectType, type.indexType];
     case "TSMappedType":
-      return type.typeAnnotation ? [type.typeAnnotation] : [];
+      return [type.typeAnnotation, type.constraint, type.nameType].filter(Boolean) as TSESTree.TypeNode[];
     case "TSConditionalType":
       return [type.checkType, type.extendsType, type.trueType, type.falseType];
     case "TSRestType":
@@ -247,8 +247,15 @@ export function collectChildTypes(type: TSESTree.TypeNode): TSESTree.TypeNode[] 
     case "TSTypeReference":
       return type.typeArguments ? [...type.typeArguments.params] : [];
     case "TSTemplateLiteralType":
-      return [];
+      return [...type.types];
+    case "TSOptionalType":
+      return [type.typeAnnotation];
     default:
+      const maybeParenthesized = type as unknown as { type: string; typeAnnotation?: TSESTree.TypeNode };
+      if (maybeParenthesized.type === "TSParenthesizedType" && maybeParenthesized.typeAnnotation) {
+        return [maybeParenthesized.typeAnnotation];
+      }
+      return [];
       return [];
   }
 }
