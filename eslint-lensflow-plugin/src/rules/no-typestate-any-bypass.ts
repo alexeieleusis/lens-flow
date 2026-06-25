@@ -2,6 +2,12 @@ import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
 function isMethodChain(node: TSESTree.Node): boolean {
+  if (node.type === AST_NODE_TYPES.ChainExpression) {
+    return isMethodChain(node.expression);
+  }
+  if (node.type === AST_NODE_TYPES.TSNonNullExpression) {
+    return isMethodChain(node.expression);
+  }
   if (node.type === AST_NODE_TYPES.CallExpression) {
     return true;
   }
