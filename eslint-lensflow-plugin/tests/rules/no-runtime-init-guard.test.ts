@@ -51,5 +51,27 @@ ruleTester.run("no-runtime-init-guard", rule, {
       }`,
       errors: [{ messageId: "runtimeInitGuard" }],
     },
+    {
+      code: `class Service {
+        config: string | undefined;
+        setConfig(c: string) { this.config = c; }
+        run() {
+          if (this.config) {} else { throw new Error("config not set"); }
+          return this.config.length;
+        }
+      }`,
+      errors: [{ messageId: "runtimeInitGuard" }],
+    },
+    {
+      code: `class Service {
+        config: string | undefined;
+        setConfig(c: string) { this.config = c; }
+        run() {
+          if (this.config) {} else throw new Error("config not set");
+          return this.config.length;
+        }
+      }`,
+      errors: [{ messageId: "runtimeInitGuard" }],
+    },
   ],
 });

@@ -1,5 +1,5 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 export default createRule({
   name: "no-runtime-init-guard",
@@ -36,23 +36,45 @@ export default createRule({
         }
         if (!isInsideMethod) return;
 
-        const test = node.test;
-        if (test.type !== "UnaryExpression") return;
-        if (test.operator !== "!") return;
+        let throwStmt: TSESTree.ThrowStatement | null = null;
+        let throwInAlternate = false;
 
-        const arg = test.argument;
-        if (arg.type !== "MemberExpression") return;
-        if (arg.object.type !== "ThisExpression") return;
+        if (node.consequent.type === "ThrowStatement") {
+          throwStmt = node.consequent;
+        } else if (node.alternate) {
+          if (node.alternate.type === "ThrowStatement") {
+            throwStmt = node.alternate;
+            throwInAlternate = true;
+          } else if (
+            node.alternate.type === "BlockStatement" &&
+            node.alternate.body.length === 1 &&
+            node.alternate.body[0].type === "ThrowStatement"
+          ) {
+            throwStmt = node.alternate.body[0];
+            throwInAlternate = true;
+          }
+        }
 
-        const consequent = node.consequent;
-        if (consequent.type !== "ThrowStatement") return;
+        if (!throwStmt) return;
 
-        const thrown = consequent.argument;
+        const thrown = throwStmt.argument;
         if (thrown?.type !== "NewExpression") return;
 
         const callee = thrown.callee;
         if (callee.type !== "Identifier" || !/^Error$/.test(callee.name))
           return;
+
+        let target: TSESTree.Node;
+        if (node.test.type === "UnaryExpression" && node.test.operator === "!") {
+          target = node.test.argument;
+        } else if (throwInAlternate && node.test.type === "MemberExpression") {
+          target = node.test;
+        } else {
+          return;
+        }
+
+        if (target.type !== "MemberExpression") return;
+        if (target.object.type !== "ThisExpression") return;
 
         context.report({ node, messageId: "runtimeInitGuard" });
       },
