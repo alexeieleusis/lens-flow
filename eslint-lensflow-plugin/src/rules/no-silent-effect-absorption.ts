@@ -122,8 +122,7 @@ export default createRule({
       "getOrElse",
       "orElse",
     ];
-    const [{ allowedTerminators } = { allowedTerminators: DEFAULT_TERMINATORS }] =
-      context.options ?? [{ allowedTerminators: DEFAULT_TERMINATORS }];
+    const { allowedTerminators = DEFAULT_TERMINATORS } = context.options[0] ?? {};
     const terminatorSet = new Set(allowedTerminators);
 
     return {
