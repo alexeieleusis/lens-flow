@@ -1,6 +1,40 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
+function extractParamIdentifier(
+  param: TSESTree.Parameter,
+): TSESTree.Identifier | null {
+  if (param.type === "Identifier") return param;
+  if (param.type === "AssignmentPattern") {
+    if (param.left.type === "Identifier") return param.left;
+    return null;
+  }
+  if (param.type === "RestElement") {
+    if (param.argument.type === "Identifier") return param.argument;
+    return null;
+  }
+  return null;
+}
+
+function extractParamTypeAnnotation(
+  param: TSESTree.Parameter,
+): TSESTree.TSTypeAnnotation | null {
+  if (param.type === "Identifier" && param.typeAnnotation) {
+    return param.typeAnnotation;
+  }
+  if (param.type === "AssignmentPattern") {
+    if (param.left.type === "Identifier" && param.left.typeAnnotation) {
+      return param.left.typeAnnotation;
+    }
+  }
+  if (param.type === "RestElement") {
+    if (param.argument.type === "Identifier" && param.argument.typeAnnotation) {
+      return param.argument.typeAnnotation;
+    }
+  }
+  return null;
+}
+
 const KNOWLEDGE_URL =
   "https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T26-refinement-types.md";
 
@@ -225,11 +259,14 @@ export default createRule({
       if (node.body.type !== "BlockStatement") return;
 
       for (const param of node.params) {
-        if (param.type !== "Identifier") continue;
-        if (!param.typeAnnotation) continue;
+        const identifier = extractParamIdentifier(param);
+        if (!identifier) continue;
 
-        const paramName = param.name;
-        const typeAnn = param.typeAnnotation.typeAnnotation;
+        const typeAnnNode = extractParamTypeAnnotation(param);
+        if (!typeAnnNode) continue;
+
+        const paramName = identifier.name;
+        const typeAnn = typeAnnNode.typeAnnotation;
         const typeSig = getNullableTypeSignature(typeAnn);
         if (!typeSig) continue;
 
@@ -239,7 +276,7 @@ export default createRule({
         const signature = `${typeSig}:${guardPattern}`;
 
         functions.push({
-          paramNode: param,
+          paramNode: identifier,
           paramName,
           typeSig,
           guardPattern,
