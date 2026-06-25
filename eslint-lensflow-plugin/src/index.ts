@@ -214,7 +214,6 @@ import noTypeofMutable from "./rules/no-typeof-mutable.js";
 import noTypestateAnyBypass from "./rules/no-typestate-any-bypass.js";
 import noUnboundedPluginRegistration from "./rules/no-unbounded-plugin-registration.js";
 import noUndiscriminatedErrorType from "./rules/no-undiscriminated-error-type.js";
-import noUnionExplosionT59 from "./rules/no-union-explosion-t59.js";
 import noUnionWithoutCommonShape from "./rules/no-union-without-common-shape.js";
 import noUnknownTypePredicate from "./rules/no-unknown-type-predicate.js";
 import noUnnecessaryInvariance from "./rules/no-unnecessary-invariance.js";
@@ -503,7 +502,6 @@ const plugin: {
     "no-typestate-any-bypass": noTypestateAnyBypass,
     "no-unbounded-plugin-registration": noUnboundedPluginRegistration,
     "no-undiscriminated-error-type": noUndiscriminatedErrorType,
-    "no-union-explosion-t59": noUnionExplosionT59,
     "no-union-without-common-shape": noUnionWithoutCommonShape,
     "no-unknown-type-predicate": noUnknownTypePredicate,
     "no-unnecessary-invariance": noUnnecessaryInvariance,
