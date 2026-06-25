@@ -1,5 +1,19 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+function findBinding(
+  scope: TSESLint.Scope.Scope | null,
+  name: string,
+  targetId: TSESTree.Identifier,
+): TSESLint.Scope.Variable | null {
+  for (let s: TSESLint.Scope.Scope | null = scope; s; s = s.upper) {
+    const binding = s.set.get(name);
+    if (binding && binding.identifiers.includes(targetId)) {
+      return binding;
+    }
+  }
+  return null;
+}
 
 export default createRule({
   name: "no-reuse-generator",
@@ -18,8 +32,8 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"reuseGenerator", []>) {
-    const callExprVars = new Set<string>();
-    const forAwaitOfCounts = new Map<string, number>();
+    const callExprVars = new Set<TSESLint.Scope.Variable>();
+    const forAwaitOfCounts = new Map<TSESLint.Scope.Variable, number>();
 
     return {
       VariableDeclarator(node) {
@@ -29,7 +43,11 @@ export default createRule({
           (node.init.type === "CallExpression" ||
             node.init.type === "NewExpression")
         ) {
-          callExprVars.add(node.id.name);
+          const scope = context.sourceCode.getScope(node);
+          const binding = findBinding(scope, node.id.name, node.id);
+          if (binding) {
+            callExprVars.add(binding);
+          }
         }
       },
 
@@ -39,18 +57,20 @@ export default createRule({
         const right = node.right;
         if (right.type !== "Identifier") return;
 
-        const varName = right.name;
+        const scope = context.sourceCode.getScope(right);
+        const binding = findBinding(scope, right.name, right);
+        if (!binding) return;
 
-        if (!callExprVars.has(varName)) return;
+        if (!callExprVars.has(binding)) return;
 
-        const currentCount = (forAwaitOfCounts.get(varName) ?? 0) + 1;
-        forAwaitOfCounts.set(varName, currentCount);
+        const currentCount = (forAwaitOfCounts.get(binding) ?? 0) + 1;
+        forAwaitOfCounts.set(binding, currentCount);
 
         if (currentCount >= 2) {
           context.report({
             node,
             messageId: "reuseGenerator",
-            data: { name: varName },
+            data: { name: right.name },
           });
         }
       },
