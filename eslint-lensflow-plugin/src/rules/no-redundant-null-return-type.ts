@@ -2,6 +2,7 @@ import ts from "typescript";
 import { ESLintUtils, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
+import { walk } from "../utils/ast-helpers.js";
 
 const KNOWLEDGE_URL = knowledgeUrl("usecases/UC16-nullability.md");
 
@@ -20,41 +21,13 @@ function hasNullableMember(
   return false;
 }
 
-function isESTreeNode(val: unknown): val is TSESTree.Node {
-  return val != null && typeof val === "object" && "type" in val;
-}
-
 function collectReturnStatements(body: TSESTree.Node): TSESTree.ReturnStatement[] {
   const returns: TSESTree.ReturnStatement[] = [];
-
-  function walkChildren(node: TSESTree.Node): void {
-    for (const key of Object.keys(node)) {
-      if (key === "parent") continue;
-      const val = (node as unknown as Record<string, unknown>)[key];
-
-      if (Array.isArray(val)) {
-        for (const item of val) {
-          if (isESTreeNode(item)) {
-            walk(item);
-          }
-        }
-      } else if (isESTreeNode(val)) {
-        walk(val);
-      }
-    }
-  }
-
-  function walk(node: TSESTree.Node | null | undefined): void {
-    if (!node) return;
-
+  walk(body, (node) => {
     if (node.type === "ReturnStatement") {
       returns.push(node);
     }
-
-    walkChildren(node);
-  }
-
-  walk(body);
+  });
   return returns;
 }
 
