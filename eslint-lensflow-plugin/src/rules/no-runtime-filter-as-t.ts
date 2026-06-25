@@ -9,7 +9,7 @@ function findParentFunction(node: TSESTree.Node): TSESTree.FunctionLike | null {
       current.type === "FunctionExpression" ||
       current.type === "ArrowFunctionExpression"
     )
-      return current as unknown as TSESTree.FunctionLike;
+      return current as TSESTree.FunctionLike;
     current = (current as any).parent;
   }
   return null;
