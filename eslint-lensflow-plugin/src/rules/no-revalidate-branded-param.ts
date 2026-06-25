@@ -3,7 +3,7 @@ import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T26-refinement-types.md");
+const DOCS_URL = knowledgeUrl("catalog/T26-refinement-types.md");
 
 function hasLengthAccess(node: any, paramName: string): boolean {
   if (!node || typeof node !== "object") return false;
@@ -172,7 +172,7 @@ export default createRule({
           context.report({
             node,
             messageId: issue === "regex" ? "regexTest" : "lengthCheck",
-            data: { param: paramName, url: URL },
+            data: { param: paramName, url: DOCS_URL },
           });
         });
       }
