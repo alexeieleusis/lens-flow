@@ -132,15 +132,13 @@ export default createRule({
     const functions: FunctionInfo[] = [];
 
     function getSignatureKey(params: TSESTree.Parameter[]): string {
-      return params
-        .map((p) => {
-          const effectiveParam = p.type === "TSParameterProperty" ? p.parameter : p;
-          if (effectiveParam.typeAnnotation) {
-            return sourceCode.getText(effectiveParam.typeAnnotation);
-          }
-          return ": unknown";
-        })
-        .join("|");
+      return JSON.stringify(params.map((p) => {
+        const effectiveParam = p.type === "TSParameterProperty" ? p.parameter : p;
+        if (effectiveParam.typeAnnotation) {
+          return sourceCode.getText(effectiveParam.typeAnnotation);
+        }
+        return ": unknown";
+      }));
     }
 
     function visitFunction(
