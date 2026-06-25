@@ -31,7 +31,9 @@ export default createRule({
         | TSESTree.ArrowFunctionExpression
         | TSESTree.ClassDeclaration
         | TSESTree.ClassExpression
-        | TSESTree.TSDeclareFunction,
+        | TSESTree.TSDeclareFunction
+        | TSESTree.TSInterfaceDeclaration
+        | TSESTree.TSTypeAliasDeclaration,
     ) {
       const typeParams = node.typeParameters;
       if (!typeParams || typeParams.params.length === 0) return;
@@ -59,9 +61,117 @@ export default createRule({
         | TSESTree.ArrowFunctionExpression
         | TSESTree.ClassDeclaration
         | TSESTree.ClassExpression
-        | TSESTree.TSDeclareFunction,
+        | TSESTree.TSDeclareFunction
+        | TSESTree.TSInterfaceDeclaration
+        | TSESTree.TSTypeAliasDeclaration,
     ) {
       if (node.typeParameters && node.typeParameters.params.length > 0) {
+        scopeStack.pop();
+      }
+    }
+
+    function enterConditionalType(node: TSESTree.TSConditionalType) {
+      const typeParams = (node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters;
+      if (!typeParams || typeParams.params.length === 0) return;
+
+      const names = typeParams.params.map((p: TSESTree.TSTypeParameter) => p.name.name);
+      const outerNames = new Set(scopeStack.flat());
+
+      for (let i = 0; i < names.length; i++) {
+        if (outerNames.has(names[i])) {
+          context.report({
+            node: typeParams.params[i],
+            messageId: "shadowedTypeParam",
+            data: { name: names[i] },
+          });
+        }
+      }
+
+      scopeStack.push(names);
+    }
+
+    function exitConditionalType(node: TSESTree.TSConditionalType) {
+      const typeParams = (node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters;
+      if (typeParams && typeParams.params.length > 0) {
+        scopeStack.pop();
+      }
+    }
+
+    function enterMappedType(node: TSESTree.TSMappedType) {
+      const typeParam = node.typeParameter;
+      if (!typeParam) return;
+
+      const nameParam = typeParam.name;
+      const name = typeof nameParam === "string" ? nameParam : nameParam.name;
+      const outerNames = new Set(scopeStack.flat());
+
+      if (outerNames.has(name)) {
+        context.report({
+          node: typeParam.name,
+          messageId: "shadowedTypeParam",
+          data: { name },
+        });
+      }
+
+      scopeStack.push([name]);
+    }
+
+    function exitMappedType(node: TSESTree.TSMappedType) {
+      if (node.typeParameter) {
+        scopeStack.pop();
+      }
+    }
+
+    function enterMethodSignature(node: TSESTree.TSMethodSignature) {
+      const typeParams = (node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters;
+      if (!typeParams || typeParams.params.length === 0) return;
+
+      const names = typeParams.params.map((p: TSESTree.TSTypeParameter) => p.name.name);
+      const outerNames = new Set(scopeStack.flat());
+
+      for (let i = 0; i < names.length; i++) {
+        if (outerNames.has(names[i])) {
+          context.report({
+            node: typeParams.params[i],
+            messageId: "shadowedTypeParam",
+            data: { name: names[i] },
+          });
+        }
+      }
+
+      scopeStack.push(names);
+    }
+
+    function exitMethodSignature(node: TSESTree.TSMethodSignature) {
+      const typeParams = (node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters;
+      if (typeParams && typeParams.params.length > 0) {
+        scopeStack.pop();
+      }
+    }
+
+    function enterMethodDefinition(node: TSESTree.MethodDefinition) {
+      const typeParams = (node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters;
+      if (!typeParams || typeParams.params.length === 0) return;
+
+      const names = typeParams.params.map((p: TSESTree.TSTypeParameter) => p.name.name);
+      const outerNames = new Set(scopeStack.flat());
+
+      for (let i = 0; i < names.length; i++) {
+        if (outerNames.has(names[i])) {
+          context.report({
+            node: typeParams.params[i],
+            messageId: "shadowedTypeParam",
+            data: { name: names[i] },
+          });
+        }
+      }
+
+      scopeStack.push(names);
+    }
+
+    function exitMethodDefinition(node: TSESTree.MethodDefinition) {
+      const typeParams = (node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters;
+      if (typeParams && typeParams.params.length > 0) {
         scopeStack.pop();
       }
     }
@@ -102,6 +212,42 @@ export default createRule({
       },
       "TSDeclareFunction:exit"(node) {
         exitWithParams(node);
+      },
+      TSInterfaceDeclaration(node) {
+        enterWithParams(node);
+      },
+      "TSInterfaceDeclaration:exit"(node) {
+        exitWithParams(node);
+      },
+      TSTypeAliasDeclaration(node) {
+        enterWithParams(node);
+      },
+      "TSTypeAliasDeclaration:exit"(node) {
+        exitWithParams(node);
+      },
+      TSConditionalType(node) {
+        enterConditionalType(node);
+      },
+      "TSConditionalType:exit"(node) {
+        exitConditionalType(node);
+      },
+      TSMappedType(node) {
+        enterMappedType(node);
+      },
+      "TSMappedType:exit"(node) {
+        exitMappedType(node);
+      },
+      TSMethodSignature(node) {
+        enterMethodSignature(node);
+      },
+      "TSMethodSignature:exit"(node) {
+        exitMethodSignature(node);
+      },
+      MethodDefinition(node) {
+        enterMethodDefinition(node);
+      },
+      "MethodDefinition:exit"(node) {
+        exitMethodDefinition(node);
       },
     };
   },
