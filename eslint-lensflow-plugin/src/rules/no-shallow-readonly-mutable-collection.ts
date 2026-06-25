@@ -68,8 +68,9 @@ function isTypeReference(node: unknown): boolean {
 }
 
 function getPropertyName(key: unknown): string {
-  if (key && typeof key === "object" && "name" in key) {
-    return (key as { name?: string }).name ?? "unknown";
+  if (key && typeof key === "object") {
+    if ("name" in key && typeof key.name === "string") return key.name;
+    if ("value" in key && typeof key.value === "string") return String(key.value);
   }
   return "unknown";
 }
