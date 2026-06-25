@@ -2,6 +2,18 @@ import ts from "typescript";
 import { ESLintUtils, TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
+function unwrapParam(param: any): any {
+  if (param.type === "AssignmentPattern") return param.left;
+  return param;
+}
+
+function getParamName(param: any): string {
+  const unwrapped = unwrapParam(param);
+  if (unwrapped.type === "Identifier") return unwrapped.name;
+  if (unwrapped.type === "PrivateIdentifier") return `#${unwrapped.name}`;
+  return "(parameter)";
+}
+
 function visitFunction(
   context: TSESLint.RuleContext<string, readonly unknown[]>,
   node: TSESTree.Node & { returnType?: any; params: any[] },
@@ -12,7 +24,8 @@ function visitFunction(
   if (node.params.length === 0) return;
 
   const firstParam = node.params[0];
-  const paramTypeAnn = firstParam.typeAnnotation?.typeAnnotation;
+  const unwrapped = unwrapParam(firstParam);
+  const paramTypeAnn = unwrapped.typeAnnotation?.typeAnnotation;
 
   const isUnknown = paramTypeAnn?.type === "TSUnknownKeyword";
   const isAny = paramTypeAnn?.type === "TSAnyKeyword";
@@ -22,8 +35,7 @@ function visitFunction(
       node,
       messageId: "unknownTypePredicate",
       data: {
-        paramName:
-          firstParam.type === "Identifier" ? firstParam.name : "(parameter)",
+        paramName: getParamName(firstParam),
         paramType: isUnknown ? "unknown" : "any",
       },
     });
@@ -35,7 +47,7 @@ function visitFunction(
   if (!program) return;
 
   const checker = program.getTypeChecker();
-  const tsParam = parserServices.esTreeNodeToTSNodeMap.get(firstParam);
+  const tsParam = parserServices.esTreeNodeToTSNodeMap.get(unwrapped);
   if (!tsParam) return;
 
   const tsType = checker.getTypeAtLocation(tsParam as ts.Node);
@@ -46,8 +58,7 @@ function visitFunction(
       node,
       messageId: "unknownTypePredicate",
       data: {
-        paramName:
-          firstParam.type === "Identifier" ? firstParam.name : "(parameter)",
+        paramName: getParamName(firstParam),
         paramType: typeStr,
       },
     });
