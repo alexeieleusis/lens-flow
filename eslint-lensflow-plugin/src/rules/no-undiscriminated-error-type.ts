@@ -52,6 +52,11 @@ function getParentDeclarationName(
     id?: { name?: string };
   };
 
+  // Direct parent is TSTypeAliasDeclaration (top-level type alias)
+  if (p.type === AST_NODE_TYPES.TSTypeAliasDeclaration) {
+    return p.id?.name ?? null;
+  }
+
   // Direct parent is TSTypeLiteral, go to grandparent for TSTypeAliasDeclaration
   if (p.type === AST_NODE_TYPES.TSTypeLiteral) {
     const grandparent = (p as { parent?: unknown }).parent;
