@@ -137,10 +137,13 @@ function extractGuards(
 }
 
 function extractParamName(
-  param: TSESTree.Parameter,
+  param: TSESTree.Node,
+  sourceCode: TSESLint.SourceCode,
 ): string | null {
   if (param.type === "Identifier") return param.name;
-  return null;
+  if (param.type === "AssignmentPattern") return extractParamName(param.left, sourceCode);
+  if (param.type === "RestElement") return extractParamName(param.argument, sourceCode);
+  return sourceCode.getText(param);
 }
 
 export default createRule({
@@ -183,7 +186,7 @@ export default createRule({
     ) {
       const params = node.params;
       const paramNames = params
-        .map(extractParamName)
+        .map((p) => extractParamName(p, sourceCode))
         .filter(Boolean) as string[];
       const signatureKey = getSignatureKey(params);
 
