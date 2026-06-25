@@ -27,7 +27,7 @@ export default createRule({
       if (typeAnn?.type !== "TSArrayType") return;
 
       const source = context.sourceCode;
-      const typeName = source.getText(node.typeAnnotation!);
+      const typeName = source.getText(typeAnn);
       if (typeName.startsWith("readonly ")) return;
       const propName =
         node.key.type === "Identifier" ? node.key.name : source.getText(node.key);
