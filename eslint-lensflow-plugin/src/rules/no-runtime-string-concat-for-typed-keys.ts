@@ -81,7 +81,7 @@ export default createRule({
           if (typeAnn?.type !== "TSStringKeyword") continue;
 
           context.report({
-            node,
+            node: tmpl,
             messageId: "runtimeStringConcatKey",
             data: { param: param.name },
           });
