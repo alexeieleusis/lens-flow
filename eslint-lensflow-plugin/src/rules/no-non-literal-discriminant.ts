@@ -182,6 +182,71 @@ export default createRule({
 
             visited = new Set(visited);
             visited.add(typeNode);
+          } else if (typeNode.type === "TSIndexedAccessType") {
+            if (hasTypeChecker && checker) {
+              const tsNode = parserServices.esTreeNodeToTSNodeMap.get(typeNode);
+              const memberType = checker.getTypeAtLocation(tsNode);
+              const props = checker.getPropertiesOfType(memberType);
+              for (const prop of props) {
+                const propType = checker.getTypeOfSymbolAtLocation(
+                  prop,
+                  tsNode,
+                );
+                const propName = prop.getName();
+                if (!DISCRIMINANT_NAMES.has(propName)) continue;
+
+                const isWidenedStr =
+                  (propType.flags & ts.TypeFlags.String) !== 0 &&
+                  (propType.flags & ts.TypeFlags.StringLiteral) === 0;
+                const isWidenedNum =
+                  (propType.flags & ts.TypeFlags.Number) !== 0 &&
+                  (propType.flags & ts.TypeFlags.NumberLiteral) === 0;
+                const isLiteralStr =
+                  (propType.flags & ts.TypeFlags.StringLiteral) !== 0;
+                const isLiteralNum =
+                  (propType.flags & ts.TypeFlags.NumberLiteral) !== 0;
+
+                if (
+                  !isWidenedStr &&
+                  !isWidenedNum &&
+                  !isLiteralStr &&
+                  !isLiteralNum
+                )
+                  continue;
+
+                if (!prop.valueDeclaration) continue;
+                const estreeNode = parserServices.tsNodeToESTreeNodeMap.get(
+                  prop.valueDeclaration,
+                ) as TSESTree.TSPropertySignature | undefined;
+                if (!estreeNode) continue;
+
+                const widened: "string" | "number" | null =
+                  isWidenedStr
+                    ? "string"
+                    : isWidenedNum
+                      ? "number"
+                      : null;
+                const hasLiteral = isLiteralStr || isLiteralNum;
+
+                const existing = propMap.get(propName);
+                if (existing) {
+                  existing.push({
+                    sig: estreeNode,
+                    widened,
+                    hasLiteral,
+                  });
+                } else {
+                  propMap.set(propName, [
+                    {
+                      sig: estreeNode,
+                      widened,
+                      hasLiteral,
+                    },
+                  ]);
+                }
+              }
+            }
+            return;
           } else if (typeNode.type === "TSIntersectionType") {
             for (const intersectMember of typeNode.types) {
               processType(intersectMember, visited, out, propMap);
