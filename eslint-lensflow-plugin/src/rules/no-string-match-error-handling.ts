@@ -1,5 +1,6 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { walkNodes } from "../utils/ast-helpers.js";
 
 const stringMatchMethods = new Set([
   "includes",
@@ -30,56 +31,6 @@ function isStringMatchCall(
   return true;
 }
 
-function isAstNode(val: unknown): val is TSESTree.Node {
-  return typeof val === "object" && val !== null && "type" in val;
-}
-
-function pushChildNodes(
-  node: TSESTree.Node,
-  stack: TSESTree.Node[],
-): void {
-  for (const key of Object.keys(node)) {
-    if (key === "parent" || key === "loc" || key === "range") continue;
-    const val = (node as unknown as Record<string, unknown>)[key];
-    if (!val || typeof val !== "object") continue;
-
-    if (Array.isArray(val)) {
-      for (const item of val) {
-        if (isAstNode(item)) {
-          stack.push(item);
-        }
-      }
-    } else if (isAstNode(val)) {
-      stack.push(val);
-    }
-  }
-}
-
-function findStringMatchInNode(
-  root: TSESTree.Node,
-  catchParamName: string,
-): boolean {
-  const visited = new WeakSet<TSESTree.Node>();
-  const stack: TSESTree.Node[] = [root];
-
-  while (stack.length > 0) {
-    const node = stack.pop()!;
-    if (visited.has(node)) continue;
-    visited.add(node);
-
-    if (
-      node.type === "CallExpression" &&
-      isStringMatchCall(node, catchParamName)
-    ) {
-      return true;
-    }
-
-    pushChildNodes(node, stack);
-  }
-
-  return false;
-}
-
 export default createRule({
   name: "no-string-match-error-handling",
   meta: {
@@ -107,7 +58,12 @@ export default createRule({
         const catchParamName = catchParam.name;
         const catchBody = node.handler.body;
 
-        if (findStringMatchInNode(catchBody, catchParamName)) {
+        if (walkNodes(catchBody, (node) => {
+          return (
+            node.type === "CallExpression" &&
+            isStringMatchCall(node, catchParamName)
+          );
+        })) {
           context.report({
             node,
             messageId: "stringMatchOnError",
