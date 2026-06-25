@@ -139,19 +139,10 @@ export default createRule({
             }
             checkConditionals(type.trueType, branchInferNames);
             checkConditionals(type.falseType, branchInferNames);
-          } else if (
-            type.type === "TSUnionType" ||
-            type.type === "TSIntersectionType"
-          ) {
-            type.types.forEach((t) => checkConditionals(t, inferNames));
-          } else if (type.type === "TSTupleType") {
-            type.elementTypes.forEach((t) => checkConditionals(t, inferNames));
-          } else if (type.type === "TSArrayType") {
-            checkConditionals(type.elementType, inferNames);
-          } else if (type.type === "TSMappedType") {
-            if (type.typeAnnotation) checkConditionals(type.typeAnnotation, inferNames);
-          } else if (type.type === "TSRestType") {
-            checkConditionals(type.typeAnnotation, inferNames);
+          } else {
+            for (const child of collectChildTypes(type)) {
+              checkConditionals(child, inferNames);
+            }
           }
         }
 
