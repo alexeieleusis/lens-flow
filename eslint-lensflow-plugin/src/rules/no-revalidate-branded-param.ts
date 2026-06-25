@@ -204,6 +204,12 @@ export default createRule({
       ArrowFunctionExpression(node) {
         checkFunction(node);
       },
+      MethodDefinition(node) {
+        checkFunction(node.value);
+      },
+      TSDeclareFunction(node) {
+        checkFunction(node);
+      },
     };
   },
 });
