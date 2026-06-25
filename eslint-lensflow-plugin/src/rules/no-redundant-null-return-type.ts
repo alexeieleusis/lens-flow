@@ -65,9 +65,34 @@ export default createRule({
 
       if (!hasNullableMember(retType)) return;
 
-      if (node.body?.type !== "BlockStatement") return;
+      // For expression-bodied arrows, the body itself is the implicit return expression.
+      if (node.body?.type !== "BlockStatement") {
+        const tsNode = parserServices.esTreeNodeToTSNodeMap.get(node.body);
+        const bodyType = checker.getTypeAtLocation(tsNode);
+        const bodyConstituents = (bodyType as ts.UnionType).types || [bodyType];
+
+        const bodyIsNullable = bodyConstituents.some((t) => {
+          const typeName = checker.typeToString(t);
+          return typeName === "null" || typeName === "undefined";
+        });
+
+        if (!bodyIsNullable) {
+          context.report({
+            node,
+            messageId: "redundantNullReturnType",
+            data: { url: KNOWLEDGE_URL },
+          });
+        }
+        return;
+      }
 
       const returns = collectReturnStatements(node.body);
+
+      // Functions with zero explicit returns implicitly return undefined.
+      // If the declared return type includes undefined, it's NOT redundant — skip.
+      if (returns.length === 0) {
+        return;
+      }
 
       const allReturnsNonNullable = returns.every((retStmt) => {
         if (retStmt.argument === null) {
@@ -90,7 +115,7 @@ export default createRule({
         return !isNullable;
       });
 
-      if (allReturnsNonNullable && returns.length > 0) {
+      if (allReturnsNonNullable) {
         context.report({
           node,
           messageId: "redundantNullReturnType",
