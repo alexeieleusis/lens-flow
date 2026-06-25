@@ -113,20 +113,51 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"runtimeMetadataAccess" | "runtimeMetadataOnCall" | "unsafeCastOnGeneric", []>) {
-    const genericFns = new Set<string>();
-    const paramStack: Set<string>[] = [];
-
-    function pushParams(paramNames: string[]) {
-      paramStack.push(new Set(paramNames));
-    }
-
-    function popParams() {
-      paramStack.pop();
-    }
+    const scopeStack: { genericFns: Set<string>; params: Set<string> }[] = [];
 
     function isGenericParam(name: string): boolean {
-      for (let i = paramStack.length - 1; i >= 0; i--) {
-        if (paramStack[i].has(name)) return true;
+      for (let i = scopeStack.length - 1; i >= 0; i--) {
+        if (scopeStack[i].params.has(name)) return true;
+      }
+      return false;
+    }
+
+    function isGenericFn(callee: TSESTree.Identifier): boolean {
+      const scope = context.sourceCode.getScope(callee);
+      let found: { identifiers: TSESTree.Identifier[]; name: string } | undefined;
+      for (let s: { upper?: typeof s } = scope; s; s = s.upper) {
+        for (const v of s.variables) {
+          if (v.name === callee.name) {
+            found = v;
+            break;
+          }
+        }
+        if (found) break;
+      }
+      if (!found) return false;
+      for (const id of found.identifiers) {
+        const parent = (id as { parent?: unknown }).parent;
+        if (!parent) continue;
+        const p = parent as {
+          type: string;
+          typeParameters?: { params: unknown[] };
+        };
+        const fnNode: { typeParameters?: { params: unknown[] } } | undefined =
+          p.type === "VariableDeclarator"
+            ? ((p as { init?: { type: string; typeParameters?: { params: unknown[] } } }).init as
+                  | { type: string; typeParameters?: { params: unknown[] } }
+                  | undefined)
+            : p;
+        if (
+          fnNode &&
+          (fnNode.type === "FunctionDeclaration" ||
+            fnNode.type === "FunctionExpression" ||
+            fnNode.type === "ArrowFunctionExpression") &&
+          fnNode.typeParameters &&
+          fnNode.typeParameters.params.length > 0
+        ) {
+          return true;
+        }
       }
       return false;
     }
@@ -138,15 +169,18 @@ export default createRule({
       };
       const hasTypeParams =
         n.typeParameters && n.typeParameters.params.length > 0;
+      const outerGenericFns =
+        scopeStack.length > 0 ? scopeStack[scopeStack.length - 1].genericFns : new Set<string>();
+      const currentGenericFns = new Set(outerGenericFns);
       if (hasTypeParams && n.id) {
-        genericFns.add(n.id.name);
+        currentGenericFns.add(n.id.name);
       }
       const paramNames = getGenericParamNames(node);
-      pushParams(paramNames);
+      scopeStack.push({ genericFns: currentGenericFns, params: new Set(paramNames) });
     }
 
     function exitFn() {
-      popParams();
+      scopeStack.pop();
     }
 
     return {
@@ -189,9 +223,9 @@ export default createRule({
         }
 
         if (obj.type === "CallExpression") {
-          const callObj = obj as { callee?: { type: string; name?: string } };
+          const callObj = obj as { callee?: TSESTree.Identifier };
           const callee = callObj.callee;
-          if (callee?.type === "Identifier" && callee.name && genericFns.has(callee.name)) {
+          if (callee?.type === "Identifier" && isGenericFn(callee as TSESTree.Identifier)) {
             context.report({
               node,
               messageId: "runtimeMetadataOnCall",
