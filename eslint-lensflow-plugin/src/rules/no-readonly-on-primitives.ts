@@ -45,9 +45,7 @@ export default createRule({
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"redundantReadonly", []>) {
     function checkNode(
-      node:
-        | import("@typescript-eslint/types").TSESTree.TSPropertySignature
-        | import("@typescript-eslint/types").TSESTree.PropertyDefinition,
+      node: TSESTree.TSPropertySignature | TSESTree.PropertyDefinition,
     ) {
       if (!node.readonly) return;
 
