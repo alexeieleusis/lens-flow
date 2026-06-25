@@ -1,16 +1,14 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
-function findParentFunction(node: TSESTree.Node): TSESTree.FunctionLike | null {
-  let current: TSESTree.Node | undefined = node;
-  while (current) {
+function findParentFunction(ancestors: TSESTree.Node[]): TSESTree.FunctionLike | null {
+  for (const node of ancestors) {
     if (
-      current.type === "FunctionDeclaration" ||
-      current.type === "FunctionExpression" ||
-      current.type === "ArrowFunctionExpression"
+      node.type === "FunctionDeclaration" ||
+      node.type === "FunctionExpression" ||
+      node.type === "ArrowFunctionExpression"
     )
-      return current as TSESTree.FunctionLike;
-    current = (current as any).parent;
+      return node as TSESTree.FunctionLike;
   }
   return null;
 }
@@ -38,7 +36,7 @@ export default createRule({
       const typeRef = asNode.typeAnnotation;
       if (typeRef.typeName.type !== "Identifier") return;
 
-      const func = findParentFunction(asNode);
+      const func = findParentFunction(context.sourceCode.getAncestors(asNode));
       if (!func?.typeParameters) return;
 
       const typeParamNames = new Set(
