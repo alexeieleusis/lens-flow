@@ -246,6 +246,11 @@ export default createRule({
       ArrowFunctionExpression(node) {
         visitFunction(node);
       },
+      MethodDefinition(node) {
+        if (node.value.type === "FunctionExpression") {
+          visitFunction(node.value);
+        }
+      },
       "Program:exit"() {
         const groups = new Map<string, FuncInfo[]>();
         for (const fn of functions) {
