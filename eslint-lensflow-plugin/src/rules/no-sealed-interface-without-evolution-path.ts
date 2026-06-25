@@ -42,10 +42,7 @@ export default createRule({
             member.optional === true,
         );
 
-        // Fewer than 5 total members
-        const hasFewMembers = members.length < 5;
-
-        if (!hasOptional && hasFewMembers) {
+        if (!hasOptional) {
           context.report({
             node,
             messageId: "sealedNoEvolution",
