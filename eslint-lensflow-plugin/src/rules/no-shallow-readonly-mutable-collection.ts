@@ -36,7 +36,7 @@ function isMutableCollectionType(node: unknown): node is { type: MutableCollecti
       (refNode.typeName as { type: string }).type === AST_NODE_TYPES.Identifier
     ) {
       const name = (refNode.typeName as { name?: string }).name;
-      return name === "Map" || name === "Set";
+      return name === "Map" || name === "Set" || name === "Array";
     }
     return false;
   }
@@ -138,13 +138,21 @@ export default createRule({
       const propName = getPropertyName(node.key);
 
       if (isTypeReference(typeAnnotation)) {
-        const refNode = typeAnnotation as { typeName?: { name?: string } };
+        const refNode = typeAnnotation as { typeName?: { name?: string }; typeParameters?: { params?: unknown[] } };
         const typeName = refNode.typeName?.name;
         if (typeName === "Map" || typeName === "Set") {
           context.report({
             node: node as unknown as TSESTree.Node,
             messageId: "mutableMapSet",
             data: { name: propName, collection: typeName },
+          });
+        }
+        if (typeName === "Array") {
+          const elementName = getArrayElementName(refNode.typeParameters?.params?.[0]);
+          context.report({
+            node: node as unknown as TSESTree.Node,
+            messageId: "mutableArray",
+            data: { name: propName, element: elementName },
           });
         }
         return;
