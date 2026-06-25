@@ -17,8 +17,12 @@ function findReferencedTypeParamNames(
   const names = new Set<string>();
 
   function walk(type: TSESTree.TypeNode) {
-    if (type.type === "TSTypeReference" && type.typeName.type === "Identifier") {
-      names.add(type.typeName.name);
+    if (type.type === "TSTypeReference") {
+      if (type.typeName.type === "Identifier") {
+        names.add(type.typeName.name);
+      } else if (type.typeName.type === "TSQualifiedName") {
+        names.add(type.typeName.right.name);
+      }
     }
     for (const child of collectChildTypes(type)) {
       walk(child);
