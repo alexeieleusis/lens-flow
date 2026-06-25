@@ -21,9 +21,20 @@ export default createRule({
     return {
       IfStatement(node) {
         const ancestors = context.sourceCode.getAncestors(node);
-        if (
-          !ancestors.some((a) => a.type === "MethodDefinition")
-        ) return;
+        let isInsideMethod = false;
+        for (const a of ancestors) {
+          if (
+            a.type === "FunctionDeclaration" ||
+            a.type === "FunctionExpression" ||
+            a.type === "ArrowFunctionExpression"
+          )
+            break;
+          if (a.type === "MethodDefinition") {
+            isInsideMethod = true;
+            break;
+          }
+        }
+        if (!isInsideMethod) return;
 
         const test = node.test;
         if (test.type !== "UnaryExpression") return;
