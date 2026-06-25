@@ -25,9 +25,9 @@ function isInsideConsoleCall(
 ): boolean {
   const ancestors = sourceCode.getAncestors(node);
   for (let i = ancestors.length - 1; i >= 0; i--) {
-    if (ancestors[i].type === "CallExpression") {
-      const call = ancestors[i] as TSESTree.CallExpression;
-      const callee = call.callee;
+    const ancestor = ancestors[i];
+    if (ancestor.type === "CallExpression") {
+      const callee = ancestor.callee;
       if (
         callee.type === "MemberExpression" &&
         callee.object.type === "Identifier" &&
