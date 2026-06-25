@@ -1,4 +1,5 @@
-import { AST_NODE_TYPES, TSESLint } from "@typescript-eslint/utils";
+import ts from "typescript";
+import { AST_NODE_TYPES, ESLintUtils, TSESLint } from "@typescript-eslint/utils";
 import type { TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
@@ -64,13 +65,17 @@ export default createRule({
     },
     messages: {
       redundantConditional:
-        "This conditional type is a redundant identity distribution. Use a simple type alias instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T49-associated-types.md",
+        "This conditional type is a redundant identity distribution. The check type is already constrained to extend the union type, so `T extends A | B ? T : never` is equivalent to just `T`. Use a simple type alias instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T49-associated-types.md",
     },
     schema: [],
     fixable: undefined,
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"redundantConditional", []>) {
+    const parserServices = ESLintUtils.getParserServices(context);
+    if (!parserServices.program) return {};
+    const checker = parserServices.program.getTypeChecker();
+
     return {
       TSConditionalType(node) {
         const { checkType, extendsType, trueType, falseType } = node;
@@ -95,6 +100,24 @@ export default createRule({
 
         // extendsType must be a TSUnionType
         if (extendsType.type !== AST_NODE_TYPES.TSUnionType) return;
+
+        // Use the TypeScript checker to verify the check type is already a
+        // subtype of extendsType. Without this check, `T extends A | B ? T :
+        // never` would be flagged even when T is unconstrained, in which case
+        // the conditional is a legitimate narrowing (e.g.,
+        // `type Filter<T> = T extends string | number ? T : never`).
+        const checkTypeNode = parserServices.esTreeNodeToTSNodeMap.get(checkType);
+        const extendsTypeNode = parserServices.esTreeNodeToTSNodeMap.get(extendsType);
+        if (!checkTypeNode || !extendsTypeNode) return;
+
+        const checkTsType = checker.getTypeFromTypeNode(
+          checkTypeNode as ts.TypeReference,
+        );
+        const extendsTsType = checker.getTypeFromTypeNode(
+          extendsTypeNode as ts.TypeNode,
+        );
+
+        if (!checker.isTypeAssignableTo(checkTsType, extendsTsType)) return;
 
         context.report({
           node,
