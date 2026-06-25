@@ -7,7 +7,7 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow reusing an async generator instance across multiple for await...of loops",
+        "Flag async iterable call results used in multiple for-await-of loops — a common pattern for accidentally reusing a single-use async generator",
     },
     messages: {
       reuseGenerator:
