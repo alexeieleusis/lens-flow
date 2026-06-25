@@ -1,7 +1,10 @@
+import { TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-function extractYieldExpr(forOfBody: any): any {
+function extractYieldExpr(
+  forOfBody: TSESTree.BlockStatement | TSESTree.ExpressionStatement,
+): TSESTree.Expression | null {
   if (forOfBody.type === "BlockStatement") {
     if (forOfBody.body.length !== 1) return null;
     const yieldStmt = forOfBody.body[0];
@@ -14,40 +17,47 @@ function extractYieldExpr(forOfBody: any): any {
   return null;
 }
 
-function isLiteralNode(node: any): boolean {
-  return (
-    node.type === "Literal" ||
-    node.type === "BooleanLiteral" ||
-    node.type === "NullLiteral" ||
-    node.type === "RegExpLiteral" ||
-    node.type === "TemplateLiteral" &&
-      node.expressions.length === 0 ||
-    node.type === "UnaryExpression" &&
-    node.operator === "-" &&
-    isLiteralNode(node.argument)
+function isLiteralNode(node: TSESTree.Node): boolean {
+  if (node.type === "Literal") return true;
+  if (node.type === "TemplateLiteral") return node.expressions.length === 0;
+  if (node.type === "UnaryExpression") {
+    return node.operator === "-" && isLiteralNode(node.argument);
+  }
+  return false;
+}
+
+function extractLoopTargetName(forOf: TSESTree.ForOfStatement): string | null {
+  const left = forOf.left;
+  if (left.type === "VariableDeclaration") {
+    const id = left.declarations[0].id;
+    if (id.type === "Identifier") return id.name;
+    return null;
+  }
+  if (left.type === "Identifier") {
+    return left.name;
+  }
+  return null;
+}
+
+function isArrayOfLiterals(expr: TSESTree.Node): boolean {
+  if (expr.type !== "ArrayExpression") return false;
+  return expr.elements.every(
+    (el) => el !== null && el.type !== "SpreadElement" && isLiteralNode(el),
   );
 }
 
-function extractLoopTargetName(forOf: any): string | null {
-  return forOf.left.declarations
-    ? forOf.left.declarations[0].id?.name ?? null
-    : forOf.left?.name ?? null;
-}
-
-function isArrayOfLiterals(expr: any): boolean {
-  return (
-    expr.type === "ArrayExpression" &&
-    expr.elements.every(
-      (el: any) => el !== null && isLiteralNode(el)
-    )
-  );
-}
-
-function checkForOfPattern(forOf: any, declName: string, loopTargetName: string): boolean {
+function checkForOfPattern(
+  forOf: TSESTree.ForOfStatement,
+  declName: string,
+  loopTargetName: string,
+): boolean {
   if (forOf.right.type !== "Identifier") return false;
   if (forOf.right.name !== declName) return false;
 
-  const yieldExpr = extractYieldExpr(forOf.body);
+  const body = forOf.body as
+    | TSESTree.BlockStatement
+    | TSESTree.ExpressionStatement;
+  const yieldExpr = extractYieldExpr(body);
   if (yieldExpr?.type !== "YieldExpression") return false;
 
   const yieldArg = yieldExpr.argument;
@@ -84,10 +94,12 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ maxElements: 5 }],
-  create(context: TSESLint.RuleContext<"staticAsyncGenerator", [{ maxElements: number }]>) {
+  create(
+    context: TSESLint.RuleContext<"staticAsyncGenerator", [{ maxElements: number }]>,
+  ) {
     const [{ maxElements } = { maxElements: 5 }] = context.options ?? [];
 
-    function extractArrayDecl(stmts: any[]): { decl: any; secondStmt: any } | null {
+    function extractArrayDecl(stmts: TSESTree.Statement[]) {
       if (stmts.length !== 2) return null;
 
       const [firstStmt, secondStmt] = stmts;
@@ -96,32 +108,43 @@ export default createRule({
 
       const decl = firstStmt.declarations[0];
       if (!decl.init || !isArrayOfLiterals(decl.init)) return null;
-      if (decl.init.elements.length > maxElements) return null;
-      if (!decl.id.name) return null;
+      if (decl.id.type !== "Identifier" || !decl.id.name) return null;
 
-      return { decl, secondStmt };
+      const init = decl.init as TSESTree.ArrayExpression;
+      if (init.elements.length > maxElements) return null;
+      if (secondStmt.type !== "ForOfStatement") return null;
+
+      return {
+        declName: decl.id.name,
+        init,
+        secondStmt,
+      } as const;
     }
 
-    function checkFunctionNode(node: any) {
+    function checkFunctionNode(
+      node:
+        | TSESTree.FunctionDeclaration
+        | TSESTree.FunctionExpression
+        | TSESTree.ArrowFunctionExpression,
+    ) {
       if (!node.generator || !node.async) return;
       if (node.body?.type !== "BlockStatement") return;
 
       const result = extractArrayDecl(node.body.body);
       if (!result) return;
 
-      const { decl, secondStmt } = result;
-      if (secondStmt.type !== "ForOfStatement") return;
+      const { declName, init, secondStmt } = result;
 
       const loopTargetName = extractLoopTargetName(secondStmt);
       if (!loopTargetName) return;
 
-      if (!checkForOfPattern(secondStmt, decl.id.name, loopTargetName)) return;
+      if (!checkForOfPattern(secondStmt, declName, loopTargetName)) return;
 
       context.report({
         node,
         messageId: "staticAsyncGenerator",
         data: {
-          count: String(decl.init.elements.length),
+          count: String(init.elements.length),
         },
       });
     }
