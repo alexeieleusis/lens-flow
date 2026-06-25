@@ -35,19 +35,7 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"directAssertion" | "indirectAssertion", []>) {
-    const jsonParseVars = new Set<string>();
-
     return {
-      VariableDeclarator(node) {
-        if (
-          node.id.type === "Identifier" &&
-          node.init?.type === "CallExpression" &&
-          isJsonParseCall(node.init)
-        ) {
-          jsonParseVars.add(node.id.name);
-        }
-      },
-
       TSAsExpression(node) {
         const expr = node.expression;
 
@@ -59,14 +47,21 @@ export default createRule({
           return;
         }
 
-        if (
-          expr.type === "Identifier" &&
-          jsonParseVars.has(expr.name)
-        ) {
-          context.report({
-            node,
-            messageId: "indirectAssertion",
-          });
+        if (expr.type === "Identifier") {
+          const scope = context.sourceCode.getScope(node);
+          const variable = scope.variables.find(v => v.name === expr.name);
+          if (
+            variable &&
+            variable.defs.length > 0 &&
+            variable.defs[0].node.type === "VariableDeclarator" &&
+            variable.defs[0].node.init?.type === "CallExpression" &&
+            isJsonParseCall(variable.defs[0].node.init)
+          ) {
+            context.report({
+              node,
+              messageId: "indirectAssertion",
+            });
+          }
         }
       },
     };
