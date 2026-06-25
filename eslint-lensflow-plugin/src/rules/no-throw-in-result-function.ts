@@ -1,7 +1,7 @@
 // eslint-plugin/src/rules/no-throw-in-result-function.ts
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
-import { walkNodes } from "../utils/ast-helpers.js";
+import { hasThrow, walkNodes } from "../utils/ast-helpers.js";
 
 const RESULT_TYPES = new Set(["Result", "Either", "TaskEither"]);
 
@@ -31,16 +31,16 @@ function hasResultReturnType(node: TSESTree.FunctionLike): boolean {
   return false;
 }
 
-function findThrowStatement(node: TSESTree.Node): TSESTree.ThrowStatement | null {
-  let found: TSESTree.ThrowStatement | null = null;
-  walkNodes(node, (n) => {
+function findFirstThrow(body: TSESTree.Node): TSESTree.ThrowStatement | null {
+  let throwNode: TSESTree.ThrowStatement | null = null;
+  walkNodes(body, (n) => {
     if (n.type === "ThrowStatement") {
-      found = n;
+      throwNode = n;
       return true;
     }
     return false;
   });
-  return found;
+  return throwNode;
 }
 
 const EXCLUDED_NAMES = new Set(["assertNever", "fail"]);
@@ -74,9 +74,11 @@ export default createRule({
     return {
       FunctionDeclaration(node) {
         if (!hasResultReturnType(node) || isExcludedFunction(node)) return;
-        if (findThrowStatement(node.body)) {
+        if (!hasThrow(node.body)) return;
+        const throwNode = findFirstThrow(node.body);
+        if (throwNode) {
           context.report({
-            node,
+            node: throwNode,
             messageId: "throwInResultFunction",
           });
         }
@@ -84,9 +86,11 @@ export default createRule({
 
       FunctionExpression(node) {
         if (!hasResultReturnType(node) || isExcludedFunction(node)) return;
-        if (findThrowStatement(node.body)) {
+        if (!hasThrow(node.body)) return;
+        const throwNode = findFirstThrow(node.body);
+        if (throwNode) {
           context.report({
-            node,
+            node: throwNode,
             messageId: "throwInResultFunction",
           });
         }
@@ -94,9 +98,12 @@ export default createRule({
 
       ArrowFunctionExpression(node) {
         if (!hasResultReturnType(node)) return;
-        if (findThrowStatement(node.body)) {
+        if (node.body.type !== "BlockStatement") return;
+        if (!hasThrow(node.body)) return;
+        const throwNode = findFirstThrow(node.body);
+        if (throwNode) {
           context.report({
-            node,
+            node: throwNode,
             messageId: "throwInResultFunction",
           });
         }
