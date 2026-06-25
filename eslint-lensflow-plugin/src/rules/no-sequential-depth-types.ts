@@ -124,8 +124,9 @@ function getNextRef(node: TSESTree.TSTypeAliasDeclaration): string | null {
 function getRefName(typeName: TSESTree.EntityName): string | null {
   if (typeName.type === "Identifier") return typeName.name;
   if (typeName.type === "TSQualifiedName") {
+    const left = getRefName(typeName.left);
     const right = getRefName(typeName.right);
-    return right ? `${getRefName(typeName.left)}.${right}` : null;
+    return left && right ? `${left}.${right}` : null;
   }
   return null;
 }
