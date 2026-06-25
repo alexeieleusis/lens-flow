@@ -139,6 +139,64 @@ export default createRule({
       });
     }
 
+    function checkParameterProperty(
+      node: TSESTree.TSParameterProperty,
+    ): void {
+      if (!node.readonly) return;
+      const parameter = node.parameter;
+      if (parameter.type !== AST_NODE_TYPES.Identifier) return;
+      const typedParam = parameter as TSESTree.Identifier & { typeAnnotation?: TSESTree.TSTypeAnnotation };
+      const typeAnnotation = typedParam.typeAnnotation?.typeAnnotation;
+      if (!typeAnnotation) return;
+      if (!isMutableCollectionType(typeAnnotation)) return;
+
+      const propName = (typedParam as TSESTree.Identifier).name;
+
+      if (isTypeReference(typeAnnotation)) {
+        const refNode = typeAnnotation as TSESTree.TSTypeReference;
+        let typeName: string | undefined;
+        if (refNode.typeName.type === AST_NODE_TYPES.Identifier) {
+          typeName = (refNode.typeName as TSESTree.Identifier).name;
+        }
+        if (typeName === "Map" || typeName === "Set") {
+          context.report({
+            node,
+            messageId: "mutableMapSet",
+            data: { name: propName, collection: typeName },
+          });
+        }
+        if (typeName === "Array") {
+          const elementName = getArrayElementName(
+            refNode.typeArguments?.params?.[0] ?? {} as TSESTree.TypeNode,
+          );
+          context.report({
+            node,
+            messageId: "mutableArray",
+            data: { name: propName, element: elementName },
+          });
+        }
+        return;
+      }
+
+      if (isArrayType(typeAnnotation)) {
+        const elementName = getArrayElementName(
+          (typeAnnotation as TSESTree.TSArrayType).elementType,
+        );
+        context.report({
+          node,
+          messageId: "mutableArray",
+          data: { name: propName, element: elementName },
+        });
+        return;
+      }
+
+      context.report({
+        node,
+        messageId: "mutableIntersection",
+        data: { name: propName },
+      });
+    }
+
     return {
       ClassBody(node) {
         for (const member of node.body) {
@@ -148,6 +206,19 @@ export default createRule({
             member.typeAnnotation
           ) {
             checkProperty(member);
+          }
+        }
+      },
+
+      MethodDefinition(node) {
+        if (
+          node.key.type !== AST_NODE_TYPES.Identifier ||
+          (node.key as TSESTree.Identifier).name !== "constructor"
+        ) return;
+
+        for (const param of node.value.params) {
+          if (param.type === AST_NODE_TYPES.TSParameterProperty) {
+            checkParameterProperty(param);
           }
         }
       },

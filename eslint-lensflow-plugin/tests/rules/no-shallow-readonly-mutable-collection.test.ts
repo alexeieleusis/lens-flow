@@ -33,6 +33,15 @@ ruleTester.run("no-shallow-readonly-mutable-collection", rule, {
     `type Config = {
   readonly value: string;
 }`,
+    `class Config {
+  constructor(readonly items: readonly string[]) {}
+}`,
+    `class Config {
+  constructor(readonly map: ReadonlyMap<string, number>) {}
+}`,
+    `class Config {
+  constructor(readonly count: number) {}
+}`,
   ],
   invalid: [
     {
@@ -83,6 +92,24 @@ ruleTester.run("no-shallow-readonly-mutable-collection", rule, {
     {
       code: `interface Config {
   readonly cache: Map<string, unknown>;
+}`,
+      errors: [{ messageId: "mutableMapSet" }],
+    },
+    {
+      code: `class Config {
+  constructor(readonly items: string[]) {}
+}`,
+      errors: [{ messageId: "mutableArray" }],
+    },
+    {
+      code: `class Config {
+  constructor(readonly map: Map<string, number>) {}
+}`,
+      errors: [{ messageId: "mutableMapSet" }],
+    },
+    {
+      code: `class Config {
+  constructor(readonly set: Set<number>) {}
 }`,
       errors: [{ messageId: "mutableMapSet" }],
     },
