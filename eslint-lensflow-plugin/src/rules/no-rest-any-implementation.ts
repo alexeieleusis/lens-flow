@@ -76,26 +76,14 @@ export default createRule({
         allFns.push(node);
       },
       "Program:exit"() {
-        let i = 0;
-        while (i < allFns.length) {
-          const name = getFnName(allFns[i]);
+        const byName = new Map<string, FnLikeNode[]>();
+        for (const fn of allFns) {
+          const name = getFnName(fn);
+          if (!name) continue;
+          byName.set(name, [...(byName.get(name) || []), fn]);
+        }
 
-          if (!name) {
-            i++;
-            continue;
-          }
-
-          let j = i + 1;
-          while (
-            j < allFns.length &&
-            allFns[j].id?.type === "Identifier" &&
-            allFns[j].id!.name === name
-          ) {
-            j++;
-          }
-
-          const group = allFns.slice(i, j);
-
+        for (const [name, group] of byName) {
           if (group.length >= 2) {
             const impl = group.find(isImplementation);
             if (
@@ -109,8 +97,6 @@ export default createRule({
               });
             }
           }
-
-          i = j;
         }
       },
     };
