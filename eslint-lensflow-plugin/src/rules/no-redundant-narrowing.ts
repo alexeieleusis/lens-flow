@@ -1,35 +1,20 @@
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
 
 function testsEqual(
   context: Parameters<ReturnType<typeof createRule>["create"]>[0],
-  a: unknown,
-  b: unknown,
+  a: TSESTree.Node,
+  b: TSESTree.Node,
 ): boolean {
-  if (
-    a &&
-    b &&
-    typeof a === "object" &&
-    typeof b === "object" &&
-    (a as any).type === "BinaryExpression" &&
-    (b as any).type === "BinaryExpression"
-  ) {
-    const leftA = (a as any).left;
-    const leftB = (b as any).left;
-    const rightA = (a as any).right;
-    const rightB = (b as any).right;
+  if (a.type !== "BinaryExpression" || b.type !== "BinaryExpression") return false;
 
-    return (
-      (a as any).operator === (b as any).operator &&
-      leftA.type === leftB.type &&
-      rightA.type === rightB.type &&
-      context.sourceCode.getText(leftA) ===
-        context.sourceCode.getText(leftB) &&
-      context.sourceCode.getText(rightA) ===
-        context.sourceCode.getText(rightB)
-    );
-  }
-  return false;
+  return (
+    a.operator === b.operator &&
+    a.left.type === b.left.type &&
+    a.right.type === b.right.type &&
+    context.sourceCode.getText(a.left) === context.sourceCode.getText(b.left) &&
+    context.sourceCode.getText(a.right) === context.sourceCode.getText(b.right)
+  );
 }
 
 export default createRule({
