@@ -1,6 +1,28 @@
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
+function collectIdentifiers(
+  node: TSESTree.Node,
+  out: TSESTree.Identifier[] = [],
+): TSESTree.Identifier[] {
+  if (node.type === "Identifier") {
+    out.push(node);
+  } else if ("type" in node && typeof (node as any).type === "string") {
+    for (const key of Object.keys(node)) {
+      if (key === "type" || key === "loc" || key === "range" || key === "parent") continue;
+      const child = (node as any)[key];
+      if (Array.isArray(child)) {
+        for (const item of child) {
+          if (item && typeof item === "object") collectIdentifiers(item, out);
+        }
+      } else if (child && typeof child === "object") {
+        collectIdentifiers(child, out);
+      }
+    }
+  }
+  return out;
+}
+
 function testsEqual(
   context: Parameters<ReturnType<typeof createRule>["create"]>[0],
   a: TSESTree.Node,
@@ -8,7 +30,37 @@ function testsEqual(
 ): boolean {
   if (a.type !== b.type) return false;
 
-  return context.sourceCode.getText(a) === context.sourceCode.getText(b);
+  if (context.sourceCode.getText(a) !== context.sourceCode.getText(b)) return false;
+
+  const idsA = collectIdentifiers(a);
+  const idsB = collectIdentifiers(b);
+
+  if (idsA.length !== idsB.length) return false;
+
+  for (let i = 0; i < idsA.length; i++) {
+    const idA = idsA[i];
+    const idB = idsB[i];
+
+    let scopeA: TSESLint.Scope.Scope | null = context.sourceCode.getScope(a);
+    let bindingA: TSESLint.Scope.Variable | undefined;
+    while (scopeA) {
+      bindingA = scopeA.set.get(idA.name);
+      if (bindingA) break;
+      scopeA = scopeA.upper;
+    }
+
+    let scopeB: TSESLint.Scope.Scope | null = context.sourceCode.getScope(b);
+    let bindingB: TSESLint.Scope.Variable | undefined;
+    while (scopeB) {
+      bindingB = scopeB.set.get(idB.name);
+      if (bindingB) break;
+      scopeB = scopeB.upper;
+    }
+
+    if (bindingA !== bindingB) return false;
+  }
+
+  return true;
 }
 
 export default createRule({
