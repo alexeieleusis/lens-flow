@@ -24,7 +24,7 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow union types whose members share no common properties",
+        "Disallow union types whose inline type literal members share no common properties",
     },
     messages: {
       noCommonShape:
