@@ -212,7 +212,7 @@ export default createRule({
     type: "suggestion",
     docs: {
       description:
-        "Disallow multiple functions from repeating the same null/empty guard on a nullable union parameter instead of using a branded non-null type produced once upstream",
+        "Disallow multiple functions from repeating the same null guard on a nullable union parameter instead of using a branded non-null type produced once upstream",
     },
     messages: {
       redundantGuard:
