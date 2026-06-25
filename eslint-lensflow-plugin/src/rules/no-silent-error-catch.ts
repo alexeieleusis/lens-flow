@@ -45,6 +45,7 @@ export default createRule({
   name: "no-silent-error-catch",
   meta: {
     type: "problem",
+    fixable: undefined,
     docs: {
       description:
         "Disallow catch blocks that only log the error and throw a generic Error, discarding original error details.",
