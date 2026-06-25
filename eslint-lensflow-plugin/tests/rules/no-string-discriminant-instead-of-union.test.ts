@@ -24,8 +24,21 @@ ruleTester.run("no-string-discriminant-instead-of-union", rule, {
       kind: string | number;
       value: number;
     }`,
+    `type Single = { kind: "a" | "b"; }`,
+    `type Event = { kind: string; data: unknown }`,
   ],
   invalid: [
+    {
+      code: `type Event = {
+        kind: "click" | "hover";
+        data: unknown;
+      }`,
+      errors: [{ messageId: "stringDiscriminant" }],
+    },
+    {
+      code: `type Status = { kind: "A" | "B"; data: unknown }`,
+      errors: [{ messageId: "stringDiscriminant" }],
+    },
     {
       code: `interface Shape {
         kind: "circle" | "rect";

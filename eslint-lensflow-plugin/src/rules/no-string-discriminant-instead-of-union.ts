@@ -1,5 +1,63 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+type MemberNode = TSESTree.TSInterfaceBody | TSESTree.TSTypeLiteral;
+
+function checkDiscriminant(
+  context: TSESLint.RuleContext<"stringDiscriminant", []>,
+  node: MemberNode,
+  kind: "Interface" | "Type",
+) {
+  const members =
+    node.type === "TSInterfaceBody" ? node.body : node.members;
+
+  if (members.length <= 1) return;
+
+  const discriminantProp = members.find(
+    (member) =>
+      member.type === "TSPropertySignature" &&
+      !member.optional &&
+      member.typeAnnotation?.typeAnnotation?.type === "TSUnionType" &&
+      member.typeAnnotation.typeAnnotation.types.every(
+        (t) =>
+          t.type === "TSLiteralType" &&
+          t.literal.type === "Literal" &&
+          typeof t.literal.value === "string",
+      ),
+  );
+
+  if (discriminantProp?.type !== "TSPropertySignature") return;
+
+  let propName: string;
+  if (discriminantProp.key.type === "Identifier") {
+    propName = discriminantProp.key.name;
+  } else {
+    propName =
+      discriminantProp.key.type === "Literal"
+        ? String(discriminantProp.key.value)
+        : "?";
+  }
+
+  let name = "?";
+  const parent = node.parent;
+  if (
+    (parent?.type === "TSInterfaceDeclaration" ||
+      parent?.type === "TSTypeAliasDeclaration") &&
+    parent.id?.type === "Identifier"
+  ) {
+    name = parent.id.name;
+  }
+
+  context.report({
+    node,
+    messageId: "stringDiscriminant",
+    data: {
+      kind,
+      name,
+      discriminant: propName,
+    },
+  });
+}
 
 export default createRule({
   name: "no-string-discriminant-instead-of-union",
@@ -7,11 +65,11 @@ export default createRule({
     type: "suggestion",
     docs: {
       description:
-        "Disallow interfaces with a string-literal-union discriminant and other fields — use a discriminated union type instead for exhaustiveness checking.",
+        "Disallow interfaces or type literals with a string-literal-union discriminant and other fields — use a discriminated union type instead for exhaustiveness checking.",
     },
     messages: {
       stringDiscriminant:
-        "Interface '{{name}}' uses a string-literal-union discriminant ('{{discriminant}}') with other fields. Use a discriminated union type instead to get compile-time exhaustiveness checking. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC14-extensibility.md",
+        "{{kind}} '{{name}}' uses a string-literal-union discriminant ('{{discriminant}}') with other fields. Use a discriminated union type instead to get compile-time exhaustiveness checking. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC14-extensibility.md",
     },
     schema: [],
     fixable: undefined,
@@ -20,47 +78,10 @@ export default createRule({
   create(context: TSESLint.RuleContext<"stringDiscriminant", []>) {
     return {
       TSInterfaceBody(node) {
-        if (node.body.length <= 1) return;
-
-        const discriminantProp = node.body.find(
-          (member) =>
-            member.type === "TSPropertySignature" &&
-            !member.optional &&
-            member.typeAnnotation?.typeAnnotation?.type === "TSUnionType" &&
-            member.typeAnnotation.typeAnnotation.types.every(
-              (t) =>
-                t.type === "TSLiteralType" &&
-                t.literal.type === "Literal" &&
-                typeof t.literal.value === "string",
-            ),
-        );
-
-        if (discriminantProp?.type === "TSPropertySignature") {
-          let propName: string;
-          if (discriminantProp.key.type === "Identifier") {
-            propName = discriminantProp.key.name;
-          } else {
-            propName =
-              discriminantProp.key.type === "Literal"
-                ? String(discriminantProp.key.value)
-                : "?";
-          }
-
-          const ifaceName =
-            node.parent?.type === "TSInterfaceDeclaration" &&
-            node.parent?.id?.type === "Identifier"
-              ? node.parent.id.name
-              : "?";
-
-          context.report({
-            node,
-            messageId: "stringDiscriminant",
-            data: {
-              name: ifaceName,
-              discriminant: propName,
-            },
-          });
-        }
+        checkDiscriminant(context, node, "Interface");
+      },
+      TSTypeLiteral(node) {
+        checkDiscriminant(context, node, "Type");
       },
     };
   },
