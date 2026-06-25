@@ -16,6 +16,13 @@ function isPrimitiveLiteralType(node: TSESTree.Node): boolean {
   return literal.type === "Literal" && typeof literal.value !== "object";
 }
 
+function unwrapParens(node: TSESTree.TypeNode): TSESTree.TypeNode {
+  while (node.type === ("TSParenthesizedType" as TSESTree.TypeNode["type"])) {
+    node = (node as unknown as { typeAnnotation: TSESTree.TypeNode }).typeAnnotation;
+  }
+  return node;
+}
+
 export default createRule({
   name: "no-readonly-on-primitives",
   meta: {
@@ -43,11 +50,13 @@ export default createRule({
       const typeAnn = node.typeAnnotation?.typeAnnotation;
       if (!typeAnn) return;
 
-      if (typeAnn.type === "TSTypeReference") return;
+      const unwrapped = unwrapParens(typeAnn);
+
+      if (unwrapped.type === "TSTypeReference") return;
 
       if (
-        !PRIMITIVE_TYPE_NODES.has(typeAnn.type) &&
-        !isPrimitiveLiteralType(typeAnn)
+        !PRIMITIVE_TYPE_NODES.has(unwrapped.type) &&
+        !isPrimitiveLiteralType(unwrapped)
       )
         return;
 
@@ -60,9 +69,9 @@ export default createRule({
         propName = "this property";
       }
 
-      let typeName: string = typeAnn.type;
-      if (typeAnn.type === "TSLiteralType") {
-        const lit = typeAnn as unknown as { literal: { value?: unknown } };
+      let typeName: string = unwrapped.type;
+      if (unwrapped.type === "TSLiteralType") {
+        const lit = unwrapped as unknown as { literal: { value?: unknown } };
         typeName = typeof lit.literal.value === "number" ? "number" : "string";
       }
 
