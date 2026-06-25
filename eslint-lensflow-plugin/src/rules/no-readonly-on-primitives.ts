@@ -1,5 +1,6 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESTree } from "@typescript-eslint/types";
 
 const PRIMITIVE_TYPE_NODES = new Set([
   "TSStringKeyword",
@@ -9,20 +10,10 @@ const PRIMITIVE_TYPE_NODES = new Set([
   "TSSymbolKeyword",
 ]);
 
-function isPrimitiveLiteralType(node: unknown): boolean {
-  if (
-    node &&
-    typeof node === "object" &&
-    "type" in node &&
-    node.type === "TSLiteralType"
-  ) {
-    const { literal } = node as unknown as { literal: { type: string } };
-    return (
-      literal.type === "Literal" &&
-      typeof (literal as { value?: unknown }).value !== "object"
-    );
-  }
-  return false;
+function isPrimitiveLiteralType(node: TSESTree.Node): boolean {
+  if (node.type !== "TSLiteralType") return false;
+  const { literal } = node;
+  return literal.type === "Literal" && typeof literal.value !== "object";
 }
 
 export default createRule({
