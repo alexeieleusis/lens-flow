@@ -102,15 +102,100 @@ function normalizeGuardPattern(test: any, paramName: string): string | null {
 function findGuardInBody(body: any, paramName: string): string | null {
   if (!body?.body) return null;
 
-  const statements = Array.isArray(body.body) ? body.body : [body.body];
+  const NESTING_LIMIT = 10;
 
-  for (const stmt of statements.slice(0, 5)) {
-    if (stmt.type !== "IfStatement") continue;
-    const pattern = normalizeGuardPattern(stmt.test, paramName);
-    if (pattern) return pattern;
+  function walkStatements(stmts: any[], depth: number): string | null {
+    if (depth > NESTING_LIMIT) return null;
+
+    for (const stmt of stmts.slice(0, 10)) {
+      if (stmt.type === "IfStatement") {
+        const pattern = normalizeGuardPattern(stmt.test, paramName);
+        if (pattern) return pattern;
+        if (stmt.consequent) {
+          const nested = walkStatements(
+            Array.isArray(stmt.consequent.body) ? stmt.consequent.body : [stmt.consequent],
+            depth + 1,
+          );
+          if (nested) return nested;
+        }
+        if (stmt.alternate) {
+          const nested = walkStatements(
+            Array.isArray(stmt.alternate.body) ? stmt.alternate.body : [stmt.alternate],
+            depth + 1,
+          );
+          if (nested) return nested;
+        }
+      }
+
+      if (stmt.type === "ForStatement" || stmt.type === "ForInStatement" || stmt.type === "ForOfStatement") {
+        if (stmt.body) {
+          const nested = walkStatements(
+            Array.isArray(stmt.body.body) ? stmt.body.body : [stmt.body],
+            depth + 1,
+          );
+          if (nested) return nested;
+        }
+      }
+
+      if (stmt.type === "WhileStatement" || stmt.type === "DoWhileStatement") {
+        if (stmt.body) {
+          const nested = walkStatements(
+            Array.isArray(stmt.body.body) ? stmt.body.body : [stmt.body],
+            depth + 1,
+          );
+          if (nested) return nested;
+        }
+      }
+
+      if (stmt.type === "WithStatement") {
+        const nested = walkStatements(
+          Array.isArray(stmt.body.body) ? stmt.body.body : [stmt.body],
+          depth + 1,
+        );
+        if (nested) return nested;
+      }
+
+      if (stmt.type === "TryStatement") {
+        if (stmt.block?.body) {
+          const nested = walkStatements(stmt.block.body, depth + 1);
+          if (nested) return nested;
+        }
+        if (stmt.handler?.handler?.body?.body) {
+          const nested = walkStatements(stmt.handler.handler.body.body, depth + 1);
+          if (nested) return nested;
+        }
+        if (stmt.finalizer?.body) {
+          const nested = walkStatements(
+            Array.isArray(stmt.finalizer.body) ? stmt.finalizer.body : [stmt.finalizer],
+            depth + 1,
+          );
+          if (nested) return nested;
+        }
+      }
+
+      if (stmt.type === "LabeledStatement" && stmt.body) {
+        const nested = walkStatements(
+          Array.isArray(stmt.body.body) ? stmt.body.body : [stmt.body],
+          depth + 1,
+        );
+        if (nested) return nested;
+      }
+
+      if (stmt.type === "SwitchStatement" && stmt.cases) {
+        for (const caseClause of stmt.cases || []) {
+          if (caseClause.consequent) {
+            const nested = walkStatements(caseClause.consequent, depth + 1);
+            if (nested) return nested;
+          }
+        }
+      }
+    }
+
+    return null;
   }
 
-  return null;
+  const statements = Array.isArray(body.body) ? body.body : [body.body];
+  return walkStatements(statements, 0);
 }
 
 interface FuncInfo {
