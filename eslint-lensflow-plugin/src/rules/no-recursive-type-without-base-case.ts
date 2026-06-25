@@ -91,6 +91,15 @@ function collectInferNames(node: TypeNode): Set<string> {
     }
 
     switch (n.type) {
+      case "TSConditionalType":
+        walk(n.checkType);
+        walk(n.extendsType);
+        walk(n.trueType);
+        walk(n.falseType);
+        break;
+      case "TSIntersectionType":
+        n.types.forEach(walk);
+        break;
       case "TSTypeReference":
         if (n.typeArguments?.params) {
           n.typeArguments.params.forEach(walk);
@@ -104,6 +113,18 @@ function collectInferNames(node: TypeNode): Set<string> {
         break;
       case "TSTupleType":
         n.elementTypes.forEach(walk);
+        break;
+      case "TSMappedType":
+        walk(n.constraint);
+        walk(n.typeAnnotation);
+        if (n.nameType) walk(n.nameType);
+        break;
+      case "TSIndexedAccessType":
+        walk(n.objectType);
+        walk(n.indexType);
+        break;
+      case "TSTemplateLiteralType":
+        n.types.forEach(walk);
         break;
       case "TSRestType":
       case "TSOptionalType":
