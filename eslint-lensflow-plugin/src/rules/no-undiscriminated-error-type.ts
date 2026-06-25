@@ -4,79 +4,52 @@ import { createRule } from "../utils/rule-creator.js";
 const DISCRIMINANT_PATTERN = /^(kind|tag|code|type)$/;
 const ERROR_NAME_PATTERN = /[Ee]rror|[Ff]ail|[Ee]xception/;
 
-function isStringType(node: unknown): boolean {
-  const n = node as { type?: string };
-  return n.type === AST_NODE_TYPES.TSStringKeyword;
+function isStringType(node: TSESTree.TypeNode): boolean {
+  return node.type === AST_NODE_TYPES.TSStringKeyword;
 }
 
-function isLiteralType(node: unknown): boolean {
-  const n = node as { type?: string };
-  return n.type === AST_NODE_TYPES.TSLiteralType;
+function isLiteralType(node: TSESTree.TypeNode): boolean {
+  return node.type === AST_NODE_TYPES.TSLiteralType;
 }
 
-function hasDiscriminant(members: unknown[]): boolean {
+function hasDiscriminant(members: TSESTree.TSPropertySignature[]): boolean {
   return members.some((member) => {
-    const m = member as {
-      type?: string;
-      key?: { name?: string };
-      typeAnnotation?: { typeAnnotation?: unknown };
-    };
-    if (m.type !== AST_NODE_TYPES.TSPropertySignature) return false;
-    const name = m.key?.name;
+    if (!member.typeAnnotation) return false;
+    const name = member.key.type === AST_NODE_TYPES.Identifier ? member.key.name : undefined;
     if (name == null || !DISCRIMINANT_PATTERN.test(name)) return false;
-    return isLiteralType(m.typeAnnotation?.typeAnnotation);
+    return isLiteralType(member.typeAnnotation.typeAnnotation);
   });
 }
 
-function isStringProperty(member: unknown): boolean {
-  const m = member as {
-    type?: string;
-    key?: { name?: string };
-    typeAnnotation?: { typeAnnotation?: unknown };
-  };
+function isStringProperty(member: TSESTree.TSPropertySignature): boolean {
   return (
-    m.type === AST_NODE_TYPES.TSPropertySignature &&
-    m.key?.name != null &&
-    isStringType(m.typeAnnotation?.typeAnnotation)
+    member.typeAnnotation != null &&
+    isStringType(member.typeAnnotation.typeAnnotation)
   );
 }
 
 function getParentDeclarationName(
-  node: { parent?: unknown },
+  node: TSESTree.TSTypeLiteral | TSESTree.TSInterfaceBody,
 ): string | null {
   const parent = node.parent;
   if (!parent) return null;
 
-  const p = parent as {
-    type?: string;
-    id?: { name?: string };
-  };
-
   // Direct parent is TSTypeAliasDeclaration (top-level type alias)
-  if (p.type === AST_NODE_TYPES.TSTypeAliasDeclaration) {
-    return p.id?.name ?? null;
+  if (parent.type === AST_NODE_TYPES.TSTypeAliasDeclaration) {
+    return parent.id.name;
   }
 
   // Direct parent is TSTypeLiteral, go to grandparent for TSTypeAliasDeclaration
-  if (p.type === AST_NODE_TYPES.TSTypeLiteral) {
-    const grandparent = (p as { parent?: unknown }).parent;
-    if (grandparent) {
-      const gp = grandparent as {
-        type?: string;
-        id?: { name?: string };
-      };
-      if (
-        gp.type === AST_NODE_TYPES.TSTypeAliasDeclaration &&
-        gp.id?.name
-      ) {
-        return gp.id.name;
-      }
+  if (parent.type === AST_NODE_TYPES.TSTypeLiteral) {
+    const grandparent = parent.parent;
+    if (grandparent && grandparent.type === AST_NODE_TYPES.TSTypeAliasDeclaration) {
+      return grandparent.id.name;
     }
     return null;
   }
 
-  if (p.type === AST_NODE_TYPES.TSInterfaceDeclaration) {
-    return p.id?.name ?? null;
+  if (parent.type === AST_NODE_TYPES.TSInterfaceDeclaration) {
+    return parent.id.name;
   }
 
   return null;
