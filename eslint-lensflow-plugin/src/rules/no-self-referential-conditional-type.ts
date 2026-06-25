@@ -26,6 +26,7 @@ function collectInferNames(
     names.add(type.typeParameter.name.name);
   }
   for (const child of collectChildTypes(type)) {
+    if (child.type === "TSConditionalType") continue;
     collectInferNames(child, names);
   }
   return names;
