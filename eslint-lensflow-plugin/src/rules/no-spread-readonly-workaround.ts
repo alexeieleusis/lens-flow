@@ -62,9 +62,7 @@ export default createRule({
             if (inner.type === "Identifier") {
               const spreadId = inner;
               const scope = context.sourceCode.getScope(spreadId);
-              const variable = scope.variables.find(
-                (v) => v.name === spreadId.name && v.defs.length > 0,
-              );
+              const variable = scope.set.get(spreadId.name);
 
               if (!variable) continue;
 
@@ -100,9 +98,7 @@ export default createRule({
               if (unwrappedObject.type !== "Identifier") continue;
 
               const scope = context.sourceCode.getScope(unwrappedObject);
-              const variable = scope.variables.find(
-                (v) => v.name === unwrappedObject.name && v.defs.length > 0,
-              );
+              const variable = scope.set.get(unwrappedObject.name);
 
               if (!variable) continue;
 
