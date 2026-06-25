@@ -21,8 +21,9 @@ function checkDiscriminant(
       member.typeAnnotation.typeAnnotation.types.every(
         (t) =>
           t.type === "TSLiteralType" &&
-          t.literal.type === "Literal" &&
-          typeof t.literal.value === "string",
+          (t.literal.type === "Literal" ||
+            (t.literal.type === "TemplateLiteral" &&
+              t.literal.expressions.length === 0)),
       ),
   );
 
