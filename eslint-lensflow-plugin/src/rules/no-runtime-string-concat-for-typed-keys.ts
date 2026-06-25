@@ -3,17 +3,17 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 
 function findEnclosingFunction(
   node: TSESTree.Node,
+  context: TSESLint.RuleContext<string, unknown[]>,
 ): TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression | null {
-  let current: TSESTree.Node | undefined = node.parent;
-  while (current) {
+  const ancestors = context.sourceCode.getAncestors(node);
+  for (const ancestor of ancestors) {
     if (
-      current.type === "FunctionDeclaration" ||
-      current.type === "FunctionExpression" ||
-      current.type === "ArrowFunctionExpression"
+      ancestor.type === "FunctionDeclaration" ||
+      ancestor.type === "FunctionExpression" ||
+      ancestor.type === "ArrowFunctionExpression"
     ) {
-      return current as TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression;
+      return ancestor as TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression;
     }
-    current = current.parent;
   }
   return null;
 }
@@ -71,7 +71,7 @@ export default createRule({
         const tmplExpr = tmpl.expressions[0];
         if (tmplExpr.type !== "Identifier") return;
 
-        const func = findEnclosingFunction(node);
+        const func = findEnclosingFunction(node, context);
         if (!func) return;
 
         const params = func.params;
