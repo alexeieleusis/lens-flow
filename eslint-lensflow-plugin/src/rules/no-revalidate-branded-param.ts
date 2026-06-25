@@ -82,7 +82,7 @@ function checkRegexAndLength(
   let reportedLength = false;
 
   walk(root, (node) => {
-    if (reportedRegex && reportedLength) return;
+    if (reportedRegex && reportedLength) return true;
 
     if (!reportedRegex && isRegexTestOnParam(node, paramName)) {
       onReport(node, "regex");

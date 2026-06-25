@@ -58,11 +58,11 @@ export interface WalkOptions {
 
 export function walk(
   root: TSESTree.Node,
-  cb: (node: TSESTree.Node) => void,
+  cb: (node: TSESTree.Node) => boolean | void,
   options: WalkOptions = {},
 ): void {
   const stopBoundary = options.stopAtFunctionBoundaries ?? true;
-  cb(root);
+  if (cb(root)) return;
   for (const child of getChildren(root)) {
     if (stopBoundary && isFunctionBoundary(child)) continue;
     walk(child, cb, options);
