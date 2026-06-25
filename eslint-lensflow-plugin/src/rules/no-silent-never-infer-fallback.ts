@@ -3,7 +3,7 @@ import { createRule } from "../utils/rule-creator.js";
 import { collectChildTypes } from "../utils/ts-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T49-associated-types.md");
+const DOC_URL = knowledgeUrl("catalog/T49-associated-types.md");
 
 function hasInfer(node: TSESTree.TypeNode): boolean {
   if (node.type === "TSInferType") return true;
@@ -110,7 +110,7 @@ export default createRule({
             context.report({
               node,
               messageId: "silentNeverInferFallback",
-              data: { url: URL },
+              data: { url: DOC_URL },
             });
           }
         }
