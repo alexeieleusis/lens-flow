@@ -1,10 +1,10 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 const statefulEntityPattern =
   /account|wallet|balance|counter|state|inventory|cart|session|store|registry|pool|cache|buffer|accumulator|collector/i;
 
-function isArrayType(node: any): boolean {
+function isArrayType(node: TSESTree.TypeNode): boolean {
   if (node.type === "TSArrayType") return true;
   if (
     node.type === "TSTypeReference" &&
@@ -15,7 +15,7 @@ function isArrayType(node: any): boolean {
   return false;
 }
 
-function hasMutableStateType(typeAnnotation: any): boolean {
+function hasMutableStateType(typeAnnotation: TSESTree.TypeNode): boolean {
   if (!typeAnnotation) return false;
 
   const { type } = typeAnnotation;
@@ -26,7 +26,7 @@ function hasMutableStateType(typeAnnotation: any): boolean {
 
   if (type === "TSUnionType") {
     return typeAnnotation.types.some(
-      (t: any) =>
+      (t: TSESTree.TypeNode) =>
         t.type === "TSNumberKeyword" ||
         t.type === "TSStringKeyword" ||
         isArrayType(t),
@@ -37,17 +37,21 @@ function hasMutableStateType(typeAnnotation: any): boolean {
 }
 
 function findEnclosingDeclaration(
-  node: any,
-): any {
-  let current = node.parent;
+  node: TSESTree.Node,
+): TSESTree.TSTypeAliasDeclaration | TSESTree.TSInterfaceDeclaration | null {
+  let current: TSESTree.Node | undefined = (node as TSESTree.Node & { parent?: TSESTree.Node }).parent;
   while (current) {
     if (
-      current.type === "TSTypeAliasDeclaration" ||
+      current.type === "TSTypeAliasDeclaration"
+    ) {
+      return current as TSESTree.TSTypeAliasDeclaration;
+    }
+    if (
       current.type === "TSInterfaceDeclaration"
     ) {
-      return current;
+      return current as TSESTree.TSInterfaceDeclaration;
     }
-    current = current.parent;
+    current = (current as TSESTree.Node & { parent?: TSESTree.Node }).parent;
   }
   return null;
 }
@@ -70,8 +74,8 @@ export default createRule({
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"mutableStateObject", []>) {
     function checkNode(
-      members: any[],
-      parent: any,
+      members: TSESTree.TypeElement[],
+      parent: TSESTree.TSInterfaceDeclaration | TSESTree.TSTypeAliasDeclaration,
       kind: "interface" | "type",
       parentType: string,
     ) {
@@ -81,10 +85,11 @@ export default createRule({
       if (!statefulEntityPattern.test(name)) return;
 
       const mutableProps = members.filter(
-        (member: any) =>
+        (member): member is TSESTree.TSPropertySignature =>
           member.type === "TSPropertySignature" &&
           !member.readonly &&
-          hasMutableStateType(member.typeAnnotation?.typeAnnotation),
+          !!member.typeAnnotation &&
+          hasMutableStateType(member.typeAnnotation.typeAnnotation),
       );
 
       if (mutableProps.length > 0) {
@@ -95,7 +100,7 @@ export default createRule({
             name,
             kind,
             props: mutableProps
-              .map((m: any) =>
+              .map((m) =>
                 m.key.type === "Identifier" ? m.key.name : "?",
               )
               .join(", "),
@@ -108,7 +113,7 @@ export default createRule({
       TSInterfaceBody(node) {
         checkNode(
           node.body,
-          node.parent as any,
+          node.parent as TSESTree.TSInterfaceDeclaration,
           "interface",
           "TSInterfaceDeclaration",
         );
