@@ -56,7 +56,6 @@ export default createRule({
     const regexReplace = String.raw`\$&`;
     const tablePattern = new RegExp(
       `^(${tableNames.map((n) => n.replace(/[.*+?^${}()|[\]\\]/g, regexReplace)).join("|")})$`,
-      "i",
     );
 
     return {
