@@ -3,6 +3,8 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
 
+const RESULT_TYPES = new Set(["Result", "Either", "TaskEither"]);
+
 function hasResultReturnType(node: TSESTree.FunctionLike): boolean {
   const returnType = node.returnType?.typeAnnotation;
   if (!returnType) return false;
@@ -10,20 +12,17 @@ function hasResultReturnType(node: TSESTree.FunctionLike): boolean {
   if (returnType.type === "TSTypeReference") {
     const typeName = returnType.typeName;
     if (typeName.type === "Identifier") {
-      return /Result|Either|TaskEither/.test(typeName.name);
+      return RESULT_TYPES.has(typeName.name);
     }
     if (typeName.type === "TSQualifiedName") {
-      const leftName =
-        typeName.left.type === "Identifier" ? typeName.left.name : "";
-      const fullName = `${leftName}.${typeName.right.name}`;
-      return /Result|Either|TaskEither/.test(fullName);
+      return RESULT_TYPES.has(typeName.right.name);
     }
   }
 
   if (returnType.type === "TSUnionType") {
     return returnType.types.some((t) => {
       if (t.type === "TSTypeReference" && t.typeName.type === "Identifier") {
-        return /Result|Either|TaskEither/.test(t.typeName.name);
+        return RESULT_TYPES.has(t.typeName.name);
       }
       return false;
     });
