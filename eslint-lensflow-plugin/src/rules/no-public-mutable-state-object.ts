@@ -15,22 +15,34 @@ function isArrayType(node: TSESTree.TypeNode): boolean {
   return false;
 }
 
+function unwrapParenthesized(node: TSESTree.TypeNode): TSESTree.TypeNode {
+  let current = node;
+  // TSParenthesizedType exists at runtime but isn't in @typescript-eslint's types.
+  while ((current as any).type === "TSParenthesizedType") {
+    current = (current as any).typeAnnotation;
+  }
+  return current;
+}
+
 function hasMutableStateType(typeAnnotation: TSESTree.TypeNode): boolean {
   if (!typeAnnotation) return false;
 
-  const { type } = typeAnnotation;
+  const unwrapped = unwrapParenthesized(typeAnnotation);
+  const { type } = unwrapped;
 
   if (type === "TSNumberKeyword" || type === "TSStringKeyword") return true;
 
-  if (isArrayType(typeAnnotation)) return true;
+  if (isArrayType(unwrapped)) return true;
 
   if (type === "TSUnionType") {
-    return typeAnnotation.types.some(
-      (t: TSESTree.TypeNode) =>
-        t.type === "TSNumberKeyword" ||
-        t.type === "TSStringKeyword" ||
-        isArrayType(t),
-    );
+    return unwrapped.types.some((t: TSESTree.TypeNode) => {
+      const inner = unwrapParenthesized(t);
+      return (
+        inner.type === "TSNumberKeyword" ||
+        inner.type === "TSStringKeyword" ||
+        isArrayType(inner)
+      );
+    });
   }
 
   return false;
