@@ -21,33 +21,63 @@ type ConditionalNode = Extract<
   | TSESTree.ConditionalExpression
 >;
 
-function hasLengthAccess(root: TSESTree.Node, paramName: string): boolean {
+function isSameBinding(
+  sourceCode: TSESLint.SourceCode,
+  identifier: TSESTree.Identifier,
+  paramId: TSESTree.Identifier,
+): boolean {
+  const scope = sourceCode.getScope(identifier);
+  const variable = scope.variables.find(
+    (v) => v.name === identifier.name,
+  );
+  if (!variable) return false;
+  return variable.identifiers.includes(paramId);
+}
+
+function hasLengthAccess(
+  root: TSESTree.Node,
+  sourceCode: TSESLint.SourceCode,
+  paramId: TSESTree.Identifier,
+): boolean {
   return walkNodes(root, (node) => {
     if (node.type !== "MemberExpression") return false;
-    return (
-      node.object.type === "Identifier" &&
-      node.object.name === paramName &&
+    if (node.object.type !== "Identifier") return false;
+    if (
       node.property.type === "Identifier" &&
-      node.property.name === "length"
-    );
+      node.property.name === "length" &&
+      isSameBinding(sourceCode, node.object, paramId)
+    ) {
+      return true;
+    }
+    return false;
   });
 }
 
-function isRegexTestOnParam(node: TSESTree.Node, paramName: string): boolean {
-  return (
-    node.type === "CallExpression" &&
-    node.callee.type === "MemberExpression" &&
-    node.callee.property.type === "Identifier" &&
-    node.callee.property.name === "test" &&
-    node.arguments.length >= 1 &&
-    node.arguments[0].type === "Identifier" &&
-    node.arguments[0].name === paramName
-  );
+function isRegexTestOnParam(
+  node: TSESTree.Node,
+  sourceCode: TSESLint.SourceCode,
+  paramId: TSESTree.Identifier,
+): boolean {
+  if (
+    node.type !== "CallExpression" ||
+    node.callee.type !== "MemberExpression" ||
+    node.callee.property.type !== "Identifier" ||
+    node.callee.property.name !== "test" ||
+    node.arguments.length < 1 ||
+    node.arguments[0].type !== "Identifier"
+  ) {
+    return false;
+  }
+  return isSameBinding(sourceCode, node.arguments[0], paramId);
 }
 
-function isLengthCheckCondition(node: TSESTree.Node, paramName: string): boolean {
+function isLengthCheckCondition(
+  node: TSESTree.Node,
+  sourceCode: TSESLint.SourceCode,
+  paramId: TSESTree.Identifier,
+): boolean {
   if (!CONDITIONAL_TYPES.has(node.type)) return false;
-  return hasLengthAccess((node as ConditionalNode).test, paramName);
+  return hasLengthAccess((node as ConditionalNode).test, sourceCode, paramId);
 }
 
 function isBranded(checker: ts.TypeChecker, tsType: ts.Type): boolean {
@@ -75,7 +105,9 @@ function isBranded(checker: ts.TypeChecker, tsType: ts.Type): boolean {
 
 function checkRegexAndLength(
   root: TSESTree.Node,
+  sourceCode: TSESLint.SourceCode,
   paramName: string,
+  paramId: TSESTree.Identifier,
   onReport: (node: TSESTree.Node, issue: "regex" | "length") => void,
 ): void {
   let reportedRegex = false;
@@ -84,11 +116,11 @@ function checkRegexAndLength(
   walk(root, (node) => {
     if (reportedRegex && reportedLength) return true;
 
-    if (!reportedRegex && isRegexTestOnParam(node, paramName)) {
+    if (!reportedRegex && isRegexTestOnParam(node, sourceCode, paramId)) {
       onReport(node, "regex");
       reportedRegex = true;
     }
-    if (!reportedLength && isLengthCheckCondition(node, paramName)) {
+    if (!reportedLength && isLengthCheckCondition(node, sourceCode, paramId)) {
       onReport((node as ConditionalNode).test, "length");
       reportedLength = true;
     }
@@ -121,6 +153,8 @@ export default createRule({
     const checker = program.getTypeChecker();
     const esTreeNodeToTSNodeMap = parserServices.esTreeNodeToTSNodeMap;
 
+    const sourceCode = context.sourceCode;
+
     function checkFunction(funcNode: TSESTree.FunctionLike): void {
       const body = funcNode.body;
       if (!body) return;
@@ -138,8 +172,8 @@ export default createRule({
 
       if (brandedParams.size === 0) return;
 
-      for (const paramName of brandedParams.keys()) {
-        checkRegexAndLength(body, paramName, (node, issue) => {
+      for (const [paramName, paramId] of brandedParams) {
+        checkRegexAndLength(body, sourceCode, paramName, paramId, (node, issue) => {
           context.report({
             node,
             messageId: issue === "regex" ? "regexTest" : "lengthCheck",
