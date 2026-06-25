@@ -34,12 +34,10 @@ function findReferencedTypeParamNames(
 }
 
 function findParentTypeAliasDeclaration(
-  node: TSESTree.Node,
+  ancestors: TSESTree.Node[],
 ): TSESTree.TSTypeAliasDeclaration | null {
-  let cur: TSESTree.Node | undefined = node.parent;
-  while (cur) {
-    if (cur.type === "TSTypeAliasDeclaration") return cur;
-    cur = cur.parent;
+  for (const ancestor of ancestors) {
+    if (ancestor.type === "TSTypeAliasDeclaration") return ancestor;
   }
   return null;
 }
@@ -91,7 +89,8 @@ export default createRule({
         if (falseType.type !== "TSNeverKeyword") return;
 
         // Find the enclosing type alias and its type parameters
-        const typeAlias = findParentTypeAliasDeclaration(node);
+        const ancestors = context.sourceCode.getAncestors(node);
+        const typeAlias = findParentTypeAliasDeclaration(ancestors);
         if (!typeAlias?.typeParameters) return;
 
         const scopeParamNames = new Set(
