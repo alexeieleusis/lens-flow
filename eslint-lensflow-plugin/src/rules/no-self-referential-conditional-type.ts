@@ -32,6 +32,17 @@ function collectInferNames(
   return names;
 }
 
+function referencesName(
+  node: TSESTree.TypeNode,
+  names: Set<string>,
+): boolean {
+  const refName = getRefName(node);
+  if (refName && names.has(refName)) return true;
+
+  const children = collectChildTypes(node);
+  return children.some((child) => referencesName(child, names));
+}
+
 function hasSelfReferentialCall(
   type: TSESTree.TypeNode,
   aliasName: string,
@@ -43,13 +54,13 @@ function hasSelfReferentialCall(
   if (refName === aliasName) {
     const params = getTypeArgs(type);
     if (params.length === 0) return false;
-    const hasInferUsage = params.some((p) => referencesInferName(p, inferNames));
+    const hasInferUsage = params.some((p) => referencesName(p, inferNames));
     const hasNonDefaultOriginal = params.some(
-      (p) => referencesOriginalParam(p, typeParamNames) &&
-             !referencesInferName(p, inferNames) &&
-             !referencesDefaultParam(p, defaultParamNames),
+      (p) => referencesName(p, typeParamNames) &&
+             !referencesName(p, inferNames) &&
+             !referencesName(p, defaultParamNames),
     );
-    const hasOnlyInfer = !params.some((p) => referencesOriginalParam(p, typeParamNames));
+    const hasOnlyInfer = !params.some((p) => referencesName(p, typeParamNames));
     if (hasNonDefaultOriginal || (hasInferUsage && hasOnlyInfer)) {
       return true;
     }
@@ -59,39 +70,6 @@ function hasSelfReferentialCall(
   return children.some((child) =>
     hasSelfReferentialCall(child, aliasName, typeParamNames, inferNames, defaultParamNames),
   );
-}
-
-function referencesOriginalParam(
-  node: TSESTree.TypeNode,
-  names: Set<string>,
-): boolean {
-  const refName = getRefName(node);
-  if (refName && names.has(refName)) return true;
-
-  const children = collectChildTypes(node);
-  return children.some((child) => referencesOriginalParam(child, names));
-}
-
-function referencesInferName(
-  node: TSESTree.TypeNode,
-  names: Set<string>,
-): boolean {
-  const refName = getRefName(node);
-  if (refName && names.has(refName)) return true;
-
-  const children = collectChildTypes(node);
-  return children.some((child) => referencesInferName(child, names));
-}
-
-function referencesDefaultParam(
-  node: TSESTree.TypeNode,
-  names: Set<string>,
-): boolean {
-  const refName = getRefName(node);
-  if (refName && names.has(refName)) return true;
-
-  const children = collectChildTypes(node);
-  return children.some((child) => referencesDefaultParam(child, names));
 }
 
 export default createRule({
