@@ -1,53 +1,7 @@
 import { createRule } from "../utils/rule-creator.js";
+import { walk, walkNodes } from "../utils/ast-helpers.js";
 import type { TSESLint } from "@typescript-eslint/utils";
-
-function isAstNode(val: unknown): val is { type: string } {
-  return (
-    val !== null &&
-    typeof val === "object" &&
-    "type" in val &&
-    typeof (val as { type: unknown }).type === "string"
-  );
-}
-
-/**
- * Recursively collect all descendant nodes (excluding parent/backward references).
- */
-function collectDescendants(root: { type: string }): Array<{ type: string }> {
-  const result: Array<{ type: string }> = [];
-  const stack: Array<{ type: string }> = [];
-
-  const nonNodeProps = new Set([
-    "parent",
-    "loc",
-    "range",
-    "leadingComments",
-    "trailingComments",
-    "innerComments",
-  ]);
-
-  const pushChildren = (node: { type: string }) => {
-    for (const [key, val] of Object.entries(node)) {
-      if (nonNodeProps.has(key)) continue;
-      if (Array.isArray(val)) {
-        for (const item of val) {
-          if (isAstNode(item)) stack.push(item);
-        }
-      } else if (isAstNode(val)) {
-        stack.push(val);
-      }
-    }
-  };
-
-  pushChildren(root);
-  while (stack.length > 0) {
-    const node = stack.pop()!;
-    result.push(node);
-    pushChildren(node);
-  }
-
-  return result;
-}
+import { TSESTree } from "@typescript-eslint/utils";
 
 /**
  * Walk up parent chain to find an ancestor matching the predicate.
@@ -73,15 +27,14 @@ function findAncestor(
 
 /**
  * Check whether any descendant of the given node is an Identifier with the specified name.
+ * Stops at function boundaries to avoid crossing scope.
  */
 function nodeContainsIdentifier(
-  node: { type: string },
+  node: TSESTree.Node,
   name: string,
 ): boolean {
-  const descendants = collectDescendants(node);
-  return descendants.some(
-    (d) =>
-      d.type === "Identifier" && (d as { name?: string }).name === name,
+  return walkNodes(node, (n) =>
+    n.type === "Identifier" && n.name === name,
   );
 }
 
@@ -127,51 +80,38 @@ export default createRule({
 
         const paramName = node.param.name;
 
-        // Collect all descendants of the catch body (not the param itself).
-        const allDescendants = collectDescendants(node.body);
+        // Collect error references and throw statements, stopping at function boundaries.
+        const errorRefs: TSESTree.Identifier[] = [];
+        const throwStmts: TSESTree.ThrowStatement[] = [];
 
-        // Find all references to the error parameter in the body.
-        const errorRefs = allDescendants.filter(
-          (d) =>
-            d.type === "Identifier" &&
-            (d as { name?: string }).name === paramName,
-        );
+        walk(node.body, (n) => {
+          if (n.type === "Identifier" && n.name === paramName) {
+            errorRefs.push(n);
+          }
+          if (n.type === "ThrowStatement") {
+            throwStmts.push(n);
+          }
+        });
 
         if (errorRefs.length === 0) return;
 
         // All references must be inside console.* calls.
-        const allInsideConsole = errorRefs.every((ref) => isInsideConsoleCall(ref as { parent?: unknown }));
-        if (!allInsideConsole) return;
+        if (!errorRefs.every((ref) => isInsideConsoleCall(ref))) return;
 
         // There must be a ThrowStatement with `new Error(...)` that does NOT
         // include the caught error parameter in its arguments.
-        const throwStmts = allDescendants.filter(
-          (d) => d.type === "ThrowStatement",
-        );
         const hasGenericThrow = throwStmts.some((stmt) => {
-          const arg = (stmt as { argument?: unknown }).argument;
+          const arg = stmt.argument;
+          if (!(arg && arg.type === "NewExpression")) return false;
           if (
-            arg == null ||
-            typeof arg !== "object" ||
-            (arg as { type?: string }).type !== "NewExpression"
-          )
-            return false;
-
-          const newExpr = arg as {
-            callee?: { type?: string; name?: string };
-            arguments?: unknown[];
-          };
-          if (
-            newExpr.callee?.type !== "Identifier" ||
-            newExpr.callee?.name !== "Error"
+            arg.callee.type !== "Identifier" ||
+            arg.callee.name !== "Error"
           )
             return false;
 
           // Check that none of the Error constructor args contain the error param.
-          const args = newExpr.arguments ?? [];
-          const hasErrorRef = args.some(
-            (argNode) =>
-              isAstNode(argNode) && nodeContainsIdentifier(argNode, paramName),
+          const hasErrorRef = arg.arguments.some(
+            (argNode) => nodeContainsIdentifier(argNode, paramName),
           );
           return !hasErrorRef;
         });
