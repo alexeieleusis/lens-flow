@@ -42,11 +42,6 @@ function isEffectType(type: ts.Type): boolean {
   const props = type.getProperties();
   const propNames = new Set(props.map((p) => p.name));
 
-  // _tag is a strong signal for discriminated effect types
-  if (propNames.has("_tag")) {
-    return true;
-  }
-
   // Structural: need BOTH transform AND error-handling methods
   const hasTransform = propNames.has("map") || propNames.has("flatMap") || propNames.has("chain");
   const hasErrorHandling = Array.from(ERROR_HANDLING_METHODS).some((n) => propNames.has(n));
