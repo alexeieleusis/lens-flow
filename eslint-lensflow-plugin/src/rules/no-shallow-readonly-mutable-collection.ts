@@ -1,110 +1,66 @@
 import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
-type MutableCollectionType =
-  | "TSArrayType"
-  | "TSTypeReference"
-  | "TSIntersectionType";
-
-function isMutableCollectionType(node: unknown): node is { type: MutableCollectionType } {
-  if (!node || typeof node !== "object" || !("type" in node)) return false;
-
-  const typedNode = node as { type: string };
-
-  if (typedNode.type === AST_NODE_TYPES.TSArrayType) {
-    const arrNode = typedNode as { type: string; elementType?: unknown };
+function isMutableCollectionType(node: TSESTree.TypeNode): boolean {
+  if (node.type === AST_NODE_TYPES.TSArrayType) {
+    const arrNode = node as TSESTree.TSArrayType;
     if (
-      arrNode.elementType &&
-      typeof arrNode.elementType === "object" &&
-      "type" in arrNode.elementType &&
-      (arrNode.elementType as { type: string }).type ===
-        AST_NODE_TYPES.TSTypeOperator &&
-      (arrNode.elementType as { type: string; operator?: string }).operator ===
-        "readonly"
+      arrNode.elementType?.type === AST_NODE_TYPES.TSTypeOperator &&
+      (arrNode.elementType as TSESTree.TSTypeOperator).operator === "readonly"
     ) {
       return false;
     }
     return true;
   }
 
-  if (typedNode.type === AST_NODE_TYPES.TSTypeReference) {
-    const refNode = typedNode as { type: string; typeName?: unknown };
-    if (
-      refNode.typeName &&
-      typeof refNode.typeName === "object" &&
-      "type" in refNode.typeName &&
-      (refNode.typeName as { type: string }).type === AST_NODE_TYPES.Identifier
-    ) {
-      const name = (refNode.typeName as { name?: string }).name;
+  if (node.type === AST_NODE_TYPES.TSTypeReference) {
+    const refNode = node as TSESTree.TSTypeReference;
+    if (refNode.typeName.type === AST_NODE_TYPES.Identifier) {
+      const name = (refNode.typeName as TSESTree.Identifier).name;
       return name === "Map" || name === "Set" || name === "Array";
     }
     return false;
   }
 
-  if (typedNode.type === AST_NODE_TYPES.TSIntersectionType) {
-    const interNode = typedNode as { type: string; types?: unknown[] };
-    return interNode.types?.some((t) => isMutableCollectionType(t)) ?? false;
+  if (node.type === AST_NODE_TYPES.TSIntersectionType) {
+    const interNode = node as TSESTree.TSIntersectionType;
+    return interNode.types.some((t) => isMutableCollectionType(t));
   }
 
-  if (typedNode.type === AST_NODE_TYPES.TSUnionType) {
-    const unionNode = typedNode as { type: string; types?: unknown[] };
-    return unionNode.types?.some((t) => isMutableCollectionType(t)) ?? false;
-  }
-
-  if (typedNode.type === AST_NODE_TYPES.TSParenthesizedType) {
-    const parenNode = typedNode as { type: string; typeAnnotation?: unknown };
-    return parenNode.typeAnnotation ? isMutableCollectionType(parenNode.typeAnnotation) : false;
+  if (node.type === AST_NODE_TYPES.TSUnionType) {
+    const unionNode = node as TSESTree.TSUnionType;
+    return unionNode.types.some((t) => isMutableCollectionType(t));
   }
 
   return false;
 }
 
-function isArrayType(node: unknown): boolean {
-  return (
-    node !== null &&
-    typeof node === "object" &&
-    "type" in node &&
-    (node as { type: string }).type === AST_NODE_TYPES.TSArrayType
-  );
+function isArrayType(node: TSESTree.TypeNode): boolean {
+  return node.type === AST_NODE_TYPES.TSArrayType;
 }
 
-function isTypeReference(node: unknown): boolean {
-  return (
-    node !== null &&
-    typeof node === "object" &&
-    "type" in node &&
-    (node as { type: string }).type === AST_NODE_TYPES.TSTypeReference
-  );
+function isTypeReference(node: TSESTree.TypeNode): boolean {
+  return node.type === AST_NODE_TYPES.TSTypeReference;
 }
 
-function getPropertyName(key: unknown): string {
-  if (key && typeof key === "object") {
-    if ("name" in key && typeof key.name === "string") return key.name;
-    if ("value" in key && typeof key.value === "string") return String(key.value);
+function getPropertyName(key: TSESTree.PropertyName): string {
+  if (key.type === AST_NODE_TYPES.Identifier) {
+    return (key as TSESTree.Identifier).name;
+  }
+  if (key.type === AST_NODE_TYPES.Literal) {
+    return String((key as TSESTree.Literal).value);
   }
   return "unknown";
 }
 
-function getArrayElementName(elementType: unknown): string {
-  if (
-    elementType &&
-    typeof elementType === "object" &&
-    "type" in elementType &&
-    (elementType as { type: string }).type === AST_NODE_TYPES.TSTypeReference
-  ) {
-    return (
-      (elementType as { typeName?: { name?: string } }).typeName?.name ??
-      "unknown"
-    );
+function getArrayElementName(elementType: TSESTree.TypeNode): string {
+  if (elementType.type === AST_NODE_TYPES.TSTypeReference) {
+    const refNode = elementType as TSESTree.TSTypeReference;
+    if (refNode.typeName.type === AST_NODE_TYPES.Identifier) {
+      return (refNode.typeName as TSESTree.Identifier).name;
+    }
   }
-  if (
-    elementType &&
-    typeof elementType === "object" &&
-    "type" in elementType
-  ) {
-    return (elementType as { type: string }).type;
-  }
-  return "unknown";
+  return elementType.type;
 }
 
 export default createRule({
@@ -129,17 +85,7 @@ export default createRule({
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"mutableMapSet" | "mutableArray" | "mutableIntersection", []>) {
     function checkProperty(
-      node:
-        | {
-            readonly?: boolean;
-            typeAnnotation?: { typeAnnotation?: unknown };
-            key?: { name?: string };
-          }
-        | {
-            readonly?: boolean;
-            typeAnnotation?: { typeAnnotation?: unknown };
-            key?: unknown;
-          },
+      node: TSESTree.PropertyDefinition | TSESTree.TSPropertySignature,
     ): void {
       if (!node.readonly) return;
       const typeAnnotation = node.typeAnnotation?.typeAnnotation;
@@ -149,19 +95,24 @@ export default createRule({
       const propName = getPropertyName(node.key);
 
       if (isTypeReference(typeAnnotation)) {
-        const refNode = typeAnnotation as { typeName?: { name?: string }; typeParameters?: { params?: unknown[] } };
-        const typeName = refNode.typeName?.name;
+        const refNode = typeAnnotation as TSESTree.TSTypeReference;
+        let typeName: string | undefined;
+        if (refNode.typeName.type === AST_NODE_TYPES.Identifier) {
+          typeName = (refNode.typeName as TSESTree.Identifier).name;
+        }
         if (typeName === "Map" || typeName === "Set") {
           context.report({
-            node: node as unknown as TSESTree.Node,
+            node,
             messageId: "mutableMapSet",
             data: { name: propName, collection: typeName },
           });
         }
         if (typeName === "Array") {
-          const elementName = getArrayElementName(refNode.typeParameters?.params?.[0]);
+          const elementName = getArrayElementName(
+            refNode.typeArguments?.params?.[0] ?? {} as TSESTree.TypeNode,
+          );
           context.report({
-            node: node as unknown as TSESTree.Node,
+            node,
             messageId: "mutableArray",
             data: { name: propName, element: elementName },
           });
@@ -170,10 +121,11 @@ export default createRule({
       }
 
       if (isArrayType(typeAnnotation)) {
-        const arrNode = typeAnnotation as { elementType?: unknown };
-        const elementName = getArrayElementName(arrNode.elementType);
+        const elementName = getArrayElementName(
+          (typeAnnotation as TSESTree.TSArrayType).elementType,
+        );
         context.report({
-          node: node as unknown as TSESTree.Node,
+          node,
           messageId: "mutableArray",
           data: { name: propName, element: elementName },
         });
@@ -181,7 +133,7 @@ export default createRule({
       }
 
       context.report({
-        node: node as unknown as TSESTree.Node,
+        node,
         messageId: "mutableIntersection",
         data: { name: propName },
       });
