@@ -104,7 +104,7 @@ export default createRule({
   create(
     context: TSESLint.RuleContext<"silentAbsorption", [{ allowedTerminators: string[] }]>
   ) {
-    const parserServices = ESLintUtils.getParserServices(context);
+    const parserServices = ESLintUtils.getParserServices(context, true);
     if (!parserServices.program) return {};
 
     const DEFAULT_TERMINATORS = [
