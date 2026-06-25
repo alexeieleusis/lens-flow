@@ -2,35 +2,12 @@ import ts from "typescript";
 import { AST_NODE_TYPES, ESLintUtils, TSESLint } from "@typescript-eslint/utils";
 import type { TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
-
-function containsInferInArray(arr: unknown[]): boolean {
-  for (const item of arr) {
-    if (item != null && typeof item === "object" && "type" in item) {
-      if (containsInfer(item as TSESTree.Node)) return true;
-    }
-  }
-  return false;
-}
-
-function containsInferInObject(node: TSESTree.Node): boolean {
-  const skipProps = new Set(["parent", "loc", "range", "leadingComments", "trailingComments", "innerComments"]);
-  const entries = Object.entries(node as unknown as Record<string, unknown>);
-  for (const [key, value] of entries) {
-    if (skipProps.has(key)) continue;
-    if (value == null || typeof value !== "object") continue;
-    if (Array.isArray(value)) {
-      if (containsInferInArray(value)) return true;
-    }
-    if ("type" in value) {
-      if (containsInfer(value as TSESTree.Node)) return true;
-    }
-  }
-  return false;
-}
+import { walkNodes } from "../utils/ast-helpers.js";
 
 function containsInfer(node: TSESTree.Node): boolean {
-  if (node.type === AST_NODE_TYPES.TSInferType) return true;
-  return containsInferInObject(node);
+  return walkNodes(node, (n) => n.type === AST_NODE_TYPES.TSInferType, {
+    stopAtFunctionBoundaries: false,
+  });
 }
 
 function typeReferenceToString(
