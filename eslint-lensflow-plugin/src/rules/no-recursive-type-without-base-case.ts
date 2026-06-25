@@ -3,6 +3,15 @@ import { createRule } from "../utils/rule-creator.js";
 
 type TypeNode = TSESTree.TypeNode;
 
+type TSParenthesizedTypeNode = { type: "TSParenthesizedType"; typeAnnotation: TypeNode };
+
+function getParenthesizedInner(node: TypeNode): TypeNode | undefined {
+  if ((node as unknown as { type: string }).type === "TSParenthesizedType") {
+    return (node as unknown as TSParenthesizedTypeNode).typeAnnotation;
+  }
+  return undefined;
+}
+
 function findSelfReferences(
   node: TypeNode,
   aliasName: string,
@@ -64,9 +73,7 @@ function findSelfReferences(
         break;
     }
 
-    if ((n as any).type === "TSParenthesizedType") {
-      walk((n as any).typeAnnotation);
-    }
+    walk(getParenthesizedInner(n));
   }
 
   walk(node);
@@ -107,9 +114,7 @@ function collectInferNames(node: TypeNode): Set<string> {
         break;
     }
 
-    if ((n as any).type === "TSParenthesizedType") {
-      walk((n as any).typeAnnotation);
-    }
+    walk(getParenthesizedInner(n));
   }
 
   walk(node);
@@ -123,8 +128,9 @@ function hasStructuralReduction(
 ): boolean {
   let current: TypeNode = typeParam;
 
-  while ((current as any).type === "TSParenthesizedType") {
-    current = (current as any).typeAnnotation;
+  let inner: TypeNode | undefined;
+  while ((inner = getParenthesizedInner(current))) {
+    current = inner;
   }
 
   if (current.type === "TSInferType") return true;
