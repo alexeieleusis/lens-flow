@@ -32,7 +32,8 @@ export default createRule({
         );
 
         const hasInstanceFields = members.some(
-          (member) => member.type === "PropertyDefinition",
+          (member) =>
+            member.type === "PropertyDefinition" && !member.static,
         );
 
         const nonConstructorMethods = members.filter(
