@@ -60,8 +60,9 @@ export default createRule({
         // Condition 3: false branch is TSNeverKeyword
         if (falseType.type !== AST_NODE_TYPES.TSNeverKeyword) return;
 
-        // No infer keyword anywhere in the conditional
-        if (containsInfer(node)) return;
+        // No infer keyword in checkType or trueType — those are the identity
+        // passthrough operands. infer in extendsType is irrelevant.
+        if (containsInfer(checkType) || containsInfer(trueType)) return;
 
         // Condition 1: check type is a TSTypeReference
         if (checkType.type !== AST_NODE_TYPES.TSTypeReference) return;
