@@ -124,7 +124,11 @@ function containsTypeParamReference(
   paramName: string,
 ): boolean {
   if (node.type === "TSTypeParameter") {
-    return node.name.name === paramName;
+    if (node.name.name === paramName) return true;
+    return (
+      (node.constraint ? containsTypeParamReference(node.constraint, paramName) : false) ||
+      (node.default ? containsTypeParamReference(node.default, paramName) : false)
+    );
   }
   if (node.type === "TSTypeReference") {
     return checkTypeReference(node, paramName);
