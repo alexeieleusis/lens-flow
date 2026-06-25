@@ -3,7 +3,7 @@ import { ESLintUtils, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC16-nullability.md");
+const KNOWLEDGE_URL = knowledgeUrl("usecases/UC16-nullability.md");
 
 function hasNullableMember(
   typeAnnotation: TSESTree.TypeNode,
@@ -121,7 +121,7 @@ export default createRule({
         context.report({
           node,
           messageId: "redundantNullReturnType",
-          data: { url: URL },
+          data: { url: KNOWLEDGE_URL },
         });
       }
     }
