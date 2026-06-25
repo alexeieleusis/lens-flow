@@ -31,6 +31,36 @@ function isReadonlyTypeAnnotation(node: TSESTree.TypeNode): boolean {
   return false;
 }
 
+function getTypeAnnotationFromDef(
+  def: TSESLint.Scope.Definition,
+): TSESTree.TypeNode | null {
+  switch (def.type) {
+    case "Variable": {
+      const id = (def.node as TSESTree.VariableDeclarator).id;
+      if (id.type === "Identifier" && id.typeAnnotation) {
+        return id.typeAnnotation.typeAnnotation;
+      }
+      return null;
+    }
+    case "Parameter": {
+      const param = def.node as unknown as TSESTree.Parameter;
+      if (param.type === "Identifier" && param.typeAnnotation) {
+        return param.typeAnnotation.typeAnnotation;
+      }
+      if (
+        param.type === "AssignmentPattern" &&
+        param.left.type === "Identifier" &&
+        param.left.typeAnnotation
+      ) {
+        return param.left.typeAnnotation.typeAnnotation;
+      }
+      return null;
+    }
+    default:
+      return null;
+  }
+}
+
 export default createRule({
   name: "no-spread-readonly-workaround",
   meta: {
@@ -67,12 +97,8 @@ export default createRule({
               if (!variable) continue;
 
               const isReadonly = variable.defs.some((def) => {
-                if (def.type !== "Variable") return false;
-                const declarator = def.node;
-                const id = declarator.id;
-                if (id.type !== "Identifier") return false;
-                if (!id.typeAnnotation) return false;
-                return isReadonlyTypeAnnotation(id.typeAnnotation.typeAnnotation);
+                const typeAnn = getTypeAnnotationFromDef(def);
+                return typeAnn != null && isReadonlyTypeAnnotation(typeAnn);
               });
 
               if (isReadonly) {
@@ -103,15 +129,10 @@ export default createRule({
               if (!variable) continue;
 
               const isReadonly = variable.defs.some((def) => {
-                if (def.type !== "Variable") return false;
-                const declarator = def.node;
-                const id = declarator.id;
-                if (id.type !== "Identifier" || !id.typeAnnotation) return false;
-                const typeAnnNode = id.typeAnnotation.typeAnnotation;
+                const typeAnn = getTypeAnnotationFromDef(def);
+                if (typeAnn?.type !== "TSTypeLiteral") return false;
 
-                if (typeAnnNode.type !== "TSTypeLiteral") return false;
-
-                const member = typeAnnNode.members.find((m) => {
+                const member = typeAnn.members.find((m) => {
                   if (m.type !== "TSPropertySignature") return false;
                   const key = m.key;
 
