@@ -122,6 +122,16 @@ export default createRule({
         for (const stmt of node.consequent.body) {
           checkAndWalk(stmt, node.test);
         }
+
+        if (node.alternate) {
+          if (node.alternate.type === "BlockStatement") {
+            for (const stmt of node.alternate.body) {
+              checkAndWalk(stmt, node.test);
+            }
+          } else {
+            checkAndWalk(node.alternate, node.test);
+          }
+        }
       },
     };
   },
