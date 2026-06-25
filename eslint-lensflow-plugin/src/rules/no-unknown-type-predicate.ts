@@ -42,7 +42,7 @@ function visitFunction(
     return;
   }
 
-  const parserServices = ESLintUtils.getParserServices(context);
+  const parserServices = ESLintUtils.getParserServices(context, {});
   const program = parserServices.program;
   if (!program) return;
 
