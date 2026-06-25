@@ -60,7 +60,7 @@ export default createRule({
       },
 
       TSTypeAliasDeclaration(node) {
-        const match = /^(.+?)(\d+)$/.exec(node.id.name);
+        const match = /^(.+?)(\d{2,})$/.exec(node.id.name);
         if (match) {
           typeAliases.push({
             node,
