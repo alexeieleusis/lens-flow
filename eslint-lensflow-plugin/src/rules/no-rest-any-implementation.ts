@@ -2,7 +2,7 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T22-callable-typing.md");
+const RULE_DOCS_URL = knowledgeUrl("catalog/T22-callable-typing.md");
 
 type FnLikeNode =
   | TSESTree.FunctionDeclaration
@@ -118,7 +118,7 @@ export default createRule({
               context.report({
                 node: impl,
                 messageId: "restAnyImplementation",
-                data: { fnName: name, url: URL },
+                data: { fnName: name, url: RULE_DOCS_URL },
               });
             }
           }
