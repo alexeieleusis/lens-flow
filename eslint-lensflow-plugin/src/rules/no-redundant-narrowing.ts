@@ -28,17 +28,47 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"redundantNarrowing", []>) {
+    const nestedBodyKinds = [
+      "consequent",
+      "alternate",
+      "body",
+      "finalizer",
+      "init",
+      "update",
+      "test",
+    ] as const;
+
+    function checkAndWalk(node: TSESTree.Node, outerTest: TSESTree.Node): void {
+      if (node.type === "IfStatement" && testsEqual(context, outerTest, node.test)) {
+        context.report({
+          node,
+          messageId: "redundantNarrowing",
+        });
+      }
+      walkNode(node, outerTest);
+    }
+
+    function walkNode(node: TSESTree.Node, outerTest: TSESTree.Node): void {
+      for (const key of nestedBodyKinds) {
+        const child = (node as any)[key];
+        if (!child) continue;
+
+        if (Array.isArray(child)) {
+          for (const item of child) {
+            checkAndWalk(item, outerTest);
+          }
+        } else {
+          checkAndWalk(child, outerTest);
+        }
+      }
+    }
+
     return {
       IfStatement(node) {
         if (node.consequent.type !== "BlockStatement") return;
 
         for (const stmt of node.consequent.body) {
-          if (stmt.type === "IfStatement" && testsEqual(context, node.test, stmt.test)) {
-            context.report({
-              node: stmt,
-              messageId: "redundantNarrowing",
-            });
-          }
+          checkAndWalk(stmt, node.test);
         }
       },
     };
