@@ -18,9 +18,14 @@ function isPublicProperty(node: TSESTree.PropertyDefinition): boolean {
 }
 
 function isMatchingName(node: TSESTree.PropertyDefinition): string | null {
-  if (node.key.type !== "Identifier") return null;
-  const name = node.key.name;
-  return INTERNAL_NAME_PATTERN.test(name) ? name : null;
+  if (node.key.type === "Identifier") {
+    const name = node.key.name;
+    return INTERNAL_NAME_PATTERN.test(name) ? name : null;
+  }
+  if (node.key.type === "Literal" && typeof node.key.value === "string") {
+    return INTERNAL_NAME_PATTERN.test(node.key.value) ? node.key.value : null;
+  }
+  return null;
 }
 
 function matchesCollectionOrMutableType(typeNode: TSESTree.TypeNode): boolean {
@@ -121,7 +126,11 @@ export default createRule({
         for (const member of flagged) {
           const propDef = member as TSESTree.PropertyDefinition;
           const propName =
-            propDef.key.type === "Identifier" ? propDef.key.name : "?";
+            propDef.key.type === "Identifier"
+              ? propDef.key.name
+              : propDef.key.type === "Literal" && typeof propDef.key.value === "string"
+                ? propDef.key.value
+                : "?";
           context.report({
             node: member,
             messageId: "publicInternalState",
