@@ -36,6 +36,22 @@ function hasMutableStateType(typeAnnotation: any): boolean {
   return false;
 }
 
+function findEnclosingDeclaration(
+  node: any,
+): any {
+  let current = node.parent;
+  while (current) {
+    if (
+      current.type === "TSTypeAliasDeclaration" ||
+      current.type === "TSInterfaceDeclaration"
+    ) {
+      return current;
+    }
+    current = current.parent;
+  }
+  return null;
+}
+
 export default createRule({
   name: "no-public-mutable-state-object",
   meta: {
@@ -99,11 +115,16 @@ export default createRule({
       },
 
       TSTypeLiteral(node) {
+        const enclosing = findEnclosingDeclaration(node);
+        if (!enclosing) return;
+
         checkNode(
           node.members,
-          node.parent as any,
-          "type",
-          "TSTypeAliasDeclaration",
+          enclosing,
+          enclosing.type === "TSInterfaceDeclaration"
+            ? "interface"
+            : "type",
+          enclosing.type,
         );
       },
     };
