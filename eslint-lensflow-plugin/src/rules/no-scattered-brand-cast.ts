@@ -91,26 +91,76 @@ function isRedundantCast(node: TSESTree.TSAsExpression): boolean {
   return castName !== null && castName === varName;
 }
 
-function isBrandedTypePattern(typeNode: TSESTree.TypeNode): boolean {
+const KNOWN_BRANDED_CONSTRUCTORS = new Set([
+  "Branded",
+  "Opaque",
+  "Nominal",
+  "BrandedType",
+]);
+
+function isTypeNameBranded(
+  name: string,
+  knownBrandedTypes: ReadonlySet<string>,
+): boolean {
+  if (name.endsWith("Brand")) return true;
+  if (KNOWN_BRANDED_CONSTRUCTORS.has(name)) return true;
+  if (knownBrandedTypes.has(name)) return true;
+  return false;
+}
+
+function getTypeIdentifier(
+  typeNameNode: TSESTree.TypeNode["typeName"],
+): string | null {
+  if (typeNameNode.type === "Identifier") return typeNameNode.name;
+  if (
+    typeNameNode.type === "TSQualifiedName" &&
+    typeNameNode.right.type === "Identifier"
+  )
+    return typeNameNode.right.name;
+  return null;
+}
+
+function hasBrandProperty(typeNode: TSESTree.TypeNode): boolean {
+  if (typeNode.type !== "TSTypeLiteral") return false;
+  for (const member of typeNode.members) {
+    if (member.type !== "TSPropertySignature") continue;
+    const key = member.key;
+    if (key.type === "Identifier") {
+      const name = key.name;
+      if (name === "_brand" || name === "__brand" || name.endsWith("Brand")) {
+        return true;
+      }
+    }
+    if (key.type === "Literal" && typeof key.value === "string") {
+      const name = key.value;
+      if (name === "_brand" || name === "__brand" || name.endsWith("Brand")) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function isBrandedTypePattern(
+  typeNode: TSESTree.TypeNode,
+  knownBrandedTypes: ReadonlySet<string> = new Set(),
+): boolean {
   if (typeNode.type === "TSIntersectionType") {
-    return typeNode.types.length >= 2;
+    return typeNode.types.some((member) => {
+      if (hasBrandProperty(member)) return true;
+      if (member.type === "TSTypeReference") {
+        const name = getTypeIdentifier(member.typeName);
+        if (name !== null && isTypeNameBranded(name, knownBrandedTypes)) {
+          return true;
+        }
+      }
+      return false;
+    });
   }
 
   if (typeNode.type === "TSTypeReference") {
-    const typeNameNode = typeNode.typeName;
-    if (
-      typeNode.typeArguments !== undefined &&
-      typeNode.typeArguments.params.length >= 2
-    ) {
-      return true;
-    }
-    if (typeNameNode.type === "Identifier") {
-      return true;
-    }
-    if (
-      typeNameNode.type === "TSQualifiedName" &&
-      typeNameNode.right.type === "Identifier"
-    ) {
+    const name = getTypeIdentifier(typeNode.typeName);
+    if (name !== null && isTypeNameBranded(name, knownBrandedTypes)) {
       return true;
     }
   }
@@ -135,10 +185,16 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"scatteredBrandCast", []>) {
+    const knownBrandedTypes = new Set<string>();
     return {
+      TSTypeAliasDeclaration(node) {
+        if (isBrandedTypePattern(node.typeAnnotation, knownBrandedTypes)) {
+          knownBrandedTypes.add(node.id.name);
+        }
+      },
       TSAsExpression(node) {
         const castType = node.typeAnnotation;
-        if (!isBrandedTypePattern(castType)) return;
+        if (!isBrandedTypePattern(castType, knownBrandedTypes)) return;
         if (isRedundantCast(node)) return;
 
         const brandedTypeName = getCastTypeName(castType);
