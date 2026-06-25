@@ -153,6 +153,15 @@ export default createRule({
       FunctionDeclaration: checkFunctionNode,
       FunctionExpression: checkFunctionNode,
       ArrowFunctionExpression: checkFunctionNode,
+      MethodDefinition(node: TSESTree.MethodDefinition) {
+        const value = node.value;
+        if (
+          value.type === "FunctionExpression" ||
+          value.type === "ArrowFunctionExpression"
+        ) {
+          checkFunctionNode(value);
+        }
+      },
     };
   },
 });
