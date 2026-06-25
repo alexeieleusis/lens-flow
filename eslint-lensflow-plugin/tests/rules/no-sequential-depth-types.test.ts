@@ -22,12 +22,19 @@ type Level3 = { id: string };`,
 type Alpha2 = { id: string };
 type Beta1 = { id: string; children?: Beta2[] };
 type Beta2 = { id: string };`,
-    // Non-array reference - not a depth chain
-    `type Level1 = { id: string; next?: Level2 };
-type Level2 = { id: string; next?: Level3 };
-type Level3 = { id: string };`,
   ],
   invalid: [
+    // Non-array reference is also a depth chain
+    {
+      code: `type Level1 = { id: string; next?: Level2 };
+type Level2 = { id: string; next?: Level3 };
+type Level3 = { id: string };`,
+      errors: [
+        { messageId: "sequentialDepthType" },
+        { messageId: "sequentialDepthType" },
+        { messageId: "sequentialDepthType" },
+      ],
+    },
     // The canonical antipattern from the spec
     {
       code: `type Level1 = { id: string; children?: Level2[] };

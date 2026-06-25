@@ -60,7 +60,7 @@ export default createRule({
       },
 
       TSTypeAliasDeclaration(node) {
-        const match = /^(.+?)(\d{2,})$/.exec(node.id.name);
+        const match = /^(.+?)(\d+)$/.exec(node.id.name);
         if (match) {
           typeAliases.push({
             node,
@@ -111,18 +111,52 @@ function getNextRef(node: TSESTree.TSTypeAliasDeclaration): string | null {
   for (const member of typeAnn.members) {
     if (member.type !== "TSPropertySignature") continue;
     const typeAnnotation = member.typeAnnotation?.typeAnnotation;
-    if (typeAnnotation?.type !== "TSArrayType") continue;
-    const elem = typeAnnotation.elementType;
-    if (elem.type === "TSTypeReference") {
-      const typeName = getRefName(elem.typeName);
+    if (!typeAnnotation) continue;
+
+    const refs = extractTypeRefs(typeAnnotation);
+    for (const ref of refs) {
+      const typeName = getRefName(ref.typeName);
       if (typeName) return typeName;
     }
   }
   return null;
 }
 
+function extractTypeRefs(type: TSESTree.TypeNode): TSESTree.TSTypeReference[] {
+  const results: TSESTree.TSTypeReference[] = [];
+
+  switch (type.type) {
+    case "TSTypeReference":
+      results.push(type);
+      break;
+    case "TSArrayType":
+      results.push(...extractTypeRefs(type.elementType));
+      break;
+    case "TSUnionType":
+      for (const unionType of type.types) {
+        results.push(...extractTypeRefs(unionType));
+      }
+      break;
+    case "TSIntersectionType":
+      for (const intersectType of type.types) {
+        results.push(...extractTypeRefs(intersectType));
+      }
+      break;
+    case "TSTypeOperator":
+      if (type.typeAnnotation) {
+        results.push(...extractTypeRefs(type.typeAnnotation));
+      }
+      break;
+  }
+
+  return results;
+}
+
 function getRefName(typeName: TSESTree.EntityName): string | null {
-  if (typeName.type === "Identifier") return typeName.name;
+  if (typeName.type === "Identifier") {
+    if (BUILTIN_TYPES.has(typeName.name)) return null;
+    return typeName.name;
+  }
   if (typeName.type === "TSQualifiedName") {
     const left = getRefName(typeName.left);
     const right = getRefName(typeName.right);
@@ -130,3 +164,18 @@ function getRefName(typeName: TSESTree.EntityName): string | null {
   }
   return null;
 }
+
+const BUILTIN_TYPES = new Set([
+  "string",
+  "number",
+  "boolean",
+  "bigint",
+  "symbol",
+  "null",
+  "undefined",
+  "void",
+  "never",
+  "any",
+  "unknown",
+  "object",
+]);
