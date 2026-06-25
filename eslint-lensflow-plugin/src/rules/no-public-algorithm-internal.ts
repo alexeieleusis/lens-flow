@@ -23,21 +23,44 @@ function isMatchingName(node: TSESTree.PropertyDefinition): string | null {
   return INTERNAL_NAME_PATTERN.test(name) ? name : null;
 }
 
-function isMatchingType(node: TSESTree.PropertyDefinition): boolean {
-  const ta = node.typeAnnotation?.typeAnnotation;
-  if (!ta) return false;
+function matchesCollectionOrMutableType(typeNode: TSESTree.TypeNode): boolean {
+  if (typeNode.type === "TSArrayType") return true;
+  if (typeNode.type === "TSTypeLiteral") return true;
 
-  if (ta.type === "TSArrayType") return true;
-  if (ta.type === "TSTypeLiteral") return true;
-
-  if (ta.type === "TSTypeReference") {
-    const typeName = ta.typeName;
+  if (typeNode.type === "TSTypeReference") {
+    const typeName = typeNode.typeName;
     if (typeName.type === "Identifier") {
       return COLLECTION_TYPES.has(typeName.name);
     }
     if (typeName.type === "TSQualifiedName") {
       return COLLECTION_TYPES.has(typeName.right.name);
     }
+  }
+
+  return false;
+}
+
+function isMatchingType(node: TSESTree.PropertyDefinition): boolean {
+  const ta = node.typeAnnotation?.typeAnnotation;
+  if (!ta) return false;
+
+  return unwrapAndCheckType(ta);
+}
+
+function unwrapAndCheckType(typeNode: TSESTree.TypeNode): boolean {
+  if (matchesCollectionOrMutableType(typeNode)) return true;
+
+  // TSParenthesizedType exists at runtime but isn't in @typescript-eslint's TypeNode union.
+  if ((typeNode as any).type === "TSParenthesizedType") {
+    return unwrapAndCheckType((typeNode as any).typeAnnotation as TSESTree.TypeNode);
+  }
+
+  if (typeNode.type === "TSUnionType") {
+    return typeNode.types.some((member) => unwrapAndCheckType(member));
+  }
+
+  if (typeNode.type === "TSIntersectionType") {
+    return typeNode.types.some((member) => unwrapAndCheckType(member));
   }
 
   return false;
