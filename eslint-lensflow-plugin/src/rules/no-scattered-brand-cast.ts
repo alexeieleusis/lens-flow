@@ -42,25 +42,23 @@ function isSmartConstructor(
 }
 
 function findEnclosingFunction(
+  context: TSESLint.RuleContext<string, unknown[]>,
   node: TSESTree.Node,
 ):
   | TSESTree.FunctionDeclaration
   | TSESTree.ArrowFunctionExpression
   | TSESTree.FunctionExpression
   | null {
-  let current: TSESTree.Node | undefined = node;
-  while (current) {
+  const ancestors = context.sourceCode.getAncestors(node);
+  for (let i = ancestors.length - 1; i >= 0; i--) {
+    const current = ancestors[i];
     if (
       current.type === "FunctionDeclaration" ||
       current.type === "ArrowFunctionExpression" ||
       current.type === "FunctionExpression"
     ) {
-      return current as
-        | TSESTree.FunctionDeclaration
-        | TSESTree.ArrowFunctionExpression
-        | TSESTree.FunctionExpression;
+      return current;
     }
-    current = current.parent;
   }
   return null;
 }
@@ -198,7 +196,7 @@ export default createRule({
         if (isRedundantCast(node)) return;
 
         const brandedTypeName = getCastTypeName(castType);
-        const enclosingFn = findEnclosingFunction(node);
+        const enclosingFn = findEnclosingFunction(context, node);
 
         if (!enclosingFn) {
           context.report({
