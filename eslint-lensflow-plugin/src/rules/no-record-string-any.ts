@@ -1,5 +1,55 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+function isRecordAny(node: TSESTree.TSTypeReference): boolean {
+  const typeName = node.typeName;
+  let name: string | null = null;
+  if (typeName.type === "Identifier") {
+    name = typeName.name;
+  } else if (typeName.type === "TSQualifiedName") {
+    name = typeName.right.name;
+  }
+  if (name !== "Record") return false;
+
+  const params = node.typeArguments?.params;
+  return !!(params && params.length === 2 && params[1].type === "TSAnyKeyword");
+}
+
+function reportRecordAny(
+  context: TSESLint.RuleContext<"recordAny", []>,
+  node: TSESTree.Node,
+): void {
+  context.report({
+    node,
+    messageId: "recordAny",
+  });
+}
+
+function recurseIntoType(
+  context: TSESLint.RuleContext<"recordAny", []>,
+  typeNode: TSESTree.TypeNode,
+): void {
+  if (typeNode.type === "TSUnionType" || typeNode.type === "TSIntersectionType") {
+    for (const t of typeNode.types) recurseIntoType(context, t);
+  } else if (typeNode.type === "TSTypeReference") {
+    const tn = typeNode;
+    if (isRecordAny(tn)) {
+      reportRecordAny(context, tn);
+    }
+    if (tn.typeArguments) {
+      for (const p of tn.typeArguments.params) {
+        recurseIntoType(context, p);
+      }
+    }
+  } else if (typeNode.type === "TSTypeOperator") {
+    if (typeNode.typeAnnotation) {
+      recurseIntoType(context, typeNode.typeAnnotation);
+    }
+  } else if ((typeNode as any).type === "TSParenthesizedType") {
+    const inner = (typeNode as any).typeAnnotation;
+    if (inner) recurseIntoType(context, inner);
+  }
+}
 
 export default createRule({
   name: "no-record-string-any",
@@ -20,26 +70,13 @@ export default createRule({
   create(context: TSESLint.RuleContext<"recordAny", []>) {
     return {
       TSTypeReference(node) {
-        const typeName = node.typeName;
-        let name: string | null = null;
-        if (typeName.type === "Identifier") {
-          name = typeName.name;
-        } else if (typeName.type === "TSQualifiedName") {
-          name = typeName.right.name;
+        if (isRecordAny(node)) {
+          reportRecordAny(context, node);
         }
-        if (!name) return;
-
-        if (name !== "Record") return;
-
-        const params = node.typeArguments?.params;
-        if (
-          params?.length === 2 &&
-          params[1].type === "TSAnyKeyword"
-        ) {
-          context.report({
-            node,
-            messageId: "recordAny",
-          });
+        if (node.typeArguments) {
+          for (const param of node.typeArguments.params) {
+            recurseIntoType(context, param);
+          }
         }
       },
     };
