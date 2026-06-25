@@ -1,5 +1,5 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 const KNOWLEDGE_URL =
   "https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T26-refinement-types.md";
@@ -13,7 +13,7 @@ const PRIMITIVE_KEYWORDS = new Set([
 
 const NULLISH_KEYWORDS = new Set(["TSNullKeyword", "TSUndefinedKeyword"]);
 
-function getNullableTypeSignature(typeAnn: any): string | null {
+function getNullableTypeSignature(typeAnn: TSESTree.TypeNode): string | null {
   if (typeAnn.type !== "TSUnionType") return null;
 
   let hasNullish = false;
@@ -35,7 +35,7 @@ function getNullableTypeSignature(typeAnn: any): string | null {
   return "other-nullable";
 }
 
-function referencesParam(expr: any, paramName: string): boolean {
+function referencesParam(expr: TSESTree.Expression | TSESTree.PrivateIdentifier | null | undefined, paramName: string): boolean {
   if (!expr) return false;
   if (expr.type === "Identifier") return expr.name === paramName;
   if (expr.type === "MemberExpression")
@@ -48,20 +48,20 @@ function referencesParam(expr: any, paramName: string): boolean {
   return false;
 }
 
-function normalizeGuardPattern(test: any, paramName: string): string | null {
+function normalizeGuardPattern(test: TSESTree.Expression, paramName: string): string | null {
   if (!referencesParam(test, paramName)) return null;
 
   const parts: string[] = [];
-  const visited = new Set<any>();
+  const visited = new Set<TSESTree.Node>();
 
-  function isNegatedParamIdentifier(node: any): boolean {
+  function isNegatedParamIdentifier(node: TSESTree.UnaryExpression): boolean {
     return (
       node.argument.type === "Identifier" &&
       node.argument.name === paramName
     );
   }
 
-  function isParamMemberExpression(node: any): boolean {
+  function isParamMemberExpression(node: TSESTree.MemberExpression): boolean {
     return (
       node.object.type === "Identifier" &&
       node.object.name === paramName &&
@@ -69,7 +69,7 @@ function normalizeGuardPattern(test: any, paramName: string): string | null {
     );
   }
 
-  function walk(node: any) {
+  function walk(node: TSESTree.Node) {
     if (!node || visited.has(node)) return;
     visited.add(node);
 
@@ -99,12 +99,17 @@ function normalizeGuardPattern(test: any, paramName: string): string | null {
   return parts.length > 0 ? parts.join("+") : null;
 }
 
-function findGuardInBody(body: any, paramName: string): string | null {
+function findGuardInBody(body: TSESTree.BlockStatement, paramName: string): string | null {
   if (!body?.body) return null;
 
   const NESTING_LIMIT = 10;
 
-  function walkStatements(stmts: any[], depth: number): string | null {
+  function extractStatements(node: TSESTree.Statement): TSESTree.Statement[] {
+    if (node.type === "BlockStatement") return node.body;
+    return [node];
+  }
+
+  function walkStatements(stmts: TSESTree.Statement[], depth: number): string | null {
     if (depth > NESTING_LIMIT) return null;
 
     for (const stmt of stmts.slice(0, 10)) {
@@ -112,46 +117,31 @@ function findGuardInBody(body: any, paramName: string): string | null {
         const pattern = normalizeGuardPattern(stmt.test, paramName);
         if (pattern) return pattern;
         if (stmt.consequent) {
-          const nested = walkStatements(
-            Array.isArray(stmt.consequent.body) ? stmt.consequent.body : [stmt.consequent],
-            depth + 1,
-          );
+          const nested = walkStatements(extractStatements(stmt.consequent), depth + 1);
           if (nested) return nested;
         }
         if (stmt.alternate) {
-          const nested = walkStatements(
-            Array.isArray(stmt.alternate.body) ? stmt.alternate.body : [stmt.alternate],
-            depth + 1,
-          );
+          const nested = walkStatements(extractStatements(stmt.alternate), depth + 1);
           if (nested) return nested;
         }
       }
 
       if (stmt.type === "ForStatement" || stmt.type === "ForInStatement" || stmt.type === "ForOfStatement") {
         if (stmt.body) {
-          const nested = walkStatements(
-            Array.isArray(stmt.body.body) ? stmt.body.body : [stmt.body],
-            depth + 1,
-          );
+          const nested = walkStatements(extractStatements(stmt.body), depth + 1);
           if (nested) return nested;
         }
       }
 
       if (stmt.type === "WhileStatement" || stmt.type === "DoWhileStatement") {
         if (stmt.body) {
-          const nested = walkStatements(
-            Array.isArray(stmt.body.body) ? stmt.body.body : [stmt.body],
-            depth + 1,
-          );
+          const nested = walkStatements(extractStatements(stmt.body), depth + 1);
           if (nested) return nested;
         }
       }
 
       if (stmt.type === "WithStatement") {
-        const nested = walkStatements(
-          Array.isArray(stmt.body.body) ? stmt.body.body : [stmt.body],
-          depth + 1,
-        );
+        const nested = walkStatements(extractStatements(stmt.body), depth + 1);
         if (nested) return nested;
       }
 
@@ -160,24 +150,18 @@ function findGuardInBody(body: any, paramName: string): string | null {
           const nested = walkStatements(stmt.block.body, depth + 1);
           if (nested) return nested;
         }
-        if (stmt.handler?.handler?.body?.body) {
-          const nested = walkStatements(stmt.handler.handler.body.body, depth + 1);
+        if (stmt.handler?.body?.body) {
+          const nested = walkStatements(stmt.handler.body.body, depth + 1);
           if (nested) return nested;
         }
         if (stmt.finalizer?.body) {
-          const nested = walkStatements(
-            Array.isArray(stmt.finalizer.body) ? stmt.finalizer.body : [stmt.finalizer],
-            depth + 1,
-          );
+          const nested = walkStatements(stmt.finalizer.body, depth + 1);
           if (nested) return nested;
         }
       }
 
       if (stmt.type === "LabeledStatement" && stmt.body) {
-        const nested = walkStatements(
-          Array.isArray(stmt.body.body) ? stmt.body.body : [stmt.body],
-          depth + 1,
-        );
+        const nested = walkStatements(extractStatements(stmt.body), depth + 1);
         if (nested) return nested;
       }
 
@@ -194,12 +178,11 @@ function findGuardInBody(body: any, paramName: string): string | null {
     return null;
   }
 
-  const statements = Array.isArray(body.body) ? body.body : [body.body];
-  return walkStatements(statements, 0);
+  return walkStatements(body.body, 0);
 }
 
 interface FuncInfo {
-  paramNode: any;
+  paramNode: TSESTree.Identifier;
   paramName: string;
   typeSig: string;
   guardPattern: string;
@@ -225,16 +208,15 @@ export default createRule({
   create(context: TSESLint.RuleContext<"redundantGuard", []>) {
     const functions: FuncInfo[] = [];
 
-    function visitFunction(node: any) {
+    function visitFunction(node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression) {
       if (!node.params || !node.body) return;
+      if (node.body.type !== "BlockStatement") return;
 
       for (const param of node.params) {
-        // param is an Identifier node: param.name is the string, param.typeAnnotation is TSTypeAnnotation
-        const paramName = typeof param.name === "string" ? param.name : null;
-        if (!paramName) continue;
-
+        if (param.type !== "Identifier") continue;
         if (!param.typeAnnotation) continue;
 
+        const paramName = param.name;
         const typeAnn = param.typeAnnotation.typeAnnotation;
         const typeSig = getNullableTypeSignature(typeAnn);
         if (!typeSig) continue;
