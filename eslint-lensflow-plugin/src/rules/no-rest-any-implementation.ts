@@ -16,6 +16,27 @@ function getFnName(node: FnLikeNode): string | null {
   return node.id?.type === "Identifier" ? node.id.name : null;
 }
 
+function isAnyArrayType(node: TSESTree.TypeNode): boolean {
+  if (node.type === "TSArrayType") {
+    return node.elementType.type === "TSAnyKeyword";
+  }
+
+  if (node.type === "TSTypeReference") {
+    const typeName = node.typeName;
+    if (
+      typeName.type === "Identifier" &&
+      (typeName.name === "Array" || typeName.name === "ReadonlyArray") &&
+      node.typeArguments &&
+      node.typeArguments.params.length > 0 &&
+      node.typeArguments.params[0].type === "TSAnyKeyword"
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function hasRestAnyParameter(params: TSESTree.Parameter[]): boolean {
   if (params.length === 0) return false;
 
@@ -26,7 +47,11 @@ function hasRestAnyParameter(params: TSESTree.Parameter[]): boolean {
   if (!typeAnn) return false;
 
   if (typeAnn.type === "TSArrayType") {
-    return typeAnn.elementType.type === "TSAnyKeyword";
+    return isAnyArrayType(typeAnn);
+  }
+
+  if (typeAnn.type === "TSTypeReference") {
+    return isAnyArrayType(typeAnn);
   }
 
   if (typeAnn.type === "TSTupleType") {
@@ -55,11 +80,11 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow using `...args: any[]` as the implementation signature for an overloaded function, which erases all type safety from the declared overloads.",
+        "Disallow using `...args: any[]`, `Array<any>`, or `ReadonlyArray<any>` as the implementation signature for an overloaded function, which erases all type safety from the declared overloads.",
     },
     messages: {
       restAnyImplementation:
-        "Overloaded function `{{fnName}}` uses `...args: any[]` as its implementation rest parameter, erasing all type safety from the declared overloads. Use a typed rest parameter that matches the overload union. See: {{url}}",
+        "Overloaded function `{{fnName}}` uses `...args: any[]` (or equivalent `Array<any>` / `ReadonlyArray<any>`) as its implementation rest parameter, erasing all type safety from the declared overloads. Use a typed rest parameter that matches the overload union. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
