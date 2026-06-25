@@ -1,5 +1,6 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { walk } from "../utils/ast-helpers.js";
 
 interface FunctionInfo {
   node:
@@ -11,128 +12,92 @@ interface FunctionInfo {
   guards: Set<string>;
 }
 
+function extractBinaryGuard(
+  node: TSESTree.BinaryExpression,
+  params: string[],
+  guards: Set<string>,
+) {
+  if (!["<", ">", "<=", ">="].includes(node.operator)) return;
+
+  let paramName: string | null = null;
+  let literalValue: string | null = null;
+
+  if (
+    node.left.type === "Identifier" &&
+    params.includes(node.left.name)
+  ) {
+    paramName = node.left.name;
+    if (
+      node.right.type === "Literal" &&
+      typeof node.right.value === "number"
+    ) {
+      literalValue = String(node.right.value);
+    }
+  }
+
+  if (
+    node.right.type === "Identifier" &&
+    params.includes(node.right.name)
+  ) {
+    paramName = node.right.name;
+    if (
+      node.left.type === "Literal" &&
+      typeof node.left.value === "number"
+    ) {
+      literalValue = String(node.left.value);
+    }
+  }
+
+  if (paramName && literalValue) {
+    guards.add(`${paramName} ${node.operator} ${literalValue}`);
+  }
+}
+
+function extractCallGuard(
+  node: TSESTree.CallExpression,
+  params: string[],
+  guards: Set<string>,
+) {
+  let calleeName: string | null = null;
+  if (node.callee.type === "Identifier") {
+    calleeName = node.callee.name;
+  } else if (
+    node.callee.type === "MemberExpression" &&
+    node.callee.property.type === "Identifier"
+  ) {
+    calleeName = node.callee.property.name;
+  }
+
+  if (!calleeName || !/^(isValid|validate|check)/i.test(calleeName)) return;
+
+  const argParams = node.arguments
+    .filter(
+      (arg): arg is TSESTree.Identifier =>
+        arg.type === "Identifier" && params.includes(arg.name),
+    )
+    .map((arg) => arg.name);
+
+  if (argParams.length > 0) {
+    guards.add(`${calleeName}(${argParams.join(",")})`);
+  }
+}
+
 function extractGuards(
   body: TSESTree.BlockStatement,
   paramNames: string[],
 ): Set<string> {
   const guards = new Set<string>();
-  const seen = new WeakSet<TSESTree.Node>();
 
-  function isASTNode(val: unknown): val is TSESTree.Node {
-    return (
-      val !== null &&
-      typeof val === "object" &&
-      "type" in val &&
-      typeof (val as unknown as Record<string, unknown>).type === "string"
-    );
-  }
-
-  function extractBinaryGuard(
-    node: TSESTree.BinaryExpression,
-    params: string[],
-  ) {
-    if (!["<", ">", "<=", ">="].includes(node.operator)) return;
-
-    let paramName: string | null = null;
-    let literalValue: string | null = null;
-
-    if (
-      node.left.type === "Identifier" &&
-      params.includes(node.left.name)
-    ) {
-      paramName = node.left.name;
-      if (
-        node.right.type === "Literal" &&
-        typeof node.right.value === "number"
-      ) {
-        literalValue = String(node.right.value);
-      }
-    }
-
-    if (
-      node.right.type === "Identifier" &&
-      params.includes(node.right.name)
-    ) {
-      paramName = node.right.name;
-      if (
-        node.left.type === "Literal" &&
-        typeof node.left.value === "number"
-      ) {
-        literalValue = String(node.left.value);
-      }
-    }
-
-    if (paramName && literalValue) {
-      guards.add(`${paramName} ${node.operator} ${literalValue}`);
-    }
-  }
-
-  function extractCallGuard(node: TSESTree.CallExpression, params: string[]) {
-    let calleeName: string | null = null;
-    if (node.callee.type === "Identifier") {
-      calleeName = node.callee.name;
-    } else if (
-      node.callee.type === "MemberExpression" &&
-      node.callee.property.type === "Identifier"
-    ) {
-      calleeName = node.callee.property.name;
-    }
-
-    if (!calleeName || !/^(isValid|validate|check)/i.test(calleeName)) return;
-
-    const argParams = node.arguments
-      .filter(
-        (arg): arg is TSESTree.Identifier =>
-          arg.type === "Identifier" && params.includes(arg.name),
-      )
-      .map((arg) => arg.name);
-
-    if (argParams.length > 0) {
-      guards.add(`${calleeName}(${argParams.join(",")})`);
-    }
-  }
-
-  function walkChildren(node: TSESTree.Node) {
-    for (const key of Object.keys(node)) {
-      if (key === "parent") continue;
-      const child = (node as unknown as Record<string, unknown>)[key];
-      if (Array.isArray(child)) {
-        for (const item of child) {
-          if (isASTNode(item)) {
-            walk(item);
-          }
-        }
-      } else if (isASTNode(child)) {
-        walk(child);
-      }
-    }
-  }
-
-  function walk(node: TSESTree.Node) {
-    if (seen.has(node)) return;
-    seen.add(node);
-
-    // Stop at function boundaries — ESLint visits nested functions separately
-    if (
-      node.type === "FunctionDeclaration" ||
-      node.type === "FunctionExpression" ||
-      node.type === "ArrowFunctionExpression"
-    ) {
-      return;
-    }
-
+  walk(body, (node) => {
     if (node.type === "BinaryExpression") {
-      extractBinaryGuard(node, paramNames);
+      extractBinaryGuard(node, paramNames, guards);
     }
 
     if (node.type === "CallExpression") {
-      extractCallGuard(node, paramNames);
+      extractCallGuard(node, paramNames, guards);
     }
+  }, { stopAtFunctionBoundaries: true });
 
-    walkChildren(node);
-  }
-
-  walk(body);
   return guards;
 }
 
