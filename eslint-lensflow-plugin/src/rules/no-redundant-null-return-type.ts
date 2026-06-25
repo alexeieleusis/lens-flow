@@ -21,6 +21,16 @@ function hasNullableMember(
   return false;
 }
 
+function hasNullableConstituent(type: ts.Type): boolean {
+  const flag = ts.TypeFlags.Null | ts.TypeFlags.Undefined;
+  if (type.isUnion()) {
+    for (const t of type.types) {
+      if ((t.flags & flag) !== 0) return true;
+    }
+  }
+  return (type.flags & flag) !== 0;
+}
+
 function collectReturnStatements(body: TSESTree.Node): TSESTree.ReturnStatement[] {
   const returns: TSESTree.ReturnStatement[] = [];
   walk(body, (node) => {
@@ -69,12 +79,8 @@ export default createRule({
       if (node.body?.type !== "BlockStatement") {
         const tsNode = parserServices.esTreeNodeToTSNodeMap.get(node.body);
         const bodyType = checker.getTypeAtLocation(tsNode);
-        const bodyConstituents = (bodyType as ts.UnionType).types || [bodyType];
 
-        const bodyIsNullable = bodyConstituents.some((t) => {
-          const typeName = checker.typeToString(t);
-          return typeName === "null" || typeName === "undefined";
-        });
+        const bodyIsNullable = hasNullableConstituent(bodyType);
 
         if (!bodyIsNullable) {
           context.report({
@@ -105,14 +111,7 @@ export default createRule({
         if (!tsExpr) return false;
 
         const returnType = checker.getTypeAtLocation(tsExpr);
-        const constituents = (returnType as ts.UnionType).types || [returnType];
-
-        const isNullable = constituents.some((t) => {
-          const typeName = checker.typeToString(t);
-          return typeName === "null" || typeName === "undefined";
-        });
-
-        return !isNullable;
+        return !hasNullableConstituent(returnType);
       });
 
       if (allReturnsNonNullable) {
