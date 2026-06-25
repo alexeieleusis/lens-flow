@@ -162,6 +162,17 @@ export default createRule({
       return false;
     }
 
+    function getBaseIdentifier(node: TSESTree.MemberExpression): TSESTree.Identifier | null {
+      let current: TSESTree.Expression = node;
+      while (current.type === "MemberExpression") {
+        current = (current as TSESTree.MemberExpression).object;
+      }
+      if (current.type === "Identifier") {
+        return current as TSESTree.Identifier;
+      }
+      return null;
+    }
+
     function enterFn(node: unknown) {
       const n = node as {
         id?: { name: string };
@@ -206,7 +217,12 @@ export default createRule({
           return;
         }
 
-        const obj = mn.object;
+        let obj = mn.object as TSESTree.Expression;
+
+        // Unwrap ChainExpression (optional chaining) to reach the inner expression
+        if (obj.type === "ChainExpression") {
+          obj = (obj as TSESTree.ChainExpression).expression;
+        }
 
         if (obj.type === "Identifier" && obj.name) {
           if (isGenericParam(obj.name)) {
@@ -223,8 +239,12 @@ export default createRule({
         }
 
         if (obj.type === "CallExpression") {
-          const callObj = obj as { callee?: TSESTree.Identifier };
-          const callee = callObj.callee;
+          const callObj = obj as TSESTree.CallExpression;
+          let callee = callObj.callee;
+          // Unwrap ChainExpression around the callee
+          if (callee.type === "ChainExpression") {
+            callee = (callee as TSESTree.ChainExpression).expression;
+          }
           if (callee?.type === "Identifier" && isGenericFn(callee as TSESTree.Identifier)) {
             context.report({
               node,
@@ -235,6 +255,22 @@ export default createRule({
               },
             });
             return;
+          }
+          // Handle nested MemberExpression callees like factory.create<T>().constructor
+          if (callee?.type === "MemberExpression") {
+            const memCallee = callee as TSESTree.MemberExpression;
+            const baseIdentifier = getBaseIdentifier(memCallee);
+            if (baseIdentifier && isGenericFn(baseIdentifier)) {
+              context.report({
+                node,
+                messageId: "runtimeMetadataOnCall",
+                data: {
+                  property: property.name,
+                  funcName: baseIdentifier.name,
+                },
+              });
+              return;
+            }
           }
         }
       },
