@@ -115,7 +115,7 @@ export default createRule({
 
               if (isReadonly) {
                 context.report({
-                  node: arg,
+                  node: arg.elements[0],
                   messageId: "spreadReadonlyArray",
                   data: { name: spreadId.name },
                 });
@@ -166,7 +166,7 @@ export default createRule({
 
               if (isReadonly) {
                 context.report({
-                  node: arg,
+                  node: arg.elements[0],
                   messageId: "spreadReadonlyArray",
                   data: { name: `${unwrappedObject.name}.${memberName}` },
                 });
