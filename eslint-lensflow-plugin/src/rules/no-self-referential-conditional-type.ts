@@ -50,10 +50,7 @@ function hasSelfReferentialCall(
              !referencesDefaultParam(p, defaultParamNames),
     );
     const hasOnlyInfer = !params.some((p) => referencesOriginalParam(p, typeParamNames));
-    if (hasInferUsage && (hasNonDefaultOriginal || hasOnlyInfer)) {
-      return true;
-    }
-    if (hasNonDefaultOriginal) {
+    if (hasNonDefaultOriginal || (hasInferUsage && hasOnlyInfer)) {
       return true;
     }
   }
