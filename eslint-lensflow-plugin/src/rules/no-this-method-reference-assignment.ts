@@ -140,7 +140,7 @@ export default createRule({
       }
 
       context.report({
-        node,
+        node: member,
         messageId: "methodRefAssignment",
         data: { methodName, varName, url: URL },
       });
