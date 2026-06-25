@@ -14,11 +14,7 @@ function findSelfReferences(
 
     if (n.type === "TSTypeReference") {
       const typeName = n.typeName;
-      if (
-        (typeName.type === "Identifier" && typeName.name === aliasName) ||
-        (typeName.type === "TSQualifiedName" &&
-          typeName.right.name === aliasName)
-      ) {
+      if (typeName.type === "Identifier" && typeName.name === aliasName) {
         results.push(n);
       }
     }
