@@ -38,15 +38,13 @@ function checkDiscriminant(
         : "?";
   }
 
-  let name = "?";
-  const parent = node.parent;
-  if (
-    (parent?.type === "TSInterfaceDeclaration" ||
-      parent?.type === "TSTypeAliasDeclaration") &&
-    parent.id?.type === "Identifier"
-  ) {
-    name = parent.id.name;
-  }
+  const ancestors = context.sourceCode.getAncestors(node);
+  const decl = ancestors.find(
+    (a): a is TSESTree.TSInterfaceDeclaration | TSESTree.TSTypeAliasDeclaration =>
+      (a.type === "TSInterfaceDeclaration" || a.type === "TSTypeAliasDeclaration") &&
+      a.id?.type === "Identifier",
+  );
+  const name = decl ? decl.id.name : "?";
 
   context.report({
     node,
