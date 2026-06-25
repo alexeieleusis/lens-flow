@@ -101,7 +101,11 @@ export default createRule({
             kind,
             props: mutableProps
               .map((m) =>
-                m.key.type === "Identifier" ? m.key.name : "?",
+                m.key.type === "Identifier"
+                  ? m.key.name
+                  : m.key.type === "Literal"
+                    ? String(m.key.value)
+                    : "?",
               )
               .join(", "),
           },
