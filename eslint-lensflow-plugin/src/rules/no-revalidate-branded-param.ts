@@ -1,36 +1,39 @@
 import ts from "typescript";
-import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
+import { ESLintUtils, TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
+import { walk, walkNodes } from "../utils/ast-helpers.js";
 
 const DOCS_URL = knowledgeUrl("catalog/T26-refinement-types.md");
 
-function hasLengthAccess(node: any, paramName: string): boolean {
-  if (!node || typeof node !== "object") return false;
+const CONDITIONAL_TYPES = new Set<string>([
+  "IfStatement",
+  "WhileStatement",
+  "DoWhileStatement",
+  "ConditionalExpression",
+]);
 
-  if (
-    node.type === "MemberExpression" &&
-    node.object.type === "Identifier" &&
-    node.object.name === paramName &&
-    node.property.type === "Identifier" &&
-    node.property.name === "length"
-  ) {
-    return true;
-  }
+type ConditionalNode = Extract<
+  TSESTree.Node,
+  | TSESTree.IfStatement
+  | TSESTree.WhileStatement
+  | TSESTree.DoWhileStatement
+  | TSESTree.ConditionalExpression
+>;
 
-  const keys = Object.keys(node).filter((k) => k !== "parent");
-  for (const key of keys) {
-    const child = node[key];
-    if (Array.isArray(child)) {
-      if (child.some((c) => hasLengthAccess(c, paramName))) return true;
-    } else if (child && typeof child === "object") {
-      if (hasLengthAccess(child, paramName)) return true;
-    }
-  }
-  return false;
+function hasLengthAccess(root: TSESTree.Node, paramName: string): boolean {
+  return walkNodes(root, (node) => {
+    if (node.type !== "MemberExpression") return false;
+    return (
+      node.object.type === "Identifier" &&
+      node.object.name === paramName &&
+      node.property.type === "Identifier" &&
+      node.property.name === "length"
+    );
+  });
 }
 
-function isRegexTestOnParam(node: any, paramName: string): boolean {
+function isRegexTestOnParam(node: TSESTree.Node, paramName: string): boolean {
   return (
     node.type === "CallExpression" &&
     node.callee.type === "MemberExpression" &&
@@ -42,15 +45,9 @@ function isRegexTestOnParam(node: any, paramName: string): boolean {
   );
 }
 
-function isLengthCheckCondition(node: any, paramName: string): boolean {
-  const conditionalTypes = new Set([
-    "IfStatement",
-    "WhileStatement",
-    "DoWhileStatement",
-    "ConditionalExpression",
-  ]);
-  if (!conditionalTypes.has(node.type)) return false;
-  return !!(node.test && hasLengthAccess(node.test, paramName));
+function isLengthCheckCondition(node: TSESTree.Node, paramName: string): boolean {
+  if (!CONDITIONAL_TYPES.has(node.type)) return false;
+  return hasLengthAccess((node as ConditionalNode).test, paramName);
 }
 
 function isBranded(checker: ts.TypeChecker, tsType: ts.Type): boolean {
@@ -77,51 +74,25 @@ function isBranded(checker: ts.TypeChecker, tsType: ts.Type): boolean {
 }
 
 function checkRegexAndLength(
-  root: any,
+  root: TSESTree.Node,
   paramName: string,
-  onReport: (node: any, issue: "regex" | "length") => void,
+  onReport: (node: TSESTree.Node, issue: "regex" | "length") => void,
 ): void {
   let reportedRegex = false;
   let reportedLength = false;
 
-  function walkChildren(node: any): void {
-    const keys = Object.keys(node).filter((k) => k !== "parent");
-    for (const key of keys) {
-      const child = node[key];
-      if (Array.isArray(child)) {
-        for (const item of child) {
-          walk(item);
-        }
-      } else if (child && typeof child === "object") {
-        walk(child);
-      }
-    }
-  }
-
-  function walk(node: any): void {
-    if (!node || typeof node !== "object") return;
+  walk(root, (node) => {
     if (reportedRegex && reportedLength) return;
 
-    if (
-      !reportedRegex &&
-      isRegexTestOnParam(node, paramName)
-    ) {
+    if (!reportedRegex && isRegexTestOnParam(node, paramName)) {
       onReport(node, "regex");
       reportedRegex = true;
     }
-    if (
-      !reportedLength &&
-      isLengthCheckCondition(node, paramName)
-    ) {
-      onReport(node.test, "length");
+    if (!reportedLength && isLengthCheckCondition(node, paramName)) {
+      onReport((node as ConditionalNode).test, "length");
       reportedLength = true;
     }
-    if (reportedRegex && reportedLength) return;
-
-    walkChildren(node);
-  }
-
-  walk(root);
+  });
 }
 
 export default createRule({
@@ -150,11 +121,11 @@ export default createRule({
     const checker = program.getTypeChecker();
     const esTreeNodeToTSNodeMap = parserServices.esTreeNodeToTSNodeMap;
 
-    function checkFunction(funcNode: any): void {
+    function checkFunction(funcNode: TSESTree.FunctionLike): void {
       const body = funcNode.body;
       if (!body) return;
 
-      const brandedParams = new Map<string, any>();
+      const brandedParams = new Map<string, TSESTree.Identifier>();
       for (const param of funcNode.params || []) {
         if (param.type !== "Identifier") continue;
         const tsNode = esTreeNodeToTSNodeMap.get(param);
