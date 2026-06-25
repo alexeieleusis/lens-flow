@@ -32,12 +32,54 @@ function isDuplicateCheckCall(
   return false;
 }
 
+function containsCallExpression(node: TSESTree.Node): TSESTree.CallExpression | null {
+  if (node.type === "CallExpression") return node;
+  if ("expression" in node && node.expression) {
+    return containsCallExpression(node.expression as TSESTree.Node);
+  }
+  if ("left" in node && node.left) {
+    const found = containsCallExpression(node.left as TSESTree.Node);
+    if (found) return found;
+  }
+  if ("right" in node && node.right) {
+    const found = containsCallExpression(node.right as TSESTree.Node);
+    if (found) return found;
+  }
+  if ("test" in node && node.test) {
+    return containsCallExpression(node.test as TSESTree.Node);
+  }
+  if ("consequent" in node && node.consequent) {
+    const consequent = node.consequent as TSESTree.Node;
+    if ("body" in consequent && Array.isArray((consequent as any).body)) {
+      for (const child of (consequent as any).body) {
+        const found = containsCallExpression(child);
+        if (found) return found;
+      }
+    } else {
+      return containsCallExpression(consequent);
+    }
+  }
+  return null;
+}
+
+function hasDuplicateCheckInNode(node: TSESTree.Node): boolean {
+  const call = containsCallExpression(node);
+  if (call) return isDuplicateCheckCall(call.callee);
+  return false;
+}
+
 function analyzeStatement(stmt: TSESTree.Statement): {
   hasPush: boolean;
   hasDuplicateCheck: boolean;
 } {
-  if (stmt.type === "IfStatement" || stmt.type === "ThrowStatement") {
-    return { hasPush: false, hasDuplicateCheck: true };
+  if (stmt.type === "IfStatement") {
+    const checkInCondition = hasDuplicateCheckInNode(stmt.test);
+    const checkInBody = hasDuplicateCheckInNode(stmt.consequent);
+    return { hasPush: false, hasDuplicateCheck: checkInCondition || checkInBody };
+  }
+
+  if (stmt.type === "ThrowStatement") {
+    return { hasPush: false, hasDuplicateCheck: false };
   }
 
   if (
