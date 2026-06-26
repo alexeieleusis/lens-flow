@@ -40,10 +40,7 @@ export default createRule({
 
     return {
       TSInterfaceBody(node) {
-        const parent = node.parent;
-        if (parent?.type === "TSInterfaceDeclaration") {
-          checkSingleIndexSignature(node.body, parent);
-        }
+        checkSingleIndexSignature(node.body, node.parent);
       },
 
       TSTypeLiteral(node) {
