@@ -1,5 +1,6 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { walk } from "../utils/ast-helpers.js";
 
 const ACCESSOR_CONTEXT_TYPES = new Set([
   "ClassAccessorDecoratorContext",
@@ -50,18 +51,25 @@ function getDecoratorName(expr: TSESTree.Expression): string | null {
 function findReturnedFunctionParams(
   body: TSESTree.BlockStatement,
 ): readonly TSESTree.Parameter[] | null {
-  for (const stmt of body.body) {
-    if (stmt.type === "ReturnStatement" && stmt.argument) {
-      const arg = stmt.argument;
-      if (
-        arg.type === "FunctionExpression" ||
-        arg.type === "ArrowFunctionExpression"
-      ) {
-        return arg.params;
+  let found: readonly TSESTree.Parameter[] | null = null;
+  walk(
+    body,
+    (node) => {
+      if (found) return true;
+      if (node.type === "ReturnStatement" && node.argument) {
+        const arg = node.argument;
+        if (
+          arg.type === "FunctionExpression" ||
+          arg.type === "ArrowFunctionExpression"
+        ) {
+          found = arg.params;
+          return true;
+        }
       }
-    }
-  }
-  return null;
+    },
+    { stopAtFunctionBoundaries: true },
+  );
+  return found;
 }
 
 export default createRule({
