@@ -50,11 +50,29 @@ function checkPrimitiveFlags(type: ts.Type): string[] | null {
   return null;
 }
 
+function isTSDeclarationFile(sourceFile: ts.SourceFile): boolean {
+  return sourceFile.fileName.endsWith(".d.ts");
+}
+
 function checkSymbolUnsafe(type: ts.Type): string[] | null {
-  const symName = type.symbol?.name;
-  if (!symName) return null;
-  if (UNSAFE_CONSTRUCTORS.has(symName)) return [symName];
-  if (symName === "Function") return ["Function"];
+  const sym = type.symbol;
+  if (!sym) return null;
+
+  const symName = sym.name;
+
+  if (UNSAFE_CONSTRUCTORS.has(symName)) {
+    const decl = sym.valueDeclaration;
+    if (!decl) return null;
+    const sourceFile = decl.getSourceFile();
+    if (!isTSDeclarationFile(sourceFile)) return null;
+    return [symName];
+  }
+
+  if (symName === "Function") {
+    if (isFunctionDeclaration(type)) return ["Function"];
+    return null;
+  }
+
   return null;
 }
 
@@ -68,17 +86,12 @@ function isFunctionDeclaration(type: ts.Type): boolean {
   );
 }
 
-function hasToJSON(type: ts.Type): boolean {
+function hasToJSON(type: ts.Type, checker: ts.TypeChecker): boolean {
   const toJSON = type.getProperty("toJSON");
-  if (!toJSON.length) return false;
-  const toJSONType = toJSON[0].valueDeclaration
-    ? toJSON[0].valueDeclaration.type
-    : undefined;
-  if (toJSONType) {
-    const callSigs = toJSONType.getCallSignatures();
-    if (callSigs.length > 0) return true;
-  }
-  return false;
+  if (!toJSON || toJSON.length === 0) return false;
+  const toJSONType = checker.getTypeOfSymbol(toJSON[0]);
+  const callSigs = toJSONType.getCallSignatures();
+  return callSigs.length > 0;
 }
 
 function collectFromTypeMembers(
@@ -121,7 +134,7 @@ function collectUnsafeTypes(
 
   if (isFunctionDeclaration(type)) return ["Function"];
 
-  if (hasToJSON(type)) return [];
+  if (hasToJSON(type, checker)) return [];
 
   if (type.isUnion() || type.isIntersection()) {
     return collectFromTypeMembers(type.types, checker, seen);
