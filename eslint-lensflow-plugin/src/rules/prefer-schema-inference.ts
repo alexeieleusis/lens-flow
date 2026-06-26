@@ -25,11 +25,6 @@ export default createRule({
 
         const schemaVarName = `${interfaceName}Schema`;
 
-        const hasPropertySignatures = node.body.body.some(
-          (member) => member.type === "TSPropertySignature",
-        );
-        if (!hasPropertySignatures) return;
-
         const scope = context.sourceCode.getScope(node);
         if (!scope) return;
         let currentScope: typeof scope | null = scope;
