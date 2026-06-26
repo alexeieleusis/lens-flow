@@ -37,7 +37,9 @@ function resolveUnionNode(
   const typeName =
     annotation.typeName.type === "Identifier"
       ? annotation.typeName.name
-      : null;
+      : annotation.typeName.type === "TSQualifiedName"
+        ? annotation.typeName.right.name
+        : null;
 
   if (!typeName || !typeAliases.has(typeName)) {
     return null;
