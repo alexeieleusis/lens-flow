@@ -38,16 +38,10 @@ function bodyOnlyNarrows(
   const narrowingScope: boolean[] = [];
 
   const isParamBinding = (identifier: TSESTree.Identifier): boolean => {
-    const identifierScope = scopeManager.getScope(identifier);
-    let currentScope: TSESLint.Scope.Scope | null = identifierScope;
-    while (currentScope) {
-      if (currentScope.set.has(identifier.name)) {
-        const binding = currentScope.set.get(identifier.name);
-        return binding !== undefined && binding.identifiers[0] === paramIdentifier;
-      }
-      currentScope = currentScope.upper;
-    }
-    return false;
+    const identifierScope = scopeManager.acquire(identifier);
+    if (!identifierScope || !identifierScope.set.has(identifier.name)) return false;
+    const binding = identifierScope.set.get(identifier.name);
+    return binding !== undefined && binding.identifiers[0] === paramIdentifier;
   };
 
   function checkInstanceof(n: TSESTree.BinaryExpression): boolean {
