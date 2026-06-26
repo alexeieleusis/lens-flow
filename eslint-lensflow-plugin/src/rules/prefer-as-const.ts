@@ -22,7 +22,11 @@ export default createRule({
       TSAsExpression(node) {
         if (
           node.expression.type === "ObjectExpression" &&
-          node.typeAnnotation.type === "TSTypeLiteral"
+          node.typeAnnotation.type === "TSTypeLiteral" &&
+          node.typeAnnotation.members.length > 0 &&
+          node.typeAnnotation.members.every(
+            (m) => m.type === "TSPropertySignature" && m.readonly
+          )
         ) {
           context.report({
             node,
