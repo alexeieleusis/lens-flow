@@ -33,7 +33,7 @@ export default createRule({
     return {
       BinaryExpression(node) {
         if (node.type !== "BinaryExpression") return;
-        if (!["==", "==="].includes(node.operator)) return;
+        if (!["==", "===", "!=", "!=="].includes(node.operator)) return;
 
         const leftIsPattern = isThisConstructorName(node.left);
         const rightIsPattern = isThisConstructorName(node.right);
