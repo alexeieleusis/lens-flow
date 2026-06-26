@@ -1,5 +1,6 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { walkNodes } from "../utils/ast-helpers.js";
 
 const VALIDATION_NAME_RE = /^(is|validate|check)[A-Z]/;
 
@@ -32,68 +33,27 @@ function getName(
   return null;
 }
 
-function isMetaKey(key: string): boolean {
-  return key === "parent" || key === "loc" || key === "range" || key === "type";
-}
-
-function isNodeLike(val: unknown): val is TSESTree.Node {
-  return typeof val === "object" && val != null && "type" in val;
-}
-
-function collectChildren(node: TSESTree.Node): TSESTree.Node[] {
-  const result: TSESTree.Node[] = [];
-  for (const key of Object.keys(node)) {
-    if (isMetaKey(key)) continue;
-    const val = (node as unknown as Record<string, unknown>)[key];
-    if (val == null) continue;
-    if (Array.isArray(val)) {
-      for (const item of val) {
-        if (isNodeLike(item)) {
-          result.push(item);
-        }
-      }
-    } else if (isNodeLike(val)) {
-      result.push(val);
-    }
-  }
-  return result;
-}
-
-function hasRegexTest(node: TSESTree.CallExpression): boolean {
-  const callee = node.callee;
-  if (callee.type !== "MemberExpression") return false;
-  const property = callee.property;
-  return property.type === "Identifier" && property.name === "test";
-}
-
-function hasTypeofCheck(node: TSESTree.BinaryExpression): boolean {
-  const leftIsTypeof =
-    node.left.type === "UnaryExpression" &&
-    (node.left as TSESTree.UnaryExpression).operator === "typeof";
-  const rightIsTypeof =
-    node.right.type === "UnaryExpression" &&
-    (node.right as TSESTree.UnaryExpression).operator === "typeof";
-  return leftIsTypeof || rightIsTypeof;
-}
-
 function hasValidationLogic(body: TSESTree.Node): boolean {
-  const stack: TSESTree.Node[] = [body];
-
-  while (stack.length) {
-    const current = stack.pop()!;
-
-    if (current.type === "CallExpression" && hasRegexTest(current)) {
-      return true;
+  return walkNodes(body, (node) => {
+    if (node.type === "CallExpression") {
+      const callee = node.callee;
+      if (callee.type === "MemberExpression" &&
+          callee.property.type === "Identifier" &&
+          callee.property.name === "test") {
+        return true;
+      }
     }
-
-    if (current.type === "BinaryExpression" && hasTypeofCheck(current)) {
-      return true;
+    if (node.type === "BinaryExpression") {
+      const leftIsTypeof =
+        node.left.type === "UnaryExpression" &&
+        (node.left as TSESTree.UnaryExpression).operator === "typeof";
+      const rightIsTypeof =
+        node.right.type === "UnaryExpression" &&
+        (node.right as TSESTree.UnaryExpression).operator === "typeof";
+      if (leftIsTypeof || rightIsTypeof) return true;
     }
-
-    stack.push(...collectChildren(current));
-  }
-
-  return false;
+    return false;
+  });
 }
 
 export default createRule({
