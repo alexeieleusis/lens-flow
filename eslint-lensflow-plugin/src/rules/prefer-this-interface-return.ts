@@ -44,7 +44,7 @@ export default createRule({
     },
     messages: {
       preferThis:
-        "Interface method returns the interface's own type ({{interfaceName}}). Use `this` instead to preserve concrete subclass type on calls. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T33-self-type.md",
+        "Interface method returns the interface's own type ({{interfaceName}}). Use `this` instead to preserve concrete subclass type on calls. See: https://github.com/jpablo/vibe-types/blob/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T33-self-type.md",
     },
     schema: [],
     fixable: undefined,
