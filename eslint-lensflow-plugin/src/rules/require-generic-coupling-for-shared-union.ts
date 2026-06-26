@@ -12,20 +12,18 @@ function getUnionFingerprint(
 }
 
 function hasTypeParameters(
-  node:
-    | TSESTree.FunctionDeclaration
-    | TSESTree.FunctionExpression
-    | TSESTree.ArrowFunctionExpression
-    | TSESTree.TSFunctionType,
+  node: FunctionLikeNode,
 ): boolean {
-  return !!(node as TSESTree.FunctionDeclaration).typeParameters?.params.length;
+  return !!(node).typeParameters?.params.length;
 }
 
 type FunctionLikeNode =
   | TSESTree.FunctionDeclaration
   | TSESTree.FunctionExpression
   | TSESTree.ArrowFunctionExpression
-  | TSESTree.TSFunctionType;
+  | TSESTree.TSFunctionType
+  | TSESTree.TSMethodSignature
+  | TSESTree.TSEmptyBodyFunctionExpression;
 
 export default createRule({
   name: "require-generic-coupling-for-shared-union",
@@ -96,6 +94,11 @@ export default createRule({
       FunctionExpression: checkFunction,
       ArrowFunctionExpression: checkFunction,
       TSFunctionType: checkFunction,
+      TSMethodSignature: checkFunction,
+      TSEmptyBodyFunctionExpression: checkFunction,
+      MethodDefinition(node: TSESTree.MethodDefinition) {
+        checkFunction(node.value);
+      },
     };
   },
 });
