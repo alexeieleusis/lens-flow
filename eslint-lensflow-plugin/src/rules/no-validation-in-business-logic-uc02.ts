@@ -1,4 +1,5 @@
 import { createRule } from "../utils/rule-creator.js";
+import { getChildren } from "../utils/ast-helpers.js";
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 
 const ITERATOR_METHODS = new Set([
@@ -65,7 +66,7 @@ function findThrow(node: TSESTree.Node): TSESTree.ThrowStatement | null {
     return node;
   }
 
-  for (const child of collectChildren(node)) {
+  for (const child of getChildren(node)) {
     if (isFunctionBoundary(child)) continue;
     const found = findThrow(child);
     if (found) return found;
@@ -84,30 +85,13 @@ function isLiteralLike(node: TSESTree.Node): boolean {
   return false;
 }
 
-function collectChildren(node: TSESTree.Node): TSESTree.Node[] {
-  const children: TSESTree.Node[] = [];
-
-  for (const key of Object.keys(node)) {
-    if (key === "parent" || key === "loc" || key === "range") continue;
-    const val = (node as unknown as Record<string, unknown>)[key];
-    if (Array.isArray(val)) {
-      for (const item of val) {
-        if (item && typeof item === "object" && "type" in item) {
-          children.push(item as TSESTree.Node);
-        }
-      }
-    } else if (val && typeof val === "object" && "type" in val) {
-      children.push(val as TSESTree.Node);
-    }
-  }
-
-  return children;
-}
+// Replaced with shared getChildren() from ast-helpers to use eslint-visitor-keys
+// for proper child enumeration instead of fragile Object.keys() iteration.
 
 function walk(node: TSESTree.Node): TSESTree.Node[] {
   const result: TSESTree.Node[] = [];
 
-  for (const child of collectChildren(node)) {
+  for (const child of getChildren(node)) {
     if (isFunctionBoundary(child)) {
       continue;
     }
