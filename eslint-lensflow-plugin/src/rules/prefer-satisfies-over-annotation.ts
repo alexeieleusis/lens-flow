@@ -117,7 +117,7 @@ export default createRule({
         }
 
         context.report({
-          node,
+          node: node.id.typeAnnotation,
           messageId: "preferSatisfies",
           data: { type: typeName },
         });
