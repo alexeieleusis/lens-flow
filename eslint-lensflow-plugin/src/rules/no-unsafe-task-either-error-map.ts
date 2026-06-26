@@ -86,8 +86,7 @@ export default createRule({
     const esTreeNodeToTSNodeMap = parserServices.esTreeNodeToTSNodeMap;
     const knownTENames = getKnownTENames();
 
-    let enclosingFn: TSESTree.FunctionLike | null = null;
-    let errorTypeStr: string | null = null;
+    const fnStack: Array<{ fn: TSESTree.FunctionLike; errorTypeStr: string | null }> = [];
 
     function resolveErrorType(
       fn: TSESTree.FunctionLike,
@@ -103,36 +102,32 @@ export default createRule({
 
     return {
       FunctionDeclaration(node) {
-        enclosingFn = node;
-        errorTypeStr = resolveErrorType(node);
+        fnStack.push({ fn: node, errorTypeStr: resolveErrorType(node) });
       },
       "FunctionDeclaration:exit"() {
-        enclosingFn = null;
-        errorTypeStr = null;
+        fnStack.pop();
       },
 
       FunctionExpression(node) {
-        enclosingFn = node;
-        errorTypeStr = resolveErrorType(node);
+        fnStack.push({ fn: node, errorTypeStr: resolveErrorType(node) });
       },
       "FunctionExpression:exit"() {
-        enclosingFn = null;
-        errorTypeStr = null;
+        fnStack.pop();
       },
 
       ArrowFunctionExpression(node) {
-        enclosingFn = node;
-        errorTypeStr = resolveErrorType(node);
+        fnStack.push({ fn: node, errorTypeStr: resolveErrorType(node) });
       },
       "ArrowFunctionExpression:exit"() {
-        enclosingFn = null;
-        errorTypeStr = null;
+        fnStack.pop();
       },
 
       CallExpression(node) {
         if (!isTryCatchCall(node, knownTENames)) return;
         if (node.arguments.length < 2) return;
-        if (!enclosingFn || !errorTypeStr) return;
+
+        const ctx = fnStack[fnStack.length - 1];
+        if (!ctx || !ctx.errorTypeStr) return;
 
         const [tryFn, catchFn] = node.arguments;
 
@@ -159,12 +154,12 @@ export default createRule({
             if (
               (thrownTypeStr === "Error" ||
                 thrownTypeStr.startsWith("Error &")) &&
-              thrownTypeStr !== errorTypeStr
+              thrownTypeStr !== ctx.errorTypeStr
             ) {
               context.report({
                 node: childNode.argument,
                 messageId: "unsafeThrow",
-                data: { expectedType: errorTypeStr, url: URL },
+                data: { expectedType: ctx.errorTypeStr, url: URL },
               });
             }
           });
