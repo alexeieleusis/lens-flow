@@ -32,7 +32,6 @@ export default createRule({
   create(context: TSESLint.RuleContext<"preferInstanceof", []>) {
     return {
       BinaryExpression(node) {
-        if (node.type !== "BinaryExpression") return;
         if (!["==", "===", "!=", "!=="].includes(node.operator)) return;
 
         const leftIsPattern = isThisConstructorName(node.left);
