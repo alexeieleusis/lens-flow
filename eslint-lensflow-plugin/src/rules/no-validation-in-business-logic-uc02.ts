@@ -140,7 +140,11 @@ function reportValidationInCallback(
       isLiteralLike(bin.left) || isLiteralLike(bin.right);
     if (!hasParam || !hasLiteral) continue;
 
-    const throwNode = findThrow(ifNode.consequent);
+    let throwNode: TSESTree.ThrowStatement | null = null;
+    throwNode = findThrow(ifNode.consequent);
+    if (!throwNode && ifNode.alternate) {
+      throwNode = findThrow(ifNode.alternate);
+    }
     if (throwNode && !reported.has(throwNode)) {
       reported.add(throwNode);
       context.report({
