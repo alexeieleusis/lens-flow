@@ -48,10 +48,20 @@ export default createRule({
             : null;
         if (methodName !== "then") return;
 
-        // Check return type of inner call — must be a Promise
+        // Check return type of inner call — must be a Promise-like type (has `.then`)
         const innerReturnType = parserServices.getTypeAtLocation(innerCall);
-        const returnTypeName = checker.typeToString(innerReturnType);
-        if (!returnTypeName.startsWith("Promise")) return;
+        const thenProp = checker.getPropertyOfType(innerReturnType, "then");
+        const thenType = thenProp ? checker.getTypeOfSymbol(thenProp) : undefined;
+        if (
+          !thenType ||
+          !thenType
+            .getCallSignatures()
+            .some((sig) => {
+              const decl = sig.getDeclaration();
+              return decl && decl.name?.getText() === "then";
+            })
+        )
+          return;
 
         // Check if the inner call's callee refers to a generic function
         const innerCalleeType = parserServices.getTypeAtLocation(
