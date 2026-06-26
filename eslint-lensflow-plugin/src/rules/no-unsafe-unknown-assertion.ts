@@ -3,7 +3,7 @@ import { ESLintUtils, type TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T07-structural-typing.md");
+const KNOWLEDGE_URL = knowledgeUrl("catalog/T07-structural-typing.md");
 
 function isInsideTypePredicateFn(node: TSESTree.Node): boolean {
   let current: TSESTree.Node | undefined = node.parent;
@@ -76,7 +76,7 @@ export default createRule({
           messageId: "unsafeCast",
           data: {
             targetType: targetTypeStr,
-            url: URL,
+            url: KNOWLEDGE_URL,
           },
         });
       },
