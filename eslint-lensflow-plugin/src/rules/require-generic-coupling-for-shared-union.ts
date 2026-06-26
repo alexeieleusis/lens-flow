@@ -54,7 +54,10 @@ export default createRule({
       const unionGroups = new Map<string, string[]>();
 
       for (const param of params) {
-        const effectiveParam = param.type === "TSParameterProperty" ? param.parameter : param;
+        let effectiveParam = param.type === "TSParameterProperty" ? param.parameter : param;
+        if (effectiveParam.type === "AssignmentPattern") {
+          effectiveParam = effectiveParam.left;
+        }
         const typeAnn = effectiveParam.typeAnnotation;
         if (!typeAnn) continue;
 
