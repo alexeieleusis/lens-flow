@@ -1,5 +1,5 @@
 import ts from "typescript";
-import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
+import { ESLintUtils, TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
@@ -61,22 +61,19 @@ function isArrayOrIterable(checker: ts.TypeChecker, argType: ts.Type): boolean {
 }
 
 function findEnclosingFunction(
-  startNode: { parent?: any; type?: string; generator?: boolean; async?: boolean },
+  ancestors: TSESTree.Node[],
 ): { generator: boolean; async: boolean } | null {
-  let current: any = startNode;
-
-  while (current) {
+  for (const node of ancestors) {
     if (
-      current.type === "FunctionDeclaration" ||
-      current.type === "FunctionExpression" ||
-      current.type === "ArrowFunctionExpression"
+      node.type === "FunctionDeclaration" ||
+      node.type === "FunctionExpression" ||
+      node.type === "ArrowFunctionExpression"
     ) {
       return {
-        generator: current.generator ?? false,
-        async: current.async ?? false,
+        generator: node.generator ?? false,
+        async: node.async ?? false,
       };
     }
-    current = current.parent;
   }
   return null;
 }
@@ -109,7 +106,9 @@ export default createRule({
         if (yieldNode.delegate) return;
         if (!yieldNode.argument) return;
 
-        const enclosingFn = findEnclosingFunction(yieldNode);
+        const enclosingFn = findEnclosingFunction(
+          context.sourceCode.getAncestors(yieldNode),
+        );
         if (!enclosingFn || !enclosingFn.generator || !enclosingFn.async) return;
 
         const tsArg =
