@@ -40,31 +40,26 @@ export default createRule({
     }
 
     function findEnclosingFunction(callNode: TSESTree.CallExpression): string | null {
-      let current = (callNode as any).parent;
-      while (current) {
-        if (
-          current.type === "FunctionDeclaration" &&
-          current.id
-        ) {
-          return current.id.name;
+      const ancestors = context.sourceCode.getAncestors(callNode);
+      for (const node of ancestors) {
+        if (node.type === "FunctionDeclaration" && node.id) {
+          return node.id.name;
         }
-        if (
-          current.type === "FunctionExpression" &&
-          current.id
-        ) {
-          return current.id.name;
+        if (node.type === "FunctionExpression" && node.id) {
+          return node.id.name;
         }
-        if (current.type === "ArrowFunctionExpression") {
-          const p = current.parent;
+        if (node.type === "ArrowFunctionExpression") {
+          const varDecl = ancestors
+            .slice(ancestors.indexOf(node) + 1)
+            .find((a) => a.type === "VariableDeclarator");
           if (
-            p?.type === "VariableDeclarator" &&
-            p.id?.type === "Identifier"
+            varDecl &&
+            varDecl.id.type === "Identifier"
           ) {
-            return p.id.name;
+            return varDecl.id.name;
           }
           return null;
         }
-        current = current.parent;
       }
       return null;
     }
@@ -91,13 +86,11 @@ export default createRule({
         }
       },
       ArrowFunctionExpression(node) {
-        const parent = (node as any).parent;
+        const ancestors = context.sourceCode.getAncestors(node);
+        const varDecl = ancestors.find((a) => a.type === "VariableDeclarator");
         let name = "";
-        if (
-          parent?.type === "VariableDeclarator" &&
-          parent.id.type === "Identifier"
-        ) {
-          name = parent.id.name;
+        if (varDecl && varDecl.id.type === "Identifier") {
+          name = varDecl.id.name;
         }
         const retType = node.returnType?.typeAnnotation;
         if (name && isGuardCandidate(name, retType)) {
