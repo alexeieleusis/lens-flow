@@ -1,5 +1,5 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 export default createRule({
   name: "prefer-const-for-literal-binding",
@@ -18,73 +18,97 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"preferConst", []>) {
+    const reportedDeclarations = new Set<number>();
+
+    function isReassigned(declarator: TSESTree.VariableDeclarator, varName: string): boolean {
+      let currentScope = context.sourceCode.getScope(declarator);
+      let variable = null;
+      while (currentScope !== null) {
+        variable = currentScope.variables.find((v) => v.name === varName) ?? null;
+        if (variable) break;
+        currentScope = currentScope.upper!;
+      }
+      return variable?.references.some((ref) => ref.isWrite() && !ref.init) ?? false;
+    }
+
+    function getLiteralInfo(
+      init: TSESTree.Literal
+    ): { literalType: string | number; widenedType: "string" | "number" | "boolean" } | null {
+      const val = init.value;
+      let literalType: string | number | null;
+      if (typeof val === "string") {
+        literalType = `"${val}"`;
+      } else if (typeof val === "number") {
+        literalType = val;
+      } else if (typeof val === "boolean") {
+        literalType = String(val);
+      } else {
+        return null;
+      }
+      const widenedType = typeof val as "string" | "number" | "boolean";
+      return { literalType, widenedType };
+    }
+
     return {
-      VariableDeclarator(node) {
-        const parent = node.parent;
-        if (
-          parent?.type !== "VariableDeclaration" ||
-          parent?.kind !== "let"
-        ) {
+      VariableDeclaration(node) {
+        if (node.kind !== "let") {
           return;
         }
 
-        if (node.init?.type !== "Literal") {
+        if (reportedDeclarations.has(node.range[0])) {
           return;
         }
 
-        if (node.id.typeAnnotation) {
+        const violatingDeclarators: (TSESTree.VariableDeclarator & {
+          literalType: string | number;
+          widenedType: "string" | "number" | "boolean";
+        })[] = [];
+
+        for (const declarator of node.declarations) {
+          if (declarator.init?.type !== "Literal") continue;
+          if (declarator.id.typeAnnotation) continue;
+          if (declarator.id.type !== "Identifier") continue;
+          if (isReassigned(declarator, declarator.id.name)) continue;
+
+          const info = getLiteralInfo(declarator.init);
+          if (!info) continue;
+
+          violatingDeclarators.push({
+            ...declarator,
+            literalType: info.literalType,
+            widenedType: info.widenedType,
+          });
+        }
+
+        if (violatingDeclarators.length === 0) {
           return;
         }
 
-        if (node.id.type !== "Identifier") {
-          return;
-        }
+        reportedDeclarations.add(node.range[0]);
 
-        // Skip if the variable is reassigned anywhere in its scope
-        const varName = node.id.name;
-        let currentScope = context.sourceCode.getScope(node);
-        let variable = null;
-        while (currentScope !== null) {
-          variable = currentScope.variables.find((v) => v.name === varName) ?? null;
-          if (variable) break;
-          currentScope = currentScope.upper!;
-        }
-        if (variable?.references.some((ref) => ref.isWrite() && !ref.init)) {
-          return;
-        }
+        const letToken = context.sourceCode.getFirstToken(node);
+        const hasFix = letToken?.value === "let";
 
-        const val = node.init.value;
-        let literalType: string | number | null;
-        if (typeof val === "string") {
-          literalType = `"${val}"`;
-        } else if (typeof val === "number") {
-          literalType = val;
-        } else if (typeof val === "boolean") {
-          literalType = String(val);
-        } else {
-          literalType = null;
+        for (let i = 0; i < violatingDeclarators.length; i++) {
+          const decl = violatingDeclarators[i];
+          context.report({
+            node: decl.id,
+            messageId: "preferConst",
+            data: {
+              literalType: String(decl.literalType),
+              widenedType: decl.widenedType,
+            },
+            // Only attach the fix to the first report to avoid overlapping
+            // fix ranges when multiple declarators share the same `let` token.
+            ...(i === 0 && hasFix
+              ? {
+                  fix(fixer: TSESLint.RuleFixer) {
+                    return fixer.replaceText(letToken!, "const");
+                  },
+                }
+              : {}),
+          });
         }
-
-        if (literalType === null) {
-          return;
-        }
-
-        const widenedType = typeof val as "string" | "number" | "boolean";
-
-        context.report({
-          node: node.id,
-          messageId: "preferConst",
-          data: {
-            literalType: String(literalType),
-            widenedType,
-          },
-          fix(fixer) {
-            const letToken = context.sourceCode.getFirstToken(parent);
-            return letToken?.value === "let"
-              ? fixer.replaceText(letToken, "const")
-              : null;
-          },
-        });
       },
     };
   },
