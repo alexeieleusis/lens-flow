@@ -12,12 +12,14 @@ export default createRule({
     messages: {
       requireDeclareBrand:
         "Brand symbol {{name}} uses `const` which emits a runtime value. Use `declare const {{name}}: unique symbol;` instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T03-newtypes-opaque.md",
+      symbolTypedBrand:
+        "Symbol {{name}} is typed as `symbol` and uses `const` which emits a runtime value. Consider using `declare const {{name}}: symbol;` if the symbol is not a brand, or rename to match brand conventions (e.g., `__{{name}}Brand`) for auto-fix. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T03-newtypes-opaque.md",
     },
     schema: [],
     fixable: "code",
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"requireDeclareBrand", []>) {
+  create(context: TSESLint.RuleContext<"requireDeclareBrand" | "symbolTypedBrand", []>) {
     return {
       VariableDeclaration(node) {
         if (node.declare) return;
@@ -42,6 +44,15 @@ export default createRule({
             varName.startsWith("__") || varName.endsWith("Brand");
 
           if (!hasSymbolType && !matchesBrandNaming) continue;
+
+          if (hasSymbolType) {
+            context.report({
+              node: decl,
+              messageId: "symbolTypedBrand",
+              data: { name: varName },
+            });
+            return;
+          }
 
           context.report({
             node: decl,
