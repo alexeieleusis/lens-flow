@@ -116,7 +116,7 @@ export default createRule({
       } else if (node.key.type === "Literal") {
         propName = String(node.key.value);
       } else {
-        propName = "";
+        propName = context.sourceCode.getText(node.key);
       }
 
       let hasAccessorDeco = false;
