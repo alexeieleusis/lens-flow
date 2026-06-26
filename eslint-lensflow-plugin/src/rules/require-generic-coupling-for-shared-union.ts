@@ -69,7 +69,7 @@ export default createRule({
         const paramName =
           effectiveParam.type === IDENTIFIER
             ? effectiveParam.name
-            : "_";
+            : sourceCode.getText(effectiveParam);
 
         if (!unionGroups.has(fingerprint)) {
           unionGroups.set(fingerprint, []);
