@@ -36,8 +36,8 @@ export default createRule({
           !targetType.every(
             (t) =>
               t.type === "TSLiteralType" &&
-              (t as any).literal.type === "Literal" &&
-              typeof (t as any).literal.value === "string",
+              t.literal.type === "Literal" &&
+              typeof t.literal.value === "string",
           )
         )
           return;
