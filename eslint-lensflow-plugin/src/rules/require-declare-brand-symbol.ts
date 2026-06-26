@@ -23,38 +23,45 @@ export default createRule({
         if (node.declare) return;
         if (node.declarations.length === 0) return;
 
-        const decl = node.declarations[0];
-        if (!decl.init) return;
-        if (decl.init.type !== "CallExpression") return;
+        const isSingleDeclarator = node.declarations.length === 1;
 
-        const callee = decl.init.callee;
-        if (callee.type !== "Identifier" || callee.name !== "Symbol") return;
+        for (const decl of node.declarations) {
+          if (!decl.init) continue;
+          if (decl.init.type !== "CallExpression") continue;
 
-        const varName =
-          decl.id.type === "Identifier" ? decl.id.name : null;
-        if (!varName) return;
+          const callee = decl.init.callee;
+          if (callee.type !== "Identifier" || callee.name !== "Symbol") continue;
 
-        const hasSymbolType =
-          decl.id.typeAnnotation?.typeAnnotation.type === "TSSymbolKeyword";
-        const matchesBrandNaming =
-          varName.startsWith("__") || varName.endsWith("Brand");
+          const varName =
+            decl.id.type === "Identifier" ? decl.id.name : null;
+          if (!varName) continue;
 
-        if (!hasSymbolType && !matchesBrandNaming) return;
+          const hasSymbolType =
+            decl.id.typeAnnotation?.typeAnnotation.type === "TSSymbolKeyword";
+          const matchesBrandNaming =
+            varName.startsWith("__") || varName.endsWith("Brand");
 
-        context.report({
-          node,
-          messageId: "requireDeclareBrand",
-          data: { name: varName },
-          fix(fixer) {
-            const sourceCode = context.sourceCode;
-            const text = sourceCode.getText(node);
-            const isConst = text.startsWith("const");
-            if (!isConst) return null;
+          if (!hasSymbolType && !matchesBrandNaming) continue;
 
-            const replacement = `declare const ${varName}: unique symbol;`;
-            return fixer.replaceText(node, replacement);
-          },
-        });
+          context.report({
+            node: decl,
+            messageId: "requireDeclareBrand",
+            data: { name: varName },
+            ...(isSingleDeclarator
+              ? {
+                  fix(fixer) {
+                    const sourceCode = context.sourceCode;
+                    const text = sourceCode.getText(node);
+                    const isConst = text.startsWith("const");
+                    if (!isConst) return null;
+
+                    const replacement = `declare const ${varName}: unique symbol;`;
+                    return fixer.replaceText(node, replacement);
+                  },
+                }
+              : {}),
+          });
+        }
       },
     };
   },
