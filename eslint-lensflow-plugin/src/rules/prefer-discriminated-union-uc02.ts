@@ -22,6 +22,10 @@ function resolveUnionNode(
   annotation: TSESTree.TypeNode,
   typeAliases: Map<string, TSESTree.TypeNode>,
 ): TSESTree.TSUnionType | null {
+  while (annotation.type === "TSParenthesizedType") {
+    annotation = (annotation as TSESTree.TSParenthesizedType).typeAnnotation;
+  }
+
   if (annotation.type === "TSUnionType") {
     return annotation;
   }
