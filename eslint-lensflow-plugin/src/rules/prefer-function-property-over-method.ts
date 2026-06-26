@@ -33,13 +33,13 @@ function referencesTypeParam(
   function qualifiedNameHasTypeParam(
     qn: TSESTree.TSQualifiedName
   ): boolean {
+    if (typeParamNames.has(qn.right.name)) return true;
     const left = qn.left;
     if (left.type === "Identifier") {
       return typeParamNames.has(left.name);
     }
     if (left.type === "TSQualifiedName") {
-      return typeParamNames.has(left.right.name) ||
-        (left.left.type === "Identifier" && typeParamNames.has(left.left.name));
+      return qualifiedNameHasTypeParam(left);
     }
     return false;
   }
