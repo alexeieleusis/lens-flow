@@ -41,22 +41,44 @@ export default createRule({
       return null;
     }
 
+    function isSameVariable(
+      ident: TSESTree.Identifier,
+      target: TSESLint.Scope.Variable,
+    ): boolean {
+      let current: TSESLint.Scope.Scope | null = context.sourceCode.getScope(ident);
+      while (current) {
+        for (const v of current.variables) {
+          if (v.name === ident.name) return v === target;
+        }
+        current = current.upper;
+      }
+      return false;
+    }
+
     function checkFunction(
       node:
         | TSESTree.FunctionDeclaration
         | TSESTree.FunctionExpression
         | TSESTree.ArrowFunctionExpression,
     ): void {
-      const anyParamNames = new Set<string>();
+      const anyParamBindings = new Set<TSESLint.Scope.Variable>();
 
       for (const param of node.params) {
         const id = normalizeParam(param);
         if (id && id.typeAnnotation?.typeAnnotation.type === "TSAnyKeyword") {
-          anyParamNames.add(id.name);
+          const scopeManager = context.sourceCode.scopeManager;
+          if (scopeManager) {
+            for (const variable of scopeManager.getDeclaredVariables(node)) {
+              if (variable.identifiers.includes(id)) {
+                anyParamBindings.add(variable);
+                break;
+              }
+            }
+          }
         }
       }
 
-      if (anyParamNames.size === 0) return;
+      if (anyParamBindings.size === 0) return;
 
       const body = node.body;
       if (!body) return;
@@ -70,35 +92,41 @@ export default createRule({
         if (bothFound()) return;
 
         if (n.type === "UnaryExpression" && n.operator === "typeof") {
-          if (
-            n.argument.type === "Identifier" &&
-            anyParamNames.has(n.argument.name)
-          ) {
-            hasRuntimeGuard = true;
+          if (n.argument.type === "Identifier") {
+            for (const binding of anyParamBindings) {
+              if (isSameVariable(n.argument, binding)) {
+                hasRuntimeGuard = true;
+                break;
+              }
+            }
           }
         }
 
         if (n.type === "BinaryExpression" && n.operator === "instanceof") {
-          if (
-            n.left.type === "Identifier" &&
-            anyParamNames.has(n.left.name)
-          ) {
-            hasRuntimeGuard = true;
+          if (n.left.type === "Identifier") {
+            for (const binding of anyParamBindings) {
+              if (isSameVariable(n.left, binding)) {
+                hasRuntimeGuard = true;
+                break;
+              }
+            }
           }
         }
 
         if (n.type === "MemberExpression") {
-          if (
-            n.object.type === "Identifier" &&
-            anyParamNames.has(n.object.name)
-          ) {
-            hasPropertyAccess = true;
+          if (n.object.type === "Identifier") {
+            for (const binding of anyParamBindings) {
+              if (isSameVariable(n.object, binding)) {
+                hasPropertyAccess = true;
+                break;
+              }
+            }
           }
         }
       });
 
       if (hasRuntimeGuard && hasPropertyAccess) {
-        const paramName = Array.from(anyParamNames)[0];
+        const paramName = Array.from(anyParamBindings)[0].name;
         context.report({
           node,
           messageId: "preferConstraint",
