@@ -2,7 +2,9 @@ import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 /**
  * Walks the scope chain upward from the given scope checking for a variable
- * with the specified name. Returns the variable if found, null otherwise.
+ * with the specified name. Stops at function or class scope boundaries to
+ * avoid matching unrelated schemas from outer (e.g. module-level) scopes.
+ * Returns the variable if found, null otherwise.
  */
 export function findVariableInScopeChain(
   scope: TSESLint.Scope.Scope | null,
@@ -14,6 +16,23 @@ export function findVariableInScopeChain(
     if (variable) {
       return variable;
     }
+
+    // Stop before walking into function or class scopes — a schema defined
+    // in an unrelated function or at module level should not match an
+    // interface nested inside a different function or class method.
+    if (
+      currentScope.type === "function" ||
+      currentScope.type === "class"
+    ) {
+      break;
+    }
+
+    // Also stop if the next scope up is module-level — module-scoped
+    // variables from unrelated code should not be matched.
+    if (currentScope.upper?.type === "module") {
+      break;
+    }
+
     currentScope = currentScope.upper;
   }
   return null;
