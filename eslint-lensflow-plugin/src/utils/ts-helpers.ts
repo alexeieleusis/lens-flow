@@ -292,11 +292,13 @@ export function extractLiteralValues(tsType: ts.Type): (string | number | boolea
 export function checkSwitchExhaustiveness(
   node: TSESTree.SwitchStatement,
   checker: ts.TypeChecker,
-  tsNode: ts.Node,
+  tsNode: ts.Node | undefined,
   context: Readonly<TSESLint.RuleContext<string, readonly unknown[]>>,
   messageId: string,
   url: string,
 ): void {
+  if (!tsNode) return;
+
   const discriminantType = checker.getTypeAtLocation(tsNode);
   const literalValues = extractLiteralValues(discriminantType);
 
