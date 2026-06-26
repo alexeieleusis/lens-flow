@@ -19,6 +19,28 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"preferConstraint", []>) {
+    function normalizeParam(
+      param: TSESTree.Parameter,
+    ): TSESTree.Identifier | null {
+      if (param.type === "TSParameterProperty") {
+        return normalizeParam(param.parameter);
+      }
+      if (param.type === "AssignmentPattern") {
+        const left = param.left as TSESTree.Identifier | TSESTree.ArrayPattern | TSESTree.ObjectPattern;
+        if (left.type === "Identifier") return left;
+        return null;
+      }
+      if (param.type === "RestElement") {
+        const arg = param.argument as TSESTree.Identifier | TSESTree.ArrayPattern | TSESTree.ObjectPattern;
+        if (arg.type === "Identifier") return arg;
+        return null;
+      }
+      if (param.type === "Identifier") {
+        return param;
+      }
+      return null;
+    }
+
     function checkFunction(
       node:
         | TSESTree.FunctionDeclaration
@@ -28,11 +50,9 @@ export default createRule({
       const anyParamNames = new Set<string>();
 
       for (const param of node.params) {
-        if (
-          param.type === "Identifier" &&
-          param.typeAnnotation?.typeAnnotation.type === "TSAnyKeyword"
-        ) {
-          anyParamNames.add(param.name);
+        const id = normalizeParam(param);
+        if (id && id.typeAnnotation?.typeAnnotation.type === "TSAnyKeyword") {
+          anyParamNames.add(id.name);
         }
       }
 
