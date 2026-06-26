@@ -95,7 +95,7 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"preferYieldStar", []>) {
-    const parserServices = ESLintUtils.getParserServices(context);
+    const parserServices = ESLintUtils.getParserServices(context, { allowNoProject: true });
     const program = parserServices.program;
     if (!program) return {};
 
