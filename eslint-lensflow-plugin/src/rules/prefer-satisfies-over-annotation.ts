@@ -1,5 +1,26 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+function buildQualifiedName(node: TSESTree.TSQualifiedName): string {
+  let left: string;
+  if (node.left.type === "Identifier") {
+    left = node.left.name;
+  } else if (node.left.type === "TSQualifiedName") {
+    left = buildQualifiedName(node.left);
+  } else {
+    left = "this";
+  }
+  return `${left}.${node.right.name}`;
+}
+
+function extractTypeName(typeNode: TSESTree.TypeNode): string {
+  if (typeNode.type === "TSTypeReference") {
+    const tn = typeNode.typeName;
+    if (tn.type === "Identifier") return tn.name;
+    if (tn.type === "TSQualifiedName") return buildQualifiedName(tn);
+  }
+  return "?";
+}
 
 export default createRule({
   name: "prefer-satisfies-over-annotation",
@@ -48,10 +69,7 @@ export default createRule({
         const typeAnnotation = node.id.typeAnnotation.typeAnnotation;
         let typeName = "?";
         if (typeAnnotation.type === "TSTypeReference") {
-          const typeNameNode = typeAnnotation.typeName;
-          if (typeNameNode.type === "Identifier") {
-            typeName = typeNameNode.name;
-          }
+          typeName = extractTypeName(typeAnnotation);
         } else if (typeAnnotation.type === "TSUnionType") {
           typeName = typeAnnotation.types
             .map((t) => {
@@ -59,9 +77,7 @@ export default createRule({
                 const lit = t.literal;
                 if (lit.type === "Literal") return String(lit.value);
               }
-              if (t.type === "TSTypeReference" && t.typeName.type === "Identifier")
-                return t.typeName.name;
-              return "?";
+              return extractTypeName(t);
             })
             .join(" | ");
         }
