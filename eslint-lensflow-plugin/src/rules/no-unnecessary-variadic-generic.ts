@@ -63,21 +63,17 @@ export default createRule({
       ];
     const simpleSet = new Set<string>(simpleMethods);
 
-    let currentFn:
-      | {
-          generics: Map<
-            string,
-            {
-              node: TSESTree.TSTypeParameter;
-              constraintText: string;
-              paramNames: string[];
-              calls: string[];
-            }
-          >;
+    const fnStack: Array<
+      Map<
+        string,
+        {
+          node: TSESTree.TSTypeParameter;
+          constraintText: string;
+          paramBinding: TSESLint.Scope.Variable | undefined;
+          calls: string[];
         }
-      | null = null;
-
-    let fnDepth = 0;
+      >
+    > = [];
 
     function getArrayConstraintText(
       constraint: TSESTree.TypeNode,
@@ -130,14 +126,9 @@ export default createRule({
         | TSESTree.FunctionExpression
         | TSESTree.ArrowFunctionExpression,
     ) {
-      fnDepth++;
-
-      if (fnDepth !== 1) {
-        return;
-      }
-
       const typeParams = node.typeParameters;
-      if (!typeParams || typeParams.params.length === 0 || !node.body) {
+      if (!typeParams || typeParams.params.length === 0) {
+        fnStack.push(new Map());
         return;
       }
 
@@ -157,56 +148,55 @@ export default createRule({
         }
       }
 
-      if (arrayConstrained.size === 0) return;
-
       // Map generic names to function parameter names
       const generics = new Map<
         string,
         {
           node: TSESTree.TSTypeParameter;
           constraintText: string;
-          paramNames: string[];
+          paramBinding: TSESLint.Scope.Variable | undefined;
           calls: string[];
         }
       >();
 
       for (const [genName, info] of arrayConstrained) {
-        generics.set(genName, { ...info, paramNames: [], calls: [] });
+        generics.set(genName, { ...info, paramBinding: undefined, calls: [] });
       }
 
       // Match function parameters to generics by type annotation
-      for (const param of node.params) {
-        const genName = matchParamToGeneric(param, generics);
-        if (genName) {
-          if (param.type === AST_NODE_TYPES.Identifier) {
-            generics.get(genName)!.paramNames.push(param.name);
+      if (node.body) {
+        const fnScope = context.sourceCode.getScope(node);
+        for (const param of node.params) {
+          const genName = matchParamToGeneric(param, generics);
+          if (genName) {
+            if (param.type === AST_NODE_TYPES.Identifier) {
+              generics.get(genName)!.paramBinding =
+                fnScope.set.get(param.name);
+            }
           }
         }
       }
 
-      currentFn = { generics };
+      fnStack.push(generics);
     }
 
     function exitFn() {
-      if (fnDepth === 1 && currentFn) {
-        for (const [genName, data] of currentFn.generics) {
-          if (data.calls.length === 0) continue;
+      const generics = fnStack.pop();
+      if (!generics) return;
 
-          const allSimple = data.calls.every((m) => simpleSet.has(m));
+      for (const [genName, data] of generics) {
+        if (data.calls.length === 0) continue;
 
-          if (allSimple) {
-            context.report({
-              node: data.node,
-              messageId: "unnecessaryGeneric",
-              data: { param: genName, constraint: data.constraintText },
-            });
-          }
+        const allSimple = data.calls.every((m) => simpleSet.has(m));
+
+        if (allSimple) {
+          context.report({
+            node: data.node,
+            messageId: "unnecessaryGeneric",
+            data: { param: genName, constraint: data.constraintText },
+          });
         }
-
-        currentFn = null;
       }
-
-      fnDepth--;
     }
 
     return {
@@ -218,7 +208,7 @@ export default createRule({
       "ArrowFunctionExpression:exit": exitFn,
 
       CallExpression(callNode) {
-        if (!currentFn || fnDepth !== 1) return;
+        if (fnStack.length === 0) return;
 
         if (
           callNode.callee.type !== AST_NODE_TYPES.MemberExpression ||
@@ -228,14 +218,31 @@ export default createRule({
         )
           return;
 
-        const varName = callNode.callee.object.name;
+        const varId = callNode.callee.object;
         const methodName = callNode.callee.property.name;
 
-        // Find which generic this variable belongs to
-        for (const data of currentFn.generics.values()) {
-          if (data.paramNames.includes(varName)) {
-            data.calls.push(methodName);
-            break;
+        // Resolve the identifier's binding using scope analysis
+        let scope: TSESLint.Scope.Scope | null = context.sourceCode.getScope(callNode);
+        let resolved: TSESLint.Scope.Variable | undefined;
+
+        while (scope) {
+          for (const v of scope.variables) {
+            if (v.name === varId.name) {
+              resolved = v;
+              break;
+            }
+          }
+          if (resolved) break;
+          scope = scope.upper;
+        }
+
+        // Walk the stack from innermost to outermost to find the matching generic
+        for (let i = fnStack.length - 1; i >= 0; i--) {
+          for (const data of fnStack[i].values()) {
+            if (resolved === data.paramBinding) {
+              data.calls.push(methodName);
+              return;
+            }
           }
         }
       },
