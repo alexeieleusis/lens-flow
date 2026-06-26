@@ -28,11 +28,31 @@ function findAccessedProperties(
   return accessed;
 }
 
+function normalizeParameter(param: TSESTree.Parameter): TSESTree.Node {
+  if (param.type === "AssignmentPattern") return param.left;
+  if (param.type === "TSParameterProperty") return param.parameter;
+  if (param.type === "RestElement") {
+    const arg = param.argument;
+    if (arg.type === "ObjectPattern" || arg.type === "ArrayPattern") return arg;
+    return arg;
+  }
+  return param;
+}
+
 function isParameterTypedWith(
   param: TSESTree.Parameter,
   typeParamName: string,
 ): boolean {
-  if (param.type !== "Identifier" || !param.typeAnnotation) return false;
+  const normalized = normalizeParameter(param);
+  const hasTypeAnnotation =
+    typeof normalized === "object" &&
+    normalized !== null &&
+    "typeAnnotation" in normalized &&
+    (normalized as unknown as Record<string, unknown>).typeAnnotation != null;
+
+  if (!hasTypeAnnotation) return false;
+
+  const typeAnn = (normalized as unknown as { typeAnnotation: { typeAnnotation: TSESTree.TypeNode } }).typeAnnotation;
 
   function getRightmostIdentifier(entity: TSESTree.EntityName): string | null {
     if (entity.type === "Identifier") return entity.name;
@@ -53,7 +73,7 @@ function isParameterTypedWith(
     return false;
   }
 
-  return matches(param.typeAnnotation.typeAnnotation);
+  return matches(typeAnn.typeAnnotation);
 }
 
 function getConstraintMemberNames(
@@ -72,14 +92,19 @@ function getConstraintMemberNames(
     .filter(Boolean);
 }
 
+function getParameterName(param: TSESTree.Parameter): string {
+  const normalized = normalizeParameter(param);
+  if (normalized.type === "Identifier") return normalized.name;
+  return "";
+}
+
 function collectAccessedMembers(
   funcNode: FunctionNode,
   typedParams: TSESTree.Parameter[],
 ): Set<string> {
   const accessedMembers = new Set<string>();
   for (const param of typedParams) {
-    const paramName =
-      param.type === "Identifier" ? param.name : "";
+    const paramName = getParameterName(param);
     if (!paramName) continue;
     const accessed = findAccessedProperties(
       funcNode.body as TSESTree.Node,
