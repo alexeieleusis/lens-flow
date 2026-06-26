@@ -148,6 +148,12 @@ function bodyOnlyNarrows(
     }
   }
 
+  const functionBoundaryTypes = new Set([
+    "FunctionDeclaration",
+    "FunctionExpression",
+    "ArrowFunctionExpression",
+  ]);
+
   function visit(node: TSESTree.Node, parent: TSESTree.Node | null): void {
     if (node.type === "IfStatement") {
       visitIfStatement(node, parent);
@@ -156,6 +162,10 @@ function bodyOnlyNarrows(
 
     if (node.type === "Identifier" && node.name === paramName && parent) {
       checkIdentifierUsage(node, parent);
+      return;
+    }
+
+    if (functionBoundaryTypes.has(node.type)) {
       return;
     }
 
