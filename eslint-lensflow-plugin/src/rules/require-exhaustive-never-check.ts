@@ -191,45 +191,74 @@ function isChainableIf(stmt: TSESTree.Node): stmt is TSESTree.IfStatement {
   return stmt.test.operator === "===";
 }
 
+function extractMemberPath(
+  node: TSESTree.MemberExpression,
+): { root: TSESTree.Identifier; propName: string } | null {
+  if (node.property.type !== "Identifier") return null;
+  if (node.object.type === "Identifier") return { root: node.object, propName: node.property.name };
+  if (node.object.type === "MemberExpression") {
+    const inner = extractMemberPath(node.object);
+    return inner ? { root: inner.root, propName: node.property.name } : null;
+  }
+  return null;
+}
+
+function unwrapChain(expr: TSESTree.Expression | TSESTree.PrivateIdentifier): TSESTree.Expression {
+  if (expr.type === "ChainExpression") return expr.expression;
+  return expr as TSESTree.Expression;
+}
+
+function extractLeftMember(
+  test: TSESTree.BinaryExpression,
+): { varName: string; propName: string; value: string | number | boolean | null } | null {
+  const left = unwrapChain(test.left);
+  if (left.type !== "MemberExpression" || left.property.type !== "Identifier") return null;
+  const path = extractMemberPath(left);
+  if (!path) return null;
+  const value = getLiteralFromExpr(test.right);
+  return { varName: path.root.name, propName: path.propName, value };
+}
+
+function extractRightMember(
+  test: TSESTree.BinaryExpression,
+): { varName: string; propName: string; value: string | number | boolean | null } | null {
+  const right = unwrapChain(test.right);
+  if (right.type !== "MemberExpression" || right.property.type !== "Identifier") return null;
+  const path = extractMemberPath(right);
+  if (!path) return null;
+  const value = getLiteralFromExpr(test.left);
+  return { varName: path.root.name, propName: path.propName, value };
+}
+
 function extractBinaryDiscriminant(
   test: TSESTree.BinaryExpression,
 ): { varName: string; propName: string | null; value: string | number } | null {
-  if (
-    test.left.type === "MemberExpression" &&
-    test.left.property.type === "Identifier" &&
-    test.left.object.type === "Identifier"
-  ) {
+  const lm = extractLeftMember(test);
+  if (lm && lm.value !== null && typeof lm.value !== "boolean") {
+    return { varName: lm.varName, propName: lm.propName, value: lm.value };
+  }
+
+  const left = unwrapChain(test.left);
+  if (left.type === "Identifier") {
     const value = getLiteralFromExpr(test.right);
-    if (value === null || typeof value === "boolean") return null;
-    return {
-      varName: test.left.object.name,
-      propName: test.left.property.name,
-      value,
-    };
+    if (value !== null && typeof value !== "boolean") {
+      return { varName: left.name, propName: null, value };
+    }
   }
-  if (test.left.type === "Identifier") {
-    const value = getLiteralFromExpr(test.right);
-    if (value === null || typeof value === "boolean") return null;
-    return { varName: test.left.name, propName: null, value };
+
+  const rm = extractRightMember(test);
+  if (rm && rm.value !== null && typeof rm.value !== "boolean") {
+    return { varName: rm.varName, propName: rm.propName, value: rm.value };
   }
-  if (
-    test.right.type === "MemberExpression" &&
-    test.right.property.type === "Identifier" &&
-    test.right.object.type === "Identifier"
-  ) {
+
+  const right = unwrapChain(test.right);
+  if (right.type === "Identifier") {
     const value = getLiteralFromExpr(test.left);
-    if (value === null || typeof value === "boolean") return null;
-    return {
-      varName: test.right.object.name,
-      propName: test.right.property.name,
-      value,
-    };
+    if (value !== null && typeof value !== "boolean") {
+      return { varName: right.name, propName: null, value };
+    }
   }
-  if (test.right.type === "Identifier") {
-    const value = getLiteralFromExpr(test.left);
-    if (value === null || typeof value === "boolean") return null;
-    return { varName: test.right.name, propName: null, value };
-  }
+
   return null;
 }
 
