@@ -16,6 +16,7 @@ const UNSAFE_CONSTRUCTORS = new Set([
   "FinalizationRegistry",
   "RegExp",
   "Error",
+  "Symbol",
 ]);
 
 function isJsonStringifyCall(node: TSESTree.CallExpression): boolean {
@@ -43,6 +44,7 @@ const PRIMITIVE_FLAGS =
 function checkPrimitiveFlags(type: ts.Type): string[] | null {
   if (type.flags & PRIMITIVE_FLAGS) return [];
   if (type.flags & ts.TypeFlags.BigInt) return ["bigint"];
+  if (type.flags & ts.TypeFlags.Symbol) return ["Symbol"];
   if (type.flags & (ts.TypeFlags.Any | ts.TypeFlags.Unknown)) return [];
   if (type.flags & ts.TypeFlags.Never) return [];
   return null;
