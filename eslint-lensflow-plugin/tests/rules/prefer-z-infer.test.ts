@@ -4,14 +4,25 @@ import rule from "../../src/rules/prefer-z-infer.js";
 ruleTester.run("prefer-z-infer", rule, {
   valid: [
     `type Config = z.infer<typeof ConfigSchema>;
-    
+
     const ConfigSchema = z.object({ port: z.number(), host: z.string() });`,
     `type Config = z.infer<typeof ConfigSchema>;`,
     `type Config = { port: number; host: string };`,
     `type Config = string | number;`,
     `type Config = { a: number } & { b: string };
-    
+
     const OtherSchema = z.object({ a: z.number() });`,
+    `interface User {
+      id: number;
+      name: string;
+    }`,
+    `const UserSchema = z.object({
+      id: z.number(),
+      name: z.string(),
+      email: z.string().email(),
+    });
+
+    type User = z.infer<typeof UserSchema>;`,
   ],
   invalid: [
     {
@@ -25,13 +36,13 @@ ruleTester.run("prefer-z-infer", rule, {
         name: z.string(),
         email: z.string().email(),
       });
-      
+
       type User = { id: string; name: string; email: string };`,
       errors: [{ messageId: "preferInfer" }],
     },
     {
       code: `const StateSchema = z.object({ loading: z.boolean() });
-      
+
       type State = { loading: boolean } | { loaded: boolean };`,
       errors: [{ messageId: "preferInfer" }],
     },
@@ -39,6 +50,31 @@ ruleTester.run("prefer-z-infer", rule, {
       code: `type Config = { port: number; host: string };
       const ConfigSchema = z.object({ port: z.number(), host: z.string() });`,
       errors: [{ messageId: "preferInfer" }],
+    },
+    {
+      code: `interface User {
+        id: number;
+        name: string;
+      }
+
+      const UserSchema = z.object({
+        id: z.number(),
+        name: z.string(),
+        email: z.string().email(),
+      });`,
+      errors: [{ messageId: "redundantInterface" }],
+    },
+    {
+      code: `const ProductSchema = z.object({
+        sku: z.string(),
+        price: z.number(),
+      });
+
+      interface Product {
+        sku: string;
+        price: number;
+      }`,
+      errors: [{ messageId: "redundantInterface" }],
     },
   ],
 });

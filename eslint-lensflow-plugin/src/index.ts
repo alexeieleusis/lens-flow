@@ -245,7 +245,6 @@ import preferRecordOverIndexSignature from "./rules/prefer-record-over-index-sig
 import preferRecordOverLiteralObjectUnion from "./rules/prefer-record-over-literal-object-union.js";
 import preferSatisfiesConfigValidation from "./rules/prefer-satisfies-config-validation.js";
 import preferSatisfiesOverAnnotation from "./rules/prefer-satisfies-over-annotation.js";
-import preferSchemaInference from "./rules/prefer-schema-inference.js";
 import preferSwitchExhaustiveOverFallbackUc03 from "./rules/prefer-switch-exhaustive-over-fallback-uc03.js";
 import preferThisInterfaceReturn from "./rules/prefer-this-interface-return.js";
 import preferThisOverSelfBoundedGeneric from "./rules/prefer-this-over-self-bounded-generic.js";
@@ -532,7 +531,6 @@ const plugin: {
     "prefer-record-over-literal-object-union": preferRecordOverLiteralObjectUnion,
     "prefer-satisfies-config-validation": preferSatisfiesConfigValidation,
     "prefer-satisfies-over-annotation": preferSatisfiesOverAnnotation,
-    "prefer-schema-inference": preferSchemaInference,
     "prefer-switch-exhaustive-over-fallback-uc03": preferSwitchExhaustiveOverFallbackUc03,
     "prefer-this-interface-return": preferThisInterfaceReturn,
     "prefer-this-over-self-bounded-generic": preferThisOverSelfBoundedGeneric,

@@ -1,5 +1,9 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+import {
+  deriveSchemaName,
+  findVariableInScopeChain,
+} from "../utils/schema-inference-helper.js";
 
 function isZInferType(node: unknown): boolean {
   if (
@@ -60,21 +64,25 @@ export default createRule({
     type: "suggestion",
     docs: {
       description:
-        "Prefer `z.infer<typeof Schema>` over manually written object types that duplicate a nearby Zod schema.",
+        "Prefer `z.infer<typeof Schema>` over manually written types or interfaces that duplicate a nearby Zod schema.",
     },
     messages: {
       preferInfer:
         "Type alias `{{typeName}}` duplicates schema `{{schemaName}}`. Use `type {{typeName}} = z.infer<typeof {{schemaName}}>` instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T06-derivation.md",
+      redundantInterface:
+        "Interface `{{interfaceName}}` is manually defined alongside schema `{{schemaName}}`. Derive the type with `type {{interfaceName}} = z.infer<typeof {{schemaName}}>` instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T06-derivation.md",
     },
     schema: [],
     fixable: undefined,
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"preferInfer", []>) {
+  create(
+    context: TSESLint.RuleContext<"preferInfer" | "redundantInterface", []>,
+  ) {
     return {
       TSTypeAliasDeclaration(node) {
         const typeName = node.id.name;
-        const schemaVarName = `${typeName}Schema`;
+        const schemaVarName = deriveSchemaName(typeName);
 
         const typeAnnotation = node.typeAnnotation;
 
@@ -82,30 +90,36 @@ export default createRule({
 
         if (!containsTypeLiteral(typeAnnotation)) return;
 
-        const scope = context.sourceCode.getScope(node) as any;
-        let currentScope = scope;
-        let found = false;
+        const scope = context.sourceCode.getScope(node);
+        if (!findVariableInScopeChain(scope, schemaVarName)) return;
 
-        while (currentScope && !found) {
-          const hasSchema = currentScope.variables.some(
-            (v: any) => v.name === schemaVarName,
-          );
-          if (hasSchema) {
-            found = true;
-          }
-          currentScope = currentScope.upper;
-        }
+        context.report({
+          node,
+          messageId: "preferInfer",
+          data: {
+            typeName,
+            schemaName: schemaVarName,
+          },
+        });
+      },
 
-        if (found) {
-          context.report({
-            node,
-            messageId: "preferInfer",
-            data: {
-              typeName,
-              schemaName: schemaVarName,
-            },
-          });
-        }
+      TSInterfaceDeclaration(node) {
+        const interfaceName = node.id?.name;
+        if (!interfaceName) return;
+
+        const schemaVarName = deriveSchemaName(interfaceName);
+
+        const scope = context.sourceCode.getScope(node);
+        if (!findVariableInScopeChain(scope, schemaVarName)) return;
+
+        context.report({
+          node,
+          messageId: "redundantInterface",
+          data: {
+            interfaceName,
+            schemaName: schemaVarName,
+          },
+        });
       },
     };
   },
