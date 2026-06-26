@@ -23,6 +23,16 @@ function findAccessedProperties(
     ) {
       accessed.add(node.property.name);
     }
+    if (
+      node.type === "CallExpression" &&
+      node.callee.type === "MemberExpression" &&
+      !node.callee.computed &&
+      node.callee.property.type === "Identifier" &&
+      node.callee.object.type === "Identifier" &&
+      node.callee.object.name === paramName
+    ) {
+      accessed.add(node.callee.property.name);
+    }
   });
 
   return accessed;
@@ -76,19 +86,21 @@ function isParameterTypedWith(
   return matches(typeAnn.typeAnnotation);
 }
 
+function getMemberName(member: { key: TSESTree.Expression }): string {
+  if (member.key.type === "Identifier") return member.key.name;
+  if (member.key.type === "Literal") return String(member.key.value);
+  return "";
+}
+
 function getConstraintMemberNames(
   constraint: TSESTree.TSTypeLiteral,
 ): string[] {
   return constraint.members
     .filter(
-      (m): m is TSESTree.TSPropertySignature =>
-        m.type === "TSPropertySignature",
+      (m): m is TSESTree.TSPropertySignature | TSESTree.TSMethodSignature =>
+        m.type === "TSPropertySignature" || m.type === "TSMethodSignature",
     )
-    .map((m) => {
-      if (m.key.type === "Identifier") return m.key.name;
-      if (m.key.type === "Literal") return String(m.key.value);
-      return "";
-    })
+    .map((m) => getMemberName(m))
     .filter(Boolean);
 }
 
