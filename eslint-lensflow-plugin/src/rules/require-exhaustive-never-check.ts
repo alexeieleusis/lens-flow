@@ -11,7 +11,7 @@ import {
   checkSwitchExhaustiveness,
 } from "../utils/ts-helpers.js";
 
-const URL = knowledgeUrl("usecases/UC13-state-machines.md");
+const DISCRIMINANT_DOC_URL = knowledgeUrl("usecases/UC13-state-machines.md");
 
 interface IfChainInfo {
   discriminantVar: string;
@@ -56,7 +56,7 @@ export default createRule({
           tsDiscriminant,
           context,
           "switchMissingNeverCheck",
-          URL,
+          DISCRIMINANT_DOC_URL,
         );
       },
 
@@ -96,7 +96,7 @@ export default createRule({
           messageId: "ifChainMissingNeverCheck",
           data: {
             missing: missing.map(String).join(", "),
-            url: URL,
+            url: DISCRIMINANT_DOC_URL,
           },
         });
       },
