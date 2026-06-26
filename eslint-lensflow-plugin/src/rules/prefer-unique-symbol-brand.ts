@@ -2,7 +2,7 @@ import type { TSESTree } from "@typescript-eslint/types";
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const BRAND_PATTERN = /^__?(brand|Branded)$|Brand$/;
+const BRAND_PATTERN = /^__?(?:brand|Branded)$|^Brand$/;
 
 function getKeyIdentifier(key: TSESTree.Property["key"]): string | null {
   if (key.type === "Identifier") return key.name;
