@@ -32,20 +32,6 @@ function isArrayOrIterable(checker: ts.TypeChecker, argType: ts.Type): boolean {
   if (checker.getPropertyOfType(argType, "[Symbol.iterator]")) return true;
   if (checker.getPropertyOfType(argType, "[Symbol.asyncIterator]")) return true;
 
-  for (const prop of argType.getProperties()) {
-    const propName = prop.name;
-    if (
-      propName === "[Symbol.iterator]" ||
-      propName === "[Symbol.asyncIterator]" ||
-      propName === "forEach" ||
-      propName === "map" ||
-      propName === "filter" ||
-      propName === "length"
-    ) {
-      return true;
-    }
-  }
-
   return false;
 }
 
