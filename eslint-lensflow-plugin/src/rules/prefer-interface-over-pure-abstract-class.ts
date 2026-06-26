@@ -36,7 +36,16 @@ export default createRule({
           (m) => m.type === "StaticBlock",
         );
 
+        const hasConstructorParamProperties = members.some(
+          (m) =>
+            m.type === "MethodDefinition" &&
+            m.kind === "constructor" &&
+            m.value.body !== null &&
+            m.value.params.some((p) => p.type === "TSParameterProperty"),
+        );
+
         if (properties.length > 0 || staticBlocks.length > 0) return;
+        if (hasConstructorParamProperties) return;
         if (concreteMethods.length > 0) return;
         if (abstractMethods.length === 0) return;
 
