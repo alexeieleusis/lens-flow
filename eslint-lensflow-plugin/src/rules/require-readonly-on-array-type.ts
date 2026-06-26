@@ -35,7 +35,9 @@ export default createRule({
           const elemType = typeAnn.elementType;
           const elemText = context.sourceCode.getText(elemType);
           const propName =
-            node.key.type === "Identifier" ? node.key.name : "?";
+            node.key.type === "Identifier"
+              ? node.key.name
+              : context.sourceCode.getText(node.key);
 
           context.report({
             node,
@@ -57,7 +59,9 @@ export default createRule({
                   .join(", ")
               : "unknown";
             const propName =
-              node.key.type === "Identifier" ? node.key.name : "?";
+              node.key.type === "Identifier"
+                ? node.key.name
+                : context.sourceCode.getText(node.key);
 
             context.report({
               node,
