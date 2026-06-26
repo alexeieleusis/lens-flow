@@ -1,15 +1,35 @@
 import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
+function collectReturns(node: TSESTree.Node): TSESTree.ReturnStatement[] {
+  const results: TSESTree.ReturnStatement[] = [];
+  if (node.type === AST_NODE_TYPES.ReturnStatement) {
+    results.push(node);
+  }
+  for (const child of Object.values(node)) {
+    if (Array.isArray(child)) {
+      for (const item of child) {
+        if (item && typeof item === "object" && "type" in item) {
+          results.push(...collectReturns(item as TSESTree.Node));
+        }
+      }
+    } else if (child && typeof child === "object" && "type" in child) {
+      results.push(...collectReturns(child as TSESTree.Node));
+    }
+  }
+  return results;
+}
+
 function returnsThis(node: TSESTree.MethodDefinition): boolean {
   if (node.value?.type !== AST_NODE_TYPES.FunctionExpression) return false;
-  const body = node.value.body;
-  if (body.body.length === 0) return false;
-  const lastStmt = body.body[body.body.length - 1];
-  return (
-    lastStmt.type === AST_NODE_TYPES.ReturnStatement &&
-    lastStmt.argument !== null &&
-    lastStmt.argument.type === AST_NODE_TYPES.ThisExpression
+  const fn = node.value;
+
+  const returns = collectReturns(fn.body);
+  if (returns.length === 0) return false;
+
+  return returns.every(
+    (ret) =>
+      ret.argument === null || ret.argument.type === AST_NODE_TYPES.ThisExpression
   );
 }
 
