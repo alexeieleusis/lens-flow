@@ -1,7 +1,10 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
-function getActualTypeName(node: TSESTree.TypeNode): string {
+function getActualTypeName(
+  node: TSESTree.TypeNode,
+  sourceCode: TSESLint.SourceCode,
+): string {
   if (node.type === "TSStringKeyword") return "string";
   if (node.type === "TSNumberKeyword") return "number";
   if (node.type === "TSBooleanKeyword") return "boolean";
@@ -10,7 +13,7 @@ function getActualTypeName(node: TSESTree.TypeNode): string {
   if (node.type === "TSVoidKeyword") return "void";
   if (node.type === "TSNullKeyword") return "null";
   if (node.type === "TSUndefinedKeyword") return "undefined";
-  return node.type;
+  return sourceCode.getText(node);
 }
 
 export default createRule({
@@ -50,7 +53,7 @@ export default createRule({
         context.report({
           node,
           messageId: "wrongReturnType",
-          data: { name: funcName, actual: getActualTypeName(returnType) },
+          data: { name: funcName, actual: getActualTypeName(returnType, context.sourceCode) },
         });
       }
     }
@@ -72,7 +75,7 @@ export default createRule({
         context.report({
           node,
           messageId: "wrongReturnType",
-          data: { name: funcName, actual: getActualTypeName(returnType) },
+          data: { name: funcName, actual: getActualTypeName(returnType, context.sourceCode) },
         });
       }
     }
