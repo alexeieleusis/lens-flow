@@ -1,7 +1,7 @@
 import { createSwitchExhaustivenessRule } from "../utils/switch-exhaustiveness-rule.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T52-literal-types.md");
+const DOC_URL = knowledgeUrl("catalog/T52-literal-types.md");
 
 export default createSwitchExhaustivenessRule({
   name: "require-literal-switch-default",
@@ -10,5 +10,5 @@ export default createSwitchExhaustivenessRule({
   messageKey: "missingDefaultExhaustiveness",
   messageTemplate:
     "Switch on literal union type is missing a default case with assertNever exhaustiveness guard. Missing variants: {{missing}}. See: {{url}}",
-  url: URL,
+  url: DOC_URL,
 });
