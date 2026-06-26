@@ -1,5 +1,6 @@
 import ts from "typescript";
-import { ESLintUtils, TSESTree, TSESLint } from "@typescript-eslint/utils";
+import { ESLintUtils } from "@typescript-eslint/utils";
+import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
 const KNOWLEDGE_URL =
