@@ -51,7 +51,7 @@ function analyzeFunction(
     const propertyName = accessedProperties.values().next().value!;
 
     context.report({
-      node: body,
+      node: param,
       messageId: "preferPrimitive",
       data: {
         param: paramName,
