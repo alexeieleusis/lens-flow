@@ -35,7 +35,7 @@ export default createRule({
     const namePattern = /^(?:assertNever|assertExhaustive)$/;
 
     function reportMissingNeverReturn(
-      node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression,
+      node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression | TSESTree.TSDeclareFunction,
       funcName: string,
     ) {
       const returnType = node.returnType?.typeAnnotation;
@@ -55,35 +55,53 @@ export default createRule({
       }
     }
 
-    function checkFunction(node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression) {
-      const funcName =
-        node.type === "FunctionDeclaration" || node.type === "FunctionExpression"
-          ? node.id?.name
-          : null;
-
-      if (funcName === null && node.type === "ArrowFunctionExpression") {
-        return;
-      }
+    function checkFunction(node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.TSDeclareFunction) {
+      const funcName = node.id?.name;
 
       if (!funcName || !namePattern.test(funcName)) return;
 
-      reportMissingNeverReturn(node, funcName);
+      const returnType = node.returnType?.typeAnnotation;
+
+      if (!returnType) {
+        context.report({
+          node,
+          messageId: "missingNeverReturn",
+          data: { name: funcName },
+        });
+      } else if (returnType.type !== "TSNeverKeyword") {
+        context.report({
+          node,
+          messageId: "wrongReturnType",
+          data: { name: funcName, actual: getActualTypeName(returnType) },
+        });
+      }
+    }
+
+    function getArrowFunctionName(node: TSESTree.ArrowFunctionExpression): string | null {
+      const parent = node.parent;
+      if (!parent) return null;
+
+      if (parent.type === "VariableDeclarator" && parent.id.type === "Identifier") {
+        return parent.id.name;
+      }
+      if (parent.type === "PropertyDefinition" && parent.key.type === "Identifier") {
+        return parent.key.name;
+      }
+      if (parent.type === "Property" && parent.key.type === "Identifier") {
+        return parent.key.name;
+      }
+      return null;
     }
 
     return {
       FunctionDeclaration: checkFunction,
       FunctionExpression: checkFunction,
+      TSDeclareFunction: checkFunction,
       ArrowFunctionExpression(node) {
-        const parent = node.parent;
-        if (
-          parent?.type === "VariableDeclarator" &&
-          parent.id.type === "Identifier"
-        ) {
-          const funcName = parent.id.name;
-          if (!namePattern.test(funcName)) return;
+        const funcName = getArrowFunctionName(node);
+        if (!funcName || !namePattern.test(funcName)) return;
 
-          reportMissingNeverReturn(node, funcName);
-        }
+        reportMissingNeverReturn(node, funcName);
       },
     };
   },
