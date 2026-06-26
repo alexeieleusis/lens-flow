@@ -45,12 +45,28 @@ function findFirstThrow(body: TSESTree.Node): TSESTree.ThrowStatement | null {
 
 const EXCLUDED_NAMES = new Set(["assertNever", "fail"]);
 
-function isExcludedFunction(node: TSESTree.FunctionLike): boolean {
-  const name =
-    node.type === "FunctionDeclaration" || node.type === "FunctionExpression"
-      ? node.id?.name ?? ""
-      : "";
+function getFunctionName(
+  node: TSESTree.FunctionLike,
+): string {
+  if (
+    node.type === "FunctionDeclaration" ||
+    node.type === "FunctionExpression" ||
+    node.type === "TSDeclareFunction"
+  ) {
+    return node.id?.name ?? "";
+  }
+  if (node.type === "MethodDefinition" || node.type === "TSAbstractMethodDefinition") {
+    const key = (node as TSESTree.MethodDefinition).key;
+    if (key.type === "Identifier") return key.name;
+    if (key.type === "Literal" && typeof key.value === "string")
+      return key.value;
+    return "";
+  }
+  return "";
+}
 
+function isExcludedFunction(node: TSESTree.FunctionLike): boolean {
+  const name = getFunctionName(node);
   return EXCLUDED_NAMES.has(name) || name.startsWith("assert");
 }
 
@@ -101,6 +117,44 @@ export default createRule({
         if (node.body.type !== "BlockStatement") return;
         if (!hasThrow(node.body)) return;
         const throwNode = findFirstThrow(node.body);
+        if (throwNode) {
+          context.report({
+            node: throwNode,
+            messageId: "throwInResultFunction",
+          });
+        }
+      },
+
+      MethodDefinition(node) {
+        const func = node.value;
+        if (
+          func.type !== "FunctionExpression" &&
+          func.type !== "ArrowFunctionExpression"
+        ) return;
+        if (!hasResultReturnType(func)) return;
+        if (isExcludedFunction(func)) return;
+        if (func.body.type !== "BlockStatement") return;
+        if (!hasThrow(func.body)) return;
+        const throwNode = findFirstThrow(func.body);
+        if (throwNode) {
+          context.report({
+            node: throwNode,
+            messageId: "throwInResultFunction",
+          });
+        }
+      },
+
+      TSAbstractMethodDefinition(node) {
+        const func = node.value;
+        if (
+          func.type !== "FunctionExpression" &&
+          func.type !== "ArrowFunctionExpression"
+        ) return;
+        if (!hasResultReturnType(func)) return;
+        if (isExcludedFunction(func)) return;
+        if (func.body.type !== "BlockStatement") return;
+        if (!hasThrow(func.body)) return;
+        const throwNode = findFirstThrow(func.body);
         if (throwNode) {
           context.report({
             node: throwNode,
