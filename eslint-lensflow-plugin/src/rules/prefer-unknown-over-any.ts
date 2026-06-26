@@ -3,46 +3,56 @@ import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 function findAnyParams(
   params: readonly TSESTree.Parameter[],
-): Array<{ name: string; anyNode: TSESTree.TSAnyKeyword }> {
-  const results: Array<{ name: string; anyNode: TSESTree.TSAnyKeyword }> = [];
+): Array<{ name: string; anyNode: TSESTree.TSAnyKeyword; paramNode: TSESTree.Node }> {
+  const results: Array<{ name: string; anyNode: TSESTree.TSAnyKeyword; paramNode: TSESTree.Node }> = [];
 
   for (const param of params) {
-    if (param.type === "TSParameterProperty") continue;
-
     const base =
-      param.type === "AssignmentPattern"
-        ? param.left
-        : param;
+      param.type === "TSParameterProperty"
+        ? param.parameter
+        : param.type === "AssignmentPattern"
+          ? param.left
+          : param;
 
     const typeAnn = (base as TSESTree.Identifier | TSESTree.ObjectPattern | TSESTree.ArrayPattern)
       .typeAnnotation?.typeAnnotation;
 
     if (typeAnn?.type === "TSAnyKeyword") {
       const name = (base as TSESTree.Identifier).name ?? "unnamed";
-      results.push({ name, anyNode: typeAnn as TSESTree.TSAnyKeyword });
+      results.push({ name, anyNode: typeAnn as TSESTree.TSAnyKeyword, paramNode: base });
     }
   }
 
   return results;
 }
 
-function isIdentifier(node: TSESTree.Node | undefined, name: string): boolean {
-  return node?.type === "Identifier" && node.name === name;
-}
-
 function bodyOnlyNarrows(
   body: TSESTree.BlockStatement,
-  paramName: string,
+  paramIdentifier: TSESTree.Identifier,
+  scopeManager: TSESLint.Scope.ScopeManager,
 ): boolean {
   let hasNarrowing = false;
   let hasUnsafeDirectAccess = false;
 
   const skipKeys = new Set(["parent", "scope"]);
-  const narrowingScope: Set<string>[] = [];
+  const narrowingScope: boolean[] = [];
+
+  const isParamBinding = (identifier: TSESTree.Identifier): boolean => {
+    const identifierScope = scopeManager.getScope(identifier);
+    let currentScope: TSESLint.Scope.Scope | null = identifierScope;
+    while (currentScope) {
+      if (currentScope.set.has(identifier.name)) {
+        const binding = currentScope.set.get(identifier.name);
+        return binding !== undefined && binding.identifiers[0] === paramIdentifier;
+      }
+      currentScope = currentScope.upper;
+    }
+    return false;
+  };
 
   function checkInstanceof(n: TSESTree.BinaryExpression): boolean {
     if (n.type !== "BinaryExpression" || n.operator !== "instanceof") return false;
-    return isIdentifier(n.left, paramName);
+    return n.left.type === "Identifier" && isParamBinding(n.left);
   }
 
   function checkBinaryExpression(n: TSESTree.BinaryExpression): boolean {
@@ -52,10 +62,10 @@ function bodyOnlyNarrows(
       n.left.type === "UnaryExpression" &&
       n.left.operator === "typeof"
     ) {
-      if (isIdentifier(n.left.argument, paramName)) return true;
+      if (n.left.argument.type === "Identifier" && isParamBinding(n.left.argument)) return true;
     }
 
-    if (isIdentifier(n.left, paramName)) {
+    if (n.left.type === "Identifier" && isParamBinding(n.left)) {
       if (
         n.right.type === "Literal" &&
         typeof n.right.value === "string"
@@ -69,30 +79,28 @@ function bodyOnlyNarrows(
 
   function checkUnaryTypeof(n: TSESTree.UnaryExpression): boolean {
     if (n.type !== "UnaryExpression" || n.operator !== "typeof") return false;
-    return isIdentifier(n.argument, paramName);
+    return n.argument.type === "Identifier" && isParamBinding(n.argument);
   }
 
-  function detectNarrowingParam(testNode: TSESTree.Node): string | null {
-    const t = testNode;
-
+  function detectNarrowingParam(testNode: TSESTree.Node): boolean {
     if (
-      (t.type === "BinaryExpression" && (checkInstanceof(t) || checkBinaryExpression(t))) ||
-      (t.type === "UnaryExpression" && checkUnaryTypeof(t))
+      (testNode.type === "BinaryExpression" && (checkInstanceof(testNode) || checkBinaryExpression(testNode))) ||
+      (testNode.type === "UnaryExpression" && checkUnaryTypeof(testNode))
     ) {
       hasNarrowing = true;
-      return paramName;
+      return true;
     }
 
-    return null;
+    return false;
   }
 
   function visitIfStatement(n: TSESTree.IfStatement, parent: TSESTree.Node | null): void {
-    const narrowedParam = detectNarrowingParam(n.test);
+    const narrowed = detectNarrowingParam(n.test);
 
     visit(n.test, parent);
 
-    if (narrowedParam) {
-      narrowingScope.push(new Set([narrowedParam]));
+    if (narrowed) {
+      narrowingScope.push(true);
       visit(n.consequent, parent);
       narrowingScope.pop();
     } else {
@@ -124,7 +132,7 @@ function bodyOnlyNarrows(
     }
 
     if (parent.type === "MemberExpression" && parent.object === currentNode) {
-      const isNarrowed = narrowingScope.some((s) => s.has(paramName));
+      const isNarrowed = narrowingScope.some((s) => s === true);
       if (!isNarrowed) {
         hasUnsafeDirectAccess = true;
       }
@@ -138,11 +146,11 @@ function bodyOnlyNarrows(
 
       if (Array.isArray(value)) {
         for (const child of value) {
-          if (child && typeof child === "object") {
+          if (child && typeof child === "object" && "type" in child) {
             visit(child as TSESTree.Node, currentNode);
           }
         }
-      } else if (value && typeof value === "object") {
+      } else if (value && typeof value === "object" && "type" in value) {
         visit(value as TSESTree.Node, currentNode);
       }
     }
@@ -160,7 +168,7 @@ function bodyOnlyNarrows(
       return;
     }
 
-    if (node.type === "Identifier" && node.name === paramName && parent) {
+    if (node.type === "Identifier" && isParamBinding(node) && parent) {
       checkIdentifierUsage(node, parent);
       return;
     }
@@ -194,16 +202,21 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"preferUnknown", []>) {
+    const sourceCode = context.sourceCode;
+
     function visitFunction(node: TSESTree.FunctionLike) {
       if (!node.body) return;
 
       if (node.body.type !== "BlockStatement") return;
       const body = node.body;
 
+      const scopeManager = sourceCode.scopeManager;
+      if (!scopeManager) return;
+
       const anyParams = findAnyParams(node.params);
 
-      for (const { name, anyNode } of anyParams) {
-        if (bodyOnlyNarrows(body, name)) {
+      for (const { name, anyNode, paramNode } of anyParams) {
+        if (paramNode && paramNode.type === "Identifier" && bodyOnlyNarrows(body, paramNode, scopeManager)) {
           context.report({
             node: anyNode,
             messageId: "preferUnknown",
