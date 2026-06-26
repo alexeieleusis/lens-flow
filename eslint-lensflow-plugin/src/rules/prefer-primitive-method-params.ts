@@ -44,7 +44,7 @@ function analyzeFunction(
           }
         }
       }
-    });
+    }, { skipTypeAnnotations: true });
 
     if (accessedProperties.size !== 1 || hasBareCallArg) continue;
 

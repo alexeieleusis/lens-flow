@@ -17,13 +17,19 @@ function collectNodeArray(val: unknown[], children: TSESTree.Node[]): void {
   }
 }
 
-export function getChildren(node: TSESTree.Node): TSESTree.Node[] {
+export function getChildren(
+  node: TSESTree.Node,
+  options: WalkOptions = {},
+): TSESTree.Node[] {
   const children: TSESTree.Node[] = [];
   const childKeys = KEYS[node.type];
   if (!childKeys) return children;
 
+  const skipType = options.skipTypeAnnotations ?? false;
+
   for (const key of childKeys) {
     if (key === "type") continue;
+    if (skipType && TYPE_ANNOTATION_KEYS.has(key)) continue;
     const val = (node as unknown as Record<string, unknown>)[key];
     if (val == null || typeof val !== "object") continue;
 
@@ -54,7 +60,22 @@ export interface WalkOptions {
    * and produce false positives. Defaults to `true`.
    */
   stopAtFunctionBoundaries?: boolean;
+  /**
+   * When true, the walker skips visitor keys that lead into type annotation
+   * positions (e.g., `typeAnnotation`, `typeArguments`, `returnType`). This
+   * prevents the walker from visiting nodes that exist only in type positions
+   * and would otherwise be mistaken for runtime value accesses.
+   */
+  skipTypeAnnotations?: boolean;
 }
+
+const TYPE_ANNOTATION_KEYS = new Set([
+  "typeAnnotation",
+  "typeParameters",
+  "typeArguments",
+  "returnType",
+  "typePredicate",
+]);
 
 export function walk(
   root: TSESTree.Node,
@@ -63,7 +84,7 @@ export function walk(
 ): void {
   const stopBoundary = options.stopAtFunctionBoundaries ?? true;
   if (cb(root)) return;
-  for (const child of getChildren(root)) {
+  for (const child of getChildren(root, options)) {
     if (stopBoundary && isFunctionBoundary(child)) continue;
     walk(child, cb, options);
   }
@@ -82,7 +103,7 @@ export function walkNodes(
 
     if (predicate(node)) return true;
 
-    for (const child of getChildren(node)) {
+    for (const child of getChildren(node, options)) {
       if (stopBoundary && isFunctionBoundary(child)) continue;
       if (innerWalk(child)) return true;
     }
