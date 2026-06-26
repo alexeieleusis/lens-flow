@@ -12,7 +12,7 @@ export default createRule({
     },
     messages: {
       preferConstraint:
-        "Parameter '{{param}}' is typed as `any` with a runtime guard. Use a generic constraint instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC04-generic-constraints.md",
+        "Parameter '{{param}}' is typed as `any` with a runtime guard. Use a generic constraint instead.",
     },
     schema: [],
     fixable: undefined,
