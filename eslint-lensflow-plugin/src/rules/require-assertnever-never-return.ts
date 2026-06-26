@@ -32,7 +32,7 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"missingNeverReturn" | "wrongReturnType", []>) {
-    const namePattern = /^(?:assertNever|assertExhaustive)$/i;
+    const namePattern = /^(?:assertNever|assertExhaustive)$/;
 
     function reportMissingNeverReturn(
       node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression,
