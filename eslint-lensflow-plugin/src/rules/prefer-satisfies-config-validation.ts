@@ -133,6 +133,7 @@ function countRuntimeChecks(
   }
 
   function walk(node: TSESTree.Node) {
+    if (FUNCTION_TYPES.includes(node.type as any)) return;
     if (node.type === AST_NODE_TYPES.IfStatement) {
       walkIfStatement(node);
     } else if (node.type === AST_NODE_TYPES.CallExpression) {
