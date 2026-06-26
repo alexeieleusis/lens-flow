@@ -1,4 +1,5 @@
-import { TSESTree, TSESLint } from "@typescript-eslint/utils";
+import type { TSESTree } from "@typescript-eslint/utils";
+import { TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
 function findInterfaceTypeParams(
