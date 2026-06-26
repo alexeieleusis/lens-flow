@@ -194,9 +194,7 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"preferUnknown", []>) {
-    function visitFunction(
-      node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression,
-    ) {
+    function visitFunction(node: TSESTree.FunctionLike) {
       if (!node.body) return;
 
       if (node.body.type !== "BlockStatement") return;
@@ -219,6 +217,18 @@ export default createRule({
       FunctionDeclaration: visitFunction,
       FunctionExpression: visitFunction,
       ArrowFunctionExpression: visitFunction,
+      TSEmptyBodyFunctionExpression: visitFunction,
+      TSFunctionType(_node: TSESTree.TSFunctionType) {
+        // Type-only construct with no body to analyze narrowing — skip.
+      },
+      TSMethodSignature(_node: TSESTree.TSMethodSignature) {
+        // Type-only construct with no body to analyze narrowing — skip.
+      },
+      MethodDefinition(node: TSESTree.MethodDefinition) {
+        if (node.value) {
+          visitFunction(node.value);
+        }
+      },
     };
   },
 });
