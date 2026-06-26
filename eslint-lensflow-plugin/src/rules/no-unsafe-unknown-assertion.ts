@@ -1,5 +1,4 @@
-import ts from "typescript";
-import { ESLintUtils, type TSESTree, TSESLint } from "@typescript-eslint/utils";
+import { ESLintUtils, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
@@ -54,22 +53,12 @@ export default createRule({
       TSAsExpression(node) {
         if (isInsideTypePredicateFn(context, node)) return;
 
-        const exprTs =
-          parserServices.esTreeNodeToTSNodeMap.get(node.expression);
-        if (!exprTs) return;
-
-        const exprType = checker.getTypeAtLocation(exprTs as ts.Expression);
+        const exprType = parserServices.getTypeAtLocation(node.expression);
         const typeStr = checker.typeToString(exprType);
 
         if (typeStr !== "unknown") return;
 
-        const typeNodeTs =
-          parserServices.esTreeNodeToTSNodeMap.get(node.typeAnnotation);
-        if (!typeNodeTs) return;
-
-        const targetType = checker.getTypeFromTypeNode(
-          typeNodeTs as ts.TypeNode,
-        );
+        const targetType = parserServices.getTypeAtLocation(node.typeAnnotation);
         const targetTypeStr = checker.typeToString(targetType);
 
         if (["unknown", "any", "never"].includes(targetTypeStr)) return;
