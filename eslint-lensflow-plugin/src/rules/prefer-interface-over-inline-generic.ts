@@ -104,6 +104,9 @@ function containsTypeReference(node: TSESTree.TypeNode, paramName: string): bool
       return false;
     }
 
+    case "TSParenthesizedType":
+      return containsTypeReference(node.typeAnnotation, paramName);
+
     default:
       return false;
   }
