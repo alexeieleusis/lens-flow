@@ -1,36 +1,6 @@
-import { TSESTree, TSESLint } from "@typescript-eslint/utils";
+import { TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
-
-const SKIPPED_KEYS = new Set(["parent", "loc", "range", "type", "name"]);
-
-function isChildNode(val: unknown): val is TSESTree.Node {
-  return val != null && typeof val === "object" && "type" in val;
-}
-
-function checkValue(val: unknown): boolean {
-  if (Array.isArray(val)) {
-    for (const child of val) {
-      if (isChildNode(child) && containsCallExpression(child)) return true;
-    }
-    return false;
-  }
-
-  return isChildNode(val) && containsCallExpression(val);
-}
-
-function containsCallExpression(node: TSESTree.Node): boolean {
-  if (node.type === "CallExpression") return true;
-
-  const obj = node as unknown as Record<string, unknown>;
-
-  for (const key of Object.keys(obj)) {
-    if (SKIPPED_KEYS.has(key)) continue;
-    const val = obj[key];
-    if (val == null) continue;
-    if (checkValue(val)) return true;
-  }
-  return false;
-}
+import { hasAssertNever } from "../utils/ast-helpers.js";
 
 export default createRule({
   name: "require-assert-never-default-uc03",
@@ -88,7 +58,7 @@ export default createRule({
           return;
         }
 
-        if (!containsCallExpression(defaultCase)) {
+        if (!conseq.some((stmt) => hasAssertNever(stmt))) {
           context.report({
             node: defaultCase,
             messageId: "missingAssertNever",
