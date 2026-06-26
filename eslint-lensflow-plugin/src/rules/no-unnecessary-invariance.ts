@@ -125,6 +125,18 @@ function checkMemberForOutput(
     if (ta && containsTypeRefInOutput(ta, paramName)) {
       return true;
     }
+  } else if (member.type === AST_NODE_TYPES.TSCallSignatureDeclaration) {
+    const c = member as TSESTree.TSCallSignatureDeclaration;
+    const rt = c.returnType?.typeAnnotation;
+    if (rt && containsTypeRefInOutput(rt, paramName)) {
+      return true;
+    }
+  } else if (member.type === AST_NODE_TYPES.TSConstructSignatureDeclaration) {
+    const c = member as TSESTree.TSConstructSignatureDeclaration;
+    const rt = c.returnType?.typeAnnotation;
+    if (rt && containsTypeRefInOutput(rt, paramName)) {
+      return true;
+    }
   }
   return false;
 }
