@@ -8,7 +8,9 @@ function getUnionFingerprint(
   sourceCode: TSESLint.SourceCode,
   node: TSESTree.TSUnionType,
 ): string {
-  return node.types.map((t) => sourceCode.getText(t).trim()).join("|");
+  return node.types
+    .map((t) => sourceCode.getText(t).replace(/\s+/g, " ").trim())
+    .join("|");
 }
 
 function hasTypeParameters(
