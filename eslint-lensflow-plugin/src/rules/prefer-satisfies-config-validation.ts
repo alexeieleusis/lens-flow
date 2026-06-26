@@ -198,6 +198,9 @@ const FUNCTION_TYPES = [
   AST_NODE_TYPES.FunctionDeclaration,
   AST_NODE_TYPES.FunctionExpression,
   AST_NODE_TYPES.ArrowFunctionExpression,
+  AST_NODE_TYPES.TSDeclareFunction,
+  AST_NODE_TYPES.TSFunctionType,
+  AST_NODE_TYPES.TSMethodSignature,
 ] as const;
 
 export default createRule({
@@ -237,10 +240,38 @@ export default createRule({
       }
     }
 
+    function checkFunctionSignature(
+      node: TSESTree.TSFunctionType | TSESTree.TSMethodSignature,
+    ) {
+      const anyParam = findAnyParam(node.params);
+      if (!anyParam) return;
+
+      const body = (node as unknown as { body?: TSESTree.Node })?.body;
+      if (!body) return;
+
+      const checks = countRuntimeChecks(body, anyParam.name);
+      if (checks >= 2) {
+        context.report({
+          node: anyParam.node,
+          messageId: "preferSatisfies",
+          data: {
+            count: String(checks),
+            paramName: anyParam.name,
+          },
+        });
+      }
+    }
+
     return {
       FunctionDeclaration: checkFunction,
       FunctionExpression: checkFunction,
       ArrowFunctionExpression: checkFunction,
+      MethodDefinition: (node: TSESTree.MethodDefinition) => {
+        checkFunction(node.value);
+      },
+      TSDeclareFunction: checkFunction,
+      TSFunctionType: checkFunctionSignature,
+      TSMethodSignature: checkFunctionSignature,
     };
   },
 });
