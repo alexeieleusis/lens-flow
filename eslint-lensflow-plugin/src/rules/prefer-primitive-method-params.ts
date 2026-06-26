@@ -1,4 +1,4 @@
-import { TSESTree, TSESLint } from "@typescript-eslint/utils";
+import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { walk } from "../utils/ast-helpers.js";
 
