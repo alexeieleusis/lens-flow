@@ -92,7 +92,7 @@ export default createRule({
         let reportedType = "";
         const hasUninferredParam = callback.params.some((param) => {
           // Parameter must not have an explicit type annotation
-          if ((param as any).typeAnnotation) return false;
+          if ("typeAnnotation" in param && param.typeAnnotation) return false;
 
           const paramType = parserServices.getTypeAtLocation(param);
 
