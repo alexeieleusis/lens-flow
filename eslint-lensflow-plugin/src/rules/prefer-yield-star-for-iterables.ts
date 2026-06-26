@@ -28,20 +28,9 @@ function isArrayOrIterable(checker: ts.TypeChecker, argType: ts.Type): boolean {
     return false;
   }
 
-  const symbol = argType.getSymbol();
-  if (!symbol) return false;
-
-  const name = symbol.escapedName as string;
-  if (
-    name.includes("Array") ||
-    name.includes("Iterable") ||
-    name.includes("Iterator") ||
-    name.includes("Set") ||
-    name.includes("Map") ||
-    name.includes("Tuple")
-  ) {
-    return true;
-  }
+  // Authoritative iterator protocol check via TypeChecker
+  if (checker.getPropertyOfType(argType, "[Symbol.iterator]")) return true;
+  if (checker.getPropertyOfType(argType, "[Symbol.asyncIterator]")) return true;
 
   for (const prop of argType.getProperties()) {
     const propName = prop.name;
