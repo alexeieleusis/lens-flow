@@ -1,5 +1,13 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+function getPropertyKey(
+  key: TSESTree.TSPropertySignature["key"],
+): string | null {
+  if (key.type === "Identifier") return key.name;
+  if (key.type === "Literal" && typeof key.value === "string") return key.value;
+  return null;
+}
 
 export default createRule({
   name: "no-value-wrapper-nominal",
@@ -26,7 +34,7 @@ export default createRule({
 
         const [member] = typeAnnotation.members;
         if (member.type !== "TSPropertySignature") return;
-        if (member.key.type !== "Identifier" || member.key.name !== "value")
+        if (getPropertyKey(member.key) !== "value")
           return;
 
         const typeAnn = member.typeAnnotation?.typeAnnotation;
