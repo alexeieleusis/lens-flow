@@ -52,8 +52,8 @@ export default createRule({
   create(context: TSESLint.RuleContext<"preferThis", []>) {
     return {
       MethodDefinition(node) {
-        const parent = context.sourceCode.getAncestors(node);
-        const classNode = parent.find(
+        const ancestors = context.sourceCode.getAncestors(node);
+        const classNode = ancestors.find(
           (a) =>
             a.type === AST_NODE_TYPES.ClassDeclaration ||
             a.type === AST_NODE_TYPES.ClassExpression,
