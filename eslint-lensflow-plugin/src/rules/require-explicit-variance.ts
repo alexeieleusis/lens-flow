@@ -125,7 +125,7 @@ export default createRule({
 
       members.forEach((member) => {
         if (member.type === "TSPropertySignature" || member.type === "TSMethodSignature") {
-          findTypeParamUsage(member, paramName, true, usage);
+          findTypeParamUsage(member, paramName, false, usage);
         }
       });
 
