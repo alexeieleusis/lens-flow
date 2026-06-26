@@ -94,7 +94,7 @@ function containsTypeReference(node: TSESTree.TypeNode, paramName: string): bool
       return false;
 
     case "TSTypeOperator":
-      return false;
+      return containsTypeReference(node.typeAnnotation, paramName);
 
     case "TSNamedTupleMember": {
       const member = node;
