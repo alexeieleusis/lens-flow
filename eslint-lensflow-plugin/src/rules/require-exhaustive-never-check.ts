@@ -127,23 +127,35 @@ function findContainingFunctionBody(
 ): { body: TSESTree.BlockStatement; index: number } | null {
   let cur: TSESTree.Node | undefined = returnNode;
   while (cur) {
-    if (isFunctionBody(cur)) {
+    if (
+      cur.type === "BlockStatement" &&
+      cur.parent &&
+      (cur.parent.type === "FunctionDeclaration" ||
+        cur.parent.type === "FunctionExpression" ||
+        cur.parent.type === "ArrowFunctionExpression")
+    ) {
       const idx = cur.body.indexOf(returnNode);
       if (idx >= 0) return { body: cur, index: idx };
+      const si = findAncestorStatementIndex(returnNode, cur);
+      if (si >= 0) return { body: cur, index: si };
+      return null;
     }
     cur = cur.parent;
   }
   return null;
 }
 
-function isFunctionBody(node: TSESTree.Node): node is TSESTree.BlockStatement {
-  if (node.type !== "BlockStatement" || !node.parent) return false;
-  const pType = node.parent.type;
-  return (
-    pType === "FunctionDeclaration" ||
-    pType === "FunctionExpression" ||
-    pType === "ArrowFunctionExpression"
-  );
+function findAncestorStatementIndex(
+  returnNode: TSESTree.ReturnStatement,
+  funcBody: TSESTree.BlockStatement,
+): number {
+  let cur: TSESTree.Node | undefined = returnNode;
+  while (cur) {
+    const idx = funcBody.body.indexOf(cur as TSESTree.Statement);
+    if (idx >= 0) return idx;
+    cur = cur.parent;
+  }
+  return -1;
 }
 
 function collectBackwardsIfChain(
