@@ -31,7 +31,14 @@ function findAccessedProperties(
     }
   }
 
+  const FUNCTION_BOUNDARIES = new Set([
+    "FunctionDeclaration",
+    "FunctionExpression",
+    "ArrowFunctionExpression",
+  ]);
+
   function traverse(node: TSESTree.Node) {
+    if (FUNCTION_BOUNDARIES.has(node.type)) return;
     if (visited.has(node)) return;
     visited.add(node);
 
