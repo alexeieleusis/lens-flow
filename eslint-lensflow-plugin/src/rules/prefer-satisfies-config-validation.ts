@@ -1,17 +1,55 @@
 import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
+function getNameFromPattern(pattern: TSESTree.Node): string | null {
+  if (pattern.type === AST_NODE_TYPES.Identifier) return pattern.name;
+  if (pattern.type === AST_NODE_TYPES.ObjectPattern) {
+    const prop = pattern.properties[0];
+    if (prop && "key" in prop && prop.key.type === AST_NODE_TYPES.Identifier) {
+      return prop.key.name;
+    }
+    return null;
+  }
+  if (pattern.type === AST_NODE_TYPES.ArrayPattern) {
+    const elem = pattern.elements[0];
+    if (elem && elem.type === AST_NODE_TYPES.Identifier) return elem.name;
+    return null;
+  }
+  return null;
+}
+
+function normalizeParam(
+  param: TSESTree.Parameter,
+): { node: TSESTree.Node; name: string } | null {
+  let inner: TSESTree.Node = param;
+  if (param.type === AST_NODE_TYPES.AssignmentPattern) {
+    inner = param.left;
+  } else if (param.type === AST_NODE_TYPES.RestElement) {
+    inner = param.argument;
+  }
+
+  if (
+    inner.type === AST_NODE_TYPES.Identifier ||
+    inner.type === AST_NODE_TYPES.ObjectPattern ||
+    inner.type === AST_NODE_TYPES.ArrayPattern
+  ) {
+    if (
+      inner.typeAnnotation != null &&
+      inner.typeAnnotation.typeAnnotation?.type === AST_NODE_TYPES.TSAnyKeyword
+    ) {
+      const name = getNameFromPattern(inner);
+      if (name) return { node: inner, name };
+    }
+  }
+  return null;
+}
+
 function findAnyParam(
   params: TSESTree.Parameter[],
-): { node: TSESTree.Identifier; name: string } | null {
+): { node: TSESTree.Node; name: string } | null {
   for (const param of params) {
-    if (
-      param.type === AST_NODE_TYPES.Identifier &&
-      param.typeAnnotation != null &&
-      param.typeAnnotation.typeAnnotation?.type === AST_NODE_TYPES.TSAnyKeyword
-    ) {
-      return { node: param, name: param.name };
-    }
+    const result = normalizeParam(param);
+    if (result) return result;
   }
   return null;
 }
