@@ -49,7 +49,7 @@ export default createRule({
 
       const params = node.params;
 
-      const unionGroups = new Map<string, string[]>();
+      const unionGroups = new Map<string, { name: string; param: TSESTree.Parameter }[]>();
 
       for (const param of params) {
         let effectiveParam = param.type === "TSParameterProperty" ? param.parameter : param;
@@ -72,19 +72,22 @@ export default createRule({
         if (!unionGroups.has(fingerprint)) {
           unionGroups.set(fingerprint, []);
         }
-        unionGroups.get(fingerprint)!.push(paramName);
+        unionGroups.get(fingerprint)!.push({ name: paramName, param });
       }
 
-      for (const [fingerprint, groupParams] of unionGroups) {
-        if (groupParams.length >= 2) {
-          context.report({
-            node,
-            messageId: "sharedUnionWithoutGeneric",
-            data: {
-              params: groupParams.join(", "),
-              union: fingerprint.replace(/\|/g, " | "),
-            },
-          });
+      for (const [fingerprint, groupEntries] of unionGroups) {
+        if (groupEntries.length >= 2) {
+          const groupParams = groupEntries.map((e) => e.name);
+          for (const entry of groupEntries) {
+            context.report({
+              node: entry.param,
+              messageId: "sharedUnionWithoutGeneric",
+              data: {
+                params: groupParams.join(", "),
+                union: fingerprint.replace(/\|/g, " | "),
+              },
+            });
+          }
         }
       }
     }
