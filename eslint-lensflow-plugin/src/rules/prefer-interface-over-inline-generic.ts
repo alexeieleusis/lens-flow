@@ -129,8 +129,9 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"preferInterface", []>) {
-    function checkFunction(
-      node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression,
+    function checkFunctionLike(
+      node: { typeParameters?: TSESTree.TSTypeParameterDeclaration | null; returnType?: TSESTree.TSTypeAnnotation | null },
+      reportNode: TSESTree.Node,
     ) {
       const typeParams = node.typeParameters;
       if (!typeParams) return;
@@ -151,7 +152,7 @@ export default createRule({
           memberCount <= 3 ? "inline type literal" : `inline type literal with ${memberCount} members`;
 
         context.report({
-          node,
+          node: reportNode,
           messageId: "preferInterface",
           data: {
             constraintSummary,
@@ -160,10 +161,40 @@ export default createRule({
       }
     }
 
+    function checkFunction(
+      node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression,
+    ) {
+      checkFunctionLike(node, node);
+    }
+
+    function checkTSDeclareFunction(node: TSESTree.TSDeclareFunction) {
+      checkFunctionLike(node, node);
+    }
+
+    function checkTSFunctionType(node: TSESTree.TSFunctionType) {
+      checkFunctionLike(node, node);
+    }
+
+    function checkTSMethodSignature(node: TSESTree.TSMethodSignature) {
+      checkFunctionLike(node, node);
+    }
+
+   function checkMethodDefinition(node: TSESTree.MethodDefinition) {
+      // MethodDefinition doesn't carry typeParameters directly — they're on
+      // `node.value` (FunctionExpression), which is already visited by
+      // `FunctionExpression`. Skip here to avoid double-reporting.
+      // Abstract methods (`TSAbstractMethodDefinition`) have an empty body
+      // value; handled by the TSAbstractMethodDefinition visitor below.
+    }
+
     return {
       FunctionDeclaration: checkFunction,
       FunctionExpression: checkFunction,
       ArrowFunctionExpression: checkFunction,
+      TSDeclareFunction: checkTSDeclareFunction,
+      TSFunctionType: checkTSFunctionType,
+      TSMethodSignature: checkTSMethodSignature,
+      MethodDefinition: checkMethodDefinition,
     };
   },
 });

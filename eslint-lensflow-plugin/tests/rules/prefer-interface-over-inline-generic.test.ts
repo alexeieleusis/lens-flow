@@ -30,6 +30,14 @@ function handle<T extends Base>(item: T) {
 function compare<T extends Comparable, U extends Comparable>(a: T, b: U) {
   return a.compareTo(b);
 }`,
+    // TSDeclareFunction — return type references T, legitimate use
+    `declare function identity<T extends { value: number }>(item: T): T;`,
+    // TSFunctionType — return type references T, legitimate use
+    `type Identity = <T extends { value: number }>(item: T) => T;`,
+    // TSMethodSignature — return type references T, legitimate use
+    `interface Service {
+  transform<T extends { value: number }>(item: T): T;
+}`,
   ],
   invalid: [
     // Basic case from the spec
@@ -74,6 +82,23 @@ function multi<T extends Base, U extends { value: number }>(a: T, b: U) {
 function execute<T extends { run(): void }>(item: T): Result {
   item.run();
   return { ok: true };
+}`,
+      errors: [{ messageId: "preferInterface" }],
+    },
+    // TSDeclareFunction — ambient function with inline type literal constraint
+    {
+      code: `declare function ambient<T extends { value: number }>(item: T): void;`,
+      errors: [{ messageId: "preferInterface" }],
+    },
+    // TSFunctionType — function type alias with inline type literal constraint
+    {
+      code: `type Handler = <T extends { data: string }>(item: T) => void;`,
+      errors: [{ messageId: "preferInterface" }],
+    },
+    // TSMethodSignature — interface method with inline type literal constraint
+    {
+      code: `interface Service {
+  handle<T extends { id: string }>(item: T): void;
 }`,
       errors: [{ messageId: "preferInterface" }],
     },
