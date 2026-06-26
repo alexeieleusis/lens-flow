@@ -77,6 +77,8 @@ export default createRule({
         }
       | null = null;
 
+    let fnDepth = 0;
+
     function getArrayConstraintText(
       constraint: TSESTree.TypeNode,
     ): string | undefined {
@@ -128,6 +130,12 @@ export default createRule({
         | TSESTree.FunctionExpression
         | TSESTree.ArrowFunctionExpression,
     ) {
+      fnDepth++;
+
+      if (fnDepth !== 1) {
+        return;
+      }
+
       const typeParams = node.typeParameters;
       if (!typeParams || typeParams.params.length === 0 || !node.body) {
         return;
@@ -180,26 +188,25 @@ export default createRule({
     }
 
     function exitFn() {
-      if (!currentFn) {
-        currentFn = null;
-        return;
-      }
+      if (fnDepth === 1 && currentFn) {
+        for (const [genName, data] of currentFn.generics) {
+          if (data.calls.length === 0) continue;
 
-      for (const [genName, data] of currentFn.generics) {
-        if (data.calls.length === 0) continue;
+          const allSimple = data.calls.every((m) => simpleSet.has(m));
 
-        const allSimple = data.calls.every((m) => simpleSet.has(m));
-
-        if (allSimple) {
-          context.report({
-            node: data.node,
-            messageId: "unnecessaryGeneric",
-            data: { param: genName, constraint: data.constraintText },
-          });
+          if (allSimple) {
+            context.report({
+              node: data.node,
+              messageId: "unnecessaryGeneric",
+              data: { param: genName, constraint: data.constraintText },
+            });
+          }
         }
+
+        currentFn = null;
       }
 
-      currentFn = null;
+      fnDepth--;
     }
 
     return {
@@ -211,7 +218,7 @@ export default createRule({
       "ArrowFunctionExpression:exit": exitFn,
 
       CallExpression(callNode) {
-        if (!currentFn) return;
+        if (!currentFn || fnDepth !== 1) return;
 
         if (
           callNode.callee.type !== AST_NODE_TYPES.MemberExpression ||
