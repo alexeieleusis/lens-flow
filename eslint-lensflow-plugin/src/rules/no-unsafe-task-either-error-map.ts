@@ -78,7 +78,7 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"unsafeThrow" | "unsafeCast", []>) {
-    const parserServices = ESLintUtils.getParserServices(context);
+    const parserServices = ESLintUtils.getParserServices(context, { allowNoProject: true });
     const program = parserServices.program;
     if (!program) return {};
 
