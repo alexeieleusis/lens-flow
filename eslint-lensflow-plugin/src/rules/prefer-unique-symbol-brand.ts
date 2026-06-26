@@ -2,7 +2,7 @@ import type { TSESTree } from "@typescript-eslint/types";
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const BRAND_PATTERN = /^__?(?:brand|Branded)$|^Brand$/;
+const BRAND_PATTERN = /^__?(?:brand|Branded)$|Brand$/;
 
 function getKeyIdentifier(key: TSESTree.Property["key"]): string | null {
   if (key.type === "Identifier") return key.name;
@@ -32,7 +32,7 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Prefer `unique symbol` brands over string-literal brands to prevent forgery via `as` cast",
+        "Prefer `unique symbol` brands over string-literal brands to prevent forgery via `as` cast. Detects brand properties named `brand`, `_brand`, `__brand`, `Branded`, `_Branded`, `__Branded`, or any name ending in `Brand` (e.g. `orderBrand`, `MoneyBrand`).",
     },
     messages: {
       stringBrandForgery:
