@@ -5,6 +5,10 @@ function getTypeName(node: TSESTree.TSTypeReference): string | null {
   if (node.typeName.type === AST_NODE_TYPES.Identifier) {
     return node.typeName.name;
   }
+  if (node.typeName.type === AST_NODE_TYPES.TSQualifiedName) {
+    const right = node.typeName.right;
+    return right.type === AST_NODE_TYPES.Identifier ? right.name : null;
+  }
   return null;
 }
 
