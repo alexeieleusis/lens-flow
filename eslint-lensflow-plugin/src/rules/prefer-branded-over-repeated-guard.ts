@@ -48,6 +48,22 @@ export default createRule({
         if (node.type === "FunctionExpression" && node.id) {
           return node.id.name;
         }
+        if (node.type === "MethodDefinition" && node.key.type === "Identifier") {
+          let className = "anonymous";
+          const idx = ancestors.indexOf(node);
+          for (let i = idx - 1; i >= 0; i--) {
+            const a = ancestors[i];
+            if (a.type === "ClassDeclaration" && a.id) {
+              className = a.id.name;
+              break;
+            }
+            if (a.type === "ClassExpression" && a.id) {
+              className = a.id.name;
+              break;
+            }
+          }
+          return `${className}.${node.key.name}`;
+        }
         if (node.type === "ArrowFunctionExpression") {
           const varDecl = ancestors
             .slice(ancestors.indexOf(node) + 1)
@@ -92,6 +108,21 @@ export default createRule({
         if (varDecl && varDecl.id.type === "Identifier") {
           name = varDecl.id.name;
         }
+        const retType = node.returnType?.typeAnnotation;
+        if (name && isGuardCandidate(name, retType)) {
+          guardNames.add(name);
+        }
+      },
+      MethodDefinition(node) {
+        if (node.key.type !== "Identifier") return;
+        const name = node.key.name;
+        const retType = (node.value as TSESTree.FunctionExpression).returnType?.typeAnnotation;
+        if (name && isGuardCandidate(name, retType)) {
+          guardNames.add(name);
+        }
+      },
+      TSDeclareFunction(node) {
+        const name = node.id?.name ?? "";
         const retType = node.returnType?.typeAnnotation;
         if (name && isGuardCandidate(name, retType)) {
           guardNames.add(name);
