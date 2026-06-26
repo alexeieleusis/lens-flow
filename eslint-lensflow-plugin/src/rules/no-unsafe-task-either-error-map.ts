@@ -8,7 +8,7 @@ interface ESTreeToTSNodeMap {
   get<K extends TSESTree.Node>(key: K): ts.Node | undefined;
 }
 
-const URL = knowledgeUrl("usecases/UC21-async-concurrency.md");
+const DOCS_URL = knowledgeUrl("usecases/UC21-async-concurrency.md");
 
 function isTryCatchCall(
   node: TSESTree.CallExpression,
@@ -159,7 +159,7 @@ export default createRule({
               context.report({
                 node: childNode.argument,
                 messageId: "unsafeThrow",
-                data: { expectedType: ctx.errorTypeStr, url: URL },
+                data: { expectedType: ctx.errorTypeStr, url: DOCS_URL },
               });
             }
           });
@@ -185,7 +185,7 @@ export default createRule({
             context.report({
               node: childNode,
               messageId: "unsafeCast",
-              data: { url: URL },
+              data: { url: DOCS_URL },
             });
           });
         }
