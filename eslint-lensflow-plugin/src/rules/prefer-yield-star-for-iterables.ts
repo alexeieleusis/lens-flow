@@ -3,7 +3,7 @@ import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC21-async-concurrency.md");
+const RULE_URL = knowledgeUrl("usecases/UC21-async-concurrency.md");
 
 function isArrayOrIterable(checker: ts.TypeChecker, argType: ts.Type): boolean {
   if (checker.isArrayType(argType)) return true;
@@ -124,7 +124,7 @@ export default createRule({
           context.report({
             node: yieldNode,
             messageId: "preferYieldStar",
-            data: { url: URL },
+            data: { url: RULE_URL },
           });
         }
       },
