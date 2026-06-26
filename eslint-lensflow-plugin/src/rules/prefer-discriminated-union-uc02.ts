@@ -53,7 +53,7 @@ function resolveUnionNode(
   return null;
 }
 
-function getFieldName(key: TSESTree.PropertyName): string {
+function getFieldName(key: TSESTree.PropertyName, sourceCode: TSESLint.SourceCode): string {
   if (key.type === "Identifier") {
     return key.name;
   }
@@ -62,7 +62,7 @@ function getFieldName(key: TSESTree.PropertyName): string {
     return String(key.value);
   }
 
-  return "?";
+  return sourceCode.getText(key);
 }
 
 function reportLiteralUnionField(
@@ -74,7 +74,7 @@ function reportLiteralUnionField(
     node: member,
     messageId: "literalUnionField",
     data: {
-      field: getFieldName(member.key),
+      field: getFieldName(member.key, context.sourceCode),
       count: String(countLiteralMembers(unionNode)),
     },
   });
