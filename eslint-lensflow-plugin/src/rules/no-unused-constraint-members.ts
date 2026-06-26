@@ -58,14 +58,27 @@ function isParameterTypedWith(
   typeParamName: string,
 ): boolean {
   if (param.type !== "Identifier" || !param.typeAnnotation) return false;
-  const typeAnn = param.typeAnnotation.typeAnnotation;
-  if (typeAnn.type === "TSTypeReference") {
-    return (
-      typeAnn.typeName.type === "Identifier" &&
-      typeAnn.typeName.name === typeParamName
-    );
+
+  function getRightmostIdentifier(entity: TSESTree.EntityName): string | null {
+    if (entity.type === "Identifier") return entity.name;
+    if (entity.type === "TSQualifiedName") return getRightmostIdentifier(entity.right);
+    return null;
   }
-  return false;
+
+  function matches(node: TSESTree.TypeNode): boolean {
+    if (node.type === "TSTypeReference") {
+      return getRightmostIdentifier(node.typeName as TSESTree.EntityName) === typeParamName;
+    }
+    if (node.type === "TSUnionType") {
+      return node.types.some(matches);
+    }
+    if (node.type === "TSIntersectionType") {
+      return node.types.some(matches);
+    }
+    return false;
+  }
+
+  return matches(param.typeAnnotation.typeAnnotation);
 }
 
 function getConstraintMemberNames(
