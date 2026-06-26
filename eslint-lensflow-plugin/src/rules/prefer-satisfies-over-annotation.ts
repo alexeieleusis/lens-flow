@@ -13,13 +13,51 @@ function buildQualifiedName(node: TSESTree.TSQualifiedName): string {
   return `${left}.${node.right.name}`;
 }
 
-function extractTypeName(typeNode: TSESTree.TypeNode): string {
+const PRIMITIVE_KEYWORDS: Record<string, string> = {
+  TSStringKeyword: "string",
+  TSNumberKeyword: "number",
+  TSBooleanKeyword: "boolean",
+  TSBigIntKeyword: "bigint",
+  TSSymbolKeyword: "symbol",
+  TSAnyKeyword: "any",
+  TSUnknownKeyword: "unknown",
+  TSNeverKeyword: "never",
+  TSVoidKeyword: "void",
+  TSUndefinedKeyword: "undefined",
+  TSNullKeyword: "null",
+  TSObjectKeyword: "object",
+  TSIntrinsicKeyword: "intrinsic",
+};
+
+function extractTypeName(typeNode: TSESTree.TypeNode, sourceCode: TSESLint.SourceCode): string {
   if (typeNode.type === "TSTypeReference") {
     const tn = typeNode.typeName;
     if (tn.type === "Identifier") return tn.name;
     if (tn.type === "TSQualifiedName") return buildQualifiedName(tn);
   }
-  return "?";
+
+  if (typeNode.type in PRIMITIVE_KEYWORDS) {
+    return PRIMITIVE_KEYWORDS[typeNode.type];
+  }
+
+  if (typeNode.type === "TSLiteralType") {
+    const lit = typeNode.literal;
+    if (lit.type === "Literal") return String(lit.value);
+  }
+
+  if (typeNode.type === "TSTypeLiteral") {
+    return "{ ... }";
+  }
+
+  if (typeNode.type === "TSArrayType") {
+    return `${extractTypeName(typeNode.elementType, sourceCode)}[]`;
+  }
+
+  if (typeNode.type === "TSTupleType") {
+    return `[${typeNode.elementTypes.map((e) => extractTypeName(e, sourceCode)).join(", ")}]`;
+  }
+
+  return sourceCode.getText(typeNode);
 }
 
 export default createRule({
@@ -66,20 +104,16 @@ export default createRule({
 
         if (!node.id.typeAnnotation) return;
 
+        const sourceCode = context.sourceCode;
         const typeAnnotation = node.id.typeAnnotation.typeAnnotation;
-        let typeName = "?";
-        if (typeAnnotation.type === "TSTypeReference") {
-          typeName = extractTypeName(typeAnnotation);
-        } else if (typeAnnotation.type === "TSUnionType") {
+
+        let typeName: string;
+        if (typeAnnotation.type === "TSUnionType") {
           typeName = typeAnnotation.types
-            .map((t) => {
-              if (t.type === "TSLiteralType") {
-                const lit = t.literal;
-                if (lit.type === "Literal") return String(lit.value);
-              }
-              return extractTypeName(t);
-            })
+            .map((t) => extractTypeName(t, sourceCode))
             .join(" | ");
+        } else {
+          typeName = extractTypeName(typeAnnotation, sourceCode);
         }
 
         context.report({
