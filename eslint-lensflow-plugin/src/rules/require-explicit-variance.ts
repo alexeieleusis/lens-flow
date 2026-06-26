@@ -62,9 +62,18 @@ function findTypeParamUsage(
       findTypeParamUsage(node.indexType, paramName, false, result);
       break;
     }
-    case "TSPropertySignature":
-      // Plain property types are invariant (readable and writable) — skip
+    case "TSPropertySignature": {
+      if (node.typeAnnotation) {
+        if (node.readonly) {
+          findTypeParamUsage(node.typeAnnotation, paramName, true, result);
+        } else {
+          // Mutable property — invariant position
+          findTypeParamUsage(node.typeAnnotation, paramName, true, result);
+          findTypeParamUsage(node.typeAnnotation, paramName, false, result);
+        }
+      }
       break;
+    }
     case "TSMethodSignature": {
       const ms = node as TSESTree.TSMethodSignature;
       (ms.params || []).forEach((p) => {
