@@ -96,15 +96,19 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"literalUnionField", []>) {
+ create(context: TSESLint.RuleContext<"literalUnionField", []>) {
     const typeAliases = new Map<string, TSESTree.TypeNode>();
 
     return {
-      TSTypeAliasDeclaration(node: TSESTree.TSTypeAliasDeclaration) {
-        typeAliases.set(node.id.name, node.typeAnnotation);
+      Program(program: TSESTree.Program) {
+        for (const stmt of program.body) {
+          if (stmt.type === "TSTypeAliasDeclaration") {
+            typeAliases.set(stmt.id.name, stmt.typeAnnotation);
+          }
+        }
       },
 
-     "TSInterfaceBody, TSTypeLiteral"(
+      "TSInterfaceBody, TSTypeLiteral"(
         node: TSESTree.TSInterfaceBody | TSESTree.TSTypeLiteral,
       ) {
         for (const member of getMembers(node)) {
