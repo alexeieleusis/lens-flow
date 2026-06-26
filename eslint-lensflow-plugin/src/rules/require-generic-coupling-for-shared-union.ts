@@ -37,7 +37,7 @@ export default createRule({
     },
     messages: {
       sharedUnionWithoutGeneric:
-        "Parameters {{params}} share the same union type {{union}} without a shared generic type parameter. Use a generic type variable to couple them. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+        "Parameters {{params}} share the same union type {{union}} without a shared generic type parameter. Use a generic type variable to couple them.",
     },
     schema: [],
     fixable: undefined,
