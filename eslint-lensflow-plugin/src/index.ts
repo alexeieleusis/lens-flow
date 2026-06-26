@@ -238,7 +238,6 @@ import preferFunctionPropertyOverMethod from "./rules/prefer-function-property-o
 import preferInstanceofOverConstructorName from "./rules/prefer-instanceof-over-constructor-name.js";
 import preferInterfaceOverInlineGeneric from "./rules/prefer-interface-over-inline-generic.js";
 import preferInterfaceOverPureAbstractClass from "./rules/prefer-interface-over-pure-abstract-class.js";
-import preferNullishCoalescing from "./rules/prefer-nullish-coalescing.js";
 import preferParseOverBooleanValidate from "./rules/prefer-parse-over-boolean-validate.js";
 import preferPrimitiveMethodParams from "./rules/prefer-primitive-method-params.js";
 import preferPropertyFunctionSignature from "./rules/prefer-property-function-signature.js";
@@ -526,8 +525,7 @@ const plugin: {
     "prefer-instanceof-over-constructor-name": preferInstanceofOverConstructorName,
     "prefer-interface-over-inline-generic": preferInterfaceOverInlineGeneric,
     "prefer-interface-over-pure-abstract-class": preferInterfaceOverPureAbstractClass,
-    "prefer-nullish-coalescing": preferNullishCoalescing,
-    "prefer-parse-over-boolean-validate": preferParseOverBooleanValidate,
+     "prefer-parse-over-boolean-validate": preferParseOverBooleanValidate,
     "prefer-primitive-method-params": preferPrimitiveMethodParams,
     "prefer-property-function-signature": preferPropertyFunctionSignature,
     "prefer-record-over-index-signature": preferRecordOverIndexSignature,
