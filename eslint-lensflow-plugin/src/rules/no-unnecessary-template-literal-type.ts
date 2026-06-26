@@ -1,5 +1,5 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 export default createRule({
   name: "no-unnecessary-template-literal-type",
@@ -24,11 +24,12 @@ export default createRule({
         if (node.quasis.some((q) => q.value.cooked !== "")) return;
         if (node.types.length !== 1) return;
 
-        const innerType = node.types[0];
+        let inner: TSESTree.TypeNode = node.types[0];
+        const innerAny = inner as any;
+        if (innerAny.type === "TSParenthesizedType")
+          inner = innerAny.typeAnnotation as TSESTree.TypeNode;
         const targetType =
-          innerType.type === "TSUnionType"
-            ? innerType.types
-            : [innerType];
+          inner.type === "TSUnionType" ? (inner as TSESTree.TSUnionType).types : [inner];
 
         if (
           targetType.length === 0 ||
