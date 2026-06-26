@@ -29,6 +29,15 @@ function functionTypeContainsRef(
       if (tp.constraint && containsTypeReference(tp.constraint, paramName)) return true;
     }
   }
+  for (const param of node.params) {
+    if (
+      param.type === "Identifier" &&
+      param.typeAnnotation &&
+      containsTypeReference(param.typeAnnotation.typeAnnotation, paramName)
+    ) {
+      return true;
+    }
+  }
   return false;
 }
 
