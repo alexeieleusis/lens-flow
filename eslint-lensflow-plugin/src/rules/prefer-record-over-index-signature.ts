@@ -7,7 +7,7 @@ export default createRule({
     type: "suggestion",
     docs: {
       description:
-        "Prefer Record<K, V> over inline index signature in interface or type literal",
+        "Prefer Record<K, V> over an interface or type literal containing only an index signature",
     },
     messages: {
       preferRecord:
