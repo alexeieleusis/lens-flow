@@ -1,5 +1,6 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { walk } from "../utils/ast-helpers.js";
 
 type FunctionNode =
   | TSESTree.FunctionDeclaration
@@ -11,45 +12,19 @@ function findAccessedProperties(
   paramName: string,
 ): Set<string> {
   const accessed = new Set<string>();
-  const visited = new WeakSet<TSESTree.Node>();
 
-  function isAstNode(val: unknown): val is TSESTree.Node {
-    return val != null && typeof val === "object" && "type" in val;
-  }
-
-  function visitChildren(node: TSESTree.Node) {
-    for (const key of Object.keys(node)) {
-      if (key === "parent") continue;
-      const val = (node as unknown as Record<string, unknown>)[key];
-      if (Array.isArray(val)) {
-        for (const item of val) {
-          if (isAstNode(item)) traverse(item);
-        }
-      } else if (isAstNode(val)) {
-        traverse(val);
-      }
-    }
-  }
-
-  const FUNCTION_BOUNDARIES = new Set([
-    "FunctionDeclaration",
-    "FunctionExpression",
-    "ArrowFunctionExpression",
-  ]);
-
-  function traverse(node: TSESTree.Node) {
-    if (FUNCTION_BOUNDARIES.has(node.type)) return;
-    if (visited.has(node)) return;
-    visited.add(node);
-
-    if (node.type === "MemberExpression" && !node.computed && node.property.type === "Identifier" && node.object.type === "Identifier" && node.object.name === paramName) {
+  walk(body, (node) => {
+    if (
+      node.type === "MemberExpression" &&
+      !node.computed &&
+      node.property.type === "Identifier" &&
+      node.object.type === "Identifier" &&
+      node.object.name === paramName
+    ) {
       accessed.add(node.property.name);
     }
+  });
 
-    visitChildren(node);
-  }
-
-  traverse(body);
   return accessed;
 }
 
