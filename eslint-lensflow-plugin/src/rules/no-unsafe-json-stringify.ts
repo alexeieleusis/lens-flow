@@ -66,6 +66,19 @@ function isFunctionDeclaration(type: ts.Type): boolean {
   );
 }
 
+function hasToJSON(type: ts.Type): boolean {
+  const toJSON = type.getProperty("toJSON");
+  if (!toJSON.length) return false;
+  const toJSONType = toJSON[0].valueDeclaration
+    ? toJSON[0].valueDeclaration.type
+    : undefined;
+  if (toJSONType) {
+    const callSigs = toJSONType.getCallSignatures();
+    if (callSigs.length > 0) return true;
+  }
+  return false;
+}
+
 function collectFromTypeMembers(
   members: readonly ts.Type[],
   checker: ts.TypeChecker,
@@ -105,6 +118,8 @@ function collectUnsafeTypes(
   if (symResult !== null) return symResult;
 
   if (isFunctionDeclaration(type)) return ["Function"];
+
+  if (hasToJSON(type)) return [];
 
   if (type.isUnion() || type.isIntersection()) {
     return collectFromTypeMembers(type.types, checker, seen);
