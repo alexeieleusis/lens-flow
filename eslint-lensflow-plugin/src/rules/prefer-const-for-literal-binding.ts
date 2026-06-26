@@ -32,8 +32,15 @@ export default createRule({
     }
 
     function getLiteralInfo(
-      init: TSESTree.Literal
+      init: TSESTree.Literal | TSESTree.TemplateLiteral
     ): { literalType: string | number; widenedType: "string" | "number" | "boolean" } | null {
+      if (init.type === "TemplateLiteral") {
+        if (init.expressions.length !== 0) return null;
+        const cooked = init.quasis[0].value.cooked;
+        if (cooked === null) return null;
+        return { literalType: `"${cooked}"`, widenedType: "string" };
+      }
+
       const val = init.value;
       let literalType: string | number | null;
       if (typeof val === "string") {
@@ -65,7 +72,11 @@ export default createRule({
         })[] = [];
 
         for (const declarator of node.declarations) {
-          if (declarator.init?.type !== "Literal") continue;
+          if (
+            declarator.init?.type !== "Literal" &&
+            declarator.init?.type !== "TemplateLiteral"
+          )
+            continue;
           if (declarator.id.typeAnnotation) continue;
           if (declarator.id.type !== "Identifier") continue;
           if (isReassigned(declarator, declarator.id.name)) continue;
