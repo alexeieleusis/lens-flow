@@ -26,6 +26,16 @@ function findTypeParamUsage(
     }
   }
 
+  // TSParenthesizedType isn't in AST_NODE_TYPES enum in this version of @typescript-eslint,
+  // so we handle it before the switch with a raw string check and typed cast.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  if (node.type === ("TSParenthesizedType" as any)) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pn = node as any;
+    findTypeParamUsage(pn.typeAnnotation, paramName, covariant, result);
+    return;
+  }
+
   switch (node.type) {
     case "TSFunctionType":
     case "TSConstructorType": {
@@ -91,7 +101,45 @@ function findTypeParamUsage(
       findTypeParamUsage(node.typeAnnotation, paramName, covariant, result);
       break;
     case "TSTypeQuery":
+      // typeof X<T> — variance depends on how the queried type uses its parameters.
+      // Treating as invariant to avoid silent false negatives.
+      findTypeParamUsage(node.exprName, paramName, true, result);
       findTypeParamUsage(node.exprName, paramName, false, result);
+      break;
+    case "TSTypeOperator": {
+      if (node.operator === "keyof") {
+        // keyof T — the operand is used contravariantly
+        findTypeParamUsage(node.typeAnnotation, paramName, false, result);
+      } else {
+        // readonly preserves the original variance
+        findTypeParamUsage(node.typeAnnotation, paramName, covariant, result);
+      }
+      break;
+    }
+    case "TSMappedType": {
+      // typeParameter (e.g., "K in keyof T") — bound is contravariant
+      if (node.typeParameter) {
+        findTypeParamUsage(node.typeParameter.constraint, paramName, false, result);
+      }
+      // typeAnnotation uses T covariantly
+      if (node.typeAnnotation) {
+        findTypeParamUsage(node.typeAnnotation, paramName, true, result);
+      }
+      break;
+    }
+    case "TSImportType": {
+      // import("mod").Foo<T> — check type arguments
+      if (node.typeArguments) {
+        node.typeArguments.params.forEach((arg) =>
+          findTypeParamUsage(arg, paramName, covariant, result),
+        );
+      }
+      // qualName may also reference the parameter
+      findTypeParamUsage(node.qualifier, paramName, covariant, result);
+      break;
+    }
+    case "TSInferType":
+      // infer U inside conditionals doesn't reference the outer type parameter
       break;
   }
 }
@@ -100,6 +148,7 @@ export default createRule({
   name: "require-explicit-variance",
   meta: {
     type: "suggestion",
+    fixable: undefined,
     docs: {
       description:
         "Require explicit `out` or `in` variance annotations on generic type parameters used in a single variance position",
