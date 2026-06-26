@@ -50,12 +50,23 @@ function involvesParam(expr: TSESTree.Node, params: Set<string>): boolean {
   return false;
 }
 
+const FUNCTION_BOUNDARY_TYPES = new Set([
+  "FunctionDeclaration",
+  "FunctionExpression",
+  "ArrowFunctionExpression",
+]);
+
+function isFunctionBoundary(node: TSESTree.Node): boolean {
+  return FUNCTION_BOUNDARY_TYPES.has(node.type);
+}
+
 function findThrow(node: TSESTree.Node): TSESTree.ThrowStatement | null {
   if (node.type === "ThrowStatement") {
     return node;
   }
 
   for (const child of collectChildren(node)) {
+    if (isFunctionBoundary(child)) continue;
     const found = findThrow(child);
     if (found) return found;
   }
@@ -97,6 +108,9 @@ function walk(node: TSESTree.Node): TSESTree.Node[] {
   const result: TSESTree.Node[] = [];
 
   for (const child of collectChildren(node)) {
+    if (isFunctionBoundary(child)) {
+      continue;
+    }
     result.push(child, ...walk(child));
   }
   return result;
