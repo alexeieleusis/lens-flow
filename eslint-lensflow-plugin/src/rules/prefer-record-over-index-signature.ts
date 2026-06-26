@@ -18,15 +18,15 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"preferRecord", []>) {
-    function checkSingleIndexSignature(members: unknown[], reportNode: TSESTree.Node) {
+    function checkSingleIndexSignature(
+      members: TSESTree.TypeElement[],
+      reportNode: TSESTree.Node,
+    ) {
       if (members.length !== 1) return;
-      const member = members[0] as { type: string; parameters?: unknown[] };
+      const member = members[0];
       if (member.type !== "TSIndexSignature") return;
-      if (!member.parameters || member.parameters.length === 0) return;
-      const param = member.parameters[0] as {
-        typeAnnotation?: { typeAnnotation?: { type: string } };
-      };
-      const typeAnn = param.typeAnnotation?.typeAnnotation;
+      const param = member.parameters[0];
+      const typeAnn = (param as TSESTree.Identifier).typeAnnotation?.typeAnnotation;
       if (
         typeAnn &&
         (typeAnn.type === "TSStringKeyword" || typeAnn.type === "TSNumberKeyword")
