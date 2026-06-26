@@ -98,8 +98,15 @@ export default createRule({
         }
       },
       CallExpression(node) {
-        const calleeName =
-          node.callee.type === "Identifier" ? node.callee.name : null;
+        let calleeName: string | null = null;
+        if (node.callee.type === "Identifier") {
+          calleeName = node.callee.name;
+        } else if (
+          node.callee.type === "MemberExpression" &&
+          node.callee.property.type === "Identifier"
+        ) {
+          calleeName = node.callee.property.name;
+        }
         if (calleeName && guardNames.has(calleeName)) {
           const enclosingFunc = findEnclosingFunction(node);
           guardCalls.push({
