@@ -3,6 +3,7 @@ import type { TSESLint } from "@typescript-eslint/utils";
 import {
   deriveSchemaName,
   findVariableInScopeChain,
+  looksLikeZodSchema,
 } from "../utils/schema-inference-helper.js";
 
 function isZInferType(node: unknown): boolean {
@@ -91,7 +92,8 @@ export default createRule({
         if (!containsTypeLiteral(typeAnnotation)) return;
 
         const scope = context.sourceCode.getScope(node);
-        if (!findVariableInScopeChain(scope, schemaVarName)) return;
+        const schemaVar = findVariableInScopeChain(scope, schemaVarName);
+        if (!schemaVar || !looksLikeZodSchema(schemaVar)) return;
 
         context.report({
           node,
@@ -110,7 +112,8 @@ export default createRule({
         const schemaVarName = deriveSchemaName(interfaceName);
 
         const scope = context.sourceCode.getScope(node);
-        if (!findVariableInScopeChain(scope, schemaVarName)) return;
+        const schemaVar = findVariableInScopeChain(scope, schemaVarName);
+        if (!schemaVar || !looksLikeZodSchema(schemaVar)) return;
 
         context.report({
           node,

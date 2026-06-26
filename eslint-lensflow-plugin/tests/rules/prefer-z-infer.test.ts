@@ -23,6 +23,11 @@ ruleTester.run("prefer-z-infer", rule, {
     });
 
     type User = z.infer<typeof UserSchema>;`,
+    // Not a Zod schema — conventionally named variable should not trigger
+    `const UserSchema = "some string";
+    interface User { name: string; }`,
+    `const ConfigSchema = 42;
+    type Config = { port: number; };`,
   ],
   invalid: [
     {
