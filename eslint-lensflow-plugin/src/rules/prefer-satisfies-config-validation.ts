@@ -137,14 +137,16 @@ function countRuntimeChecks(
       walkIfStatement(node);
     } else if (node.type === AST_NODE_TYPES.CallExpression) {
       walkCallExpression(node);
-    } else if ("body" in node && node.body) {
-      walkNodeBody(node.body, walk);
-    }
-    if ("consequent" in node) {
-      walkNodeBody(node.consequent, walk);
-    }
-    if ("alternate" in node) {
-      walkNodeBody(node.alternate, walk);
+    } else {
+      if ("body" in node && node.body) {
+        walkNodeBody(node.body, walk);
+      }
+      if ("consequent" in node) {
+        walkNodeBody(node.consequent, walk);
+      }
+      if ("alternate" in node) {
+        walkNodeBody(node.alternate, walk);
+      }
     }
   }
 
