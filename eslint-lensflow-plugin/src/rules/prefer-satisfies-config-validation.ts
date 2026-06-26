@@ -1,5 +1,6 @@
 import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { walk, walkNodes } from "../utils/ast-helpers.js";
 
 function getNameFromPattern(pattern: TSESTree.Node): string | null {
   if (pattern.type === AST_NODE_TYPES.Identifier) return pattern.name;
@@ -54,54 +55,20 @@ function findAnyParam(
   return null;
 }
 
-function isNode(val: unknown): val is TSESTree.Node {
-  return val != null && typeof val === "object" && "type" in val;
-}
-
-// Keys that are not AST child nodes — skip to avoid circular traversal.
-const NON_CHILD_KEYS = new Set(["parent", "loc", "range", "start", "end"]);
-
-function childNodesMatch(
-  node: TSESTree.Node,
-  paramName: string,
-): boolean {
-  for (const key of Object.keys(node) as (keyof TSESTree.Node)[]) {
-    if (NON_CHILD_KEYS.has(key)) continue;
-    const child = (node as unknown as Record<string, unknown>)[key];
-    if (Array.isArray(child)) {
-      if (arrayContainsMatchingNode(child, paramName)) return true;
-    }
-    if (isNode(child) && checkContainsParamMemberExpression(child, paramName)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function arrayContainsMatchingNode(arr: unknown[], paramName: string): boolean {
-  for (const item of arr) {
-    if (isNode(item) && checkContainsParamMemberExpression(item, paramName)) {
-      return true;
-    }
-  }
-  return false;
-}
-
 function checkContainsParamMemberExpression(
   node: TSESTree.Node,
   paramName: string,
 ): boolean {
-  if (node.type === AST_NODE_TYPES.MemberExpression) {
-    const obj = node.object;
-    if (obj.type === AST_NODE_TYPES.Identifier && obj.name === paramName) {
+  return walkNodes(node, (n) => {
+    if (
+      n.type === AST_NODE_TYPES.MemberExpression &&
+      n.object.type === AST_NODE_TYPES.Identifier &&
+      n.object.name === paramName
+    ) {
       return true;
     }
-    return (
-      checkContainsParamMemberExpression(node.object, paramName) ||
-      checkContainsParamMemberExpression(node.property, paramName)
-    );
-  }
-  return childNodesMatch(node, paramName);
+    return false;
+  });
 }
 
 function checkArrayMethodCallOnParam(
@@ -131,77 +98,26 @@ function checkArrayMethodCallOnParam(
   return false;
 }
 
-function walkNodeBody(body: unknown, walk: (node: TSESTree.Node) => void) {
-  if (Array.isArray(body)) {
-    for (const stmt of body) {
-      walk(stmt);
-    }
-  } else if (body && typeof body === "object" && "type" in body) {
-    walk(body as TSESTree.Node);
-  }
-}
-
 function countRuntimeChecks(
   body: TSESTree.Node,
   paramName: string,
 ): number {
   let count = 0;
 
-  function walkIfStatement(node: TSESTree.IfStatement) {
-    if (checkContainsParamMemberExpression(node.test, paramName)) {
-      count++;
-    }
-    walk(node.consequent);
-    if (node.alternate) {
-      walk(node.alternate);
-    }
-  }
-
-  function walkCallExpression(node: TSESTree.CallExpression) {
-    if (checkArrayMethodCallOnParam(node, paramName)) {
-      count++;
-    }
-    for (const arg of node.arguments) {
-      walk(arg);
-    }
-    if (node.callee.type === AST_NODE_TYPES.MemberExpression) {
-      walk(node.callee.object);
-      walk(node.callee.property);
-    }
-  }
-
-  function walk(node: TSESTree.Node) {
-    if (FUNCTION_TYPES.includes(node.type as any)) return;
+  walk(body, (node) => {
     if (node.type === AST_NODE_TYPES.IfStatement) {
-      walkIfStatement(node);
+      if (checkContainsParamMemberExpression(node.test, paramName)) {
+        count++;
+      }
     } else if (node.type === AST_NODE_TYPES.CallExpression) {
-      walkCallExpression(node);
-    } else {
-      if ("body" in node && node.body) {
-        walkNodeBody(node.body, walk);
-      }
-      if ("consequent" in node) {
-        walkNodeBody(node.consequent, walk);
-      }
-      if ("alternate" in node) {
-        walkNodeBody(node.alternate, walk);
+      if (checkArrayMethodCallOnParam(node, paramName)) {
+        count++;
       }
     }
-  }
-
-  walkNodeBody(body, walk);
+  });
 
   return count;
 }
-
-const FUNCTION_TYPES = [
-  AST_NODE_TYPES.FunctionDeclaration,
-  AST_NODE_TYPES.FunctionExpression,
-  AST_NODE_TYPES.ArrowFunctionExpression,
-  AST_NODE_TYPES.TSDeclareFunction,
-  AST_NODE_TYPES.TSFunctionType,
-  AST_NODE_TYPES.TSMethodSignature,
-] as const;
 
 export default createRule({
   name: "prefer-satisfies-config-validation",
