@@ -5,9 +5,13 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const KNOWLEDGE_URL = knowledgeUrl("catalog/T07-structural-typing.md");
 
-function isInsideTypePredicateFn(node: TSESTree.Node): boolean {
-  let current: TSESTree.Node | undefined = node.parent;
-  while (current) {
+function isInsideTypePredicateFn(
+  context: TSESLint.RuleContext<"unsafeCast", []>,
+  node: TSESTree.Node,
+): boolean {
+  const ancestors = context.sourceCode.getAncestors(node);
+  for (let i = ancestors.length - 1; i >= 0; i--) {
+    const current = ancestors[i];
     if (
       current.type === "FunctionDeclaration" ||
       current.type === "FunctionExpression" ||
@@ -19,7 +23,6 @@ function isInsideTypePredicateFn(node: TSESTree.Node): boolean {
       }
       break;
     }
-    current = current.parent;
   }
   return false;
 }
@@ -49,7 +52,7 @@ export default createRule({
 
     return {
       TSAsExpression(node) {
-        if (isInsideTypePredicateFn(node)) return;
+        if (isInsideTypePredicateFn(context, node)) return;
 
         const exprTs =
           parserServices.esTreeNodeToTSNodeMap.get(node.expression);
