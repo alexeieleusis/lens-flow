@@ -1,7 +1,7 @@
 import { createSwitchExhaustivenessRule } from "../utils/switch-exhaustiveness-rule.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T14-type-narrowing.md");
+const DOCS_URL = knowledgeUrl("catalog/T14-type-narrowing.md");
 
 export default createSwitchExhaustivenessRule({
   name: "require-exhaustive-switch",
@@ -10,5 +10,5 @@ export default createSwitchExhaustivenessRule({
   messageKey: "missingVariants",
   messageTemplate:
     "Switch statement is not exhaustive. Missing variants: {{missing}}. Handle all variants or add a default branch with assertNever. See: {{url}}",
-  url: URL,
+  url: DOCS_URL,
 });
