@@ -2,27 +2,36 @@ import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 function isSealedSymbolMember(member: TSESTree.TSInterfaceBody["body"][number]): boolean {
-  if (member.type !== "TSIndexSignature" || member.parameters.length === 0) {
-    return false;
+  // Index signature: [key: unique symbol]: never
+  if (member.type === "TSIndexSignature" && member.parameters.length > 0) {
+    const param = member.parameters[0];
+    if (param.type === "Identifier") {
+      const paramType = param.typeAnnotation?.typeAnnotation;
+      if (paramType) {
+        if (
+          paramType.type === "TSTypeOperator" &&
+          paramType.operator === "unique"
+        ) {
+          return true;
+        }
+        if (paramType.type === "TSTypeQuery") {
+          return true;
+        }
+      }
+    }
   }
 
-  const param = member.parameters[0];
-  if (param.type !== "Identifier") return false;
-
-  const paramType = param.typeAnnotation?.typeAnnotation;
-  if (!paramType) return false;
-
-  // [Brand: unique symbol]: void -> TSTypeOperator { operator: "unique", typeAnnotation: TSSymbolKeyword }
+  // Computed property with underscore-prefixed key and never type: [_sealed]: never
   if (
-    paramType.type === "TSTypeOperator" &&
-    paramType.operator === "unique"
+    member.type === "TSPropertySignature" &&
+    member.computed &&
+    member.key.type === "Identifier" &&
+    member.key.name.startsWith("_")
   ) {
-    return true;
-  }
-
-  // [S: typeof someSymbol]: void -> TSTypeQuery
-  if (paramType.type === "TSTypeQuery") {
-    return true;
+    const typeAnn = member.typeAnnotation?.typeAnnotation;
+    if (typeAnn && typeAnn.type === "TSNeverKeyword") {
+      return true;
+    }
   }
 
   return false;
@@ -62,7 +71,10 @@ export default createRule({
             member.optional === true,
         );
 
-        if (!hasOptional) {
+        // 5+ total members means the interface is not considered brittle
+        const hasEvolutionPath = hasOptional || members.length >= 5;
+
+        if (!hasEvolutionPath) {
           context.report({
             node,
             messageId: "sealedNoEvolution",

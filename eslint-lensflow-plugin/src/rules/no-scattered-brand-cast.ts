@@ -107,7 +107,7 @@ function isTypeNameBranded(
 }
 
 function getTypeIdentifier(
-  typeNameNode: TSESTree.TypeNode["typeName"],
+  typeNameNode: TSESTree.EntityName,
 ): string | null {
   if (typeNameNode.type === "Identifier") return typeNameNode.name;
   if (

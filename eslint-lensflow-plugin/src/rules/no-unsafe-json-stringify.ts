@@ -45,7 +45,7 @@ const PRIMITIVE_FLAGS =
 function checkPrimitiveFlags(type: ts.Type): string[] | null {
   if (type.flags & PRIMITIVE_FLAGS) return [];
   if (type.flags & ts.TypeFlags.BigInt) return ["bigint"];
-  if (type.flags & ts.TypeFlags.Symbol) return ["Symbol"];
+  if (type.flags & ts.TypeFlags.ESSymbol) return ["Symbol"];
   if (type.flags & (ts.TypeFlags.Any | ts.TypeFlags.Unknown)) return [];
   if (type.flags & ts.TypeFlags.Never) return [];
   return null;
@@ -89,8 +89,8 @@ function isFunctionDeclaration(type: ts.Type): boolean {
 
 function hasToJSON(type: ts.Type, checker: ts.TypeChecker): boolean {
   const toJSON = type.getProperty("toJSON");
-  if (!toJSON || toJSON.length === 0) return false;
-  const toJSONType = checker.getTypeOfSymbol(toJSON[0]);
+  if (!toJSON) return false;
+  const toJSONType = checker.getTypeOfSymbol(toJSON);
   const callSigs = toJSONType.getCallSignatures();
   return callSigs.length > 0;
 }
@@ -181,7 +181,7 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"unsafeType", []>) {
-    const parserServices = ESLintUtils.getParserServices(context, { allowNoProject: true });
+    const parserServices = ESLintUtils.getParserServices(context, true);
     const program = parserServices.program;
     if (!program) return {};
 

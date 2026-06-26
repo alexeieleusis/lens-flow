@@ -58,7 +58,14 @@ export default createRule({
         if (right.type !== "Identifier") return;
 
         const scope = context.sourceCode.getScope(right);
-        const binding = findBinding(scope, right.name, right);
+        let binding: TSESLint.Scope.Variable | null = null;
+        for (let s: TSESLint.Scope.Scope | null = scope; s; s = s.upper) {
+          const v = s.set.get(right.name);
+          if (v && v.references.some((ref) => ref.identifier === right)) {
+            binding = v;
+            break;
+          }
+        }
         if (!binding) return;
 
         if (!callExprVars.has(binding)) return;

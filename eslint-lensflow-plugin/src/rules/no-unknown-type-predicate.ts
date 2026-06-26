@@ -14,7 +14,8 @@ function unwrapParam(param: TSESTree.Parameter): TSESTree.Parameter {
 function getParamName(param: TSESTree.Parameter): string {
   const unwrapped = unwrapParam(param);
   if (unwrapped.type === "Identifier") return unwrapped.name;
-  if ((unwrapped as TSESTree.Node).type === "PrivateIdentifier") return `#${(unwrapped as { name: string }).name}`;
+  if (unwrapped.type === "TSParameterProperty") return "(modifier-param)";
+  return "(parameter)";
   return "(parameter)";
 }
 

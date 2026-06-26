@@ -125,14 +125,16 @@ export default createRule({
     function isGenericFn(callee: TSESTree.Identifier): boolean {
       const scope = context.sourceCode.getScope(callee);
       let found: { identifiers: TSESTree.Identifier[]; name: string } | undefined;
-      for (let s: { upper?: typeof s } = scope; s; s = s.upper) {
-        for (const v of s.variables) {
+      let currentScope: TSESLint.Scope.Scope | null = scope;
+      while (currentScope) {
+        for (const v of currentScope.variables) {
           if (v.name === callee.name) {
-            found = v;
+            found = v as { identifiers: TSESTree.Identifier[]; name: string };
             break;
           }
         }
         if (found) break;
+        currentScope = currentScope.upper;
       }
       if (!found) return false;
       for (const id of found.identifiers) {
@@ -141,13 +143,9 @@ export default createRule({
         const p = parent as {
           type: string;
           typeParameters?: { params: unknown[] };
+          init?: { type: string; typeParameters?: { params: unknown[] } };
         };
-        const fnNode: { typeParameters?: { params: unknown[] } } | undefined =
-          p.type === "VariableDeclarator"
-            ? ((p as { init?: { type: string; typeParameters?: { params: unknown[] } } }).init as
-                  | { type: string; typeParameters?: { params: unknown[] } }
-                  | undefined)
-            : p;
+        const fnNode = p.type === "VariableDeclarator" ? p.init : p;
         if (
           fnNode &&
           (fnNode.type === "FunctionDeclaration" ||

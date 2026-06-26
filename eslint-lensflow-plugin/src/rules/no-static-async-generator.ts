@@ -155,10 +155,7 @@ export default createRule({
       ArrowFunctionExpression: checkFunctionNode,
       MethodDefinition(node: TSESTree.MethodDefinition) {
         const value = node.value;
-        if (
-          value.type === "FunctionExpression" ||
-          value.type === "ArrowFunctionExpression"
-        ) {
+        if (value.type === "FunctionExpression") {
           checkFunctionNode(value);
         }
       },

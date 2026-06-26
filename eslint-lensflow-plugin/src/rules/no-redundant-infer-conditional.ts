@@ -89,7 +89,7 @@ export default createRule({
         if (!checkTypeNode || !extendsTypeNode) return;
 
         const checkTsType = checker.getTypeFromTypeNode(
-          checkTypeNode as ts.TypeReference,
+          checkTypeNode as ts.TypeNode,
         );
         const extendsTsType = checker.getTypeFromTypeNode(
           extendsTypeNode as ts.TypeNode,
