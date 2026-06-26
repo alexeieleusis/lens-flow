@@ -3,7 +3,7 @@ import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T04-generics-bounds.md");
+const DOC_URL = knowledgeUrl("catalog/T04-generics-bounds.md");
 
 export default createRule({
   name: "require-explicit-generic-in-promise-chain",
@@ -112,7 +112,7 @@ export default createRule({
           context.report({
             node,
             messageId: "missingTypeArg",
-            data: { url: URL, inferredType: reportedType },
+            data: { url: DOC_URL, inferredType: reportedType },
           });
         }
       },
