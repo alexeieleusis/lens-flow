@@ -428,16 +428,7 @@ export function isUsedAsOutputInBody(
   const members =
     body.type === AST_NODE_TYPES.TSInterfaceBody ? body.body : body.members;
 
-  for (const member of members) {
-    if (member.type === AST_NODE_TYPES.TSMethodSignature) {
-      const m = member as TSESTree.TSMethodSignature;
-      const retType = m.returnType?.typeAnnotation;
-      if (retType && containsTypeRefInOutput(retType, paramName)) return true;
-    } else if (member.type === AST_NODE_TYPES.TSPropertySignature) {
-      const p = member as TSESTree.TSPropertySignature;
-      const typeAnn = p.typeAnnotation?.typeAnnotation;
-      if (typeAnn && containsTypeRefInOutput(typeAnn, paramName)) return true;
-    }
-  }
-  return false;
+  return members.some((member) =>
+    memberContainsOutputRef(member, paramName, 0),
+  );
 }
