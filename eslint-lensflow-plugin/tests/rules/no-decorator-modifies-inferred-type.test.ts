@@ -79,6 +79,17 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
     class Entity {
       id: number;
     }`,
+
+    // Qualified type reference (TSQualifiedName) — property declared on class
+    `import * as ts from "typescript";
+    function addId(target: unknown, ctx: ts.ClassDecoratorContext) {
+      Object.defineProperty(target, "id", { value: Math.random() });
+    }
+
+    @addId
+    class Entity {
+      id: number;
+    }`,
   ],
   invalid: [
     {
@@ -207,6 +218,18 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
       @addMeta
       class Widget {}`,
       errors: [{ messageId: "decoratorModifiesMultipleProperties" }],
+    },
+
+    // Qualified type reference (TSQualifiedName) — property not declared on class
+    {
+      code: `import * as ts from "typescript";
+      function addId(target: unknown, ctx: ts.ClassDecoratorContext) {
+        Object.defineProperty(target, "id", { value: Math.random() });
+      }
+
+      @addId
+      class Entity {}`,
+      errors: [{ messageId: "decoratorModifiesInferredType" }],
     },
   ],
 });
