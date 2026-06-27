@@ -59,6 +59,15 @@ const obj: Extended = { a: 1, b: "hi" };
 const base = obj as Base;
 `,
     },
+    // Target type has index signature — excess properties are allowed
+    {
+      filename: TEST_FILENAME,
+      code: `
+interface Loose { [key: string]: unknown }
+const obj = { a: 1, extra: true };
+const x = obj as Loose;
+`,
+    },
   ],
   invalid: [
     // Excess property `debug` bypassed by `as Config`
