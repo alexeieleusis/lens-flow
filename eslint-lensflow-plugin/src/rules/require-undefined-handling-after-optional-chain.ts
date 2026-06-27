@@ -355,6 +355,7 @@ export default createRule({
         if (!declName) return;
 
         const tsNode = parserServices.esTreeNodeToTSNodeMap.get(init);
+        if (!tsNode) return;
         const type = checker.getTypeAtLocation(tsNode);
         if (typeIncludesUndefined(type)) {
           undefinedChainVars.add(declName);
