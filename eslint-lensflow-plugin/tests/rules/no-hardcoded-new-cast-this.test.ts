@@ -29,6 +29,13 @@ ruleTester.run("no-hardcoded-new-cast-this", rule, {
         return obj as this;
       }
     }`,
+    // Regression: nested arrow uses its own class, not the outer method
+    `class Outer implements Cloneable {
+      clone(): this {
+        const inner = (): SomeOther => new SomeOther() as this;
+        return Object.create(Object.getPrototypeOf(this)) as this;
+      }
+    }`,
   ],
   invalid: [
     {
