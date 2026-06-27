@@ -59,6 +59,37 @@ const obj: Extended = { a: 1, b: "hi" };
 const base = obj as Base;
 `,
     },
+    // Shorthand properties — shorthand identifiers resolve correctly
+    {
+      filename: TEST_FILENAME,
+      code: `
+interface Config { a: number; b: string }
+const a = 1;
+const b = "hi";
+const config = { a, b };
+const c = config as Config;
+`,
+    },
+    // Destructured declarations — should not crash or misreport
+    {
+      filename: TEST_FILENAME,
+      code: `
+const source = { a: 1, b: "hi", extra: true };
+const { a, b } = source;
+const obj = { a, b };
+const typed = obj as { a: number; b: string };
+`,
+    },
+    // Nested object literals — only top-level keys are checked
+    {
+      filename: TEST_FILENAME,
+      code: `
+interface Inner { a: number }
+interface Outer { inner: Inner }
+const outer = { inner: { a: 1, extra: true } };
+const o = outer as Outer;
+`,
+    },
     // Target type has index signature — excess properties are allowed
     {
       filename: TEST_FILENAME,
