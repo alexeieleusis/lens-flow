@@ -328,7 +328,7 @@ def patch_rule_file(path: Path) -> None:
         if msg_ids:
             msg_union = ' | '.join(f'"{mid}"' for mid in msg_ids)
 
-            if 'TSESLint' not in text:
+            if not re.search(r'import\b.*\bTSESLint\b', text):
                 # Amend an existing @typescript-eslint/utils import if present...
                 patched = re.sub(
                     r'(import(?:\s+type)?\s*\{)([^}]+?)(\}\s*from\s*["\']@typescript-eslint/utils["\'])',
