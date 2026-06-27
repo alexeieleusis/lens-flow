@@ -96,5 +96,15 @@ ruleTester.run("no-any-in-interface", rule, {
       }`,
       errors: [{ messageId: "anyProperty" }],
     },
+    {
+      code: `interface Config {
+        optional?: any;
+        readonly immutable: any;
+      }`,
+      errors: [
+        { messageId: "anyProperty" },
+        { messageId: "anyProperty" },
+      ],
+    },
   ],
 });
