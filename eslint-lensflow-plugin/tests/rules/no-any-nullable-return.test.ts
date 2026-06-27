@@ -27,6 +27,10 @@ ruleTester.run("no-any-nullable-return", rule, {
       const inner = (): string | null => { return value ?? null; };
       return outerData();
     }`,
+    // `??` with non-nullish right operand should pass
+    `function getData(): any {
+      return fetchData() ?? defaultValue;
+    }`,
   ],
   invalid: [
     // Function declaration with any return and ?? null
