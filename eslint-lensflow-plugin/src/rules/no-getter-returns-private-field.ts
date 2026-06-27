@@ -46,6 +46,12 @@ export default createRule({
       return false;
     }
 
+    const functionBoundaryTypes = new Set([
+      "FunctionDeclaration",
+      "FunctionExpression",
+      "ArrowFunctionExpression",
+    ]);
+
     function findReturnWithPrivateField(node: unknown): boolean {
       if (!node || typeof node !== "object") return false;
       const n = node as Record<string, unknown>;
@@ -56,6 +62,11 @@ export default createRule({
         isPrivateFieldReturn(n.argument)
       ) {
         return true;
+      }
+
+      // Stop at function boundaries — nested functions are visited separately by ESLint
+      if (functionBoundaryTypes.has(n.type as string)) {
+        return false;
       }
 
       const skipKeys = new Set(["parent", "loc", "range"]);

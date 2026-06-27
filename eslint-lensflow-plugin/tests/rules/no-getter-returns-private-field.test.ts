@@ -45,6 +45,30 @@ ruleTester.run("no-getter-returns-private-field", rule, {
         return this.#config.mode;
       }
     }`,
+    // Getter with nested arrow function returning private field — NOT a leak
+    `class Foo {
+      #data: string = "";
+      get safe() {
+        const fn = () => this.#data;
+        return "safe";
+      }
+    }`,
+    // Getter with nested FunctionExpression returning private field — NOT a leak
+    `class Bar {
+      #data: string = "";
+      get safe() {
+        const fn = function () { return this.#data; };
+        return 42;
+      }
+    }`,
+    // Getter with nested FunctionDeclaration returning private field — NOT a leak
+    `class Baz {
+      #data: string = "";
+      get safe() {
+        function inner() { return this.#data; }
+        return true;
+      }
+    }`,
   ],
   invalid: [
     {
