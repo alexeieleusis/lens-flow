@@ -124,10 +124,7 @@ export default createRule({
     }
 
     function checkFunctionNode(
-      node:
-        | TSESTree.FunctionDeclaration
-        | TSESTree.FunctionExpression
-        | TSESTree.ArrowFunctionExpression,
+      node: { params: TSESTree.Parameter[] },
     ) {
       for (const param of node.params) {
         const info = extractTypeInfo(param);
@@ -152,6 +149,9 @@ export default createRule({
       FunctionDeclaration: checkFunctionNode,
       FunctionExpression: checkFunctionNode,
       ArrowFunctionExpression: checkFunctionNode,
+      TSDeclareFunction: checkFunctionNode,
+      TSFunctionType: checkFunctionNode,
+      TSMethodSignature: checkFunctionNode,
     };
   },
 });

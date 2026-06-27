@@ -46,6 +46,34 @@ function connect({ host, port }: Config) {
     `function log(...entries: string[]) {
   entries.forEach(console.log);
 }`,
+    // TSDeclareFunction with non-any type
+    `declare function processItem(item: number): void;`,
+    // TSFunctionType with non-any type
+    `type Handler = (data: string) => void;`,
+    // TSMethodSignature with non-any type
+    `interface Service {
+  process(item: number): void;
+}`,
+    // MethodDefinition with non-any type
+    `class Service {
+  process(item: number) {
+    console.log(item);
+  }
+}`,
+    // TSDeclareFunction with array non-any
+    `declare function processItems(items: string[]): void;`,
+    // TSFunctionType with array non-any
+    `type Processor = (items: number[]) => void;`,
+    // TSMethodSignature with array non-any
+    `interface Store {
+  setItems(items: string[]): void;
+}`,
+    // MethodDefinition with array non-any
+    `class Store {
+  setItems(items: number[]) {
+    console.log(items);
+  }
+}`,
   ],
   invalid: [
     {
@@ -129,6 +157,58 @@ function connect({ host, port }: Config) {
     // Arrow function with destructured any[]
     {
       code: `const fn = (items: any[]) => items.length;`,
+      errors: [{ messageId: "anyArrayParam" }],
+    },
+    // TSDeclareFunction with any
+    {
+      code: `declare function processItem(item: any): void;`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    // TSFunctionType with any
+    {
+      code: `type Handler = (data: any) => void;`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    // TSMethodSignature with any
+    {
+      code: `interface Service {
+  process(item: any): void;
+}`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    // MethodDefinition with any
+    {
+      code: `class Service {
+  process(item: any) {
+    console.log(item);
+  }
+}`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    // TSDeclareFunction with any[]
+    {
+      code: `declare function processItems(items: any[]): void;`,
+      errors: [{ messageId: "anyArrayParam" }],
+    },
+    // TSFunctionType with any[]
+    {
+      code: `type Processor = (items: any[]) => void;`,
+      errors: [{ messageId: "anyArrayParam" }],
+    },
+    // TSMethodSignature with any[]
+    {
+      code: `interface Store {
+  setItems(items: any[]): void;
+}`,
+      errors: [{ messageId: "anyArrayParam" }],
+    },
+    // MethodDefinition with any[]
+    {
+      code: `class Store {
+  setItems(items: any[]) {
+    console.log(items);
+  }
+}`,
       errors: [{ messageId: "anyArrayParam" }],
     },
   ],
