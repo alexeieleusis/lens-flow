@@ -48,6 +48,11 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
       author: string;
     }`,
 
+    // TSParameterProperty as decorator param
+    `class DecoratorFactory {
+      constructor(public ctx: ClassDecoratorContext) {}
+    }`,
+
     // Nested class with declared property inside namespace — valid
     `function addId(target: unknown, ctx: ClassDecoratorContext) {
       Object.defineProperty(target, "id", { value: Math.random() });
