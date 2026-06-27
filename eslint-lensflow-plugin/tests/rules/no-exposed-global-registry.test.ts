@@ -20,6 +20,12 @@ function addToCache(key: string) {
 }`,
     `const registry = new Map();
 const another = new Set();`,
+    // Non-Identifier (ObjectPattern) — silently ignored by rule (intentional scope exclusion).
+    // The init is an ObjectExpression, not a NewExpression, so the rule's check at line 46 doesn't match.
+    `const { registry } = { registry: new Map() };`,
+    // Exported destructuring from object literal — same reason, not flagged.
+    `const { registry } = { registry: new Set() };
+export { registry };`,
   ],
   invalid: [
     {
