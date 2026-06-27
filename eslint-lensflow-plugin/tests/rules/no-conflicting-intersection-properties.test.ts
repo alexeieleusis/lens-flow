@@ -7,6 +7,7 @@ ruleTester.run("no-conflicting-intersection-properties", rule, {
     `type Same = { x: string } & { x: string };`,
     `type NoConflict = { a: boolean } & { b: boolean };`,
     `type Mixed = { x: string } & { y: string };`,
+    `type GoodLiteral = { x: 1 } & { x: 1 };`,
   ],
   invalid: [
     {
@@ -23,6 +24,10 @@ ruleTester.run("no-conflicting-intersection-properties", rule, {
     },
     {
       code: `type TwoProps = { x: string } & { y: number } & { x: number };`,
+      errors: [{ messageId: "conflict" }],
+    },
+    {
+      code: `type BadLiteral = { x: 1 } & { x: 2 };`,
       errors: [{ messageId: "conflict" }],
     },
   ],
