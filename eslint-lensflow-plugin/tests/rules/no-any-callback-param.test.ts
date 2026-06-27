@@ -12,6 +12,7 @@ ruleTester.run("no-any-callback-param", rule, {
 }`,
     `declare function process(fn: (input: boolean) => void): void;`,
     `type Handler = (event: { type: string }) => void;`,
+    `type Callable = { (item: string): void };`,
   ],
   invalid: [
     {
@@ -32,6 +33,10 @@ ruleTester.run("no-any-callback-param", rule, {
     },
     {
       code: `declare function badProcess(fn: (input: any) => void): void;`,
+      errors: [{ messageId: "anyCallbackParam" }],
+    },
+    {
+      code: `type Callable = { (item: any): void };`,
       errors: [{ messageId: "anyCallbackParam" }],
     },
   ],
