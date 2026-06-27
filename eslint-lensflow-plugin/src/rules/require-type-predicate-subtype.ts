@@ -1,5 +1,5 @@
 import ts from "typescript";
-import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
+import { ESLintUtils, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
@@ -28,7 +28,7 @@ export default createRule({
 
     const checker = program.getTypeChecker();
 
-    function checkTypePredicate(node: any) {
+    function checkTypePredicate(node: TSESTree.Node & { returnType?: TSESTree.TSTypeAnnotation }) {
       const returnAnn = node.returnType?.typeAnnotation;
       if (returnAnn?.type !== "TSTypePredicate") return;
 
@@ -82,12 +82,12 @@ export default createRule({
       }
     }
 
-    const handler = (node: any) => checkTypePredicate(node);
+    const handler = (node: TSESTree.Node & { returnType?: TSESTree.TSTypeAnnotation }) => checkTypePredicate(node);
 
     return {
       TSMethodSignature: handler,
       TSFunctionType: handler,
-      MethodDefinition(node: any) {
+      MethodDefinition(node: TSESTree.MethodDefinition) {
         handler(node.value);
       },
       FunctionDeclaration: handler,
