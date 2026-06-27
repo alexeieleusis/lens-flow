@@ -5,10 +5,29 @@ function collectAnyParams(params: any[]): Array<{ name: string; anyNode: any }> 
   const anyParams: Array<{ name: string; anyNode: any }> = [];
 
   for (const param of params) {
-    const typeAnn = param.typeAnnotation?.typeAnnotation;
+    let base: any;
+    if (param.type === "RestElement") {
+      // typeAnnotation is on the RestElement itself, name on argument
+      const typeAnn = param.typeAnnotation?.typeAnnotation;
+      if (typeAnn?.type === "TSAnyKeyword") {
+        anyParams.push({
+          name: param.argument.type === "Identifier" ? param.argument.name : "(unknown)",
+          anyNode: typeAnn,
+        });
+      }
+      continue;
+    }
+    if (param.type === "AssignmentPattern") {
+      base = param.left;
+    } else if (param.type === "TSParameterProperty") {
+      base = param.parameter;
+    } else {
+      base = param;
+    }
+    const typeAnn = base.typeAnnotation?.typeAnnotation;
     if (typeAnn?.type === "TSAnyKeyword") {
       const paramName =
-        param.type === "Identifier" ? param.name : "(unknown)";
+        base.type === "Identifier" ? base.name : "(unknown)";
       anyParams.push({ name: paramName, anyNode: typeAnn });
     }
   }

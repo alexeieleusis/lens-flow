@@ -91,5 +91,44 @@ ruleTester.run("no-any-parameter-with-typeguard", rule, {
       code: `const fn = (x: any) => typeof x === "string" ? x.toUpperCase() : String(x);`,
       errors: [{ messageId: "anyParamWithTypeguard" }],
     },
+    {
+      // AssignmentPattern (default parameter)
+      code: `function f(x: any = 1) {
+        if (typeof x === "string") {
+          console.log(x.toUpperCase());
+        }
+      }`,
+      errors: [{ messageId: "anyParamWithTypeguard" }],
+    },
+    {
+      // RestElement
+      code: `function f(...args: any) {
+        if (args instanceof Array) {
+          console.log(args.length);
+        }
+      }`,
+      errors: [{ messageId: "anyParamWithTypeguard" }],
+    },
+    {
+      // Destructuring with any type — typeof on the whole parameter
+      code: `function f(params: any) {
+        if (typeof params === "object") {
+          const { a } = params;
+          console.log(a);
+        }
+      }`,
+      errors: [{ messageId: "anyParamWithTypeguard" }],
+    },
+    {
+      // TSParameterProperty
+      code: `class C {
+        constructor(public x: any) {
+          if (typeof x === "string") {
+            console.log(x.toUpperCase());
+          }
+        }
+      }`,
+      errors: [{ messageId: "anyParamWithTypeguard" }],
+    },
   ],
 });
