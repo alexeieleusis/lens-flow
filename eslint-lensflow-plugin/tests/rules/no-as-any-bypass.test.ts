@@ -8,6 +8,7 @@ ruleTester.run("no-as-any-bypass", rule, {
 }`,
     `const value = x as string;`,
     `type Safe = unknown;`,
+    `const value = x as unknown;`,
   ],
   invalid: [
     {
