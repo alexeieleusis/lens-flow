@@ -64,6 +64,7 @@ function hasSubsequentUse(
 ): boolean {
   for (let i = startIdx; i < body.length; i++) {
     const stmt = body[i];
+    if (FUNCTION_BOUNDARY_TYPES.has(stmt.type)) continue;
     if (
       stmt.type === "VariableDeclaration" &&
       stmt.declarations.some((d) => skipDeclarators.has(d))
