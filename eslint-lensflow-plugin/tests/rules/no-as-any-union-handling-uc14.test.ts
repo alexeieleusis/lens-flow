@@ -24,6 +24,10 @@ function greet(u: User) {
     `function process(items: string[]) {
   return (items as any).length;
 }`,
+    // Shadowed parameter in nested function — should NOT flag
+    `function outer(s: { kind: "a" } | { kind: "b" }) {
+  const inner = (s: string) => (s as any).trim();
+}`,
   ],
   invalid: [
     // Direct `as any` on inline union-typed parameter

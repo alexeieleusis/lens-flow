@@ -25,16 +25,14 @@ function isUnionType(typeAnnotation: unknown): boolean {
   return type === "TSUnionType";
 }
 
-function findEnclosingFunction(
-  node: { parent?: unknown },
+function findNearestEnclosingFunction(
+  ancestors: unknown[],
 ): unknown {
-  let current: unknown = node.parent;
-  while (current) {
-    const obj = current as Record<string, unknown>;
+  for (let i = ancestors.length - 1; i >= 0; i--) {
+    const obj = ancestors[i] as Record<string, unknown>;
     if (FUNCTION_NODES.has(obj.type as string)) {
       return obj;
     }
-    current = obj.parent;
   }
   return null;
 }
@@ -104,7 +102,8 @@ export default createRule({
       TSAsExpression(node) {
         if (node.typeAnnotation.type !== "TSAnyKeyword") return;
 
-        const fnNode = findEnclosingFunction(node);
+        const ancestors = context.sourceCode.getAncestors(node);
+        const fnNode = findNearestEnclosingFunction(ancestors);
         if (!fnNode) return;
 
         const unionParamNames = getUnionParamNames(fnNode);
