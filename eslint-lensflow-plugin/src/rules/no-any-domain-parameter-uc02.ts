@@ -42,6 +42,87 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"anyParam" | "anyArrayParam", []>) {
+    function extractTypeInfo(
+      param: TSESTree.Parameter,
+    ): { name: string; typeAnnotation: TSESTree.TypeNode } | null {
+      if (param.type === "Identifier") {
+        if (param.typeAnnotation?.typeAnnotation) {
+          return {
+            name: param.name,
+            typeAnnotation: param.typeAnnotation.typeAnnotation,
+          };
+        }
+        return null;
+      }
+
+      if (param.type === "AssignmentPattern") {
+        const left = param.left;
+        if (
+          left.type === "Identifier" &&
+          left.typeAnnotation?.typeAnnotation
+        ) {
+          return {
+            name: left.name,
+            typeAnnotation: left.typeAnnotation.typeAnnotation,
+          };
+        }
+        if (
+          (left.type === "ObjectPattern" || left.type === "ArrayPattern") &&
+          left.typeAnnotation?.typeAnnotation
+        ) {
+          return {
+            name: "(destructured)",
+            typeAnnotation: left.typeAnnotation.typeAnnotation,
+          };
+        }
+        return null;
+      }
+
+      if (param.type === "RestElement") {
+        const arg = param.argument;
+
+        if (param.typeAnnotation?.typeAnnotation) {
+          return {
+            name:
+              arg.type === "Identifier"
+                ? arg.name
+                : "(destructured)",
+            typeAnnotation: param.typeAnnotation.typeAnnotation,
+          };
+        }
+
+        if (
+          (arg.type === "ObjectPattern" || arg.type === "ArrayPattern") &&
+          arg.typeAnnotation?.typeAnnotation
+        ) {
+          return {
+            name: "(destructured)",
+            typeAnnotation: arg.typeAnnotation.typeAnnotation,
+          };
+        }
+        return null;
+      }
+
+      if (param.type === "TSParameterProperty") {
+        return extractTypeInfo(param.parameter);
+      }
+
+      if (
+        param.type === "ObjectPattern" ||
+        param.type === "ArrayPattern"
+      ) {
+        if (param.typeAnnotation?.typeAnnotation) {
+          return {
+            name: "(destructured)",
+            typeAnnotation: param.typeAnnotation.typeAnnotation,
+          };
+        }
+        return null;
+      }
+
+      return null;
+    }
+
     function checkFunctionNode(
       node:
         | TSESTree.FunctionDeclaration
@@ -49,24 +130,20 @@ export default createRule({
         | TSESTree.ArrowFunctionExpression,
     ) {
       for (const param of node.params) {
-        if (
-          param.type === "Identifier" &&
-          param.typeAnnotation?.typeAnnotation
-        ) {
-          const anyNode = containsAnyKeyword(
-            param.typeAnnotation.typeAnnotation,
-          );
-          if (anyNode) {
-            const parentType = param.typeAnnotation.typeAnnotation.type;
-            context.report({
-              node: anyNode,
-              messageId:
-                parentType === "TSArrayType" ? "anyArrayParam" : "anyParam",
-              data: {
-                name: param.name,
-              },
-            });
-          }
+        const info = extractTypeInfo(param);
+        if (!info) continue;
+
+        const anyNode = containsAnyKeyword(info.typeAnnotation);
+        if (anyNode) {
+          const parentType = info.typeAnnotation.type;
+          context.report({
+            node: anyNode,
+            messageId:
+              parentType === "TSArrayType" ? "anyArrayParam" : "anyParam",
+            data: {
+              name: info.name,
+            },
+          });
         }
       }
     }
