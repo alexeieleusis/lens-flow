@@ -1,6 +1,10 @@
 import { ruleTester } from "../helpers/rule-tester.js";
 import rule from "../../src/rules/no-any-callback-param.js";
 
+// Note: AssignmentPattern (e.g., `x: any = null`) cannot appear in TSFunctionType
+// parameters because default values are a runtime construct. The checkAnyParams
+// function handles AssignmentPattern for runtime function signatures, but this
+// rule only checks type-level declarations via createNoAnyParamTypeChecker.
 ruleTester.run("no-any-callback-param", rule, {
   valid: [
     `function map<A, B>(arr: A[], fn: (item: A) => B): B[] {
@@ -50,6 +54,11 @@ ruleTester.run("no-any-callback-param", rule, {
     },
     {
       code: `type Handler = (data: Array<any>) => void;`,
+      errors: [{ messageId: "anyCallbackParam" }],
+    },
+    {
+      // Verifies the getText fallback for non-Identifier params (ObjectPattern) in checkAnyParams.
+      code: `type Handler = ({ value }: any) => void;`,
       errors: [{ messageId: "anyCallbackParam" }],
     },
   ],
