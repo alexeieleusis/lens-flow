@@ -49,13 +49,21 @@ ruleTester.run("consistent-constructor-strategy", rule, {
      }`,
 
     // Throw inside nested callback — not attributed to outer constructor
-    `type Email = string & { _brand: "Email" };
+     `type Email = string & { _brand: "Email" };
 
-     function parseEmail(s: string): Email {
-       const inner = () => { throw new Error("inner"); };
-       return s as Email;
-     }`,
-  ],
+      function parseEmail(s: string): Email {
+        const inner = () => { throw new Error("inner"); };
+        return s as Email;
+      }`,
+
+     // FunctionExpression with throwing strategy
+     `type Email = string & { _brand: "Email" };
+
+      const parseEmail = function(s: string): Email {
+        if (!s.includes("@")) throw new Error("invalid");
+        return s as Email;
+      };`,
+   ],
   invalid: [
     {
       code: `type Email = string & { _brand: "Email" };
