@@ -21,6 +21,11 @@ ruleTester.run("no-abstract-class-overkill-uc14", rule, {
       private id = 0;
       abstract handle(x: number): string;
     }`,
+    // Abstract class with constructor parameter property — should not trigger
+    `abstract class HandlerWithParamProperty {
+      constructor(readonly id: number) {}
+      abstract handle(x: number): string;
+    }`,
     // Regression pair: instance fields DO suppress the rule (unlike static fields above)
     `abstract class InstanceFieldSuppresses {
       private id = 0;

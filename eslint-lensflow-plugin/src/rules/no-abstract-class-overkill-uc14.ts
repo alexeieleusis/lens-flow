@@ -49,6 +49,16 @@ export default createRule<Options, MessageIds>({
         (m): m is TSESTree.PropertyDefinition =>
           m.type === "PropertyDefinition" && !m.static,
       );
+      // Also count constructor parameter properties as instance state
+      const constructorParamProps = members
+        .filter(
+          (m): m is TSESTree.MethodDefinition =>
+            m.type === "MethodDefinition" &&
+            m.kind === "constructor" &&
+            m.value.params !== undefined,
+        )
+        .flatMap((m) => m.value.params)
+        .filter((p): p is TSESTree.TSParameterProperty => p.type === "TSParameterProperty");
       const concreteMethods = members.filter(
         (m): m is TSESTree.MethodDefinition =>
           m.type === "MethodDefinition" && m.value.body !== null,
@@ -60,6 +70,7 @@ export default createRule<Options, MessageIds>({
         abstractCount >= 1 &&
         abstractCount <= maxAbstractMethods &&
         instanceFields.length === 0 &&
+        constructorParamProps.length === 0 &&
         concreteMethods.length === 0
       ) {
         const className =
