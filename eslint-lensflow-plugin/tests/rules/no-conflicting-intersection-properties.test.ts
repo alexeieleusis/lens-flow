@@ -8,6 +8,7 @@ ruleTester.run("no-conflicting-intersection-properties", rule, {
     `type NoConflict = { a: boolean } & { b: boolean };`,
     `type Mixed = { x: string } & { y: string };`,
     `type GoodLiteral = { x: 1 } & { x: 1 };`,
+    `type QuotedSame = { "x": string } & { "x": string };`,
   ],
   invalid: [
     {
@@ -32,6 +33,10 @@ ruleTester.run("no-conflicting-intersection-properties", rule, {
     },
     {
       code: `type MultiConflict = { x: string } & { y: number } & { x: number } & { y: string };`,
+      errors: [{ messageId: "conflict" }],
+    },
+    {
+      code: `type QuotedConflict = { "x": string } & { "x": number };`,
       errors: [{ messageId: "conflict" }],
     },
   ],
