@@ -71,5 +71,10 @@ ruleTester.run("no-any-nullable-return", rule, {
       }`,
       errors: [{ messageId: "anyNullableReturn" }],
     },
+    // Class method with any return and ?? null
+    {
+      code: `class C { getData(): any { return fetchData() ?? null; } }`,
+      errors: [{ messageId: "anyNullableReturn" }],
+    },
   ],
 });
