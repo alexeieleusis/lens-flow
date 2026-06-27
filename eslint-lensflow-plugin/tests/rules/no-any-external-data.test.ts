@@ -44,5 +44,9 @@ ruleTester.run("no-any-external-data", rule, {
       code: `declare function legacyApi(input: any): string;`,
       errors: [{ messageId: "anyExternalParam" }],
     },
+    {
+      code: `function process(...args: any) {}`,
+      errors: [{ messageId: "anyExternalParam" }],
+    },
   ],
 });
