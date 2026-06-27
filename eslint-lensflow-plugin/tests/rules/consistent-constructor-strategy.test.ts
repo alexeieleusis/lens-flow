@@ -57,13 +57,35 @@ ruleTester.run("consistent-constructor-strategy", rule, {
       }`,
 
      // FunctionExpression with throwing strategy
-     `type Email = string & { _brand: "Email" };
+      `type Email = string & { _brand: "Email" };
 
-      const parseEmail = function(s: string): Email {
+       const parseEmail = function(s: string): Email {
+         if (!s.includes("@")) throw new Error("invalid");
+         return s as Email;
+       };`,
+
+     // All throwing, exported — consistent strategy
+     `type Email = string & { _brand: "Email" };
+      type Port = number & { _brand: "Port" };
+
+      export function parseEmail(s: string): Email {
         if (!s.includes("@")) throw new Error("invalid");
         return s as Email;
-      };`,
-   ],
+      }
+
+      export function parsePort(n: number): Port {
+        if (n < 1 || n > 65535) throw new Error("out of range");
+        return n as Port;
+      }`,
+
+     // All result-returning, exported — consistent strategy
+     `type Email = string & { _brand: "Email" };
+
+      export function tryParseEmail(s: string): Email | Error {
+        if (!s.includes("@")) return new Error("invalid");
+        return s as Email;
+      }`,
+    ],
   invalid: [
     {
       code: `type Email = string & { _brand: "Email" };
@@ -133,6 +155,24 @@ function parseCount(n: number): Count | Error {
 }`,
       errors: [
         { messageId: "inconsistent" },
+        { messageId: "inconsistent" },
+        { messageId: "inconsistent" },
+      ],
+    },
+    {
+      code: `type Email = string & { _brand: "Email" };
+type Port = number & { _brand: "Port" };
+
+export function parseEmail(s: string): Email {
+  if (!s.includes("@")) throw new Error("invalid");
+  return s as Email;
+}
+
+export function tryParsePort(n: number): Port | Error {
+  if (n < 1 || n > 65535) return new Error("out of range");
+  return n as Port;
+}`,
+      errors: [
         { messageId: "inconsistent" },
         { messageId: "inconsistent" },
       ],
