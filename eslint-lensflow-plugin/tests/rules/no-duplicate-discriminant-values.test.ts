@@ -26,6 +26,9 @@ ruleTester.run("no-duplicate-discriminant-values", rule, {
     `type BooleanValid =
       | { kind: true; enabled: number }
       | { kind: false; disabled: string };`,
+    `function fn(x: { kind: "a" } | { kind: "b" }) {}`,
+    `const x: { kind: "a" } | { kind: "b" } = {} as any;`,
+    `interface I { field: { kind: "a" } | { kind: "b" }; }`,
   ],
   invalid: [
     {
@@ -70,6 +73,22 @@ ruleTester.run("no-duplicate-discriminant-values", rule, {
       code: `type BooleanDup =
       | { kind: true; enabled: number }
       | { kind: true; disabled: string };`,
+      errors: [{ messageId: "duplicateDiscriminant" }, { messageId: "duplicateDiscriminant" }],
+    },
+    {
+      code: `function fn(): { kind: "a" } | { kind: "a" } { throw new Error(); }`,
+      errors: [{ messageId: "duplicateDiscriminant" }, { messageId: "duplicateDiscriminant" }],
+    },
+    {
+      code: `function fn(x: { kind: "a" } | { kind: "a" }) {}`,
+      errors: [{ messageId: "duplicateDiscriminant" }, { messageId: "duplicateDiscriminant" }],
+    },
+    {
+      code: `const x: { kind: "a" } | { kind: "a" } = {} as any;`,
+      errors: [{ messageId: "duplicateDiscriminant" }, { messageId: "duplicateDiscriminant" }],
+    },
+    {
+      code: `interface I { field: { kind: "a" } | { kind: "a" }; }`,
       errors: [{ messageId: "duplicateDiscriminant" }, { messageId: "duplicateDiscriminant" }],
     },
   ],
