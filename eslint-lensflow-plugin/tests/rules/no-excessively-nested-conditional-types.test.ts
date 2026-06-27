@@ -68,5 +68,52 @@ ruleTester.run("no-excessively-nested-conditional-types", rule, {
       options: [{ maxDepth: 1 }],
       errors: [{ messageId: "excessiveNesting" }],
     },
+    // Conditional type inside a function return type (depth 3 > default maxDepth 2)
+    {
+      code: `function resolve<T>(input: T): T extends { value: infer V }
+  ? V extends { inner: infer I }
+    ? I extends { data: infer D }
+      ? D : never
+    : never
+  : never
+  : never {
+  return input as any;
+}`,
+      errors: [{ messageId: "excessiveNesting" }],
+    },
+   // Conditional type as a generic constraint (depth 3 > default maxDepth 2)
+    {
+      code: `type Constrained<U, T extends U extends { x: infer X }
+  ? X extends { y: infer Y }
+    ? Y extends { z: infer Z }
+      ? Z : never
+    : never
+  : never> = T;`,
+      errors: [{ messageId: "excessiveNesting" }],
+    },
+    // Conditional type inside a type literal property (depth 3 > default maxDepth 2)
+    {
+      code: `type Wrapper<T> = {
+  unwrap: T extends { value: infer V }
+    ? V extends { inner: infer I }
+      ? I extends { data: infer D }
+        ? D : never
+      : never
+    : never;
+};`,
+      errors: [{ messageId: "excessiveNesting" }],
+    },
+    // Conditional type inside an interface member (depth 4 > default maxDepth 2)
+    {
+      code: `interface Deep<T> {
+  result: T extends { a: infer A }
+    ? A extends { b: infer B }
+      ? B extends { c: infer C }
+        ? C : never
+      : never
+    : never;
+}`,
+      errors: [{ messageId: "excessiveNesting" }],
+    },
   ],
 });
