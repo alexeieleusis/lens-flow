@@ -16,14 +16,12 @@ export default createRule({
     messages: {
       anyProperty:
         "Property \"{{name}}\" uses `any` type, defeating structural typing. Replace with a specific type. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T05-type-classes.md",
-      anyIndexSignature:
-        "Index signature returns `any` type. Replace with a specific return type. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T05-type-classes.md",
     },
     schema: [],
     fixable: undefined,
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"anyProperty" | "anyIndexSignature", []>) {
+  create(context: TSESLint.RuleContext<"anyProperty", []>) {
     return {
       TSPropertySignature(node) {
         const typeAnnotation = node.typeAnnotation?.typeAnnotation;
@@ -40,16 +38,6 @@ export default createRule({
             node,
             messageId: "anyProperty",
             data: { name, url: KNOWLEDGE_URL },
-          });
-        }
-      },
-      TSIndexSignature(node) {
-        const typeAnnotation = node.typeAnnotation?.typeAnnotation;
-        if (typeAnnotation && containsAny(typeAnnotation)) {
-          context.report({
-            node,
-            messageId: "anyIndexSignature",
-            data: { url: KNOWLEDGE_URL },
           });
         }
       },
