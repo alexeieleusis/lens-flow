@@ -72,7 +72,7 @@ export default createRule({
 
       const enclosingTypeStr = checker.typeToString(enclosingType);
 
-      if (!checker.isTypeAssignableTo(enclosingType, predicateType)) {
+      if (!checker.isTypeAssignableTo(predicateType, enclosingType)) {
         context.report({
           node: pred,
           messageId: "notSubtype",
