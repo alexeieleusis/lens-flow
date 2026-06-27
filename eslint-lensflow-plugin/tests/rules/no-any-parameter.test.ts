@@ -91,5 +91,21 @@ ruleTester.run("no-any-parameter", rule, {
       code: `const arrowDestructured = ({ x }: any) => x;`,
       errors: [{ messageId: "anyParam" }],
     },
+    {
+      code: `function unionWithAny(x: any | string) { return x; }`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    {
+      code: `function arrayOfAny(items: any[]) { return items; }`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    {
+      code: `function intersectionWithAny(x: any & { foo: string }) { return x; }`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    {
+      code: `function genericWithAny(x: Array<any>) { return x; }`,
+      errors: [{ messageId: "anyParam" }],
+    },
   ],
 });
