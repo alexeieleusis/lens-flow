@@ -24,6 +24,12 @@ ruleTester.run("no-as-any-bypass-exhaustiveness", rule, {
       }
   }
 }`,
+    `const x = msg as any;`,
+    `function handle(msg: Message) {
+  switch (msg.kind) {
+    case "click": const x = msg as any; break;
+  }
+}`,
   ],
   invalid: [
     {
