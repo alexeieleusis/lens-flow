@@ -1,5 +1,12 @@
 import { createRule } from "../utils/rule-creator.js";
+import { getChildren } from "../utils/ast-helpers.js";
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
+
+const FUNCTION_BOUNDARY_TYPES = new Set([
+  "FunctionDeclaration",
+  "FunctionExpression",
+  "ArrowFunctionExpression",
+]);
 
 function isCallOnObject(
   node: TSESTree.Expression,
@@ -30,33 +37,21 @@ function nodeMatchesTarget(n: TSESTree.Node, targetName: string): "use" | "rebin
   return null;
 }
 
-function isTraversableNode(val: unknown): val is TSESTree.Node {
-  return typeof val === "object" && val !== null && "type" in val;
-}
+function nodeHasTargetUse(
+  n: TSESTree.Node,
+  targetName: string,
+  seen = new Set<TSESTree.Node>(),
+): boolean {
+  if (seen.has(n)) return false;
+  seen.add(n);
 
-function arrayHasTargetUse(arr: unknown[], targetName: string): boolean {
-  for (const item of arr) {
-    if (isTraversableNode(item) && nodeHasTargetUse(item, targetName)) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function nodeHasTargetUse(n: TSESTree.Node, targetName: string): boolean {
   const match = nodeMatchesTarget(n, targetName);
   if (match === "use") return true;
   if (match === "rebind") return false;
 
-  for (const key of Object.keys(n)) {
-    if (key === "parent") continue;
-    const child = (n as unknown as Record<string, unknown>)[key];
-
-    if (Array.isArray(child)) {
-      if (arrayHasTargetUse(child, targetName)) return true;
-    } else if (isTraversableNode(child)) {
-      if (nodeHasTargetUse(child, targetName)) return true;
-    }
+  for (const child of getChildren(n, { skipTypeAnnotations: true })) {
+    if (FUNCTION_BOUNDARY_TYPES.has(child.type)) continue;
+    if (nodeHasTargetUse(child, targetName, seen)) return true;
   }
   return false;
 }
