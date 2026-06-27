@@ -63,6 +63,17 @@ function process(run: (x: string) => void) {
   box.cb = run;
   return box.cb("secret");
 }`,
+
+    // Shadowing regression: nested function shadows generic callback param name with a non-generic param of the same name,
+    // and assigns it to an outer variable — should NOT be flagged (the captured param is the inner non-generic one)
+    `let outerVar: (x: string) => void;
+
+function outer(run: <T>(s: T) => Result): Result {
+  function inner(run: (x: string) => void) {
+    outerVar = run;
+  }
+  return run("secret");
+}`,
   ],
   invalid: [
     // Assignment to module-level variable
