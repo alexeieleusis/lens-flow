@@ -34,10 +34,7 @@ export default createRule({
 
       const pred = returnAnn;
       const paramNameNode = pred.parameterName;
-      if (
-        paramNameNode.type !== "TSThisType" &&
-        paramNameNode !== "this"
-      ) return;
+      if (paramNameNode.type !== "TSThisType") return;
 
       const tsPredNode =
         parserServices.esTreeNodeToTSNodeMap.get(pred);
