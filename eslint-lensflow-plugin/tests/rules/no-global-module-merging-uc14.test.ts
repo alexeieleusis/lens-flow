@@ -16,6 +16,11 @@ ruleTester.run("no-global-module-merging-uc14", rule, {
     theme: string;
   }
 }`,
+    `declare module MyApp {
+  interface Settings {
+    theme: string;
+  }
+}`,
   ],
   invalid: [
     {
