@@ -9,7 +9,7 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Enforce `readonly T[]` instead of mutable `T[]` on interface properties already marked `readonly`",
+        "Enforce `readonly T[]` or `ReadonlyArray<T>` instead of mutable `T[]` / `Array<T>` on interface properties already marked `readonly`",
     },
     messages: {
       mutableArrayOnReadonlyProp:
