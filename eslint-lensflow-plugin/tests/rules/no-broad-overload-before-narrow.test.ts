@@ -53,6 +53,13 @@ function k(x: string): string;
 function k(x: string): number;
 function k(x: string): string | number { return x; }`,
     },
+    {
+      filename: TEST_FILENAME,
+      code: `// declare function — narrow first, then broad
+declare function f(x: number): number;
+declare function f(x: string | number): string;
+function f(x: string | number): string { return String(x); }`,
+    },
   ],
   invalid: [
     {
@@ -69,6 +76,14 @@ function f(x) { }`,
 function parse(v: unknown): string;
 function parse(v: string): string;
 function parse(v: unknown): string { return String(v); }`,
+      errors: [{ messageId: "broadBeforeNarrow" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `// declare function — broad before narrow, narrow is unreachable
+declare function f(x: string | number): string;
+declare function f(x: number): number;
+function f(x: string | number): string { return String(x); }`,
       errors: [{ messageId: "broadBeforeNarrow" }],
     },
   ],
