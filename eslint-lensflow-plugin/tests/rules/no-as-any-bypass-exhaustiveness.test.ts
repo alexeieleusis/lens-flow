@@ -50,5 +50,41 @@ ruleTester.run("no-as-any-bypass-exhaustiveness", rule, {
 }`,
       errors: [{ messageId: "bypassExhaustiveness" }],
     },
+    {
+      code: `function handle(msg: Message) {
+  switch (msg.kind) {
+    case "click": console.log(msg.x); break;
+    default: return msg as any;
+  }
+}`,
+      errors: [{ messageId: "bypassExhaustiveness" }],
+    },
+    {
+      code: `function handle(msg: Message) {
+  switch (msg.kind) {
+    case "click": console.log(msg.x); break;
+    default: process(msg as any);
+  }
+}`,
+      errors: [{ messageId: "bypassExhaustiveness" }],
+    },
+    {
+      code: `function handle(msg: Message) {
+  switch (msg.kind) {
+    case "click": console.log(msg.x); break;
+    default: const x = { data: msg as any };
+  }
+}`,
+      errors: [{ messageId: "bypassExhaustiveness" }],
+    },
+    {
+      code: `function handle(msg: Message) {
+  switch (msg.kind) {
+    case "click": console.log(msg.x); break;
+    default: console.log((msg as any).x);
+  }
+}`,
+      errors: [{ messageId: "bypassExhaustiveness" }],
+    },
   ],
 });
