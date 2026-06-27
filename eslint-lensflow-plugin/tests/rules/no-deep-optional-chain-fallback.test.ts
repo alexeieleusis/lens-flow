@@ -12,6 +12,11 @@ ruleTester.run("no-deep-optional-chain-fallback", rule, {
       code: `const name = user?.profile?.name ?? "Unknown";`,
       options: [{ minDepth: 3 }],
     },
+    // --- Boundary: depth exactly minDepth - 1 should be valid ---
+    {
+      code: `const x = a?.b ?? 0;`,
+      options: [{ minDepth: 2 }],
+    },
     // --- TypeScript type annotation cases ---
     `const x: number = user?.id ?? 0;`,
     `const x: number | undefined = user?.profile?.id;`,
