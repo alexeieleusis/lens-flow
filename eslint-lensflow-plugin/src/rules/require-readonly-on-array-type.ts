@@ -31,13 +31,14 @@ export default createRule({
         const typeAnn = node.typeAnnotation?.typeAnnotation;
         if (!typeAnn) return;
 
+        const propName =
+          node.key.type === "Identifier"
+            ? node.key.name
+            : context.sourceCode.getText(node.key);
+
         if (typeAnn.type === "TSArrayType") {
           const elemType = typeAnn.elementType;
           const elemText = context.sourceCode.getText(elemType);
-          const propName =
-            node.key.type === "Identifier"
-              ? node.key.name
-              : context.sourceCode.getText(node.key);
 
           context.report({
             node,
@@ -58,10 +59,6 @@ export default createRule({
                   .map((e: TSESTree.Node) => context.sourceCode.getText(e))
                   .join(", ")
               : "unknown";
-            const propName =
-              node.key.type === "Identifier"
-                ? node.key.name
-                : context.sourceCode.getText(node.key);
 
             context.report({
               node,
