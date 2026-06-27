@@ -100,5 +100,19 @@ ruleTester.run("no-as-instead-of-narrowing", rule, {
 }`,
       errors: [{ messageId: "narrowViaAs" }],
     },
+    {
+      filename,
+      code: `function f(x: "a" | "b") {
+  const a = x as "a";
+}`,
+      errors: [{ messageId: "narrowViaAs" }],
+    },
+    {
+      filename,
+      code: `function f(x: 1 | 2) {
+  const n = x as 1;
+}`,
+      errors: [{ messageId: "narrowViaAs" }],
+    },
   ],
 });
