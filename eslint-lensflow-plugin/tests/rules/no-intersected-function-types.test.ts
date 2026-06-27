@@ -19,5 +19,9 @@ ruleTester.run("no-intersected-function-types", rule, {
       code: `type Triple = ((x: string) => void) & ((x: number) => void) & ((x: boolean) => void);`,
       errors: [{ messageId: "intersectedFunctions" }],
     },
+    {
+      code: `type NoParams = (() => void) & (() => number);`,
+      errors: [{ messageId: "intersectedFunctions" }],
+    },
   ],
 });
