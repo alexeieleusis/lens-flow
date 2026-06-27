@@ -13,6 +13,7 @@ Usage:
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -179,24 +180,95 @@ export default plugin;
 
 # ── Phase: branch — file operations ───────────────────────────────────────────
 
+def _parse_props(block: str) -> list[tuple[str, str]]:
+    """Parse key: value pairs from an object literal, respecting nesting."""
+    pairs: list[tuple[str, str]] = []
+    i = 0
+    while i < len(block):
+        km = re.match(r'\s*(\w+)\s*:\s*', block[i:])
+        if not km:
+            break
+        key = km.group(1)
+        j = i + km.end()
+        c = block[j]
+        if c == '{':
+            depth = 1
+            j += 1
+            while j < len(block) and depth > 0:
+                if block[j] == '{':
+                    depth += 1
+                elif block[j] == '}':
+                    depth -= 1
+                j += 1
+            val = block[i + km.end():j]
+        elif c == '[':
+            depth = 1
+            j += 1
+            while j < len(block) and depth > 0:
+                if block[j] == '[':
+                    depth += 1
+                elif block[j] == ']':
+                    depth -= 1
+                j += 1
+            val = block[i + km.end():j]
+        elif c in ('"', "'"):
+            q = c
+            j += 1
+            while j < len(block):
+                if block[j] == '\\' and j + 1 < len(block):
+                    j += 2
+                    continue
+                if block[j] == q:
+                    j += 1
+                    break
+                j += 1
+            val = block[i + km.end():j]
+        else:
+            em = re.match(r'([^,}]*)', block[j:])
+            val = em.group(1) if em else ''
+            j += len(val)
+        pairs.append((key, val.strip()))
+        while j < len(block) and block[j] == ',':
+            j += 1
+        i = j
+    return pairs
+
+
+def _infer_ts_type(val: str) -> str:
+    """Infer a TypeScript type from a JS literal value string."""
+    if val in ('true', 'false'):
+        return 'boolean'
+    if re.match(r'^-?\d+(\.\d+)?$', val):
+        return 'number'
+    if val.startswith(('"', "'")):
+        return 'string'
+    if val.startswith('['):
+        return 'unknown[]'
+    if val.startswith('{'):
+        return 'object'
+    return 'unknown'
+
+
 def _infer_options_type(text: str) -> str:
     """Return a TS tuple type string for the rule's options, derived from defaultOptions."""
-    m = re.search(r'defaultOptions:\s*\[\s*(\{[^}]*\})\s*\]', text)
-    if not m:
+    dm = re.search(r'defaultOptions\s*:\s*\[\s*\{', text)
+    if not dm:
         return '[]'
-    pairs = re.findall(r'(\w+)\s*:\s*([^,}]+)', m.group(1))
+    brace_start = dm.end() - 1
+    depth = 0
+    i = brace_start
+    while i < len(text):
+        if text[i] == '{':
+            depth += 1
+        elif text[i] == '}':
+            depth -= 1
+            if depth == 0:
+                break
+        i += 1
+    block = text[brace_start + 1:i]
     props = []
-    for key, val in pairs:
-        val = val.strip()
-        if val in ('true', 'false'):
-            ts_type = 'boolean'
-        elif re.match(r'^-?\d+(\.\d+)?$', val):
-            ts_type = 'number'
-        elif val.startswith(('"', "'")):
-            ts_type = 'string'
-        else:
-            ts_type = 'unknown'
-        props.append(f'{key}: {ts_type}')
+    for key, val in _parse_props(block):
+        props.append(f'{key}: {_infer_ts_type(val)}')
     return '[{ ' + ', '.join(props) + ' }]' if props else '[]'
 
 
