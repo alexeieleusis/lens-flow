@@ -5,6 +5,7 @@ ruleTester.run("no-any-cast-chain (deprecated - use no-double-cast-any)", rule, 
   valid: [
     `const value = someValue as SomeType;`,
     `const safe = (x as unknown) as SomeType;`,
+    `const x = value as any;`,
   ],
   invalid: [
     {
