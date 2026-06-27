@@ -9,6 +9,10 @@ ruleTester.run("no-excessive-intersection-chain", rule, {
 type Part1 = A & B & C;
 type Part2 = D & E & F;`,
     `type Nested = (A & B) & (C & D);`,
+    {
+      code: `type SixMembers = A & B & C & D & E & F;`,
+      options: [{ maxMembers: 10 }],
+    },
   ],
   invalid: [
     {
@@ -21,6 +25,11 @@ type Part2 = D & E & F;`,
     },
     {
       code: `type TooMany = X & Y & Z & W & V & U & T;`,
+      errors: [{ messageId: "excessiveChain" }],
+    },
+    {
+      code: `type CustomThreshold = A & B & C & D & E & F;`,
+      options: [{ maxMembers: 5 }],
       errors: [{ messageId: "excessiveChain" }],
     },
   ],
