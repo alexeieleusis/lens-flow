@@ -67,6 +67,13 @@ ruleTester.run("no-callback-pyramid", rule, {
       });`,
       options: [{ minDepth: 4 }],
     },
+    // Expression-bodied arrow — valid (depth 2, below threshold)
+    `a(() => b(() => c()));`,
+    // Expression-bodied arrow at depth 2 with options
+    {
+      code: `a(() => b(() => c()));`,
+      options: [{ minDepth: 4 }],
+    },
   ],
   invalid: [
     // Three levels of nested callbacks — the antipattern from the spec
@@ -157,6 +164,22 @@ ruleTester.run("no-callback-pyramid", rule, {
           console.log(r2);
         });
       });`,
+      options: [{ minDepth: 2 }],
+      errors: [{ messageId: "callbackPyramid" }],
+    },
+    // Expression-bodied arrow — invalid (depth 3)
+    {
+      code: `a(() => b(() => c(() => d())));`,
+      errors: [{ messageId: "callbackPyramid" }],
+    },
+    // Expression-bodied arrow — invalid (depth 4)
+    {
+      code: `a(() => b(() => c(() => d(() => e()))));`,
+      errors: [{ messageId: "callbackPyramid" }],
+    },
+    // Expression-bodied arrow with minDepth: 2
+    {
+      code: `a(() => b(() => c()));`,
       options: [{ minDepth: 2 }],
       errors: [{ messageId: "callbackPyramid" }],
     },
