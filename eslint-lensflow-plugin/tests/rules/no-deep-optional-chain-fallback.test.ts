@@ -28,6 +28,13 @@ ruleTester.run("no-deep-optional-chain-fallback", rule, {
     // --- Inferred type cases ---
     `const x = (user as User)?.id ?? 0;`,
     `const x = (user as User)?.profile?.id;`,
+    // --- Destructured declarator cases ---
+    `const { userId } = { userId: user?.id ?? 0 };`,
+    `const [name] = [user?.name ?? "Unknown"];`,
+    {
+      code: `const { val } = { val: a?.b ?? null };`,
+      options: [{ minDepth: 2 }],
+    },
   ],
   invalid: [
     // --- Triggers on chain depth (depth >= minDepth) ---
@@ -73,6 +80,19 @@ ruleTester.run("no-deep-optional-chain-fallback", rule, {
     },
     {
       code: `const val: string | null = (obj as Record<string, any>)?.a?.b?.c ?? null;`,
+      errors: [{ messageId: "deepChain" }],
+    },
+    // --- Destructured declarator invalid cases ---
+    {
+      code: `const { userId } = { userId: user?.profile?.id ?? 0 };`,
+      errors: [{ messageId: "deepChain" }],
+    },
+    {
+      code: `const [name] = [user?.profile?.name ?? "Unknown"];`,
+      errors: [{ messageId: "deepChain" }],
+    },
+    {
+      code: `const { val } = { val: a?.b?.c?.d ?? null };`,
       errors: [{ messageId: "deepChain" }],
     },
   ],
