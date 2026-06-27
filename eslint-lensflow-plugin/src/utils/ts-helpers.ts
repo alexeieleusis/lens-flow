@@ -67,6 +67,14 @@ export function containsAny(typeNode: TSESTree.TypeNode): boolean {
   if (typeNode.type === "TSTypeOperator") {
     return typeNode.typeAnnotation ? containsAny(typeNode.typeAnnotation) : false;
   }
+  if (typeNode.type === "TSOptionalType") {
+    return containsAny(typeNode.typeAnnotation);
+  }
+  // TSParenthesizedType can appear at runtime but isn't in @typescript-eslint types
+  {
+    const maybe = typeNode as unknown as { type: string; typeAnnotation: TSESTree.TypeNode };
+    if (maybe.type === "TSParenthesizedType") return containsAny(maybe.typeAnnotation);
+  }
   return false;
 }
 
@@ -135,6 +143,14 @@ export function containsUnknown(typeNode: TSESTree.TypeNode): boolean {
   }
   if (typeNode.type === "TSTypeOperator") {
     return typeNode.typeAnnotation ? containsUnknown(typeNode.typeAnnotation) : false;
+  }
+  if (typeNode.type === "TSOptionalType") {
+    return containsUnknown(typeNode.typeAnnotation);
+  }
+  // TSParenthesizedType can appear at runtime but isn't in @typescript-eslint types
+  {
+    const maybe = typeNode as unknown as { type: string; typeAnnotation: TSESTree.TypeNode };
+    if (maybe.type === "TSParenthesizedType") return containsUnknown(maybe.typeAnnotation);
   }
   return false;
 }
