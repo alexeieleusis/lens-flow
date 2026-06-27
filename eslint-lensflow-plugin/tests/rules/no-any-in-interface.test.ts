@@ -90,5 +90,11 @@ ruleTester.run("no-any-in-interface", rule, {
         { messageId: "anyProperty" },
       ],
     },
+    {
+      code: `interface Config {
+        "api-key": any;
+      }`,
+      errors: [{ messageId: "anyProperty" }],
+    },
   ],
 });
