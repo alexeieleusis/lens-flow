@@ -62,6 +62,16 @@ ruleTester.run("no-interface-implementation-leak", rule, {
       ],
     },
     {
+      code: `interface LeakyApi {
+        _buffer: Array<string>;
+        process(): void;
+      }`,
+      errors: [
+        { messageId: "internalName" },
+        { messageId: "exposedCollection" },
+      ],
+    },
+    {
       code: `export interface Cache {
         "internalMap": Map<string, any>;
       }`,
