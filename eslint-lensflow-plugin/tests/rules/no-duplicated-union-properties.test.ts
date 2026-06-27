@@ -40,6 +40,10 @@ type Entity =
       | { flag: false; error: number };`,
     // TSTypeReference member — silently skipped, should not crash
     `type Foo = string; type Mixed = Foo | { kind: "a"; id: string };`,
+    // Property without typeAnnotation (implicit any) — silently skipped, should not crash
+    `type ImplicitAny =
+      | { kind: "a"; foo }
+      | { kind: "b"; bar };`,
   ],
   invalid: [
     // From antipattern: id: string duplicated across both members (save() is a method, not inspected by this rule)
