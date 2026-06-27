@@ -21,7 +21,7 @@ function unwrapExpression(node: TSESTree.Node): TSESTree.Node {
   return node;
 }
 
-function getUntrustedCallName(
+function getUntrustedCallNameFromExpression(
   node: TSESTree.Node,
 ): string | null {
   const unwrapped = unwrapExpression(node);
@@ -42,6 +42,37 @@ function getUntrustedCallName(
     if (untrustedCallNames.has(callee.property.name)) return callee.property.name;
     return null;
   }
+  return null;
+}
+
+function getUntrustedCallName(
+  node: TSESTree.Node,
+  sourceCode: TSESLint.SourceCode,
+): string | null {
+  // First check the expression directly
+  const direct = getUntrustedCallNameFromExpression(node);
+  if (direct) return direct;
+
+  // If it's an identifier, trace to its declaration initializer
+  const unwrapped = unwrapExpression(node);
+  if (unwrapped.type === "Identifier") {
+    const scope = sourceCode.getScope
+      ? sourceCode.getScope(unwrapped)
+      : null;
+    if (scope) {
+      const variable = scope.set.get(unwrapped.name);
+      if (variable && variable.defs.length > 0) {
+        const def = variable.defs[0];
+        if (
+          def.node.type === "VariableDeclarator" &&
+          def.node.init
+        ) {
+          return getUntrustedCallNameFromExpression(def.node.init);
+        }
+      }
+    }
+  }
+
   return null;
 }
 
@@ -69,6 +100,7 @@ export default createRule({
     if (!program) return {};
 
     const checker = program.getTypeChecker();
+    const sourceCode = context.sourceCode;
 
     return {
       TSAsExpression(node) {
@@ -93,7 +125,7 @@ export default createRule({
         if (["unknown", "any", "never"].includes(targetTypeStr)) return;
 
         if (["unknown", "any"].includes(sourceTypeStr)) {
-          const callName = getUntrustedCallName(node.expression);
+          const callName = getUntrustedCallName(node.expression, sourceCode);
           if (callName) {
             context.report({
               node,
@@ -114,7 +146,7 @@ export default createRule({
           return;
         }
 
-        const untrustedCall = getUntrustedCallName(node.expression);
+        const untrustedCall = getUntrustedCallName(node.expression, sourceCode);
         if (untrustedCall) {
           context.report({
             node,

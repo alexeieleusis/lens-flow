@@ -42,7 +42,7 @@ const result = val as string;`,
       filename: TEST_FILENAME,
       code: `const json: unknown = JSON.parse(input);
 const user = json as { name: string };`,
-      errors: [{ messageId: "blindCast" }],
+      errors: [{ messageId: "blindCastUntrusted" }],
     },
     {
       filename: TEST_FILENAME,
@@ -87,6 +87,12 @@ const parsed = (JSON.parse(data))! as { name: string };`,
     {
       filename: TEST_FILENAME,
       code: `const resp = (globalThis.fetch?.("/api/user")) as { name: string };`,
+      errors: [{ messageId: "blindCastUntrusted" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `const data: any = JSON.parse(raw);
+const result = data as { name: string };`,
       errors: [{ messageId: "blindCastUntrusted" }],
     },
   ],
