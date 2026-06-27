@@ -56,6 +56,23 @@ ruleTester.run("no-collect-then-sync-iterate", rule, {
   }
 }`,
     },
+    {
+      filename: TEST_FILENAME,
+      code: `async function summarize(source: AsyncIterable<string>): Promise<string> {
+  let result = "";
+  for await (const item of source) {
+    result += item;
+  }
+  return result;
+}
+
+async function process(source: AsyncIterable<string>): Promise<void> {
+  const text = await summarize(source);
+  for (const char of text) {
+    console.log(char);
+  }
+}`,
+    },
   ],
   invalid: [
     {

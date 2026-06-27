@@ -55,7 +55,18 @@ export default createRule({
         tsFirstArg as ts.Expression,
       );
 
-      return hasAsyncIteratorSignature(argType, checker);
+      if (!hasAsyncIteratorSignature(argType, checker)) return false;
+
+      const tsCallNode =
+        parserServices.esTreeNodeToTSNodeMap.get(awaitedExpr);
+      if (!tsCallNode) return false;
+
+      const callType = checker.getTypeAtLocation(
+        tsCallNode as ts.Expression,
+      );
+
+      const awaitedType = checker.getAwaitedType(callType);
+      return awaitedType ? isCollectionArray(awaitedType) : false;
     }
 
     return {
