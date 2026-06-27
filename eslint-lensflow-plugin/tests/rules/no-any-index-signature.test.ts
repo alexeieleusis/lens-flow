@@ -60,5 +60,21 @@ ruleTester.run("no-any-index-signature", rule, {
       code: `type RecordAnyValue = { [key: string]: Record<string, any> };`,
       errors: [{ messageId: "anyIndexSignature" }],
     },
+    {
+      code: `type NumberKeyAny = { [key: number]: any };`,
+      errors: [{ messageId: "anyIndexSignature" }],
+    },
+    {
+      code: `type NumberKeyAnyArray = { [key: number]: any[] };`,
+      errors: [{ messageId: "anyIndexSignature" }],
+    },
+    {
+      code: `type ParenthesizedAny = { [key: string]: (any) };`,
+      errors: [{ messageId: "anyIndexSignature" }],
+    },
+    {
+      code: `type ParenthesizedUnionAny = { [key: string]: (string | any) };`,
+      errors: [{ messageId: "anyIndexSignature" }],
+    },
   ],
 });
