@@ -69,5 +69,9 @@ ruleTester.run("no-eaten-callback-error", rule, {
       code: `promise.catch(({ message }) => { console.log("error"); });`,
       errors: [{ messageId: "ignoredParam" }],
     },
+    {
+      code: `promise.catch((e = "default") => { console.log("something"); });`,
+      errors: [{ messageId: "ignoredParam", data: { param: "e" } }],
+    },
   ],
 });

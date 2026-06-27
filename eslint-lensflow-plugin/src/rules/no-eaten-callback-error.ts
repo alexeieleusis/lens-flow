@@ -68,6 +68,7 @@ function collectParamIdentifiers(node: TSESTree.Node): string[] {
 
 function getParamDisplayName(node: TSESTree.Node): string {
   if (node.type === "Identifier") return node.name;
+  if (node.type === "AssignmentPattern") return getParamDisplayName(node.left);
   return "destructured params";
 }
 
