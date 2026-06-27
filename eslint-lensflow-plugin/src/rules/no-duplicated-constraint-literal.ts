@@ -152,9 +152,13 @@ function collectConditionals(
             !typeParamNames.has(ann.checkType.typeName.name)
         ) continue;
 
-        if (ann.extendsType.type !== "TSTypeLiteral") continue;
+        let extendsType: TSESTree.TypeNode = ann.extendsType;
+        while ((extendsType as any).type === "TSParenthesizedType") {
+            extendsType = (extendsType as TSESTree.TSParenthesizedType).typeAnnotation;
+        }
+        if (extendsType.type !== "TSTypeLiteral") continue;
 
-        const key = serializeTypeLiteral(ann.extendsType);
+        const key = serializeTypeLiteral(extendsType as TSESTree.TSTypeLiteral);
         result.push({ conditional: ann, key });
     }
 

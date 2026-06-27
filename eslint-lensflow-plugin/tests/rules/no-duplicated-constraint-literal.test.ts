@@ -11,6 +11,8 @@ type SaveId<T> = T extends HasId ? T["id"] : never;`,
     `type A<T> = T extends { id: string } ? T["id"] : never;
 type B<T> = T extends { name: string } ? T["name"] : never;`,
     `type A = { id: string } extends { id: string } ? true : false;`,
+    // TSParenthesizedType wrapper — should still work
+    `type A<T> = T extends ({ id: string }) ? T["id"] : never;`,
   ],
   invalid: [
     {
