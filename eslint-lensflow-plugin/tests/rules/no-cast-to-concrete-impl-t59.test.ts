@@ -63,6 +63,14 @@ const named = obj as Named;`,
 const dog: Dog = new Dog();
 const x = dog as Dog;`,
     },
+    // Cast to class not implementing the source interface
+    {
+      filename: TEST_FILENAME,
+      code: `interface Printable { print(): string; }
+class Cat { meow(): string { return "Meow!"; } }
+const animal: Printable = {} as Printable;
+const x = animal as Cat;`,
+    },
   ],
   invalid: [
     // Direct cast from interface to concrete implementing class
