@@ -28,6 +28,11 @@ function greet(u: User) {
     `function outer(s: { kind: "a" } | { kind: "b" }) {
   const inner = (s: string) => (s as any).trim();
 }`,
+    // AssignmentPattern — proper narrowing with default parameter
+    `function handle(s: ({ kind: "a" } | { kind: "b" }) = { kind: "a" }) {
+  if (s.kind === "a") return s;
+  throw new Error("not a");
+}`,
   ],
   invalid: [
     // Direct `as any` on inline union-typed parameter
@@ -41,6 +46,13 @@ function greet(u: User) {
     // Arrow function with inline union parameter
     {
       code: `const getState = (s: { kind: "loading"; data?: never } | { kind: "done"; data: string }) => (s as any).data;`,
+      errors: [{ messageId: "asAnyBypassNarrowing" }],
+    },
+    // AssignmentPattern — `as any` bypass with default parameter
+    {
+      code: `function handle(s: ({ kind: "a" } | { kind: "b" }) = { kind: "a" }) {
+  return (s as any).kind;
+}`,
       errors: [{ messageId: "asAnyBypassNarrowing" }],
     },
   ],

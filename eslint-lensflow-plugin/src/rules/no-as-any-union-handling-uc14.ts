@@ -42,7 +42,10 @@ function getUnionParamNames(fnNode: unknown): Set<string> {
   const names = new Set<string>();
   for (const param of params) {
     const obj = param as Record<string, unknown>;
-    const typeAnn = (obj as { typeAnnotation?: unknown }).typeAnnotation;
+    // For AssignmentPattern, type annotation is on the left Identifier, not the pattern itself
+    const typeAnn = obj.type === "AssignmentPattern" && obj.left && typeof obj.left === "object"
+      ? ((obj.left as Record<string, unknown>).typeAnnotation ?? obj.typeAnnotation)
+      : (obj as { typeAnnotation?: unknown }).typeAnnotation;
     if (!isUnionType(typeAnn)) continue;
 
     if (obj.type === "Identifier") {
