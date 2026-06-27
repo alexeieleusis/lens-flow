@@ -61,5 +61,14 @@ ruleTester.run("no-interface-implementation-leak", rule, {
         { messageId: "exposedCollection" },
       ],
     },
+    {
+      code: `export interface Cache {
+        "internalMap": Map<string, any>;
+      }`,
+      errors: [
+        { messageId: "internalName" },
+        { messageId: "exposedCollection" },
+      ],
+    },
   ],
 });
