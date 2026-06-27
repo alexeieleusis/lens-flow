@@ -36,8 +36,29 @@ ruleTester.run("no-god-interface", rule, {
       c?: boolean;
       d?: string;
     }`,
+    // 7 total (below default 8 maxTotalFields), no optional
+    `interface JustBelowTotal {
+      a: string;
+      b: number;
+      c: boolean;
+      d: string;
+      e: number;
+      f: string;
+      g: boolean;
+    }`,
   ],
   invalid: [
+    // Exactly 5 optional (boundary, >= 5 triggers), 5 total — verifies boundary behavior
+    {
+      code: `interface BoundaryOptional {
+        a?: string;
+        b?: number;
+        c?: boolean;
+        d?: string;
+        e?: number;
+      }`,
+      errors: [{ messageId: "tooManyOptional" }],
+    },
     // 6 optional properties (>= 5 default), also 6 total
     {
       code: `interface Config {
