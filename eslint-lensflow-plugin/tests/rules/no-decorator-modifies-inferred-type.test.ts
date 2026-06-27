@@ -194,5 +194,19 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
       class Entity {}`,
       errors: [{ messageId: "decoratorModifiesInferredType" }],
     },
+
+    // Object.defineProperties (plural) adding undeclared properties
+    {
+      code: `function addMeta(target: unknown, ctx: ClassDecoratorContext) {
+        Object.defineProperties(target, {
+          "version": { value: "1.0" },
+          "author": { value: "anon" },
+        });
+      }
+
+      @addMeta
+      class Widget {}`,
+      errors: [{ messageId: "decoratorModifiesMultipleProperties" }],
+    },
   ],
 });
