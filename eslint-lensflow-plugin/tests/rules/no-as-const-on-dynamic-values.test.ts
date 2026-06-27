@@ -12,6 +12,7 @@ ruleTester.run("no-as-const-on-dynamic-values", rule, {
       a: { b: 1, c: "hello" },
       d: [true, false],
     } as const;`,
+    `const x = { a: null } as const;`,
     `const neg = { value: -42 } as const;`,
     `const tpl = { msg: \`hello\` } as const;`,
     `const mixed = {
