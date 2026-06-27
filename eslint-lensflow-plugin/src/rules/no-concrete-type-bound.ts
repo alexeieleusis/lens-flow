@@ -48,10 +48,15 @@ export default createRule({
         }
         if (unwrapped.type !== "TSTypeReference") return;
 
-        const typeName =
-          unwrapped.typeName.type === "Identifier"
-            ? unwrapped.typeName.name
-            : null;
+        let typeName: string | null = null;
+        if (unwrapped.typeName.type === "Identifier") {
+          typeName = unwrapped.typeName.name;
+        } else if (unwrapped.typeName.type === "TSQualifiedName") {
+          const rightmost = unwrapped.typeName.right;
+          if (rightmost.type === "Identifier") {
+            typeName = rightmost.name;
+          }
+        }
 
         if (!typeName || allowed.has(typeName)) return;
 

@@ -66,5 +66,10 @@ ruleTester.run("no-concrete-type-bound", rule, {
       }`,
       errors: [{ messageId: "concreteBound" }],
     },
+    // Namespaced (TSQualifiedName) concrete type constraint
+    {
+      code: `function handle<T extends TE.User>(x: T) { return x; }`,
+      errors: [{ messageId: "concreteBound" }],
+    },
   ],
 });
