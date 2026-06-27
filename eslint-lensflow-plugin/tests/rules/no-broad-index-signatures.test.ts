@@ -80,5 +80,17 @@ ruleTester.run("no-broad-index-signatures", rule, {
       }`,
       errors: [{ messageId: "broadIndexSignature" }],
     },
+    {
+      code: `interface NumberKeyAny {
+        [key: number]: any;
+      }`,
+      errors: [{ messageId: "broadIndexSignature" }],
+    },
+    {
+      code: `type NumberKeyUnknown = {
+        [key: number]: unknown;
+      };`,
+      errors: [{ messageId: "broadIndexSignature" }],
+    },
   ],
 });
