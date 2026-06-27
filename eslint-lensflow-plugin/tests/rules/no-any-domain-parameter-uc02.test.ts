@@ -47,5 +47,17 @@ function processItems(items: Item[]) {
 };`,
       errors: [{ messageId: "anyParam" }],
     },
+    {
+      code: `function processItems(items: Array<any>) {
+  return items.map((i) => i.price);
+}`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    {
+      code: `function processItems(items: ReadonlyArray<any>) {
+  return items.map((i) => i.price);
+}`,
+      errors: [{ messageId: "anyParam" }],
+    },
   ],
 });

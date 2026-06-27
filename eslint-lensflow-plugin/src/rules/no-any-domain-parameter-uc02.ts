@@ -6,6 +6,21 @@ function containsAnyKeyword(node: TSESTree.TypeNode): TSESTree.TSAnyKeyword | nu
   if (node.type === "TSArrayType") {
     return containsAnyKeyword(node.elementType);
   }
+  if (node.type === "TSTypeReference") {
+    const name = node.typeName;
+    if (
+      name.type === "Identifier" &&
+      (name.name === "Array" || name.name === "ReadonlyArray")
+    ) {
+      const typeParams = node.typeArguments?.params;
+      if (typeParams) {
+        for (const tp of typeParams) {
+          const found = containsAnyKeyword(tp);
+          if (found) return found;
+        }
+      }
+    }
+  }
   return null;
 }
 
