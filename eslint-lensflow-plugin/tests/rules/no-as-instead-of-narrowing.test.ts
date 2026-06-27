@@ -52,6 +52,22 @@ ruleTester.run("no-as-instead-of-narrowing", rule, {
   const result = x as unknown as string;
 }`,
     },
+    {
+      filename,
+      code: `function handle(x: string | null) {
+  if (x !== null) {
+    x.toUpperCase();
+  }
+}`,
+    },
+    {
+      filename,
+      code: `function handle(x: string | undefined) {
+  if (typeof x !== "undefined") {
+    x.toUpperCase();
+  }
+}`,
+    },
   ],
   invalid: [
     {
@@ -67,6 +83,20 @@ ruleTester.run("no-as-instead-of-narrowing", rule, {
       code: `function handle(x: string | number) {
   const n = x as number;
   n.toFixed();
+}`,
+      errors: [{ messageId: "narrowViaAs" }],
+    },
+    {
+      filename,
+      code: `function handle(x: string | null) {
+  const s = x as string;
+}`,
+      errors: [{ messageId: "narrowViaAs" }],
+    },
+    {
+      filename,
+      code: `function handle(x: string | undefined) {
+  const s = x as string;
 }`,
       errors: [{ messageId: "narrowViaAs" }],
     },
