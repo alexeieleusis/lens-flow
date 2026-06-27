@@ -38,6 +38,12 @@ ruleTester.run("no-getter-returns-mutable-internal", rule, {
         return this.#items;
       }
     }`,
+    `class Example {
+      #data: Array<string> = [];
+      get data(): ReadonlyArray<string> {
+        return this.#data;
+      }
+    }`,
   ],
   invalid: [
     {
@@ -62,6 +68,15 @@ ruleTester.run("no-getter-returns-mutable-internal", rule, {
       code: `class Store {
         #data: string[] = [];
         get data(): string[] {
+          return this.#data;
+        }
+      }`,
+      errors: [{ messageId: "mutableGetterReturn" }],
+    },
+    {
+      code: `class Example {
+        #data: Array<string> = [];
+        get data(): Array<string> {
           return this.#data;
         }
       }`,
