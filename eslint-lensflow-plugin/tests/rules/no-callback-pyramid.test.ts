@@ -43,6 +43,30 @@ ruleTester.run("no-callback-pyramid", rule, {
         console.log(r2);
       });
     });`,
+    // minDepth: 4 — three levels of nesting should NOT report when threshold is raised
+    {
+      code: `getUser(id, (err, user) => {
+        if (err) return handleError(err);
+        getOrders(user.id, (err, orders) => {
+          if (err) return handleError(err);
+          getTags(user.id, (err, tags) => {
+            if (err) return handleError(err);
+            render({ user, orders, tags });
+          });
+        });
+      });`,
+      options: [{ minDepth: 4 }],
+    },
+    // minDepth: 4 — two levels should NOT report
+    {
+      code: `getUser(id, (err, user) => {
+        if (err) return handleError(err);
+        getOrders(user.id, (err, orders) => {
+          render({ user, orders });
+        });
+      });`,
+      options: [{ minDepth: 4 }],
+    },
   ],
   invalid: [
     // Three levels of nested callbacks — the antipattern from the spec
@@ -112,6 +136,28 @@ ruleTester.run("no-callback-pyramid", rule, {
           });
         });
       }`,
+      errors: [{ messageId: "callbackPyramid" }],
+    },
+    // minDepth: 2 — two levels of nesting SHOULD report when threshold is lowered
+    {
+      code: `getUser(id, (err, user) => {
+        if (err) return handleError(err);
+        getOrders(user.id, (err, orders) => {
+          if (err) return handleError(err);
+          render({ user, orders });
+        });
+      });`,
+      options: [{ minDepth: 2 }],
+      errors: [{ messageId: "callbackPyramid" }],
+    },
+    // minDepth: 2 — exactly two levels (minimal nesting) should report
+    {
+      code: `a((err, r1) => {
+        b(r1, (err, r2) => {
+          console.log(r2);
+        });
+      });`,
+      options: [{ minDepth: 2 }],
       errors: [{ messageId: "callbackPyramid" }],
     },
   ],
