@@ -45,6 +45,11 @@ ruleTester.run("no-any-nullable-return", rule, {
       code: `const getData = (): any => fetchData() ?? undefined;`,
       errors: [{ messageId: "anyNullableReturn" }],
     },
+    // Arrow function with block body, any return, and ?? null
+    {
+      code: `const getData = (): any => { return fetchData() ?? null; };`,
+      errors: [{ messageId: "anyNullableReturn" }],
+    },
     // Function expression with any return and ?? null
     {
       code: `const obj = {
