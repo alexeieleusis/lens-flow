@@ -30,5 +30,9 @@ ruleTester.run("no-conflicting-intersection-properties", rule, {
       code: `type BadLiteral = { x: 1 } & { x: 2 };`,
       errors: [{ messageId: "conflict" }],
     },
+    {
+      code: `type MultiConflict = { x: string } & { y: number } & { x: number } & { y: string };`,
+      errors: [{ messageId: "conflict" }],
+    },
   ],
 });
