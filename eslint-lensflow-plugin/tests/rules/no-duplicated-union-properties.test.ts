@@ -38,6 +38,8 @@ type Entity =
     `type BoolFlag =
       | { flag: true; data: string }
       | { flag: false; error: number };`,
+    // TSTypeReference member — silently skipped, should not crash
+    `type Foo = string; type Mixed = Foo | { kind: "a"; id: string };`,
   ],
   invalid: [
     // From antipattern: id: string duplicated across both members (save() is a method, not inspected by this rule)
