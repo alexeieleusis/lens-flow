@@ -62,5 +62,23 @@ ruleTester.run("no-broad-index-signatures", rule, {
       };`,
       errors: [{ messageId: "broadIndexSignature" }],
     },
+    {
+      code: `interface ParenthesizedAny {
+        [key: string]: (any);
+      }`,
+      errors: [{ messageId: "broadIndexSignature" }],
+    },
+    {
+      code: `interface ParenthesizedUnknown {
+        [key: string]: (unknown);
+      }`,
+      errors: [{ messageId: "broadIndexSignature" }],
+    },
+    {
+      code: `interface UnionParenthesizedAny {
+        [key: string]: string | (any);
+      }`,
+      errors: [{ messageId: "broadIndexSignature" }],
+    },
   ],
 });
