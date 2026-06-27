@@ -46,6 +46,16 @@ const parseUserId = (raw: string): UserId => {
   return raw as UserId;
 };`,
     },
+    // Named FunctionExpression smart constructor
+    {
+      filename: TEST_FILENAME,
+      code: `type PhoneNumber = string & { readonly __brand: "PhoneNumber" };
+
+const parsePhoneNumber = function parsePhoneNumber(raw: string): PhoneNumber {
+  if (!/^\+?[1-9]\d{1,14}$/.test(raw)) throw new Error("Invalid phone");
+  return raw as PhoneNumber;
+};`,
+    },
     // Non-branded type cast — plain string to string
     {
       filename: TEST_FILENAME,
