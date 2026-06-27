@@ -20,6 +20,12 @@ ruleTester.run("no-duplicate-discriminant-values", rule, {
     `type QuotedKeyValid =
       | { "kind": "a"; x: number }
       | { "kind": "b"; y: string };`,
+    `type NumericValid =
+      | { kind: 1; x: number }
+      | { kind: 2; y: string };`,
+    `type BooleanValid =
+      | { kind: true; enabled: number }
+      | { kind: false; disabled: string };`,
   ],
   invalid: [
     {
@@ -52,6 +58,18 @@ ruleTester.run("no-duplicate-discriminant-values", rule, {
       code: `type QuotedKeyDup =
       | { "kind": "a"; x: number }
       | { "kind": "a"; y: string };`,
+      errors: [{ messageId: "duplicateDiscriminant" }, { messageId: "duplicateDiscriminant" }],
+    },
+    {
+      code: `type NumericDup =
+      | { kind: 1; x: number }
+      | { kind: 1; y: string };`,
+      errors: [{ messageId: "duplicateDiscriminant" }, { messageId: "duplicateDiscriminant" }],
+    },
+    {
+      code: `type BooleanDup =
+      | { kind: true; enabled: number }
+      | { kind: true; disabled: string };`,
       errors: [{ messageId: "duplicateDiscriminant" }, { messageId: "duplicateDiscriminant" }],
     },
   ],
