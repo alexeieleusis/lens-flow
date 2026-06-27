@@ -29,6 +29,10 @@ ruleTester.run("no-infer-from-unconstrained-type", rule, {
     `type Outer<K> = <K extends { value: unknown }>() => K extends { value: infer V } ? V : never;`,
     // Nested scope — outer T constrained, inner T also constrained
     `type Outer<T extends string> = <T extends number>() => T extends infer U ? U : never;`,
+    // Qualified name — checkType.typeName is TSQualifiedName, not Identifier
+    `type Foo<NS> = NS.T extends infer U ? U : never;`,
+    // Union checkType — not a TSTypeReference at all
+    `type Bar<T> = T | string extends infer U ? U : never;`,
   ],
   invalid: [
     // Basic antipattern from the spec
