@@ -58,6 +58,19 @@ ruleTester.run("no-any-array-for-children", rule, {
       errors: [{ messageId: "anyArrayChildren" }],
     },
     {
+      code: `type Tree = {
+        sub: any[];
+      }`,
+      errors: [{ messageId: "anyArrayChildren" }],
+    },
+    {
+      code: `type Component = {
+        name: string;
+        Children: any[];
+      }`,
+      errors: [{ messageId: "anyArrayChildren" }],
+    },
+    {
       code: `type Component = {
         name: string;
         children: Array<any>;
