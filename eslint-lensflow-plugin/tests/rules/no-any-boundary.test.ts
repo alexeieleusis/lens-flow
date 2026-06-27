@@ -26,6 +26,10 @@ ruleTester.run("no-any-boundary", rule, {
       errors: [{ messageId: "anyInFunctionType" }],
     },
     {
+      code: `function f(...args: any) { return args; }`,
+      errors: [{ messageId: "anyInFunctionType" }],
+    },
+    {
       code: `function parseResponse(): any { return result; }`,
       errors: [{ messageId: "anyInFunctionType" }],
     },
