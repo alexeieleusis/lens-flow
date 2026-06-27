@@ -13,6 +13,7 @@ ruleTester.run("no-any-callback-param", rule, {
     `declare function process(fn: (input: boolean) => void): void;`,
     `type Handler = (event: { type: string }) => void;`,
     `type Callable = { (item: string): void };`,
+    `type Handler = (item: string | null) => void;`,
   ],
   invalid: [
     {
@@ -37,6 +38,18 @@ ruleTester.run("no-any-callback-param", rule, {
     },
     {
       code: `type Callable = { (item: any): void };`,
+      errors: [{ messageId: "anyCallbackParam" }],
+    },
+    {
+      code: `type Handler = (item: string | any) => void;`,
+      errors: [{ messageId: "anyCallbackParam" }],
+    },
+    {
+      code: `type Handler = (items: any[]) => void;`,
+      errors: [{ messageId: "anyCallbackParam" }],
+    },
+    {
+      code: `type Handler = (data: Array<any>) => void;`,
       errors: [{ messageId: "anyCallbackParam" }],
     },
   ],
