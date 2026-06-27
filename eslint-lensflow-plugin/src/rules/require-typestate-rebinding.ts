@@ -165,7 +165,9 @@ export default createRule({
       const methodName = callee ? extractMethodName(callee) : null;
 
       const constName =
-        declarator.id.type === "Identifier" ? declarator.id.name : "?";
+        declarator.id.type === "Identifier"
+          ? declarator.id.name
+          : context.sourceCode.getText(declarator.id);
 
       if (
         hasSubsequentUse(
