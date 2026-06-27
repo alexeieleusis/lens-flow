@@ -127,5 +127,9 @@ const config = { [envKey]: "prod" } as const;`,
       code: `const y = { b: void 0 } as const;`,
       errors: [{ messageId: "dynamicAsConst" }],
     },
+    {
+      code: `const x = { a: !true } as const;`,
+      errors: [{ messageId: "dynamicAsConst" }],
+    },
   ],
 });
