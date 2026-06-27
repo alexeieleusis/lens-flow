@@ -14,7 +14,7 @@ const __dirname = dirname(__filename);
 
 const TEST_FILENAME = "tests/rules/test.ts";
 const TS_CONFIG_DIR = resolve(__dirname, "../..");
-const TS_CONFIG = path.join(TS_CONFIG_DIR, "tsconfig.test.json");
+const TS_CONFIG = resolve(TS_CONFIG_DIR, "tsconfig.test.json");
 
 const ruleTester = new RuleTester({
   languageOptions: {
@@ -80,6 +80,23 @@ type C = A | B;`,
 type Y = { kind: "y1" };
 type Z = { kind: "z1" } | { kind: "z2" };
 type All = X | Y | Z;`,
+      errors: [{ messageId: "composed" }],
+    },
+    // Transitive union alias: AliasA references A (a union), C composes AliasA
+    {
+      filename: TEST_FILENAME,
+      code: `type A = { kind: "a" } | { kind: "b" };
+type AliasA = A;
+type C = AliasA | { kind: "c" };`,
+      errors: [{ messageId: "composed" }],
+    },
+    // Parenthesized union wrapper: (A | B) | D
+    {
+      filename: TEST_FILENAME,
+      code: `type A = { kind: "a" } | { kind: "b" };
+type B = { kind: "c" };
+type D = { kind: "d" };
+type C = (A | B) | D;`,
       errors: [{ messageId: "composed" }],
     },
   ],

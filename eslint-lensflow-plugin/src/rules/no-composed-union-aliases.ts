@@ -27,9 +27,24 @@ export default createRule({
     if (!program) return {};
     const checker = program.getTypeChecker();
     function analyzeUnionMember(member: TSESTree.TypeNode): { isUnion: boolean; refName: string } {
-      if (member.type !== "TSTypeReference") return { isUnion: false, refName: "" };
+      // Unwrap parenthesized types to get the inner type
+      let current = member;
+      while (current.type === "TSParenthesizedType") {
+        current = current.typeAnnotation;
+      }
 
-      const tsNode = parserServices.esTreeNodeToTSNodeMap.get(member);
+      // If the unwrapped node is itself a union (e.g. (A | B)), recurse into its members
+      if (current.type === "TSUnionType") {
+        for (const inner of current.types) {
+          const result = analyzeUnionMember(inner);
+          if (result.isUnion) return result;
+        }
+        return { isUnion: false, refName: "" };
+      }
+
+      if (current.type !== "TSTypeReference") return { isUnion: false, refName: "" };
+
+      const tsNode = parserServices.esTreeNodeToTSNodeMap.get(current);
       if (!tsNode) return { isUnion: false, refName: "" };
       const memberTsType = checker.getTypeAtLocation(tsNode);
       const isUnion = (memberTsType.flags & ts.TypeFlags.Union) !== 0;
@@ -37,8 +52,8 @@ export default createRule({
       if (!isUnion) return { isUnion: false, refName: "" };
 
       const refName =
-        member.typeName.type === "Identifier"
-          ? member.typeName.name
+        current.typeName.type === "Identifier"
+          ? current.typeName.name
           : "";
 
       return { isUnion: true, refName };
