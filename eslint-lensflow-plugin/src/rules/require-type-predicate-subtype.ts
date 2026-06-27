@@ -3,7 +3,7 @@ import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T33-self-type.md");
+const DOCS_URL = knowledgeUrl("catalog/T33-self-type.md");
 
 export default createRule({
   name: "require-type-predicate-subtype",
@@ -79,7 +79,7 @@ export default createRule({
           data: {
             predicateType: predicateTypeStr,
             enclosingType: enclosingTypeStr,
-            url: URL,
+            url: DOCS_URL,
           },
         });
       }
