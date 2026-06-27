@@ -29,5 +29,13 @@ ruleTester.run("no-function-type", rule, {
       code: `type Combined = Function & { tag: string };`,
       errors: [{ messageId: "noFunctionType" }],
     },
+    {
+      code: `type FnArray = Array<Function>;`,
+      errors: [{ messageId: "noFunctionType" }],
+    },
+    {
+      code: `type FnMap = Map<string, Function>;`,
+      errors: [{ messageId: "noFunctionType" }],
+    },
   ],
 });
