@@ -25,9 +25,9 @@ ruleTester.run("no-infer-from-unconstrained-type", rule, {
       code: `type Identity<X> = X extends infer Y ? Y : string;`,
       errors: [{ messageId: "inferFromUnconstrained" }],
     },
-    // Inside interface method signature
+    // Inside interface property signature
     {
-      code: `type Foo<T> = T extends infer U ? U : never;`,
+      code: `interface Container<T> { extract: T extends infer U ? U : never; }`,
       errors: [{ messageId: "inferFromUnconstrained" }],
     },
     // Multiple type parameters where the inferred one is unconstrained
