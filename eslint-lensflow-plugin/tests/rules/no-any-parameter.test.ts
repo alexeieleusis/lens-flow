@@ -12,6 +12,14 @@ ruleTester.run("no-any-parameter", rule, {
       return data;
     }`,
     `const arrow = (items: string[]) => items.join(",");`,
+    `function withDefault(x: string = "hello") { return x; }`,
+    `function withNumberDefault(x: number = 0) { return x; }`,
+    `const arrowDefault = (x: boolean = true) => x;`,
+    `function withRest(...args: string[]) { return args; }`,
+    `const arrowRest = (...nums: number[]) => nums.length;`,
+    `function destructuredObj({ a, b }: { a: string; b: number }) { return a + b; }`,
+    `function destructuredArr([first, second]: [string, number]) { return first + second; }`,
+    `const arrowDestructured = ({ x }: { x: string }) => x;`,
   ],
   invalid: [
     {
@@ -53,6 +61,34 @@ ruleTester.run("no-any-parameter", rule, {
     },
     {
       code: `type Api = (data: any) => void;`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    {
+      code: `function withDefault(x: any = 1) { return x; }`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    {
+      code: `const arrowDefault = (x: any = true) => x;`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    {
+      code: `function withRest(...rest: any[]) { return rest; }`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    {
+      code: `const arrowRest = (...nums: any) => nums;`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    {
+      code: `function destructuredObj({ a, b }: any) { return a + b; }`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    {
+      code: `function destructuredArr([first, second]: any) { return first; }`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    {
+      code: `const arrowDestructured = ({ x }: any) => x;`,
       errors: [{ messageId: "anyParam" }],
     },
   ],
