@@ -40,6 +40,21 @@ ruleTester.run("no-giant-optional-interface-t59", rule, {
       h?: string;
       i?: string;
     }`,
+    {
+      code: `interface ButtonConfig {
+        text?: string;
+        icon?: string;
+        onClick?: () => void;
+        onHover?: () => void;
+        disabled?: boolean;
+        loading?: boolean;
+        ariaLabel?: string;
+        variant?: string;
+        size?: string;
+        color?: string;
+      }`,
+      options: [{ maxOptional: 20 }],
+    },
   ],
   invalid: [
     {
@@ -101,6 +116,22 @@ ruleTester.run("no-giant-optional-interface-t59", rule, {
         i?: string;
         j?: string;
       }`,
+      errors: [{ messageId: "tooManyOptional" }],
+    },
+    {
+      code: `interface ButtonConfig {
+        text?: string;
+        icon?: string;
+        onClick?: () => void;
+        onHover?: () => void;
+        disabled?: boolean;
+        loading?: boolean;
+        ariaLabel?: string;
+        variant?: string;
+        size?: string;
+        color?: string;
+      }`,
+      options: [{ maxOptional: 5 }],
       errors: [{ messageId: "tooManyOptional" }],
     },
   ],
