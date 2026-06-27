@@ -119,5 +119,13 @@ const config = { [envKey]: "prod" } as const;`,
       code: `const x = [1, ...getItems(), 2] as const;`,
       errors: [{ messageId: "dynamicAsConst" }],
     },
+    {
+      code: `const x = { a: undefined } as const;`,
+      errors: [{ messageId: "dynamicAsConst" }],
+    },
+    {
+      code: `const y = { b: void 0 } as const;`,
+      errors: [{ messageId: "dynamicAsConst" }],
+    },
   ],
 });
