@@ -1,6 +1,7 @@
 import ts from "typescript";
 import { ESLintUtils, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { walkNodes } from "../utils/ast-helpers.js";
 
 function typeIncludesUndefined(type: ts.Type): boolean {
   if ((type.flags & ts.TypeFlags.Undefined) !== 0) return true;
@@ -51,7 +52,7 @@ function checkGuardedConsequent(
   varName: string,
 ): boolean | "stop" {
   if (testContainsGuard(test, varName)) {
-    if (isDescendant(consequent, node)) return true;
+    if (walkNodes(consequent, (n) => n === node, { skipTypeAnnotations: true })) return true;
   }
   return "stop";
 }
@@ -173,40 +174,7 @@ function isInsideGuard(
   return false;
 }
 
-function collectChild(val: unknown, children: TSESTree.Node[]): void {
-  if (!val || typeof val !== "object") return;
-  if (Array.isArray(val)) {
-    for (const item of val) {
-      collectChild(item, children);
-    }
-    return;
-  }
-  if ("type" in val) {
-    children.push(val as TSESTree.Node);
-  }
-}
 
-function getChildren(node: TSESTree.Node): TSESTree.Node[] {
-  const children: TSESTree.Node[] = [];
-  for (const key of Object.keys(node)) {
-    if (key === "parent") continue;
-    const val = (node as unknown as Record<string, unknown>)[key];
-    collectChild(val, children);
-  }
-  return children;
-}
-
-// Simple descendant check — avoids parent traversal by only going down
-function isDescendant(
-  root: TSESTree.Node,
-  target: TSESTree.Node,
-): boolean {
-  if (root === target) return true;
-  for (const child of getChildren(root)) {
-    if (isDescendant(child, target)) return true;
-  }
-  return false;
-}
 
 function isBinaryGuard(
   test: TSESTree.BinaryExpression,
@@ -306,6 +274,19 @@ function testContainsGuard(
   return false;
 }
 
+function findBindingInScope(
+  scope: TSESLint.Scope.Scope | null,
+  name: string,
+): TSESLint.Scope.Variable | null {
+  let current: TSESLint.Scope.Scope | null = scope;
+  while (current) {
+    const variable = current.variables.find((v) => v.name === name);
+    if (variable) return variable;
+    current = current.upper;
+  }
+  return null;
+}
+
 export default createRule({
   name: "require-undefined-handling-after-optional-chain",
   meta: {
@@ -329,7 +310,7 @@ export default createRule({
     const checker = program.getTypeChecker();
 
     // Track variables declared from optional chain that may be undefined
-    const undefinedChainVars = new Set<string>();
+    const undefinedChainVars = new Set<TSESLint.Scope.Variable>();
 
     return {
       VariableDeclarator(node) {
@@ -357,7 +338,13 @@ export default createRule({
         if (!tsNode) return;
         const type = checker.getTypeAtLocation(tsNode);
         if (typeIncludesUndefined(type)) {
-          undefinedChainVars.add(declName);
+          const scope = context.sourceCode.getScope(node);
+          const declaredBinding = scope.variables.find(
+            (v) => v.name === declName,
+          );
+          if (declaredBinding) {
+            undefinedChainVars.add(declaredBinding);
+          }
         }
       },
 
@@ -365,7 +352,11 @@ export default createRule({
         if (memberNode.object.type !== "Identifier") return;
 
         const varName = memberNode.object.name;
-        if (!undefinedChainVars.has(varName)) return;
+        const binding = findBindingInScope(
+          context.sourceCode.getScope(memberNode),
+          varName,
+        );
+        if (!binding || !undefinedChainVars.has(binding)) return;
 
         // Skip if this MemberExpression itself is part of an optional chain
         // (it's already safe)
