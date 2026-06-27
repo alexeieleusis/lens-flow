@@ -94,7 +94,10 @@ export default createRule({
         handler(node.value);
       },
       FunctionDeclaration: handler,
+      FunctionExpression: handler,
+      ArrowFunctionExpression: handler,
       TSEmptyBodyFunctionExpression: handler,
+      TSDeclareFunction: handler,
     };
   },
 });
