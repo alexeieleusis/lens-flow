@@ -38,9 +38,43 @@ function collectIdentifiers(node: TSESTree.Node, visited = new WeakSet<object>()
   return ids;
 }
 
+function collectParamIdentifiers(node: TSESTree.Node): string[] {
+  if (node.type === "Identifier") return [node.name];
+  if (node.type === "ObjectPattern") {
+    return node.properties.flatMap((prop) => {
+      if (prop.type === "Property") {
+        return collectParamIdentifiers(prop.value);
+      }
+      if (prop.type === "RestElement") {
+        return collectParamIdentifiers(prop.argument);
+      }
+      return [];
+    });
+  }
+  if (node.type === "ArrayPattern") {
+    return node.elements.flatMap((el) => {
+      if (el === null) return [];
+      if (el.type === "RestElement") {
+        return collectParamIdentifiers(el.argument);
+      }
+      return collectParamIdentifiers(el);
+    });
+  }
+  if (node.type === "AssignmentPattern") {
+    return collectParamIdentifiers(node.left);
+  }
+  return [];
+}
+
+function getParamDisplayName(node: TSESTree.Node): string {
+  if (node.type === "Identifier") return node.name;
+  return "destructured params";
+}
+
 function reportEatenErrorIfApplicable(
   callback: TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression,
-  errorParam: string | undefined,
+  errorParamIds: string[],
+  paramName: string,
   context: Parameters<ReturnType<typeof createRule>["create"]>[0],
 ) {
   if (callback.body.type === "BlockStatement") {
@@ -56,20 +90,20 @@ function reportEatenErrorIfApplicable(
     }
 
     const bodyIdentifiers = body.flatMap((stmt) => collectIdentifiers(stmt));
-    if (errorParam && !bodyIdentifiers.includes(errorParam)) {
+    if (errorParamIds.length > 0 && !errorParamIds.some((id) => bodyIdentifiers.includes(id))) {
       context.report({
         node: callback,
         messageId: "ignoredParam",
-        data: { param: errorParam },
+        data: { param: paramName },
       });
     }
   } else {
     const bodyIdentifiers = collectIdentifiers(callback.body);
-    if (errorParam && !bodyIdentifiers.includes(errorParam)) {
+    if (errorParamIds.length > 0 && !errorParamIds.some((id) => bodyIdentifiers.includes(id))) {
       context.report({
         node: callback,
         messageId: "ignoredParam",
-        data: { param: errorParam },
+        data: { param: paramName },
       });
     }
   }
@@ -109,11 +143,13 @@ export default createRule({
         )
           return;
 
-        const errorParam = callback.params
-          .filter((p): p is TSESTree.Identifier => p.type === "Identifier")
-          .map((p) => p.name)[0];
+        const firstParam = callback.params[0];
+        if (!firstParam) return;
 
-        reportEatenErrorIfApplicable(callback, errorParam, context);
+        const errorParamIds = collectParamIdentifiers(firstParam);
+        const paramName = getParamDisplayName(firstParam);
+
+        reportEatenErrorIfApplicable(callback, errorParamIds, paramName, context);
       },
     };
   },
