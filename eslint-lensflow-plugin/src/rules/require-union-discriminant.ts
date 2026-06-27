@@ -1,6 +1,13 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
+function unwrapParens(node: TSESTree.TypeNode): TSESTree.TypeNode {
+  while (node.type === ("TSParenthesizedType" as TSESTree.TypeNode["type"])) {
+    node = (node as unknown as { typeAnnotation: TSESTree.TypeNode }).typeAnnotation;
+  }
+  return node;
+}
+
 export default createRule({
   name: "require-union-discriminant",
   meta: {
@@ -20,10 +27,12 @@ export default createRule({
   create(context: TSESLint.RuleContext<"missingDiscriminant", []>) {
     return {
       TSUnionType(node) {
-        const typeLiterals = node.types.filter(
-          (member): member is TSESTree.TSTypeLiteral =>
-            member.type === "TSTypeLiteral",
-        );
+        const typeLiterals = node.types
+          .map(unwrapParens)
+          .filter(
+            (member): member is TSESTree.TSTypeLiteral =>
+              member.type === "TSTypeLiteral",
+          );
 
         if (typeLiterals.length < 2) return;
 
