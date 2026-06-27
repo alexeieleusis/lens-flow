@@ -20,6 +20,7 @@ ruleTester.run("no-eaten-callback-error", rule, {
   reportError(err);
   throw err;
 });`,
+    `promise.catch()`,
   ],
   invalid: [
     {
