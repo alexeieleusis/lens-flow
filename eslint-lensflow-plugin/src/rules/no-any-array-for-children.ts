@@ -22,10 +22,15 @@ export default createRule({
 
     return {
       TSPropertySignature(node) {
-        if (node.key.type !== "Identifier") return;
+        let propName: string | undefined;
 
-        const propName = node.key.name;
-        if (!nestedPattern.test(propName)) return;
+        if (node.key.type === "Identifier") {
+          propName = node.key.name;
+        } else if (node.key.type === "Literal" && typeof node.key.value === "string") {
+          propName = node.key.value;
+        }
+
+        if (!propName || !nestedPattern.test(propName)) return;
 
         const typeAnn = node.typeAnnotation?.typeAnnotation;
 
