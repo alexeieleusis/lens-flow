@@ -9,11 +9,33 @@ function unwrapExpression(
   return node;
 }
 
+function unwrapTypeAnnotation(
+  node: TSESTree.TypeNode,
+): TSESTree.TypeNode {
+  if (node.type === "TSParenthesizedType") return node.typeAnnotation;
+  if (node.type === "TSIntersectionType") {
+    for (const type of node.types) {
+      if (type.type === "TSTypeLiteral") return type;
+      const unwrapped = unwrapTypeAnnotation(type);
+      if (unwrapped.type === "TSTypeLiteral") return unwrapped;
+    }
+  }
+  if (node.type === "TSUnionType") {
+    for (const type of node.types) {
+      if (type.type === "TSTypeLiteral") return type;
+      const unwrapped = unwrapTypeAnnotation(type);
+      if (unwrapped.type === "TSTypeLiteral") return unwrapped;
+    }
+  }
+  return node;
+}
+
 function isCastToShape(node: TSESTree.Expression): boolean {
   const inner = unwrapExpression(node);
   if (inner.type !== "TSAsExpression" && inner.type !== "TSSatisfiesExpression")
     return false;
-  return inner.typeAnnotation.type === "TSTypeLiteral";
+  const unwrapped = unwrapTypeAnnotation(inner.typeAnnotation);
+  return unwrapped.type === "TSTypeLiteral";
 }
 
 export default createRule({

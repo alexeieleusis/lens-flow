@@ -22,5 +22,17 @@ ruleTester.run("no-cast-to-shape-then-access", rule, {
 }`,
       errors: [{ messageId: "castToShapeThenAccess" }],
     },
+    {
+      code: `function getFoo(obj: { data: any }) {
+  return (obj.data as { id: string } & { foo: number }).id;
+}`,
+      errors: [{ messageId: "castToShapeThenAccess" }],
+    },
+    {
+      code: `function getBar(obj: { data: any }) {
+  return (obj.data as ({ id: string })).id;
+}`,
+      errors: [{ messageId: "castToShapeThenAccess" }],
+    },
   ],
 });
