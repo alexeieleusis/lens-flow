@@ -70,6 +70,8 @@ export default createRule({
       FunctionExpression: checkFunction,
       ArrowFunctionExpression: checkFunction,
       TSDeclareFunction: checkFunction,
+      TSFunctionType: checkFunction,
+      MethodDefinition: checkFunction,
     };
   },
 });
