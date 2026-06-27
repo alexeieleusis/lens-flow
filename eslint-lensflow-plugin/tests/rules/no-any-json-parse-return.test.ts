@@ -84,5 +84,14 @@ ruleTester.run("no-any-json-parse-return", rule, {
       }`,
       errors: [{ messageId: "anyJsonParseReturn" }],
     },
+    // JSON.parse nested inside try/catch control structure
+    {
+      code: `function parse(raw: string): any {
+        try {
+          return JSON.parse(raw);
+        } catch { return {}; }
+      }`,
+      errors: [{ messageId: "anyJsonParseReturn" }],
+    },
   ],
 });
