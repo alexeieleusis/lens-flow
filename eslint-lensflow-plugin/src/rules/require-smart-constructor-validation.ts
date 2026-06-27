@@ -39,9 +39,32 @@ function hasBrandedReturnType(
   return walkType(returnType);
 }
 
+function unwrapTSExpression(node: TSESTree.Node): TSESTree.Node {
+  while (
+    node.type === "TSAsExpression" ||
+    node.type === "TSNonNullExpression" ||
+    node.type === "TSSatisfiesExpression" ||
+    node.type === "ChainExpression"
+  ) {
+    node = (node as TSESTree.TSAsExpression | TSESTree.TSNonNullExpression | TSESTree.TSSatisfiesExpression | TSESTree.ChainExpression).expression;
+  }
+  return node;
+}
+
+function unwrapToCast(node: TSESTree.Node): TSESTree.Node {
+  while (
+    node.type === "TSNonNullExpression" ||
+    node.type === "ChainExpression"
+  ) {
+    node = (node as TSESTree.TSNonNullExpression | TSESTree.ChainExpression).expression;
+  }
+  return node;
+}
+
 function isBrandedCast(node: TSESTree.Node): string | null {
-  if (node.type !== "TSAsExpression") return null;
-  const t = node.typeAnnotation;
+  const castNode = node.type === "TSAsExpression" || node.type === "TSSatisfiesExpression" ? node : null;
+  if (!castNode) return null;
+  const t = (castNode as TSESTree.TSAsExpression | TSESTree.TSSatisfiesExpression).typeAnnotation;
   if (t.type !== "TSTypeReference" || !isBrandedTypeName(t)) return null;
   const name = getBrandName(t.typeName);
   return name ?? null;
@@ -133,14 +156,15 @@ function isOnlyReturnWithCast(
   const stmt = body.body[0];
   if (stmt.type !== "ReturnStatement") return false;
   if (!stmt.argument) return false;
-  if (stmt.argument.type === "TSAsExpression") return true;
-  return false;
+  const unwrapped = unwrapToCast(stmt.argument);
+  return unwrapped.type === "TSAsExpression" || unwrapped.type === "TSSatisfiesExpression";
 }
 
 function isArrowBareCast(
   body: TSESTree.Node,
 ): boolean {
-  return body.type === "TSAsExpression";
+  const unwrapped = unwrapToCast(body);
+  return unwrapped.type === "TSAsExpression" || unwrapped.type === "TSSatisfiesExpression";
 }
 
 export default createRule({
