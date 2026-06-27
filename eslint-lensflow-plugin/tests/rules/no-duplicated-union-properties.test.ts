@@ -34,6 +34,10 @@ type Entity =
     `type QuotedValid =
       | { "kind": "a"; "value": string }
       | { "kind": "b"; "value": number };`,
+    // Boolean literal discriminant — no duplication across members
+    `type BoolFlag =
+      | { flag: true; data: string }
+      | { flag: false; error: number };`,
   ],
   invalid: [
     // From antipattern: id: string duplicated across both members (save() is a method, not inspected by this rule)
@@ -65,11 +69,18 @@ type Entity =
    | ({ kind: "b" } & { id: number; extraB: boolean });`,
       errors: [{ messageId: "duplicatedProperties" }],
     },
-    // Quoted (string-literal) property keys: "id" duplicated across both members
+   // Quoted (string-literal) property keys: "id" duplicated across both members
     {
       code: `type QuotedDup =
-   | { "kind": "a"; "id": string; "extraA": number }
-   | { "kind": "b"; "id": string; "extraB": boolean };`,
+    | { "kind": "a"; "id": string; "extraA": number }
+    | { "kind": "b"; "id": string; "extraB": boolean };`,
+      errors: [{ messageId: "duplicatedProperties" }],
+    },
+    // Boolean literal discriminant: id duplicated across both members
+    {
+      code: `type BoolDup =
+    | { flag: true; id: string; data: string }
+    | { flag: false; id: string; error: number };`,
       errors: [{ messageId: "duplicatedProperties" }],
     },
   ],
