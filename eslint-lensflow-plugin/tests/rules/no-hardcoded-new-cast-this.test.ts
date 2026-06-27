@@ -58,5 +58,29 @@ ruleTester.run("no-hardcoded-new-cast-this", rule, {
       }`,
       errors: [{ messageId: "hardcodedNewCastThis" }],
     },
+    {
+      code: `class BadClone implements Cloneable {
+        clone(): this | null {
+          return new BadClone() as this;
+        }
+      }`,
+      errors: [{ messageId: "hardcodedNewCastThis" }],
+    },
+    {
+      code: `class BadClone implements Cloneable {
+        clone(): this & Cloneable {
+          return new BadClone() as this;
+        }
+      }`,
+      errors: [{ messageId: "hardcodedNewCastThis" }],
+    },
+    {
+      code: `class BadClone implements Cloneable {
+        clone(): this | never {
+          return new BadClone() as this;
+        }
+      }`,
+      errors: [{ messageId: "hardcodedNewCastThis" }],
+    },
   ],
 });
