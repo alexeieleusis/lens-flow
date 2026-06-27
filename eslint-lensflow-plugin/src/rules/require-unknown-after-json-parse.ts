@@ -66,6 +66,13 @@ export default createRule({
         }
 
         if (
+          parent.type === "TSSatisfiesExpression" &&
+          parent.typeAnnotation.type === "TSUnknownKeyword"
+        ) {
+          return;
+        }
+
+        if (
           parent.type === "VariableDeclarator" &&
           parent.id.typeAnnotation?.typeAnnotation.type === "TSUnknownKeyword"
         ) {
