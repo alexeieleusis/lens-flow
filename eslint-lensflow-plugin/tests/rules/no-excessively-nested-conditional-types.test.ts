@@ -17,6 +17,18 @@ ruleTester.run("no-excessively-nested-conditional-types", rule, {
         ? T & U
         : T | U
       : T | U;`,
+    // Four levels with raised maxDepth (depth 4 <= maxDepth 4, should pass)
+    {
+      code: `type VeryDeep<T> = T extends { a: infer A }
+  ? A extends { b: infer B }
+    ? B extends { c: infer C }
+      ? C extends { d: infer D }
+        ? D : never
+      : never
+    : never
+  : never;`,
+      options: [{ maxDepth: 4 }],
+    },
   ],
   invalid: [
     // Three levels of nesting (depth 3 > default maxDepth 2)
