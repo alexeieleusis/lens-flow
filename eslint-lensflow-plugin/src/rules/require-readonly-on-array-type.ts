@@ -13,9 +13,9 @@ export default createRule({
     },
     messages: {
       mutableArrayOnReadonlyProp:
-        "Property '{{name}}' is marked `readonly` but uses mutable array type '{{type}}`. Use `readonly {{type}}` to prevent in-place mutation via push/splice. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC06-immutability.md",
+        "Property '{{name}}' is marked `readonly` but uses mutable array type '{{type}}`. Use `readonly {{type}}` to prevent in-place mutation via push/splice.",
       mutableArrayRefOnReadonlyProp:
-        "Property '{{name}}' is marked `readonly` but uses mutable `Array<{{element}}>` type. Use `ReadonlyArray<{{element}}>` to prevent in-place mutation via push/splice. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC06-immutability.md",
+        "Property '{{name}}' is marked `readonly` but uses mutable `Array<{{element}}>` type. Use `ReadonlyArray<{{element}}>` to prevent in-place mutation via push/splice.",
     },
     schema: [],
     fixable: undefined,
