@@ -24,6 +24,22 @@ ruleTester.run("no-giant-optional-interface-t59", rule, {
       h?: string;
       i?: string;
     }`,
+    `type SmallConfig = {
+      text?: string;
+      icon?: string;
+      onClick?: () => void;
+    }`,
+    `type JustUnderLimit = {
+      a?: string;
+      b?: string;
+      c?: string;
+      d?: string;
+      e?: string;
+      f?: string;
+      g?: string;
+      h?: string;
+      i?: string;
+    }`,
   ],
   invalid: [
     {
@@ -59,6 +75,21 @@ ruleTester.run("no-giant-optional-interface-t59", rule, {
     },
     {
       code: `interface ExactlyAtLimit {
+        a?: string;
+        b?: string;
+        c?: string;
+        d?: string;
+        e?: string;
+        f?: string;
+        g?: string;
+        h?: string;
+        i?: string;
+        j?: string;
+      }`,
+      errors: [{ messageId: "tooManyOptional" }],
+    },
+    {
+      code: `type Config = {
         a?: string;
         b?: string;
         c?: string;
