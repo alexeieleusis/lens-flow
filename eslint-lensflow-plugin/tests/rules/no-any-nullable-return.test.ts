@@ -59,6 +59,11 @@ ruleTester.run("no-any-nullable-return", rule, {
       };`,
       errors: [{ messageId: "anyNullableReturn" }],
     },
+    // Standalone function expression with any return and ?? null
+    {
+      code: `const getData = function(): any { return fetchData() ?? null; };`,
+      errors: [{ messageId: "anyNullableReturn" }],
+    },
     // Nested nullish coalescing
     {
       code: `function getData(): any {
