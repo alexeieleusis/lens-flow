@@ -34,7 +34,8 @@ export default createRule({
               sig.typeAnnotation?.typeAnnotation?.type === "TSLiteralType" &&
               sig.typeAnnotation.typeAnnotation.literal.type === "Literal" &&
               (typeof sig.typeAnnotation.typeAnnotation.literal.value === "string" ||
-                typeof sig.typeAnnotation.typeAnnotation.literal.value === "number"),
+                typeof sig.typeAnnotation.typeAnnotation.literal.value === "number" ||
+                typeof sig.typeAnnotation.typeAnnotation.literal.value === "boolean"),
           ),
         );
 
