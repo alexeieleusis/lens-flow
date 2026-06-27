@@ -60,17 +60,10 @@ function hasSubsequentUse(
   body: TSESTree.Statement[],
   startIdx: number,
   targetName: string,
-  skipDeclarators: Set<TSESTree.VariableDeclarator>,
 ): boolean {
   for (let i = startIdx; i < body.length; i++) {
     const stmt = body[i];
     if (FUNCTION_BOUNDARY_TYPES.has(stmt.type)) continue;
-    if (
-      stmt.type === "VariableDeclaration" &&
-      stmt.declarations.some((d) => skipDeclarators.has(d))
-    ) {
-      continue;
-    }
     if (nodeHasTargetUse(stmt, targetName)) return true;
   }
   return false;
@@ -179,7 +172,6 @@ export default createRule({
           body,
           idx + 1,
           objId.name,
-          new Set([declarator]),
         )
       ) {
         context.report({
