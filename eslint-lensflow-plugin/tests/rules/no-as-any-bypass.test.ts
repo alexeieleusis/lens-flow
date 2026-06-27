@@ -30,5 +30,21 @@ ruleTester.run("no-as-any-bypass", rule, {
         { messageId: "anyCast" },
       ],
     },
+    {
+      code: `obj.prop = value as any;`,
+      errors: [{ messageId: "anyCast" }],
+    },
+    {
+      code: `fn(value as any);`,
+      errors: [{ messageId: "anyCast" }],
+    },
+    {
+      code: `const obj = { x: value as any };`,
+      errors: [{ messageId: "anyCast" }],
+    },
+    {
+      code: `const arr = [value as any];`,
+      errors: [{ messageId: "anyCast" }],
+    },
   ],
 });
