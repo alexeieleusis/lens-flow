@@ -9,6 +9,10 @@ function isMutableType(
     return false;
   }
 
+  if (node.type === "TSParenthesizedType") {
+    return isMutableType(node.typeAnnotation, sourceCode);
+  }
+
   if (node.type === "TSArrayType") {
     return true;
   }
@@ -41,6 +45,10 @@ function isMutableType(
     return node.types.some((member) => isMutableType(member, sourceCode));
   }
 
+  if (node.type === "TSIntersectionType") {
+    return node.types.some((member) => isMutableType(member, sourceCode));
+  }
+
   return false;
 }
 
@@ -63,13 +71,15 @@ export default createRule({
     return {
       ClassBody(node) {
         const getters = node.body.filter(
-          (member): member is TSESTree.MethodDefinition =>
-            member.type === "MethodDefinition" && member.kind === "get",
+          (member): member is TSESTree.MethodDefinition | TSESTree.TSAbstractMethodDefinition =>
+            (member.type === "MethodDefinition" || member.type === "TSAbstractMethodDefinition") &&
+            member.kind === "get",
         );
 
         for (const getter of getters) {
           const returnTypeAnnotation =
-            getter.value.returnType?.typeAnnotation;
+            (getter as TSESTree.MethodDefinition).value.returnType?.typeAnnotation ??
+            (getter as TSESTree.TSAbstractMethodDefinition).returnType?.typeAnnotation;
 
           if (
             returnTypeAnnotation &&

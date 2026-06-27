@@ -100,5 +100,47 @@ ruleTester.run("no-getter-returns-mutable-internal", rule, {
       }`,
       errors: [{ messageId: "mutableGetterReturn" }],
     },
+    {
+      code: `class Qualified {
+        #items = new Set();
+        get items(): Collections.Set<string> {
+          return this.#items;
+        }
+      }`,
+      errors: [{ messageId: "mutableGetterReturn" }],
+    },
+    {
+      code: `class Parenthesized {
+        #items = new Set();
+        get items(): (Set<string>) {
+          return this.#items;
+        }
+      }`,
+      errors: [{ messageId: "mutableGetterReturn" }],
+    },
+    {
+      code: `class WithIntersection {
+        #items = new Set();
+        get items(): Set<string> & { readonly tag: string } {
+          return this.#items;
+        }
+      }`,
+      errors: [{ messageId: "mutableGetterReturn" }],
+    },
+    {
+      code: `abstract class AbstractGetter {
+        abstract get items(): Set<string>;
+      }`,
+      errors: [{ messageId: "mutableGetterReturn" }],
+    },
+    {
+      code: `class QuotedKey {
+        #items = new Set();
+        get "items"(): Set<string> {
+          return this.#items;
+        }
+      }`,
+      errors: [{ messageId: "mutableGetterReturn" }],
+    },
   ],
 });
