@@ -66,6 +66,13 @@ function getParamTypeAnnotation(
 }
 
 function hasVariableDeclaration(node: TSESTree.Node, name: string): boolean {
+  if (
+    node.type === AST_NODE_TYPES.FunctionDeclaration ||
+    node.type === AST_NODE_TYPES.FunctionExpression ||
+    node.type === AST_NODE_TYPES.ArrowFunctionExpression
+  ) {
+    return false;
+  }
   return walkNodes(
     node,
     (n) =>

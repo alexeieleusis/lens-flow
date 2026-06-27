@@ -123,5 +123,23 @@ function withSecret<Result>(run: <T>(s: T) => Result): Result {
 }`,
       errors: [{ messageId: "capturedGenericCallback" }],
     },
+
+    // Function boundary enforcement: generic callback captured at outer scope,
+    // nested function declares a variable with the same name — walker must not confuse them
+    {
+      code: `let capturedCallback: <T>(x: T) => void;
+
+function withSecret<Result>(run: <T>(s: T) => Result): Result {
+  capturedCallback = run;
+
+  function inner() {
+    let capturedCallback: string;
+    capturedCallback = "inner shadow";
+  }
+
+  return run("secret");
+}`,
+      errors: [{ messageId: "capturedGenericCallback" }],
+    },
   ],
 });
