@@ -1,30 +1,7 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-import { RuleTester } from "@typescript-eslint/rule-tester";
-import { afterAll, describe, it } from "vitest";
-import * as tsParser from "@typescript-eslint/parser";
+import { ruleTester } from "../helpers/rule-tester.js";
 import rule from "../../src/rules/no-blind-as-cast.js";
 
-RuleTester.afterAll = afterAll;
-RuleTester.describe = describe;
-RuleTester.it = it;
-
-const __dirname = path.resolve(fileURLToPath(import.meta.url), "..");
 const TEST_FILENAME = "file.ts";
-const TS_CONFIG_DIR = path.resolve(__dirname, "..");
-const TS_CONFIG = path.join(TS_CONFIG_DIR, "tsconfig.json");
-
-const ruleTester = new RuleTester({
-  languageOptions: {
-    parser: tsParser,
-    parserOptions: {
-      ecmaVersion: 2022,
-      sourceType: "module",
-      project: TS_CONFIG,
-      tsconfigRootDir: TS_CONFIG_DIR,
-    },
-  },
-});
 
 ruleTester.run("no-blind-as-cast", rule, {
   valid: [
