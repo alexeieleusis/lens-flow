@@ -26,9 +26,9 @@ ruleTester.run("no-abstract-class-overkill-uc14", rule, {
       constructor(readonly id: number) {}
       abstract handle(x: number): string;
     }`,
-    // Regression pair: instance fields DO suppress the rule (unlike static fields above)
-    `abstract class InstanceFieldSuppresses {
-      private id = 0;
+    // Regression pair: protected instance fields also suppress the rule
+    `abstract class ProtectedFieldSuppresses {
+      protected count: number = 0;
       abstract handle(x: number): string;
     }`,
     // Static-only fields don't count as instance state — combined with instance field, should not trigger
