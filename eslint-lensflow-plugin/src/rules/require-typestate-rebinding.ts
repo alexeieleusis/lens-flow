@@ -183,7 +183,7 @@ export default createRule({
         )
       ) {
         context.report({
-          node: declNode,
+          node: declarator,
           messageId: "staleStateRef",
           data: {
             letName: objId.name,
