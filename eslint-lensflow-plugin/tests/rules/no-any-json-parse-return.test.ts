@@ -28,6 +28,18 @@ ruleTester.run("no-any-json-parse-return", rule, {
       const inner = () => JSON.parse("{}");
       return {};
     }`,
+    // Class method with proper return type should not trigger
+    `class Parser {
+      parse(raw: string): { name: string } {
+        return JSON.parse(raw);
+      }
+    }`,
+    // Class method with any return but no JSON.parse should not trigger
+    `class Parser {
+      parse(raw: string): any {
+        return raw;
+      }
+    }`,
   ],
   invalid: [
     {
@@ -51,6 +63,25 @@ ruleTester.run("no-any-json-parse-return", rule, {
       code: `const fn = function (s: string): any {
         return JSON.parse(s);
       };`,
+      errors: [{ messageId: "anyJsonParseReturn" }],
+    },
+    // Class method with any return and JSON.parse
+    {
+      code: `class Parser {
+        parse(raw: string): any {
+          return JSON.parse(raw);
+        }
+      }`,
+      errors: [{ messageId: "anyJsonParseReturn" }],
+    },
+    // Class method with any return and nested JSON.parse
+    {
+      code: `class Parser {
+        load(data: string): any {
+          const result = JSON.parse(data);
+          return result;
+        }
+      }`,
       errors: [{ messageId: "anyJsonParseReturn" }],
     },
   ],
