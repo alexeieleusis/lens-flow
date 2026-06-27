@@ -71,5 +71,20 @@ ruleTester.run("no-concrete-type-bound", rule, {
       code: `function handle<T extends TE.User>(x: T) { return x; }`,
       errors: [{ messageId: "concreteBound" }],
     },
+    // Union containing a concrete type
+    {
+      code: `function process<T extends User | Admin>(x: T) { return x; }`,
+      errors: [{ messageId: "concreteBound" }],
+    },
+    // Intersection containing a concrete type
+    {
+      code: `function process<T extends User & Loggable>(x: T) { return x; }`,
+      errors: [{ messageId: "concreteBound" }],
+    },
+    // Parenthesized concrete type
+    {
+      code: `function process<T extends (User)>(x: T) { return x; }`,
+      errors: [{ messageId: "concreteBound" }],
+    },
   ],
 });

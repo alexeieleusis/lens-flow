@@ -3,6 +3,52 @@ import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 const BUILT_IN_REFERENCES = new Set(["Error", "Object", "Record"]);
 
+function extractTypeName(node: TSESTree.TSTypeReference): string | null {
+  if (node.typeName.type === "Identifier") {
+    return node.typeName.name;
+  }
+  if (node.typeName.type === "TSQualifiedName") {
+    const rightmost = node.typeName.right;
+    if (rightmost.type === "Identifier") {
+      return rightmost.name;
+    }
+  }
+  return null;
+}
+
+function findConcreteType(
+  node: TSESTree.TypeNode,
+  allowed: Set<string>,
+): string | null {
+  let current: TSESTree.TypeNode = node;
+
+  while ((current as any).type === "TSParenthesizedType") {
+    current = (current as any).typeAnnotation;
+  }
+
+  if (current.type === "TSTypeReference") {
+    const name = extractTypeName(current);
+    if (name && !allowed.has(name)) return name;
+    return null;
+  }
+
+  if (current.type === "TSUnionType") {
+    for (const member of current.types) {
+      const name = findConcreteType(member, allowed);
+      if (name) return name;
+    }
+  }
+
+  if (current.type === "TSIntersectionType") {
+    for (const member of current.types) {
+      const name = findConcreteType(member, allowed);
+      if (name) return name;
+    }
+  }
+
+  return null;
+}
+
 export default createRule({
   name: "no-concrete-type-bound",
   meta: {
@@ -38,27 +84,8 @@ export default createRule({
       TSTypeParameter(node) {
         if (!node.constraint) return;
 
-        const constraint = node.constraint;
-
-        // Unwrap TSParenthesizedType wrappers (e.g., `T extends (SomeType)`)
-        // TSParenthesizedType exists at runtime but isn't in @typescript-eslint's types.
-        let unwrapped: TSESTree.TypeNode = constraint;
-        while ((unwrapped as any).type === "TSParenthesizedType") {
-          unwrapped = (unwrapped as any).typeAnnotation;
-        }
-        if (unwrapped.type !== "TSTypeReference") return;
-
-        let typeName: string | null = null;
-        if (unwrapped.typeName.type === "Identifier") {
-          typeName = unwrapped.typeName.name;
-        } else if (unwrapped.typeName.type === "TSQualifiedName") {
-          const rightmost = unwrapped.typeName.right;
-          if (rightmost.type === "Identifier") {
-            typeName = rightmost.name;
-          }
-        }
-
-        if (!typeName || allowed.has(typeName)) return;
+        const concrete = findConcreteType(node.constraint, allowed);
+        if (!concrete) return;
 
         const paramName = node.name ? node.name.name : "T";
 
@@ -67,7 +94,7 @@ export default createRule({
           messageId: "concreteBound",
           data: {
             param: paramName,
-            constraint: typeName,
+            constraint: concrete,
             suggestion: "{ /* minimal required shape */ }",
           },
         });
