@@ -47,6 +47,14 @@ ruleTester.run("consistent-constructor-strategy", rule, {
      function sub(a: number, b: number): number {
        return a - b;
      }`,
+
+    // Throw inside nested callback — not attributed to outer constructor
+    `type Email = string & { _brand: "Email" };
+
+     function parseEmail(s: string): Email {
+       const inner = () => { throw new Error("inner"); };
+       return s as Email;
+     }`,
   ],
   invalid: [
     {
