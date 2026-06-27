@@ -8,6 +8,23 @@ function unwrapParens(node: TSESTree.TypeNode): TSESTree.TypeNode {
   return node;
 }
 
+function flattenUnionMembers(types: TSESTree.TypeNode[]): TSESTree.TypeNode[] {
+  const flattened: TSESTree.TypeNode[] = [];
+  for (const type of types) {
+    const unwrapped = unwrapParens(type);
+    if (unwrapped.type === "TSUnionType") {
+      flattened.push(
+        ...flattenUnionMembers(
+          (unwrapped as unknown as { types: TSESTree.TypeNode[] }).types,
+        ),
+      );
+    } else {
+      flattened.push(unwrapped);
+    }
+  }
+  return flattened;
+}
+
 export default createRule({
   name: "require-union-discriminant",
   meta: {
@@ -27,12 +44,10 @@ export default createRule({
   create(context: TSESLint.RuleContext<"missingDiscriminant", []>) {
     return {
       TSUnionType(node) {
-        const typeLiterals = node.types
-          .map(unwrapParens)
-          .filter(
-            (member): member is TSESTree.TSTypeLiteral =>
-              member.type === "TSTypeLiteral",
-          );
+        const typeLiterals = flattenUnionMembers(node.types).filter(
+          (member): member is TSESTree.TSTypeLiteral =>
+            member.type === "TSTypeLiteral",
+        );
 
         if (typeLiterals.length < 2) return;
 
