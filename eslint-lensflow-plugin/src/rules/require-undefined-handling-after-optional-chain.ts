@@ -159,17 +159,16 @@ function checkNodeInGuard(
 function isInsideGuard(
   node: TSESTree.Node,
   varName: string,
+  sourceCode: TSESLint.SourceCode,
 ): boolean {
-  let current: TSESTree.Node | undefined =
-    (node as { parent?: TSESTree.Node }).parent;
-  while (current) {
+  const ancestors = sourceCode.getAncestors(node);
+  for (let i = 0; i < ancestors.length; i++) {
+    const current = ancestors[i];
     if (isScopeBoundary(current)) break;
 
     const result = checkNodeInGuard(current, node, varName);
     if (result === "found") return true;
     if (result === "stop") break;
-
-    current = (current as { parent?: TSESTree.Node }).parent;
   }
   return false;
 }
@@ -377,7 +376,7 @@ export default createRule({
         // VariableDeclarator, CallExpression argument, etc.
 
         // Check if this use is inside a guard
-        if (isInsideGuard(memberNode, varName)) return;
+        if (isInsideGuard(memberNode, varName, context.sourceCode)) return;
 
         // Get the member name for the message
         let memberName = "";
