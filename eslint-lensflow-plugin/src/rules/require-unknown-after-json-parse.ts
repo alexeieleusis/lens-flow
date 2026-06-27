@@ -5,14 +5,22 @@ import { createRule } from "../utils/rule-creator.js";
 const KNOWLEDGE_URL =
   "https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T47-gradual-typing.md";
 
+function getMemberCallee(node: TSESTree.CallExpression): TSESTree.MemberExpression | null {
+  let callee = node.callee;
+  if (callee.type === "ChainExpression") callee = callee.expression;
+  if (callee.type === "MemberExpression") return callee;
+  return null;
+}
+
 function isJsonParseCall(node: TSESTree.CallExpression): boolean {
+  const callee = getMemberCallee(node);
+  if (!callee) return false;
   return (
-    node.callee.type === "MemberExpression" &&
-    !node.callee.computed &&
-    node.callee.object.type === "Identifier" &&
-    node.callee.object.name === "JSON" &&
-    node.callee.property.type === "Identifier" &&
-    node.callee.property.name === "parse"
+    !callee.computed &&
+    callee.object.type === "Identifier" &&
+    callee.object.name === "JSON" &&
+    callee.property.type === "Identifier" &&
+    callee.property.name === "parse"
   );
 }
 
