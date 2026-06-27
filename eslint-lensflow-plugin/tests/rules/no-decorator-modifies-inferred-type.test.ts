@@ -102,7 +102,10 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
 
       const e = new Entity();
       e.id;`,
-      errors: [{ messageId: "decoratorModifiesInferredType" }],
+      errors: [{
+        messageId: "decoratorModifiesInferredType",
+        data: { property: "id" },
+      }],
     },
     {
       code: `function addMeta(target: unknown, ctx: ClassDecoratorContext) {
@@ -112,7 +115,10 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
 
       @addMeta
       class Widget {}`,
-      errors: [{ messageId: "decoratorModifiesMultipleProperties" }],
+      errors: [{
+        messageId: "decoratorModifiesMultipleProperties",
+        data: { properties: '"version", "author"' },
+      }],
     },
     {
       code: `function addId(target: unknown, ctx: ClassDecoratorContext) {
@@ -128,7 +134,10 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
       class Entity {
         name: string;
       }`,
-      errors: [{ messageId: "decoratorModifiesInferredType" }],
+      errors: [{
+        messageId: "decoratorModifiesInferredType",
+        data: { property: "id" },
+      }],
     },
 
     // Nested inside namespace
@@ -141,7 +150,10 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
         @addId
         class Entity {}
       }`,
-      errors: [{ messageId: "decoratorModifiesInferredType" }],
+      errors: [{
+        messageId: "decoratorModifiesInferredType",
+        data: { property: "id" },
+      }],
     },
 
     // Nested inside if block
@@ -154,7 +166,10 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
         @addId
         class Entity {}
       }`,
-      errors: [{ messageId: "decoratorModifiesInferredType" }],
+      errors: [{
+        messageId: "decoratorModifiesInferredType",
+        data: { property: "id" },
+      }],
     },
 
     // Nested inside IIFE
@@ -167,7 +182,10 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
         @addId
         class Entity {}
       })();`,
-      errors: [{ messageId: "decoratorModifiesInferredType" }],
+      errors: [{
+        messageId: "decoratorModifiesInferredType",
+        data: { property: "id" },
+      }],
     },
 
     // Nested inside function
@@ -181,7 +199,10 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
         class Entity {}
         return Entity;
       }`,
-      errors: [{ messageId: "decoratorModifiesInferredType" }],
+      errors: [{
+        messageId: "decoratorModifiesInferredType",
+        data: { property: "id" },
+      }],
     },
 
     // Arrow function decorator adding undeclared property
@@ -192,7 +213,10 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
 
       @addId
       class Entity {}`,
-      errors: [{ messageId: "decoratorModifiesInferredType" }],
+      errors: [{
+        messageId: "decoratorModifiesInferredType",
+        data: { property: "id" },
+      }],
     },
 
     // Function expression decorator adding undeclared property
@@ -203,7 +227,10 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
 
       @addId
       class Entity {}`,
-      errors: [{ messageId: "decoratorModifiesInferredType" }],
+      errors: [{
+        messageId: "decoratorModifiesInferredType",
+        data: { property: "id" },
+      }],
     },
 
     // Object.defineProperties (plural) adding undeclared properties
@@ -217,7 +244,10 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
 
       @addMeta
       class Widget {}`,
-      errors: [{ messageId: "decoratorModifiesMultipleProperties" }],
+      errors: [{
+        messageId: "decoratorModifiesMultipleProperties",
+        data: { properties: '"version", "author"' },
+      }],
     },
 
     // Qualified type reference (TSQualifiedName) — property not declared on class
@@ -229,7 +259,10 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
 
       @addId
       class Entity {}`,
-      errors: [{ messageId: "decoratorModifiesInferredType" }],
+      errors: [{
+        messageId: "decoratorModifiesInferredType",
+        data: { property: "id" },
+      }],
     },
   ],
 });
