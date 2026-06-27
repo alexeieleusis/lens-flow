@@ -39,6 +39,24 @@ function process(run: (x: string) => void) {
   }
 }`,
 
+    // Variable declared inside a for loop — nested deeper than top-level statements
+    `function withSecret<Result>(run: <T>(s: T) => Result): Result {
+  for (const item of [1]) {
+    const local = run;
+    return local("secret");
+  }
+}`,
+
+    // Variable declared inside a try block — nested deeper than top-level statements
+    `function withSecret<Result>(run: <T>(s: T) => Result): Result {
+  try {
+    const local = run;
+    return local("secret");
+  } catch {
+    return run("fallback");
+  }
+}`,
+
     // Assigning to a property on a local object declared inside the same function
     `function withSecret<Result>(run: <T>(s: T) => Result): Result {
   const box = { cb: null };
