@@ -1,5 +1,6 @@
 import { createRule } from "../utils/rule-creator.js";
-import { createNoAnyParamChecker } from "../utils/no-any-param-checker.js";
+import type { TSESLint } from "@typescript-eslint/utils";
+import { createNoAnyParamChecker, createNoAnyParamTypeChecker } from "../utils/no-any-param-checker.js";
 
 export default createRule({
   name: "no-any-external-data",
@@ -17,5 +18,10 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [],
-  create: createNoAnyParamChecker("anyExternalParam"),
+  create(context: TSESLint.RuleContext<"anyExternalParam", []>) {
+    return {
+      ...createNoAnyParamChecker("anyExternalParam")(context),
+      ...createNoAnyParamTypeChecker("anyExternalParam")(context),
+    };
+  },
 });
