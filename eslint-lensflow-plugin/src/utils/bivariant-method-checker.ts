@@ -21,6 +21,8 @@ const params = member.params
         if (p.type === "Identifier") return p.name;
         if (p.type === "AssignmentPattern")
           return `${p.left.type === "Identifier" ? p.left.name : context.getSourceCode().getText(p.left)} = ...`;
+        if (p.type === "RestElement")
+          return `...${p.argument.type === "Identifier" ? p.argument.name : "?"}`;
         return context.getSourceCode().getText(p);
       })
       .join(", ");
