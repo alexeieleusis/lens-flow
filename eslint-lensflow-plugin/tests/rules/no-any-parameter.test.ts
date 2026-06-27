@@ -47,5 +47,13 @@ ruleTester.run("no-any-parameter", rule, {
       code: `class App { constructor(public config: any) {} }`,
       errors: [{ messageId: "anyParam" }],
     },
+    {
+      code: `interface Api { (data: any): void; }`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    {
+      code: `type Api = (data: any) => void;`,
+      errors: [{ messageId: "anyParam" }],
+    },
   ],
 });
