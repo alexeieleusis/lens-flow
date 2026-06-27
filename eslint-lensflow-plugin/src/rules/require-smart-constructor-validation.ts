@@ -76,20 +76,54 @@ function hasValidationLogic(node: TSESTree.Node): boolean {
     }
 
     if (
+      current.type === "UnaryExpression" &&
+      current.operator === "typeof"
+    ) {
+      return true;
+    }
+
+    if (
       current.type === "BinaryExpression" &&
-      [">", "<", ">=", "<=", "===", "!==", "in", "instanceof"].includes(
-        current.operator as string,
-      )
+      ["instanceof", "in", "===", "!=="].includes(current.operator)
     ) {
       return true;
     }
 
     if (current.type === "CallExpression") {
-      return true;
+      return isValidatorCall(current.callee);
     }
 
     return false;
   });
+}
+
+function isValidatorCall(callee: TSESTree.Expression): boolean {
+  if (callee.type === "Identifier") {
+    const name = callee.name;
+    return (
+      name.startsWith("validate") ||
+      name.startsWith("assert") ||
+      name.startsWith("check") ||
+      name.startsWith("is") ||
+      name === "parse" ||
+      name === "safeParse"
+    );
+  }
+
+  if (callee.type === "MemberExpression") {
+    const prop = callee.property;
+    if (prop.type === "Identifier") {
+      const methodName = prop.name;
+      return (
+        methodName === "parse" ||
+        methodName === "safeParse" ||
+        methodName.startsWith("validate") ||
+        methodName.startsWith("assert")
+      );
+    }
+  }
+
+  return false;
 }
 
 function isOnlyReturnWithCast(
