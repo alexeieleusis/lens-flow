@@ -17,6 +17,9 @@ ruleTester.run("no-duplicate-discriminant-values", rule, {
     `type DifferentProps =
       | { kind: "a"; x: number }
       | { status: "a"; y: string };`,
+    `type QuotedKeyValid =
+      | { "kind": "a"; x: number }
+      | { "kind": "b"; y: string };`,
   ],
   invalid: [
     {
@@ -43,6 +46,12 @@ ruleTester.run("no-duplicate-discriminant-values", rule, {
       code: `type Action =
       | { type: \`init\`; payload: number }
       | { type: \`init\`; payload: string };`,
+      errors: [{ messageId: "duplicateDiscriminant" }, { messageId: "duplicateDiscriminant" }],
+    },
+    {
+      code: `type QuotedKeyDup =
+      | { "kind": "a"; x: number }
+      | { "kind": "a"; y: string };`,
       errors: [{ messageId: "duplicateDiscriminant" }, { messageId: "duplicateDiscriminant" }],
     },
   ],
