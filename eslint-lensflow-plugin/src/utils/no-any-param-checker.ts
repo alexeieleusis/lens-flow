@@ -166,10 +166,14 @@ export function createNoAnyParamChecker(messageId: string) {
         checkAnyParams(node.params, context, messageId);
       },
       FunctionExpression(node: ParamsNode) {
+        if (node.parent?.type === "MethodDefinition") return;
         checkAnyParams(node.params, context, messageId);
       },
       ArrowFunctionExpression(node: ParamsNode) {
         checkAnyParams(node.params, context, messageId);
+      },
+      MethodDefinition(node: TSESTree.MethodDefinition) {
+        checkAnyParams(node.value.params, context, messageId);
       },
       TSParameterProperty(node) {
         const inner = node.parameter;

@@ -20,6 +20,9 @@ ruleTester.run("no-any-external-data", rule, {
     `type Handler = (data: string | boolean) => void;`,
     `type SafeCallback = (x: string | number | boolean) => void;`,
     `interface Service { handle(payload: string): void; }`,
+    `class Service {
+  handle(payload: string) { return payload; }
+}`,
   ],
   invalid: [
     {
@@ -46,6 +49,12 @@ ruleTester.run("no-any-external-data", rule, {
     },
     {
       code: `function process(...args: any) {}`,
+      errors: [{ messageId: "anyExternalParam" }],
+    },
+    {
+      code: `class Service {
+  handle(payload: any) { return payload; }
+}`,
       errors: [{ messageId: "anyExternalParam" }],
     },
   ],
