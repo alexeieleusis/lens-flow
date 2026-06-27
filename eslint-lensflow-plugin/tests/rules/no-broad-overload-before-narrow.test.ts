@@ -60,6 +60,27 @@ declare function f(x: number): number;
 declare function f(x: string | number): string;
 function f(x: string | number): string { return String(x); }`,
     },
+    {
+      filename: TEST_FILENAME,
+      code: `// Unrelated parameter types — neither assignable to the other, should not report
+function m(x: boolean): boolean;
+function m(x: symbol): symbol;
+function m(x: boolean | symbol): boolean | symbol { return x; }`,
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `// Narrow first, then broad (reverse of violation) — should not report
+function n(x: number): number;
+function n(x: string | number): string;
+function n(x: string | number): string { return String(x); }`,
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `// Different parameter counts — 2-param before 1-param, should not report
+function p(x: string, y: number): void;
+function p(z: string): void;
+function p(x: string, y?: number): void { }`,
+    },
   ],
   invalid: [
     {
