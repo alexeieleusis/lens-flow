@@ -20,5 +20,13 @@ ruleTester.run("no-empty-object-phantom-type", rule, {
       code: `type Pending = {}`,
       errors: [{ messageId: "emptyObjectPhantomType" }],
     },
+    {
+      code: `type Wrapped = ({})`,
+      errors: [{ messageId: "emptyObjectPhantomType" }],
+    },
+    {
+      code: `type DeeplyWrapped = (({}))`,
+      errors: [{ messageId: "emptyObjectPhantomType" }],
+    },
   ],
 });

@@ -20,9 +20,13 @@ export default createRule({
   create(context: TSESLint.RuleContext<"emptyObjectPhantomType", []>) {
     return {
       TSTypeAliasDeclaration(node) {
+        let typeNode = node.typeAnnotation;
+        while (typeNode.type === "TSParenthesizedType") {
+          typeNode = typeNode.typeAnnotation;
+        }
         if (
-          node.typeAnnotation.type === "TSTypeLiteral" &&
-          node.typeAnnotation.members.length === 0
+          typeNode.type === "TSTypeLiteral" &&
+          typeNode.members.length === 0
         ) {
           context.report({
             node,
