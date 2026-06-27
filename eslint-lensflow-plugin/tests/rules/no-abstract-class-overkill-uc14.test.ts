@@ -36,6 +36,10 @@ ruleTester.run("no-abstract-class-overkill-uc14", rule, {
     `class ConcreteHandler {
       handle(x: number): string { return String(x); }
     }`,
+    // ClassExpression — non-abstract class expression should not trigger
+    `const MyHandler = class Handler {
+      handle(x: number): string { return String(x); }
+    }`,
   ],
   invalid: [
     {
