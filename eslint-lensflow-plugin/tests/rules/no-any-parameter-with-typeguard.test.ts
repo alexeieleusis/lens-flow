@@ -51,6 +51,13 @@ ruleTester.run("no-any-parameter-with-typeguard", rule, {
     }`,
     // Expression-bodied arrow with no typeguard on any param
     `const fn = (x: any) => x;`,
+    // typeof on member access is NOT a typeguard on the parameter itself
+    `function handle(obj: any) {
+      if (typeof obj.foo === "undefined") {
+        return null;
+      }
+      return obj;
+    }`,
   ],
   invalid: [
     {
@@ -76,15 +83,6 @@ ruleTester.run("no-any-parameter-with-typeguard", rule, {
           return items.split(",");
         }
         return items;
-      }`,
-      errors: [{ messageId: "anyParamWithTypeguard" }],
-    },
-    {
-      code: `function handle(obj: any) {
-        if (typeof obj.foo === "undefined") {
-          return null;
-        }
-        return obj;
       }`,
       errors: [{ messageId: "anyParamWithTypeguard" }],
     },

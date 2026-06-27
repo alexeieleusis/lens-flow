@@ -1,14 +1,6 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-function getBaseIdentifier(node: any): string | null {
-  if (node.type === "Identifier") return node.name ?? null;
-  if (node.type === "MemberExpression" && node.object) {
-    return getBaseIdentifier(node.object);
-  }
-  return null;
-}
-
 function collectAnyParams(params: any[]): Array<{ name: string; anyNode: any }> {
   const anyParams: Array<{ name: string; anyNode: any }> = [];
 
@@ -32,15 +24,19 @@ function isTypeguardNode(
   node: any,
 ): { paramName: string; kind: string } | null {
   if (node.type === "UnaryExpression" && node.operator === "typeof") {
-    const id = getBaseIdentifier(node.argument);
-    return id ? { paramName: id, kind: "typeof" } : null;
+    if (node.argument.type === "Identifier") {
+      return { paramName: node.argument.name, kind: "typeof" };
+    }
+    return null;
   }
   if (
     node.type === "BinaryExpression" &&
     node.operator === "instanceof"
   ) {
-    const id = getBaseIdentifier(node.left);
-    return id ? { paramName: id, kind: "instanceof" } : null;
+    if (node.left.type === "Identifier") {
+      return { paramName: node.left.name, kind: "instanceof" };
+    }
+    return null;
   }
   return null;
 }
