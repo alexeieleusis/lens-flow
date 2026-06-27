@@ -13,6 +13,22 @@ ruleTester.run("no-infer-from-unconstrained-type", rule, {
     `type Wrap<T> = T extends infer U ? Array<U> : never;`,
     // Multiple type params, constrained one used for infer
     `type Get<K extends { key: unknown }, V> = K extends { key: infer R } ? R : V;`,
+    // TSFunctionType with constrained type param
+    `type F = <T extends { value: unknown }>() => T extends { value: infer V } ? V : never;`,
+    // TSConstructorType with constrained type param
+    `type C = new <T extends { value: unknown }>() => T extends { value: infer V } ? V : never;`,
+    // TSClassDeclaration with constrained type param
+    `class C<T extends { value: unknown }> { extract: T extends { value: infer V } ? V : never; }`,
+    // TSMethodSignature with constrained type param
+    `interface I { method<T extends { value: unknown }>() : T extends { value: infer V } ? V : never; }`,
+    // TSPropertySignature with constrained type param
+    `interface I { prop<T extends { value: unknown }>: T extends { value: infer V } ? V : never; }`,
+    // TSMappedType — mapped key has constraint, outer T is constrained
+    `type M<T extends { value: unknown }> = { [K in keyof T]: T extends { value: infer V } ? V : never; };`,
+    // Nested scope — inner K shadows outer K, inner K is constrained
+    `type Outer<K> = <K extends { value: unknown }>() => K extends { value: infer V } ? V : never;`,
+    // Nested scope — outer T constrained, inner T also constrained
+    `type Outer<T extends string> = <T extends number>() => T extends infer U ? U : never;`,
   ],
   invalid: [
     // Basic antipattern from the spec
@@ -33,6 +49,51 @@ ruleTester.run("no-infer-from-unconstrained-type", rule, {
     // Multiple type parameters where the inferred one is unconstrained
     {
       code: `type Extract<T, Default> = T extends infer U ? U : Default;`,
+      errors: [{ messageId: "inferFromUnconstrained" }],
+    },
+    // TSFunctionType — generic arrow type with unconstrained param
+    {
+      code: `type F = <T>() => T extends infer U ? U : never;`,
+      errors: [{ messageId: "inferFromUnconstrained" }],
+    },
+    // TSConstructorType — generic constructor type with unconstrained param
+    {
+      code: `type C = new <T>() => T extends infer U ? U : never;`,
+      errors: [{ messageId: "inferFromUnconstrained" }],
+    },
+    // TSClassDeclaration — class with unconstrained type param
+    {
+      code: `class C<T> { extract: T extends infer U ? U : never; }`,
+      errors: [{ messageId: "inferFromUnconstrained" }],
+    },
+    // TSInterfaceDeclaration — interface with unconstrained type param
+    {
+      code: `interface I<T> { process(): T extends infer U ? U : never; }`,
+      errors: [{ messageId: "inferFromUnconstrained" }],
+    },
+    // TSMethodSignature — method with its own unconstrained type param
+    {
+      code: `interface I { method<T>(): T extends infer U ? U : never; }`,
+      errors: [{ messageId: "inferFromUnconstrained" }],
+    },
+    // TSPropertySignature — property with its own unconstrained type param
+    {
+      code: `interface I { prop<T>: T extends infer U ? U : never; }`,
+      errors: [{ messageId: "inferFromUnconstrained" }],
+    },
+    // TSMappedType — outer type alias param is unconstrained
+    {
+      code: `type M<T> = { [K in keyof T]: T extends infer U ? U : never; };`,
+      errors: [{ messageId: "inferFromUnconstrained" }],
+    },
+    // Nested scope — inner K shadows outer K, inner K is unconstrained
+    {
+      code: `type Outer<K> = <K>() => K extends infer U ? U : never;`,
+      errors: [{ messageId: "inferFromUnconstrained" }],
+    },
+    // Nested scope — outer T constrained but inner T is unconstrained
+    {
+      code: `type Outer<T extends string> = <T>() => T extends infer U ? U : never;`,
       errors: [{ messageId: "inferFromUnconstrained" }],
     },
   ],
