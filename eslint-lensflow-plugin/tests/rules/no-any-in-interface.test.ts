@@ -16,6 +16,7 @@ ruleTester.run("no-any-in-interface", rule, {
       label: string;
     }`,
     `type TypedRecord = Record<string, { id: number }>`,
+    `interface A { config: { value: string } }`,
   ],
   invalid: [
     {
@@ -81,6 +82,13 @@ ruleTester.run("no-any-in-interface", rule, {
         [key: string]: string | any;
       }`,
       errors: [{ messageId: "anyIndexSignature" }],
+    },
+    {
+      code: `interface A { config: { value: any } }`,
+      errors: [
+        { messageId: "anyProperty" },
+        { messageId: "anyProperty" },
+      ],
     },
   ],
 });
