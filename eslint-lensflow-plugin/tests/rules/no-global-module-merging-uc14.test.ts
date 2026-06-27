@@ -47,5 +47,21 @@ ruleTester.run("no-global-module-merging-uc14", rule, {
 }`,
       errors: [{ messageId: "globalNamespacePollution" }],
     },
+    {
+      code: `declare module "my-framework/types" {
+  interface Foo extends NodeJS {
+    customProp: string;
+  }
+}`,
+      errors: [{ messageId: "builtInInterfaceAugmentation" }],
+    },
+    {
+      code: `declare module "my-framework/types" {
+  interface Bar extends NodeJS.Global {
+    customProp: string;
+  }
+}`,
+      errors: [{ messageId: "builtInInterfaceAugmentation" }],
+    },
   ],
 });

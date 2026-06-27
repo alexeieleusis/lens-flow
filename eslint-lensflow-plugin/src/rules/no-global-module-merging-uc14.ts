@@ -13,6 +13,19 @@ function resolveExprName(type: TSESTree.TSInterfaceHeritage): string | null {
     const right = exprAny.right.name;
     return leftName ? `${leftName}.${right}` : right;
   }
+  if (expr.type === "MemberExpression") {
+    const obj = expr.object;
+    let objName: string | null = null;
+    if (obj.type === "Identifier") {
+      objName = obj.name;
+    } else if (obj.type === "MemberExpression") {
+      objName = resolveExprName({ expression: obj, type: "TSInterfaceHeritage" } as unknown as TSESTree.TSInterfaceHeritage);
+    }
+    const prop = expr.property;
+    if (objName && prop.type === "Identifier" && !expr.computed) {
+      return `${objName}.${prop.name}`;
+    }
+  }
   return null;
 }
 
