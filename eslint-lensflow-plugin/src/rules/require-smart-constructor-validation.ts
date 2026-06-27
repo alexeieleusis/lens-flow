@@ -47,37 +47,19 @@ function isBrandedCast(node: TSESTree.Node): string | null {
   return name ?? null;
 }
 
-function nextCursor(node: TSESTree.Node): TSESTree.Node | null {
-  if ("consequent" in node && node.type === "IfStatement") {
-    return node.consequent;
-  }
-  if ("body" in node) {
-    const child = (node as { body?: TSESTree.Node }).body;
-    if (child && node.type !== "BlockStatement") {
-      return child;
-    }
-  }
-  return null;
-}
-
 function hasBrandedCastInBody(
   body: TSESTree.Node,
 ): string | null {
-  let cursor: TSESTree.Node | null = body;
-
-  while (cursor) {
-    const brand = isBrandedCast(cursor);
-    if (brand) return brand;
-
-    const next = nextCursor(cursor);
-    if (next) {
-      cursor = next;
-      continue;
+  let found: string | null = null;
+  walkNodes(body, (node) => {
+    const brand = isBrandedCast(node);
+    if (brand) {
+      found = brand;
+      return true;
     }
-    break;
-  }
-
-  return null;
+    return false;
+  });
+  return found;
 }
 
 function hasValidationLogic(node: TSESTree.Node): boolean {
