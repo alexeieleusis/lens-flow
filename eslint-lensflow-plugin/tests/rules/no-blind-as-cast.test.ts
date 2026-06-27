@@ -52,6 +52,13 @@ const parsed = data as { id: number; label: string };`,
     },
     {
       filename: TEST_FILENAME,
+      code: `interface MyType { value: number }
+const data: any = someValue;
+const result = data as MyType;`,
+      errors: [{ messageId: "blindCast" }],
+    },
+    {
+      filename: TEST_FILENAME,
       code: `const result: unknown = fetchData();
 const user = result as { name: string };`,
       errors: [{ messageId: "blindCast" }],
