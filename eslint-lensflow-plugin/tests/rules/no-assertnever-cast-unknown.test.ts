@@ -44,5 +44,17 @@ ruleTester.run("no-assertnever-cast-unknown", rule, {
 }`,
       errors: [{ messageId: "bypassExhaustiveness" }],
     },
+    {
+      code: `function handleBad4(x: string) {
+  assertNever((x as unknown)!);
+}`,
+      errors: [{ messageId: "bypassExhaustiveness" }],
+    },
+    {
+      code: `function handleBad5(x: string) {
+  assertNever((x as unknown) satisfies unknown);
+}`,
+      errors: [{ messageId: "bypassExhaustiveness" }],
+    },
   ],
 });
