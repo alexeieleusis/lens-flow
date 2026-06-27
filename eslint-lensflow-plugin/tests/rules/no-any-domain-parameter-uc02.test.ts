@@ -74,6 +74,21 @@ function connect({ host, port }: Config) {
     console.log(items);
   }
 }`,
+    // Union type without any
+    `function handle(data: string | number) {
+  return typeof data === "string" ? data.toUpperCase() : data.toFixed(2);
+}`,
+    // Intersection type without any
+    `type Readable = { read(): void };
+type Writable = { write(): void };
+function useStream(s: Readable & Writable) {
+  s.read();
+  s.write();
+}`,
+    // Parenthesized type without any
+    `function process(item: (string | number)) {
+  return String(item);
+}`,
   ],
   invalid: [
     {
@@ -210,6 +225,27 @@ function connect({ host, port }: Config) {
   }
 }`,
       errors: [{ messageId: "anyArrayParam" }],
+    },
+    // Union type with any
+    {
+      code: `function handle(data: any | string) {
+  return data;
+}`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    // Intersection type with any
+    {
+      code: `function useStream(s: any & Readable) {
+  s.read();
+}`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    // Parenthesized any type
+    {
+      code: `function process(item: (any)) {
+  return item;
+}`,
+      errors: [{ messageId: "anyParam" }],
     },
   ],
 });

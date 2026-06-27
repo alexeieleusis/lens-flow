@@ -6,6 +6,23 @@ function containsAnyKeyword(node: TSESTree.TypeNode): TSESTree.TSAnyKeyword | nu
   if (node.type === "TSArrayType") {
     return containsAnyKeyword(node.elementType);
   }
+  if (node.type === "TSUnionType") {
+    for (const unionType of node.types) {
+      const found = containsAnyKeyword(unionType);
+      if (found) return found;
+    }
+    return null;
+  }
+  if (node.type === "TSIntersectionType") {
+    for (const intersectionType of node.types) {
+      const found = containsAnyKeyword(intersectionType);
+      if (found) return found;
+    }
+    return null;
+  }
+  if (node.type === "TSParenthesizedType") {
+    return containsAnyKeyword(node.typeAnnotation);
+  }
   if (node.type === "TSTypeReference") {
     const name = node.typeName;
     if (
