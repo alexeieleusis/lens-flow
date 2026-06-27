@@ -71,6 +71,32 @@ export default createRule({
         }
       },
 
+      ExportDefaultDeclaration(node) {
+        const ancestors = context.sourceCode.getAncestors(node);
+        if (ancestors.length !== 1 || ancestors[0].type !== "Program") return;
+
+        const decl = node.declaration;
+
+        // Case 1: `export default new Map()` or `export default new Set()`
+        if (
+          decl?.type === "NewExpression" &&
+          decl.callee.type === "Identifier" &&
+          (decl.callee.name === "Map" || decl.callee.name === "Set")
+        ) {
+          context.report({
+            node: decl,
+            messageId: "exposedRegistry",
+            data: { collection: decl.callee.name, name: "<anonymous>" },
+          });
+          return;
+        }
+
+        // Case 2: `const m = new Map(); export default m;`
+        if (decl?.type === "Identifier") {
+          exportedNames.add(decl.name);
+        }
+      },
+
       "Program:exit"() {
         for (const { node, name, collection, directlyExported } of mapSetDecls) {
           if (directlyExported || exportedNames.has(name)) {

@@ -40,5 +40,23 @@ export { plugins };`,
 export { registry as store };`,
       errors: [{ messageId: "exposedRegistry" }],
     },
+    {
+      code: `export default new Map<string, Plugin>();`,
+      errors: [{ messageId: "exposedRegistry" }],
+    },
+    {
+      code: `export default new Set();`,
+      errors: [{ messageId: "exposedRegistry" }],
+    },
+    {
+      code: `const registry = new Map();
+export default registry;`,
+      errors: [{ messageId: "exposedRegistry" }],
+    },
+    {
+      code: `const cache = new Set<string>();
+export default cache;`,
+      errors: [{ messageId: "exposedRegistry" }],
+    },
   ],
 });
