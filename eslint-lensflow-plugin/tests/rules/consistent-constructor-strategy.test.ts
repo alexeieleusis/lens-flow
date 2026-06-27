@@ -78,11 +78,18 @@ ruleTester.run("consistent-constructor-strategy", rule, {
         return n as Port;
       }`,
 
-     // All result-returning, exported — consistent strategy
-     `type Email = string & { _brand: "Email" };
+   // All result-returning, exported — consistent strategy
+      `type Email = string & { _brand: "Email" };
 
-      export function tryParseEmail(s: string): Email | Error {
-        if (!s.includes("@")) return new Error("invalid");
+       export function tryParseEmail(s: string): Email | Error {
+         if (!s.includes("@")) return new Error("invalid");
+         return s as Email;
+       }`,
+
+     // Valid — quoted brand property key
+     `type Email = string & { "_brand": "Email" };
+      function parseEmail(s: string): Email {
+        if (!s.includes("@")) throw new Error("invalid");
         return s as Email;
       }`,
     ],

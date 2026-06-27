@@ -9,12 +9,24 @@ function isBrandedIntersection(typeNode: TSESTree.TypeNode): boolean {
   return typeNode.types.some((t) => {
     if (t.type !== "TSTypeLiteral") return false;
     return t.members.some(
-      (m) =>
-        m.type === "TSPropertySignature" &&
-        m.key.type === "Identifier" &&
-        (m.key.name === "_brand" ||
-          m.key.name === "__brand" ||
-          m.key.name.endsWith("Brand")),
+      (m) => {
+        if (m.type !== "TSPropertySignature") return false;
+        if (m.key.type === "Identifier") {
+          return (
+            m.key.name === "_brand" ||
+            m.key.name === "__brand" ||
+            m.key.name.endsWith("Brand")
+          );
+        }
+        if (m.key.type === "Literal" && typeof m.key.value === "string") {
+          return (
+            m.key.value === "_brand" ||
+            m.key.value === "__brand" ||
+            m.key.value.endsWith("Brand")
+          );
+        }
+        return false;
+      },
     );
   });
 }
