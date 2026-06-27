@@ -28,8 +28,21 @@ export default createRule({
         if (!nestedPattern.test(propName)) return;
 
         const typeAnn = node.typeAnnotation?.typeAnnotation;
-        if (typeAnn?.type !== "TSArrayType") return;
-        if (typeAnn.elementType.type !== "TSAnyKeyword") return;
+
+        let isAnyArray = false;
+
+        if (typeAnn?.type === "TSArrayType" && typeAnn.elementType.type === "TSAnyKeyword") {
+          isAnyArray = true;
+        } else if (
+          typeAnn?.type === "TSTypeReference" &&
+          typeAnn.typeName.type === "Identifier" &&
+          typeAnn.typeName.name === "Array" &&
+          typeAnn.typeArguments?.params?.[0]?.type === "TSAnyKeyword"
+        ) {
+          isAnyArray = true;
+        }
+
+        if (!isAnyArray) return;
 
         let parentName = "the containing type";
         if (node.parent?.type === "TSTypeLiteral" || node.parent?.type === "TSInterfaceBody") {

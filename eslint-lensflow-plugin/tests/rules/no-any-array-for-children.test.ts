@@ -57,5 +57,19 @@ ruleTester.run("no-any-array-for-children", rule, {
       }`,
       errors: [{ messageId: "anyArrayChildren" }],
     },
+    {
+      code: `type Component = {
+        name: string;
+        children: Array<any>;
+      }`,
+      errors: [{ messageId: "anyArrayChildren" }],
+    },
+    {
+      code: `interface TreeNode {
+        value: string;
+        nodes: Array<any>;
+      }`,
+      errors: [{ messageId: "anyArrayChildren" }],
+    },
   ],
 });
