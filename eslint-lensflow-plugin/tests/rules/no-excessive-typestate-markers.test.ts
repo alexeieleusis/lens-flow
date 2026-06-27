@@ -31,6 +31,10 @@ type WithDbName = HasState<"WithDbName">;
 type WithPool = HasState<"WithPool">;`,
       options: [{ maxMarkers: 5 }],
     },
+    // Only 3 computed-property-literal markers — below default threshold
+    `type State1 = { ["state"]: "State1" };
+type State2 = { ["state"]: "State2" };
+type State3 = { ["state"]: "State3" };`,
   ],
   invalid: [
     // 4 phantom state types matching /^With[A-Z]/
@@ -56,6 +60,14 @@ type WithPort = HasState<"WithPort">;
 type WithDbName = HasState<"WithDbName">;
 type WithPool = HasState<"WithPool">;
 type WithTimeout = HasState<"WithTimeout">;`,
+      errors: [{ messageId: "excessiveMarkers" }],
+    },
+    // 4 computed-property-literal markers — TSTypeLiteral branch coverage
+    {
+      code: `type State1 = { ["state"]: "State1" };
+type State2 = { ["state"]: "State2" };
+type State3 = { ["state"]: "State3" };
+type State4 = { ["state"]: "State4" };`,
       errors: [{ messageId: "excessiveMarkers" }],
     },
   ],
