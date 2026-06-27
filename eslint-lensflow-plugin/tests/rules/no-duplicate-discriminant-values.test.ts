@@ -29,6 +29,9 @@ ruleTester.run("no-duplicate-discriminant-values", rule, {
     `function fn(x: { kind: "a" } | { kind: "b" }) {}`,
     `const x: { kind: "a" } | { kind: "b" } = {} as any;`,
     `interface I { field: { kind: "a" } | { kind: "b" }; }`,
+    `type WithSubstitution =
+      | { kind: \`init_\${string}\`; x: number }
+      | { kind: \`init_\${string}\`; y: string };`,
   ],
   invalid: [
     {
