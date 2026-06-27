@@ -30,6 +30,10 @@ type Entity =
     `type NoDiscriminant =
       | { id: string; name: string }
       | { id: string; value: number };`,
+    // Quoted (string-literal) property keys — no duplication across members
+    `type QuotedValid =
+      | { "kind": "a"; "value": string }
+      | { "kind": "b"; "value": number };`,
   ],
   invalid: [
     // From antipattern: id: string duplicated across both members (save() is a method, not inspected by this rule)
@@ -54,11 +58,18 @@ type Entity =
   | { kind: "failed"; id: number; error: string };`,
       errors: [{ messageId: "duplicatedProperties" }],
     },
-    // Intersection-based members: id: number duplicated across both arms
+   // Intersection-based members: id: number duplicated across both arms
     {
       code: `type IntersectDup =
-  | ({ kind: "a" } & { id: number; extraA: string })
-  | ({ kind: "b" } & { id: number; extraB: boolean });`,
+   | ({ kind: "a" } & { id: number; extraA: string })
+   | ({ kind: "b" } & { id: number; extraB: boolean });`,
+      errors: [{ messageId: "duplicatedProperties" }],
+    },
+    // Quoted (string-literal) property keys: "id" duplicated across both members
+    {
+      code: `type QuotedDup =
+   | { "kind": "a"; "id": string; "extraA": number }
+   | { "kind": "b"; "id": string; "extraB": boolean };`,
       errors: [{ messageId: "duplicatedProperties" }],
     },
   ],
