@@ -111,6 +111,10 @@ ruleTester.run("no-any-boundary", rule, {
       errors: [{ messageId: "anyInFunctionType" }],
     },
     {
+      code: `class C { constructor(private x: any) {} }`,
+      errors: [{ messageId: "anyInFunctionType" }],
+    },
+    {
       code: `const { x }: any = obj;`,
       errors: [{ messageId: "anyInVarAnnotation" }],
     },

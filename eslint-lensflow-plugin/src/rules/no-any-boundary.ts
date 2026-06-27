@@ -47,7 +47,8 @@ function isAnyInParameterType(
   if (!grandparent || !PARAM_TYPE_NODES.has(grandparent.type)) return false;
   let candidate: TSESTree.Node | undefined = grandparent.parent;
   // Walk through AssignmentPattern wrappers (e.g., default params like `x: any = 1`)
-  while (candidate && candidate.type === "AssignmentPattern") {
+  // and TSParameterProperty wrappers (e.g., constructor param properties like `private x: any`)
+  while (candidate && (candidate.type === "AssignmentPattern" || candidate.type === "TSParameterProperty")) {
     candidate = candidate.parent;
   }
   return !!candidate && FUNCTION_TYPE_NODES.has(candidate.type);
