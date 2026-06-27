@@ -1,5 +1,20 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+type FunctionLikeNode =
+  | TSESTree.FunctionDeclaration
+  | TSESTree.FunctionExpression
+  | TSESTree.ArrowFunctionExpression
+  | TSESTree.TSDeclareFunction
+  | TSESTree.TSFunctionType
+  | TSESTree.MethodDefinition;
+
+type ParamNode =
+  | TSESTree.Identifier
+  | TSESTree.AssignmentPattern
+  | TSESTree.RestElement
+  | TSESTree.ObjectPattern
+  | TSESTree.ArrayPattern;
 
 export default createRule({
   name: "no-any-parameter-type-guard",
