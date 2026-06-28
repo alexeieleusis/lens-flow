@@ -65,6 +65,22 @@ const ERROR_DEF = `
 type AppError = { code: number; message: string };
 `;
 
+const IO_DEF = `
+type IO<A> = {
+  _tag: "IO";
+  map<B>(fn: (a: A) => B): IO<B>;
+  unsafeRun(): A;
+};
+`;
+
+const TASK_DEF = `
+type Task<A> = {
+  _tag: "Task";
+  map<B>(fn: (a: A) => B): Task<B>;
+  unsafeRun(): Promise<A>;
+};
+`;
+
 ruleTester.run("no-effect-boundary-assertion", rule, {
   valid: [
     // Correct pattern: discriminated union check instead of assertion
@@ -106,6 +122,46 @@ const user = obj as User;
       code: RESULT_DEF + `
 declare const r: Result<string, Error>;
 const val = r.unwrapOr("default");
+      `,
+    },
+    // Single-param effect: Task with only one type argument — guarded by params.length < 2
+    {
+      filename: TEST_FILENAME,
+      code: TASK_DEF + USER_DEF + `
+declare const task: Task<User>;
+const user = task as User;
+      `,
+    },
+    // Single-param effect: IO with only one type argument — guarded by params.length < 2
+    {
+      filename: TEST_FILENAME,
+      code: IO_DEF + `
+declare const io: IO<void>;
+const val = io as void;
+      `,
+    },
+    // Assertion to a concrete non-success type: Either<string, number> asserted to boolean
+    {
+      filename: TEST_FILENAME,
+      code: EITHER_DEF + `
+declare const e: Either<string, number>;
+const x = e as boolean;
+      `,
+    },
+    // Nested effect: Promise wrapping Either — outer type doesn't match effect pattern
+    {
+      filename: TEST_FILENAME,
+      code: EITHER_DEF + USER_DEF + ERROR_DEF + `
+declare const p: Promise<Either<AppError, User>>;
+const user = p as User;
+      `,
+    },
+    // Nested effect: Array wrapping Either — outer type doesn't match effect pattern
+    {
+      filename: TEST_FILENAME,
+      code: EITHER_DEF + `
+declare const arr: Array<Either<string, number>>;
+const val = arr as number;
       `,
     },
   ],
