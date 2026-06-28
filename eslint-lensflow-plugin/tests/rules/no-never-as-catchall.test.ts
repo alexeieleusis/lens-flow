@@ -59,6 +59,12 @@ ruleTester.run("no-never-as-catchall", rule, {
   throw new Error(_);
 }`,
     },
+    {
+      filename: TEST_FILENAME,
+      code: `class Foo {
+  constructor(readonly x: never) {}
+}`,
+    },
   ],
   invalid: [
     {
@@ -79,5 +85,6 @@ ruleTester.run("no-never-as-catchall", rule, {
 const msg: never = greet();`,
       errors: [{ messageId: "neverAsCatchall" }],
     },
+ 
   ],
 });
