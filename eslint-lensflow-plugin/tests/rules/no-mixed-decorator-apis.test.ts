@@ -25,6 +25,16 @@ ruleTester.run("no-mixed-decorator-apis", rule, {
 
     @stage3Deco
     class A {}`,
+
+    // ClassExpression with only stage-3 decorators
+    `function register(target: unknown, ctx: ClassDecoratorContext) {}
+
+    const Foo = @register class {}`,
+
+    // ClassExpression with only experimental decorators
+    `function log(target: typeof MyClass) {}
+
+    const MyClass = @log class {}`,
   ],
   invalid: [
     {
@@ -43,6 +53,15 @@ function freeze(target: typeof Service) {}
 @freeze
 @inject
 class Service {}`,
+      errors: [{ messageId: "mixedDecoratorApis" }],
+    },
+
+    // ClassExpression with mixed decorators
+    {
+      code: `function stage3Decorator(target: any, ctx: ClassDecoratorContext) {}
+function experimentalDecorator(target: typeof Bar) {}
+
+const Bar = @experimentalDecorator @stage3Decorator class {}`,
       errors: [{ messageId: "mixedDecoratorApis" }],
     },
   ],
