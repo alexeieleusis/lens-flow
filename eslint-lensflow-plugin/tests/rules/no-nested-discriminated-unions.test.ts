@@ -35,5 +35,11 @@ ruleTester.run("no-nested-discriminated-unions", rule, {
         | { kind: "none" };`,
       errors: [{ messageId: "nestedDiscriminatedUnion" }],
     },
+    {
+      code: `type QuotedKind =
+        | { "kind": "ok"; inner: { "kind": "a"; x: number } | { "kind": "b"; y: string } }
+        | { "kind": "err"; code: number };`,
+      errors: [{ messageId: "nestedDiscriminatedUnion" }],
+    },
   ],
 });
