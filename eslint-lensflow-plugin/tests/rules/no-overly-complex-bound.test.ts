@@ -38,6 +38,12 @@ function process<T extends Constructable<T> & HasId>(x: T): void {}`,
       code: `function baz<T extends { a: { b: { c: string } } }>(x: T): void {}`,
       options: [{ maxNestingDepth: 4 }],
     },
+    // Class type parameter with 2 properties (below threshold)
+    `class Foo<T extends { a: string; b: number }> {}`,
+    // Arrow function type parameter with 2 properties (below threshold)
+    `const fn = <T extends { a: string; b: number }>() => {}`,
+    // TSFunctionType inside type alias with 2 properties (below threshold)
+    `type Handler = <T extends { a: string; b: number }>() => void`,
   ],
   invalid: [
     // Antipattern: interface with construct signature + nested type literal with 3 properties
@@ -106,6 +112,21 @@ function bar<T extends { first: string; second: number }>(x: T): void {}`,
       code: `function qux<T extends { a: { b: string } }>(x: T): void {}`,
       options: [{ maxNestingDepth: 1 }],
       errors: [{ messageId: "deepNesting" }],
+    },
+    // Class type parameter with 3+ properties
+    {
+      code: `class Foo<T extends { a: string; b: number; c: boolean }> {}`,
+      errors: [{ messageId: "complexTypeLiteral" }],
+    },
+    // Arrow function type parameter with 3+ properties
+    {
+      code: `const fn = <T extends { a: string; b: number; c: boolean }>() => {}`,
+      errors: [{ messageId: "complexTypeLiteral" }],
+    },
+    // TSFunctionType inside type alias with 3+ properties
+    {
+      code: `type Handler = <T extends { a: string; b: number; c: boolean }>() => void`,
+      errors: [{ messageId: "complexTypeLiteral" }],
     },
   ],
 });
