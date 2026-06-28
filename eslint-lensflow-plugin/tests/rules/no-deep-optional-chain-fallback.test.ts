@@ -56,6 +56,10 @@ ruleTester.run("no-deep-optional-chain-fallback", rule, {
       errors: [{ messageId: "deepChain" }],
     },
     // --- Triggers on fallback count (fallbackCount >= 2), NOT chain depth ---
+    // `a?.b` has depth 1 (below default minDepth=2). This case fires because
+    // there are 2 `??` operators, exercising the `fallbackCount >= 2` branch
+    // of the rule (rule.ts line 82), not the `depth >= minDepth` branch.
+    // The `deepChain` messageId is shared by both detection paths.
     {
       code: `const x = a?.b ?? c ?? d;`,
       errors: [{ messageId: "deepChain" }],
