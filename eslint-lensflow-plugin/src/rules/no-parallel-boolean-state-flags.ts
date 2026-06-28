@@ -37,11 +37,12 @@ export default createRule({
     const isBooleanFlag = (
       member: TSESTree.TypeElement,
     ): member is TSESTree.TSPropertySignature & {
-      key: TSESTree.Identifier;
+      key: TSESTree.Identifier | TSESTree.Literal;
       typeAnnotation: { typeAnnotation: TSESTree.TypeNode };
     } =>
       member.type === "TSPropertySignature" &&
-      member.key.type === "Identifier" &&
+      (member.key.type === "Identifier" ||
+        (member.key.type === "Literal" && typeof member.key.value === "string")) &&
       member.typeAnnotation?.typeAnnotation.type === "TSBooleanKeyword";
 
     return createBooleanFlagChecker(minCount, isBooleanFlag, "tooManyBooleanFlags")(context);

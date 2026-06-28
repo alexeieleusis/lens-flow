@@ -139,7 +139,7 @@ export function getInterfaceMembers(
 }
 
 type BooleanFlagMember = TSESTree.TSPropertySignature & {
-  key: TSESTree.Identifier;
+  key: TSESTree.Identifier | TSESTree.Literal;
   typeAnnotation: { typeAnnotation: TSESTree.TypeNode };
 };
 
@@ -163,7 +163,11 @@ export function createBooleanFlagChecker(
 
       if (boolFlags.length >= minCount) {
         const flagNames = boolFlags
-          .map((m) => (m.key.type === "Identifier" ? m.key.name : "?"))
+          .map((m) => {
+            if (m.key.type === "Identifier") return m.key.name;
+            if (m.key.type === "Literal" && typeof m.key.value === "string") return m.key.value;
+            return String(m.key?.value ?? "?");
+          })
           .join(", ");
 
         const parent = node.parent;

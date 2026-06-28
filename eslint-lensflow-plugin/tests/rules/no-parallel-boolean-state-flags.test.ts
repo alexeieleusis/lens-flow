@@ -51,6 +51,15 @@ ruleTester.run("no-parallel-boolean-state-flags", rule, {
       }`,
       errors: [{ messageId: "tooManyBooleanFlags" }],
     },
+    // Quoted string property keys should be matched.
+    {
+      code: `type Config = {
+        "a": boolean;
+        "b": boolean;
+        "c": boolean;
+      }`,
+      errors: [{ messageId: "tooManyBooleanFlags" }],
+    },
     // Lowering minCount to 2 makes 2 boolean flags fail.
     {
       code: `interface Fine {
