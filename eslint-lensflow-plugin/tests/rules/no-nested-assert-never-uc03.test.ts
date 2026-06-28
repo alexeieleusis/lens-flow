@@ -157,5 +157,33 @@ function handle(s: State) {
 }`,
       errors: [{ messageId: "nestedAssertNever" }],
     },
+    // Deeply nested assertNever as function argument
+    {
+      code: `type Action = { type: "push" | "pop" } | { type: "clear" };
+
+function handle(a: Action) {
+  if (a.type !== "clear") {
+    switch (a.type) {
+      case "push": console.log("push"); break;
+      default: foo(assertNever(a));
+    }
+  }
+}`,
+      errors: [{ messageId: "nestedAssertNever" }],
+    },
+    // assertNever nested inside ternary expression
+    {
+      code: `type Action = { type: "push" | "pop" } | { type: "clear" };
+
+function handle(a: Action) {
+  if (a.type !== "clear") {
+    switch (a.type) {
+      case "push": console.log("push"); break;
+      default: (a.type === "x") ? assertNever(a) : assertNever(a);
+    }
+  }
+}`,
+      errors: [{ messageId: "nestedAssertNever" }],
+    },
   ],
 });
