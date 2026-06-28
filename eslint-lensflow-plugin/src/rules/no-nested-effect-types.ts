@@ -159,6 +159,7 @@ export default createRule({
       },
 
       FunctionExpression(node) {
+        if (node.parent?.type === "MethodDefinition") return;
         checkReturnTypesNode(node);
       },
 
@@ -172,6 +173,12 @@ export default createRule({
 
       TSCallSignatureDeclaration(node) {
         checkReturnTypesNode(node);
+      },
+
+      MethodDefinition(node) {
+        if (node.value && node.value.type !== "TSEmptyBodyFunctionExpression") {
+          checkReturnTypesNode(node.value);
+        }
       },
     };
   },
