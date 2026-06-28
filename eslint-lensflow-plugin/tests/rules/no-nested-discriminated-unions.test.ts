@@ -15,6 +15,10 @@ ruleTester.run("no-nested-discriminated-unions", rule, {
       | { kind: "data"; value: string | null }
       | { kind: "error"; msg: string };`,
     `type Simple = { kind: "a" | "b"; value: number };`,
+    // Deeply nested kind (>1 level) is NOT flagged — only direct property unions are checked
+    `type DeeplyNested =
+      | { kind: "a"; data: { nested: { kind: "x" | "y"; val: number } } }
+      | { kind: "b"; data: { nested: { kind: "x"; val: string } } };`,
   ],
   invalid: [
     {

@@ -36,7 +36,7 @@ export default createRule({
     type: "suggestion",
     docs: {
       description:
-        "Disallow deeply nested discriminated unions where a union member's field is itself a discriminated union",
+        "Disallow union members whose direct property types contain a discriminated union",
     },
     messages: {
       nestedDiscriminatedUnion:
