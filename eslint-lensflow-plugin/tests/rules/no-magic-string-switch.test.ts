@@ -82,5 +82,17 @@ function handle(kind: Action) {
 }`,
       errors: [{ messageId: "magicStringSwitch" }],
     },
+    // FunctionExpression — object method definition
+    {
+      code: `const obj = {
+  handle(kind: string) {
+    switch (kind) {
+      case "user:create": break;
+      case "user:delete": break;
+    }
+  }
+};`,
+      errors: [{ messageId: "magicStringSwitch" }],
+    },
   ],
 });
