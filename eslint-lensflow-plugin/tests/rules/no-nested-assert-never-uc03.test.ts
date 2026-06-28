@@ -109,6 +109,20 @@ function handle(e: Event) {
 }`,
       errors: [{ messageId: "nestedAssertNever" }],
     },
+    // Loose equality == variant
+    {
+      code: `type Status = { kind: "pending" | "done" } | { kind: "cancelled" };
+
+function handle(s: Status) {
+  if (s.kind == "cancelled") {
+    switch (s.kind) {
+      case "cancelled": console.log("cancelled"); break;
+      default: assertNever(s);
+    }
+  }
+}`,
+      errors: [{ messageId: "nestedAssertNever" }],
+    },
     // Discriminant on right side of comparison
     {
       code: `type Msg = { tag: "foo" } | { tag: "bar" | "baz" };
