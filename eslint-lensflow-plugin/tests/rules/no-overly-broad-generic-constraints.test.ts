@@ -34,6 +34,10 @@ ruleTester.run("no-overly-broad-generic-constraints", rule, {
       errors: [{ messageId: "anyConstraint" }],
     },
     {
+      code: `function unsafe<T extends any>(x: T) { return x; }`,
+      errors: [{ messageId: "anyConstraint" }],
+    },
+    {
       code: `type Wrapper = Box<any>;`,
       errors: [{ messageId: "anyTypeArg" }],
     },
