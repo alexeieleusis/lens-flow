@@ -65,13 +65,21 @@ function bodyHasValidation(body: TSESTree.BlockStatement): boolean {
   });
 }
 
-function isValidationGuard(node: TSESTree.IfStatement): boolean {
+function isValidationGuard(
+  node: TSESTree.IfStatement,
+  className: string,
+): boolean {
   if (node.consequent.type === AST_NODE_TYPES.BlockStatement) {
     if (bodyHasValidation(node.consequent)) return true;
   }
+  if (node.consequent.type === AST_NODE_TYPES.ThrowStatement) {
+    return true;
+  }
   if (
-    node.consequent.type === AST_NODE_TYPES.ThrowStatement ||
-    node.consequent.type === AST_NODE_TYPES.ReturnStatement
+    node.consequent.type === AST_NODE_TYPES.ReturnStatement &&
+    node.consequent.argument?.type === AST_NODE_TYPES.NewExpression &&
+    node.consequent.argument.callee.type === AST_NODE_TYPES.Identifier &&
+    node.consequent.argument.callee.name === className
   ) {
     return true;
   }
@@ -86,8 +94,16 @@ function isValidationGuard(node: TSESTree.IfStatement): boolean {
   }
   if (
     node.alternate &&
-    (node.alternate.type === AST_NODE_TYPES.ThrowStatement ||
-      node.alternate.type === AST_NODE_TYPES.ReturnStatement)
+    node.alternate.type === AST_NODE_TYPES.ThrowStatement
+  ) {
+    return true;
+  }
+  if (
+    node.alternate &&
+    node.alternate.type === AST_NODE_TYPES.ReturnStatement &&
+    node.alternate.argument?.type === AST_NODE_TYPES.NewExpression &&
+    node.alternate.argument.callee.type === AST_NODE_TYPES.Identifier &&
+    node.alternate.argument.callee.name === className
   ) {
     return true;
   }
@@ -102,7 +118,7 @@ function isValidationGuard(node: TSESTree.IfStatement): boolean {
     node.alternate &&
     node.alternate.type === AST_NODE_TYPES.IfStatement
   ) {
-    return isValidationGuard(node.alternate);
+    return isValidationGuard(node.alternate, className);
   }
   return false;
 }
@@ -163,11 +179,11 @@ export default createRule({
           const body = method.value.body;
 
           const hasValidation =
-            walkNodes(body, (node) => {
-              if (node.type === AST_NODE_TYPES.ThrowStatement) return true;
+            body.body.some((stmt) => {
+              if (stmt.type === AST_NODE_TYPES.ThrowStatement) return true;
               if (
-                node.type === AST_NODE_TYPES.IfStatement &&
-                isValidationGuard(node)
+                stmt.type === AST_NODE_TYPES.IfStatement &&
+                isValidationGuard(stmt, className)
               )
                 return true;
               return false;

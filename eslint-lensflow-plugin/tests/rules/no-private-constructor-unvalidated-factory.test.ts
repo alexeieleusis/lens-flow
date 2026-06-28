@@ -79,5 +79,15 @@ ruleTester.run("no-private-constructor-unvalidated-factory", rule, {
 }`,
       errors: [{ messageId: "unvalidatedFactory" }],
     },
+    {
+      code: String.raw`class Foo {
+  private constructor(private readonly value: string) {}
+  static create(v: string): Foo {
+    if (Math.random() > 0.5) return;
+    return new Foo(v);
+  }
+}`,
+      errors: [{ messageId: "unvalidatedFactory" }],
+    },
   ],
 });
