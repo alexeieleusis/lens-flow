@@ -26,6 +26,11 @@ type WithExtras = Core & D & E;`,
       code: `type OverFlattenDefault = A & B & C & (D & E & F & G);`,
       options: [{ maxFlattenedMembers: 10 }],
     },
+    // Empty options object: falls through to destructured defaults (maxMembers: 4, maxFlattenedMembers: 6)
+    {
+      code: `type X = A & B & C;`,
+      options: [{}],
+    },
   ],
   invalid: [
     // 6 direct (> 4) triggers; 6 flattened (not > 6) does not
