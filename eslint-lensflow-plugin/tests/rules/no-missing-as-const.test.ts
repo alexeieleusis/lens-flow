@@ -13,7 +13,7 @@ ruleTester.run("no-missing-as-const", rule, {
     `const CONFIG = { fn: Math.random };`,
     // Non-const declaration
     `let OPS = { add: "add", sub: "sub" };`,
-    // Object with only boolean values
+    // Booleans excluded by design — widening to `boolean` is considered acceptable
     `const FLAGS = { enabled: true, disabled: false };`,
     // Empty object
     `const EMPTY = {};`,
