@@ -64,5 +64,16 @@ function experimentalDecorator(target: typeof Bar) {}
 const Bar = @experimentalDecorator @stage3Decorator class {}`,
       errors: [{ messageId: "mixedDecoratorApis" }],
     },
+
+    // Decorator factory syntax (CallExpression)
+    {
+      code: `function stage3Decorator(target: any, ctx: ClassDecoratorContext) {}
+function experimentalDecorator(target: typeof Baz) {}
+
+@stage3Decorator()
+@experimentalDecorator()
+class Baz {}`,
+      errors: [{ messageId: "mixedDecoratorApis" }],
+    },
   ],
 });
