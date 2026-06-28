@@ -42,6 +42,13 @@ ruleTester.run("no-private-constructor-unvalidated-factory", rule, {
     return new NestedTry(v);
   }
 }`,
+    `class ElseThrow {
+  private constructor(private readonly value: string) {}
+  static create(v: string): ElseThrow {
+    if (v) return new ElseThrow(v);
+    else { throw new Error("empty"); }
+  }
+}`,
   ],
   invalid: [
     {
