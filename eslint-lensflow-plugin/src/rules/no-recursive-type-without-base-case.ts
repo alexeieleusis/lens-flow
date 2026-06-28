@@ -69,6 +69,22 @@ function hasStructuralReduction(
     }
   }
 
+  if (current.type === "TSIntersectionType") {
+    const members = (current as TSESTree.TSIntersectionType).types;
+    for (const member of members) {
+      if (hasStructuralReduction(member, genericParams, inferNames)) return true;
+    }
+    return false;
+  }
+
+  if (current.type === "TSTupleType") {
+    const elements = (current as TSESTree.TSTupleType).elementTypes;
+    for (const element of elements) {
+      if (hasStructuralReduction(element, genericParams, inferNames)) return true;
+    }
+    return false;
+  }
+
   return false;
 }
 

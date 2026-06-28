@@ -8,6 +8,8 @@ ruleTester.run("no-recursive-type-without-base-case", rule, {
     `type Identity<T> = T extends string ? T : number;`,
     `type NotConditional<T> = T | string;`,
     `type DeepFlatten<T> = T extends (infer U)[] ? DeepFlatten<U> : T;`,
+    `type IntersectReduce<T> = T extends infer U & object ? IntersectReduce<U & string> : T;`,
+    `type TupleReduce<T> = T extends [infer U, ...any[]] ? TupleReduce<[U, string]> : T;`,
   ],
   invalid: [
     {
@@ -28,6 +30,14 @@ ruleTester.run("no-recursive-type-without-base-case", rule, {
     },
     {
       code: `namespace TE { type Bad<T> = T extends object ? TE.Bad<T[keyof T]> : T; }`,
+      errors: [{ messageId: "noStructuralReduction" }],
+    },
+    {
+      code: `type IntersectBad<T> = T extends infer U & object ? IntersectBad<T & string> : T;`,
+      errors: [{ messageId: "noStructuralReduction" }],
+    },
+    {
+      code: `type TupleBad<T> = T extends [infer U, any] ? TupleBad<[T, string]> : T;`,
       errors: [{ messageId: "noStructuralReduction" }],
     },
   ],
