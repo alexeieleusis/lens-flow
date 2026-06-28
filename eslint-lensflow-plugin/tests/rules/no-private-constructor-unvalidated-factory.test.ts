@@ -35,6 +35,13 @@ ruleTester.run("no-private-constructor-unvalidated-factory", rule, {
     return value.toUpperCase();
   }
 }`,
+    `class NestedTry {
+  private constructor(private readonly value: string) {}
+  static create(v: string): NestedTry {
+    try { validate(v); } catch {}
+    return new NestedTry(v);
+  }
+}`,
   ],
   invalid: [
     {
