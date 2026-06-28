@@ -20,8 +20,6 @@ export default createRule({
         "Disallow optional chaining (`?.`) without handling the undefined case via `??` (in variable declarations)",
      },
     messages: {
-      bareOptionalChain:
-        "Optional chaining may produce `undefined`. Handle it with `??` or a fallback value. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T13-null-safety.md",
       undefinedType:
         "The type of `{{name}}` includes `undefined` from optional chaining. Use `??` to provide a default. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T13-null-safety.md",
     },
@@ -29,7 +27,7 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"undefinedType" | "bareOptionalChain", []>) {
+  create(context: TSESLint.RuleContext<"undefinedType", []>) {
     const parserServices = ESLintUtils.getParserServices(context, true);
     const program = parserServices.program;
     if (!program) return {};
@@ -64,11 +62,6 @@ export default createRule({
             node,
             messageId: "undefinedType",
             data: { name: declName },
-          });
-        } else {
-          context.report({
-            node,
-            messageId: "bareOptionalChain",
           });
         }
       },

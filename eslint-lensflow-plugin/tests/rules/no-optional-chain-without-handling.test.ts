@@ -65,6 +65,16 @@ declare const arr: string[] | undefined;
 const len = arr?.length ?? 0;
 `,
     },
+    {
+      // When TS type checker determines the optional chain's result does NOT
+      // include undefined (e.g. via type assertion), no error should be reported.
+      filename: TEST_FILENAME,
+      code: `
+interface Config { db?: { host: string } }
+declare const config: Config;
+const host = config.db?.host as string;
+`,
+    },
   ],
   invalid: [
     {
