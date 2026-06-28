@@ -28,10 +28,13 @@ export default createRule({
         for (const member of node.body) {
           if (
             member.type === "PropertyDefinition" &&
-            member.readonly &&
-            member.key.type === "Identifier"
+            member.readonly
           ) {
-            readonlyFields.add(member.key.name);
+            if (member.key.type === "Identifier") {
+              readonlyFields.add(member.key.name);
+            } else if (member.key.type === "Literal" && typeof member.key.value === "string") {
+              readonlyFields.add(member.key.value);
+            }
           }
 
           if (
