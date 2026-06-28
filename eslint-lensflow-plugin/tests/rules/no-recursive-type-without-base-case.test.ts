@@ -26,5 +26,9 @@ ruleTester.run("no-recursive-type-without-base-case", rule, {
       code: `type DeepBad<T> = T extends Array<infer U> ? DeepBad<U[keyof U]> : T;`,
       errors: [{ messageId: "noStructuralReduction" }],
     },
+    {
+      code: `namespace TE { type Bad<T> = T extends object ? TE.Bad<T[keyof T]> : T; }`,
+      errors: [{ messageId: "noStructuralReduction" }],
+    },
   ],
 });

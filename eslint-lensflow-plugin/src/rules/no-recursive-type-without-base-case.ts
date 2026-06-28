@@ -13,7 +13,10 @@ function findSelfReferences(
   function walk(n: TypeNode): void {
     if (n.type === "TSTypeReference") {
       const typeName = n.typeName;
-      if (typeName.type === "Identifier" && typeName.name === aliasName) {
+      if (
+        (typeName.type === "Identifier" && typeName.name === aliasName) ||
+        (typeName.type === "TSQualifiedName" && typeName.right.name === aliasName)
+      ) {
         results.push(n);
       }
     }
@@ -59,9 +62,10 @@ function hasStructuralReduction(
 
   if (current.type === "TSTypeReference") {
     const name = current.typeName;
-    if (name.type === "Identifier") {
-      if (inferNames.has(name.name)) return true;
-      if (genericParams.includes(name.name)) return false;
+    const identName = name.type === "Identifier" ? name.name : name.type === "TSQualifiedName" ? name.right.name : null;
+    if (identName) {
+      if (inferNames.has(identName)) return true;
+      if (genericParams.includes(identName)) return false;
     }
   }
 
