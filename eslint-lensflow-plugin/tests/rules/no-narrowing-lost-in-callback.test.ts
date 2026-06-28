@@ -54,9 +54,27 @@ ruleTester.run("no-narrowing-lost-in-callback", rule, {
 }`,
     },
     {
+      // Truthiness-based narrowing (e.g., `if (value)`) is intentionally out of
+      // scope for this rule. The rule's isNarrowingTest only matches BinaryExpression
+      // with != / !== operators, because those are the explicit nullish-check patterns
+      // where developers commonly assume narrowing is guaranteed. Truthiness checks
+      // depend on type-level analysis (is the type possibly falsy?) and would require
+      // significantly more complex logic to detect reliably. This test confirms the
+      // rule does not falsely report on non-nullable types.
       filename: TEST_FILENAME,
       code: `function render(value: string) {
   if (value != null) {
+    setTimeout(() => console.log(value.length), 0);
+  }
+}`,
+    },
+    {
+      // Truthiness-based narrowing: `if (value)` is an Identifier, not a
+      // BinaryExpression, so isNarrowingTest returns null. This pattern is out
+      // of scope for this rule — see comment above.
+      filename: TEST_FILENAME,
+      code: `function render(value: string | null) {
+  if (value) {
     setTimeout(() => console.log(value.length), 0);
   }
 }`,
