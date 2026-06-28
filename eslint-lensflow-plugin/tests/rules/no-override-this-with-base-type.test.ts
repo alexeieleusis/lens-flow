@@ -64,5 +64,14 @@ ruleTester.run("no-override-this-with-base-type", rule, {
       }`,
       errors: [{ messageId: "overrideThisWithBaseType" }],
     },
+    {
+      code: `class Base {
+        getSelf(): this { return this; }
+      }
+      class UntypedOverride extends Base {
+        getSelf() { return this; }
+      }`,
+      errors: [{ messageId: "overrideThisWithBaseType" }],
+    },
   ],
 });
