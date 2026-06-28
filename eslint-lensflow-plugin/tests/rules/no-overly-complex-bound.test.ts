@@ -23,6 +23,21 @@ function process<T extends Constructable<T> & HasId>(x: T): void {}`,
       new(): T;
       name: string;
     }`,
+    // Raising maxProperties threshold suppresses report for 3-property type literal
+    {
+      code: `function bar<T extends { a: string; b: number; c: boolean }>(x: T): void {}`,
+      options: [{ maxProperties: 4 }],
+    },
+    // Raising maxIntersectionMembers threshold suppresses report for 3-member intersection
+    {
+      code: `function foo<T extends { a: string } & { b: number } & { c: boolean }>(x: T): void {}`,
+      options: [{ maxIntersectionMembers: 4 }],
+    },
+    // Raising maxNestingDepth threshold suppresses report for depth-2 nesting
+    {
+      code: `function baz<T extends { a: { b: { c: string } } }>(x: T): void {}`,
+      options: [{ maxNestingDepth: 4 }],
+    },
   ],
   invalid: [
     // Antipattern: interface with construct signature + nested type literal with 3 properties
@@ -72,6 +87,25 @@ function process<T extends Constructable<T> & HasId>(x: T): void {}`,
         };
       }`,
       errors: [{ messageId: "complexInterfaceBound" }],
+    },
+    // Lowering maxProperties threshold triggers on 2-property type literal
+    {
+      code: `type Pair = { first: string; second: number };
+function bar<T extends { first: string; second: number }>(x: T): void {}`,
+      options: [{ maxProperties: 1 }],
+      errors: [{ messageId: "complexTypeLiteral" }],
+    },
+    // Lowering maxIntersectionMembers threshold triggers on 2-member intersection
+    {
+      code: `function foo<T extends { a: string } & { b: number }>(x: T): void {}`,
+      options: [{ maxIntersectionMembers: 1 }],
+      errors: [{ messageId: "complexIntersection" }],
+    },
+    // Lowering maxNestingDepth threshold triggers on depth-1 nesting
+    {
+      code: `function qux<T extends { a: { b: string } }>(x: T): void {}`,
+      options: [{ maxNestingDepth: 1 }],
+      errors: [{ messageId: "deepNesting" }],
     },
   ],
 });
