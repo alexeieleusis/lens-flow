@@ -30,6 +30,14 @@ ruleTester.run("no-nested-generics-without-extraction-uc14", rule, {
     `interface Result<T, E> {
       map<U>(f: (t: T) => U): NS_NS.Result<U, E>;
     }`,
+    // Raised threshold: 2 self-referencing methods but minSelfReferencingMethods set to 3
+    {
+      code: `interface Result<T, E> {
+        map<U>(f: (t: T) => U): Result<U, E>;
+        flatMap<U>(f: (t: T) => Result<U, E>): Result<U, E>;
+      }`,
+      options: [{ minSelfReferencingMethods: 3 }],
+    },
   ],
   invalid: [
     // Antipattern: multiple methods return the same interface with substituted generics
@@ -63,6 +71,16 @@ ruleTester.run("no-nested-generics-without-extraction-uc14", rule, {
         map<U>(f: (t: T) => U): NS_NS.Result<U, E>;
         chain<U>(f: (t: T) => NS_NS.Result<U, E>): NS_NS.Result<U, E>;
       }`,
+      errors: [{ messageId: "selfReferencingMethods" }],
+    },
+    // Raised threshold: 3 self-referencing methods with minSelfReferencingMethods set to 3
+    {
+      code: `interface Either<L, R> {
+        map<U>(f: (r: R) => U): Either<L, U>;
+        flatMap<U>(f: (r: R) => Either<L, U>): Either<L, U>;
+        bimap<A, B>(f: (l: L) => A, g: (r: R) => B): Either<A, B>;
+      }`,
+      options: [{ minSelfReferencingMethods: 3 }],
       errors: [{ messageId: "selfReferencingMethods" }],
     },
   ],
