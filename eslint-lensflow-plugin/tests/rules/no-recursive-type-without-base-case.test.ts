@@ -40,5 +40,9 @@ ruleTester.run("no-recursive-type-without-base-case", rule, {
       code: `type TupleBad<T> = T extends [infer U, any] ? TupleBad<[T, string]> : T;`,
       errors: [{ messageId: "noStructuralReduction" }],
     },
+    {
+      code: `type Multi<T, U> = T extends Array<infer Item> ? Multi<Item, U> : T;`,
+      errors: [{ messageId: "noStructuralReduction" }],
+    },
   ],
 });
