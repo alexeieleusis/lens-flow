@@ -75,5 +75,10 @@ interface Doc {
         { messageId: "redundantReadonly" },
       ],
     },
+    {
+      code: `class C { constructor(readonly count: number) {} }`,
+      output: `class C { constructor(count: number) {} }`,
+      errors: [{ messageId: "redundantReadonly" }],
+    },
   ],
 });

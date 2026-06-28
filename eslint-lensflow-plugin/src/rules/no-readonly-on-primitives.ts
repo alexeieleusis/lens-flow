@@ -44,7 +44,7 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"redundantReadonly", []>) {
-    function checkNode(
+    function checkFieldNode(
       node: TSESTree.TSPropertySignature | TSESTree.PropertyDefinition,
     ) {
       if (!node.readonly) return;
@@ -101,12 +101,64 @@ export default createRule({
       });
     }
 
+    function checkParameterProperty(node: TSESTree.TSParameterProperty) {
+      if (!node.readonly) return;
+
+      const param = node.parameter;
+      const typeAnn = param.typeAnnotation?.typeAnnotation;
+      if (!typeAnn) return;
+
+      const unwrapped = unwrapParens(typeAnn);
+
+      if (unwrapped.type === "TSTypeReference") return;
+
+      if (
+        !PRIMITIVE_TYPE_NODES.has(unwrapped.type) &&
+        !isPrimitiveLiteralType(unwrapped)
+      )
+        return;
+
+      const propName = param.type === "Identifier" ? param.name : "this parameter";
+
+      let typeName: string = unwrapped.type;
+      if (unwrapped.type === "TSLiteralType") {
+        const lit = unwrapped as unknown as { literal: { value?: unknown } };
+        const v = lit.literal.value;
+        if (typeof v === "number") typeName = "number";
+        else if (typeof v === "boolean") typeName = "boolean";
+        else typeName = "string";
+      }
+
+      context.report({
+        node,
+        messageId: "redundantReadonly",
+        data: { name: propName, type: typeName },
+        fix(fixer) {
+          const source = context.sourceCode;
+          const readonlyToken = source.getTokenBefore(
+            param,
+            (token) => token.value === "readonly",
+          );
+          if (!readonlyToken) return null;
+          const nextToken = source.getTokenAfter(readonlyToken);
+          if (!nextToken) return null;
+          return fixer.removeRange([
+            readonlyToken.range[0],
+            nextToken.range[0],
+          ]);
+        },
+      });
+    }
+
     return {
       TSPropertySignature(node) {
-        checkNode(node);
+        checkFieldNode(node);
       },
       PropertyDefinition(node) {
-        checkNode(node);
+        checkFieldNode(node);
+      },
+      TSParameterProperty(node) {
+        checkParameterProperty(node);
       },
     };
   },
