@@ -39,5 +39,12 @@ ruleTester.run("no-over-generic-interface", rule, {
       }`,
       errors: [{ messageId: "tooManyTypeParams" }],
     },
+    {
+      code: `interface Repo<T, K> {
+        get(id: K): T | null;
+      }`,
+      options: [{ maxTypeParams: 1 }],
+      errors: [{ messageId: "tooManyTypeParams" }],
+    },
   ],
 });
