@@ -83,6 +83,20 @@ function isSignalArg(
     isSameVariableMemberExpression(arg, controllerVar, sourceCode)
   )
     return true;
+  if (arg.type === "ObjectExpression") {
+    for (const prop of arg.properties) {
+      if (
+        prop.type === "Property" &&
+        prop.key.type === "Identifier" &&
+        prop.key.name === "signal" &&
+        prop.value.type === "MemberExpression" &&
+        prop.value.property.type === "Identifier" &&
+        prop.value.property.name === "signal" &&
+        isSameVariableMemberExpression(prop.value, controllerVar, sourceCode)
+      )
+        return true;
+    }
+  }
   return false;
 }
 
@@ -99,7 +113,7 @@ function passedToFunction(
     return node.arguments.some((arg) =>
       isSignalArg(arg, controllerVar, sourceCode),
     );
-  }, { stopAtFunctionBoundaries: false });
+  }, { stopAtFunctionBoundaries: true });
 }
 
 function hasAbortCall(
@@ -121,7 +135,7 @@ function hasAbortCall(
         sourceCode,
       )
     );
-  }, { stopAtFunctionBoundaries: false });
+  }, { stopAtFunctionBoundaries: true });
 }
 
 function findEnclosingFunctionBody(
@@ -180,6 +194,18 @@ export default createRule({
 
         const decl = node.parent;
         if (decl?.type !== "VariableDeclarator" || !decl.id) {
+          // Inline `new AbortController().signal` — no variable reference, always orphaned
+          if (
+            node.parent?.type === "MemberExpression" &&
+            node.parent.property.type === "Identifier" &&
+            node.parent.property.name === "signal"
+          ) {
+            context.report({
+              node,
+              messageId: "orphanedAbortController",
+              data: { name: "(inline)" },
+            });
+          }
           return;
         }
 

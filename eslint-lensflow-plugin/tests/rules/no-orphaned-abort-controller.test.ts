@@ -114,5 +114,11 @@ ruleTester.run("no-orphaned-abort-controller", rule, {
 }`,
       errors: [{ messageId: "orphanedAbortController" }],
     },
+
+    // Expression-bodied arrow function with orphaned AbortController
+    {
+      code: `const fn = () => fetch("/api", { signal: new AbortController().signal });`,
+      errors: [{ messageId: "orphanedAbortController" }],
+    },
   ],
 });
