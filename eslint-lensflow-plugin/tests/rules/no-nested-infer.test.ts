@@ -9,10 +9,10 @@ ruleTester.run("no-nested-infer", rule, {
     `type Resolve<T> = T extends Promise<infer V> ? V : T;`,
     // No infer at all
     `type Keys<T> = T extends object ? keyof T : never;`,
-    // maxDepth raised — depth 3 is OK when maxDepth is raised to 4
+    // maxDepth raised — depth 2 is OK when maxDepth is raised to 3
     {
-      code: `type Deep<T> = T extends { data: Promise<{ value: infer V }> } ? V : never;`,
-      options: [{ maxDepth: 4 }],
+      code: `type Deep<T> = T extends Promise<{ value: infer V }> ? V : never;`,
+      options: [{ maxDepth: 3 }],
     },
   ],
   invalid: [
