@@ -13,6 +13,9 @@ type B<T> = T extends { name: string } ? T["name"] : never;`,
     `type A = { id: string } extends { id: string } ? true : false;`,
     // TSParenthesizedType wrapper — should still work
     `type A<T> = T extends ({ id: string }) ? T["id"] : never;`,
+    // Different modifiers — should NOT be treated as duplicates
+    `type A<T> = T extends { id?: string } ? T : never;
+type B<T> = T extends { id: string } ? T : never;`,
   ],
   invalid: [
     {
