@@ -47,6 +47,12 @@ ruleTester.run("no-noop-brand-constructor", rule, {
 ): number & { readonly __brand: "Config" } {
   return value as (number & { readonly __brand: "Config" });
 }`,
+    // Non-brand structural intersection — should NOT be flagged as branded type
+    `function makeTracked(
+  n: number,
+): number & { readonly count: number } {
+  return n as (number & { readonly count: number });
+}`,
   ],
   invalid: [
     // Noop constructor — function declaration with inline branded type
