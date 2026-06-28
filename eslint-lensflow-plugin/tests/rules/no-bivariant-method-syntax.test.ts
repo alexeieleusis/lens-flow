@@ -49,5 +49,11 @@ ruleTester.run("no-bivariant-method-syntax", rule, {
       }`,
       errors: [{ messageId: "methodSyntax" }, { messageId: "methodSyntax" }],
     },
+    {
+      code: `interface QuotedKey {
+        "handle"(x: Dog): void;
+      }`,
+      errors: [{ messageId: "methodSyntax" }],
+    },
   ],
 });
