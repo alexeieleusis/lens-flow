@@ -5,16 +5,18 @@ import { containsAnyType } from "../utils/no-any-param-checker.js";
 function getParamTypeAnnotation(
   param: TSESTree.Parameter,
 ): TSESTree.TypeNode | undefined {
-  const base =
-    param.type === "TSParameterProperty"
-      ? param.parameter
-      : param.type === "AssignmentPattern"
-        ? param.left
-        : param.type === "RestElement"
-          ? param.argument
-          : param;
-  if ("typeAnnotation" in base && base.typeAnnotation) {
-    return base.typeAnnotation.typeAnnotation;
+  if (param.type === "TSParameterProperty") {
+    return param.parameter.typeAnnotation?.typeAnnotation;
+  }
+  if (param.type === "AssignmentPattern") {
+    return param.left.typeAnnotation?.typeAnnotation;
+  }
+  if (param.type === "RestElement") {
+    if (param.typeAnnotation?.typeAnnotation) return param.typeAnnotation.typeAnnotation;
+    return param.argument.typeAnnotation?.typeAnnotation;
+  }
+  if ("typeAnnotation" in param && param.typeAnnotation) {
+    return param.typeAnnotation.typeAnnotation;
   }
   return undefined;
 }

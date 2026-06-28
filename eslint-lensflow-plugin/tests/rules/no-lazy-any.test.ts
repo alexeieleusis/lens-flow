@@ -26,6 +26,10 @@ ruleTester.run("no-lazy-any", rule, {
 function processData(x: Input): number {
   return x.value + x.extra;
 }`,
+    // Rest parameter properly typed, return any
+    `function sum(...args: number[]): any { return args.reduce((a, b) => a + b, 0); }`,
+    // Destructured parameter properly typed, return any
+    `function f({ a, b }: { a: number; b: number }): any { return a + b; }`,
   ],
   invalid: [
     // Function declaration
@@ -67,6 +71,21 @@ function processData(x: Input): number {
     // AssignmentPattern — function declaration
     {
       code: `function f(x: any = 0): any { return x; }`,
+      errors: [{ messageId: "lazyAny" }],
+    },
+    // Rest parameter
+    {
+      code: `function f(...args: any): any { return args; }`,
+      errors: [{ messageId: "lazyAny" }],
+    },
+    // Destructured object parameter
+    {
+      code: `function f({ a, b }: any): any { return a + b; }`,
+      errors: [{ messageId: "lazyAny" }],
+    },
+    // Destructured array parameter
+    {
+      code: `function f([a, b]: any): any { return a + b; }`,
       errors: [{ messageId: "lazyAny" }],
     },
   ],
