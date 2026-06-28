@@ -9,6 +9,11 @@ ruleTester.run("no-nested-infer", rule, {
     `type Resolve<T> = T extends Promise<infer V> ? V : T;`,
     // No infer at all
     `type Keys<T> = T extends object ? keyof T : never;`,
+    // maxDepth raised — depth 3 is OK when maxDepth is raised to 4
+    {
+      code: `type Deep<T> = T extends { data: Promise<{ value: infer V }> } ? V : never;`,
+      options: [{ maxDepth: 4 }],
+    },
   ],
   invalid: [
     // Antipattern from spec: Promise wrapping object with infer inside
@@ -19,6 +24,12 @@ ruleTester.run("no-nested-infer", rule, {
     // Multiple levels of generic nesting with infer
     {
       code: `type Extract<T> = T extends Promise<Array<{ result: infer R }>> ? R : never;`,
+      errors: [{ messageId: "deeplyNestedInfer" }],
+    },
+    // maxDepth lowered — depth 1 infer triggers with maxDepth of 1
+    {
+      code: `type Deep<T> = T extends Promise<{ value: infer V }> ? V : never;`,
+      options: [{ maxDepth: 1 }],
       errors: [{ messageId: "deeplyNestedInfer" }],
     },
   ],
