@@ -115,6 +115,7 @@ export default createRule({
         | TSESTree.TSDeclareFunction
         | TSESTree.TSEmptyBodyFunctionExpression
         | TSESTree.TSMethodSignature
+        | TSESTree.TSCallSignatureDeclaration
         | TSESTree.FunctionDeclaration
         | TSESTree.FunctionExpression
         | TSESTree.ArrowFunctionExpression,
@@ -166,6 +167,10 @@ export default createRule({
       },
 
       TSDeclareFunction(node) {
+        checkReturnTypesNode(node);
+      },
+
+      TSCallSignatureDeclaration(node) {
         checkReturnTypesNode(node);
       },
     };

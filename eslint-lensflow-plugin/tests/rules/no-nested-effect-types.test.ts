@@ -32,6 +32,16 @@ ruleTester.run("no-nested-effect-types", rule, {
     `interface Service {
   getUser(id: string): Promise<User>;
 }`,
+    // TSCallSignatureDeclaration — valid
+    `interface Api {
+  (id: string): Promise<User>;
+}`,
+    // MethodDefinition — valid
+    `class Service {
+  getUser(id: string): Promise<User> {
+    return fetch(\`/users/\${id}\`).then(r => r.json());
+  }
+}`,
   ],
   invalid: [
     {
@@ -91,6 +101,22 @@ ruleTester.run("no-nested-effect-types", rule, {
     {
       code: `interface Service {
   getUser(id: string): Promise<Promise<User>>;
+}`,
+      errors: [{ messageId: "nestedEffect" }],
+    },
+    // TSCallSignatureDeclaration — invalid
+    {
+      code: `interface Api {
+  (id: string): Promise<Promise<User>>;
+}`,
+      errors: [{ messageId: "nestedEffect" }],
+    },
+    // MethodDefinition — invalid (covered via FunctionExpression visitor)
+    {
+      code: `class Service {
+  getUser(id: string): Promise<Promise<User>> {
+    return Promise.resolve(fetch(\`/users/\${id}\`));
+  }
 }`,
       errors: [{ messageId: "nestedEffect" }],
     },
