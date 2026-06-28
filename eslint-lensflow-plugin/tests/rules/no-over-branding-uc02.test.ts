@@ -20,6 +20,13 @@ type Age = number;`,
 type Bar = string & { readonly bar: string };
 type Baz = string & { readonly baz: boolean };
 type Qux = string & { readonly qux: symbol };`,
+    {
+      code: `type FirstName = string & { readonly __brand: "FirstName" };
+type LastName  = string & { readonly __brand: "LastName" };
+type Address   = string & { readonly __brand: "Address" };
+type Phone     = string & { readonly __brand: "Phone" };`,
+      options: [{ maxBrandsPerPrimitive: 5 }],
+    },
   ],
   invalid: [
     {
@@ -57,6 +64,17 @@ type E = string & { __brand: "E" };`,
       errors: [
         { messageId: "overBranding" },
         { messageId: "overBranding" },
+        { messageId: "overBranding" },
+        { messageId: "overBranding" },
+        { messageId: "overBranding" },
+      ],
+    },
+    {
+      code: `type Score = number & { readonly __brand: "Score" };
+type Rating  = number & { readonly __brand: "Rating" };
+type Age     = number & { readonly __brand: "Age" };`,
+      options: [{ maxBrandsPerPrimitive: 2 }],
+      errors: [
         { messageId: "overBranding" },
         { messageId: "overBranding" },
         { messageId: "overBranding" },
