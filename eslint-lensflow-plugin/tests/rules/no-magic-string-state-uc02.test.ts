@@ -16,6 +16,18 @@ function isShipped(o: { state: OrderState }) {
     `function check(status: string) {
       return status === "ok" && status === "ok";
     }`,
+    // Nested function scope isolation: outer has o.state === "shipped", inner has o.state === "pending" x2.
+    // Without scope isolation, combined distinct values for o.state would be >= 2 and trigger the rule.
+    `function process(o: { state: string }) {
+      const fn = (o: { state: string }) => {
+        return o.state === "pending" && o.state === "pending";
+      };
+      return o.state === "shipped" && fn(o);
+    }`,
+    // == operator (loose equality) — single value, should not trigger
+    `function isShipped(o: { state: string }) {
+      return o.state == "shipped";
+    }`,
   ],
   invalid: [
     {
@@ -62,6 +74,16 @@ function isShipped(o: { state: OrderState }) {
         }
       }`,
       errors: [{ messageId: "magicSwitch" }],
+    },
+    // == operator (loose equality) — multiple values, should trigger
+    {
+      code: `function check(o: { state: string }) {
+        return o.state == "shipped" || o.state == "SHIPPED";
+      }`,
+      errors: [
+        { messageId: "magicComparison" },
+        { messageId: "magicComparison" },
+      ],
     },
   ],
 });
