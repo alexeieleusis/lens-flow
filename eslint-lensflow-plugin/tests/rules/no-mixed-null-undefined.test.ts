@@ -32,5 +32,13 @@ ruleTester.run("no-mixed-null-undefined", rule, {
       code: `function f(): string | null | undefined {}`,
       errors: [{ messageId: "mixedNullUndefined" }],
     },
+    {
+      code: `interface Foo { value: string | null | undefined }`,
+      errors: [{ messageId: "mixedNullUndefined" }],
+    },
+    {
+      code: `type Foo = { value: string | null | undefined }`,
+      errors: [{ messageId: "mixedNullUndefined" }],
+    },
   ],
 });
