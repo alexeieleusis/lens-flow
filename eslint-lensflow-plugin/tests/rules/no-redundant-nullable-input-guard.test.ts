@@ -24,6 +24,24 @@ ruleTester.run("no-redundant-nullable-input-guard", rule, {
     // Functions with non-nullable params
     `function deleteById(id: string) { return id; }
     function archiveById(id: string) { return id; }`,
+    // AssignmentPattern (default parameter) — single function, no duplicate
+    `function deleteUser(id: string | null | undefined = "default") {
+      if (!id) { throw new Error("no id"); }
+    }`,
+    // RestElement — single function, no duplicate
+    `function logArgs(...args: (string | null)[]) {
+      for (const a of args) {
+        if (!a) { continue; }
+      }
+    }`,
+    // ObjectPattern (destructuring) — rule skips, no report
+    `function handle({ id }: { id: string | null }) {
+      if (!id) { return; }
+    }`,
+    // ArrayPattern (destructuring) — rule skips, no report
+    `function handle([id]: [string | null]) {
+      if (!id) { return; }
+    }`,
   ],
   invalid: [
     {
