@@ -59,5 +59,15 @@ function processData(x: Input): number {
       code: `type Handler = (req: any, res: any) => any;`,
       errors: [{ messageId: "lazyAny" }],
     },
+    // AssignmentPattern — arrow function
+    {
+      code: `const fn = (x: any = 1): any => x;`,
+      errors: [{ messageId: "lazyAny" }],
+    },
+    // AssignmentPattern — function declaration
+    {
+      code: `function f(x: any = 0): any { return x; }`,
+      errors: [{ messageId: "lazyAny" }],
+    },
   ],
 });
