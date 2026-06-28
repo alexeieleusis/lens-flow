@@ -89,5 +89,10 @@ function process(x: Complex) { /* ... */ }`,
         { messageId: "tooManyDirect" },
       ],
     },
+    // Parenthesized intersection at top level — should still be visited through TSParenthesizedType
+    {
+      code: `type Wrapped = (A & B & C & D & E);`,
+      errors: [{ messageId: "tooManyDirect" }],
+    },
   ],
 });
