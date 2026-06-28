@@ -77,5 +77,12 @@ type UIEvent =
   | { kind: "hover"; y: number };`,
       errors: [{ messageId: "mixed" }],
     },
+    // Class + boolean literal discriminant — mixed narrowing strategy
+    {
+      filename: TEST_FILENAME,
+      code: `class ClickEvent {}
+type Event = ClickEvent | { kind: true; x: number };`,
+      errors: [{ messageId: "mixed" }],
+    },
   ],
 });
