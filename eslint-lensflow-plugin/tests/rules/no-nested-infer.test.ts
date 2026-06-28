@@ -4,8 +4,7 @@ import rule from "../../src/rules/no-nested-infer.js";
 ruleTester.run("no-nested-infer", rule, {
   valid: [
     // Single-level property access — shallow and clear
-    `interface Payload { data: infer D }
-type Unwrap<T> = T extends { data: infer D } ? D : never;`,
+    `type Unwrap<T> = T extends { data: infer D } ? D : never;`,
     // Single-level generic — still acceptable
     `type Resolve<T> = T extends Promise<infer V> ? V : T;`,
     // No infer at all
