@@ -30,6 +30,13 @@ ruleTester.run("no-never-reachable-endpoint", rule, {
         default: throw new Error("other");
       }
     }`,
+    `function switchMulti(status: number): never {
+      switch (status) {
+        case 0: console.log("zero"); throw new Error("zero");
+        case 1: console.log("one"); throw new Error("one");
+        default: throw new Error("other");
+      }
+    }`,
   ],
   invalid: [
     {
