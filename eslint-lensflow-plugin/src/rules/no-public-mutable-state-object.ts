@@ -6,12 +6,15 @@ const statefulEntityPattern =
 
 function isArrayType(node: TSESTree.TypeNode): boolean {
   if (node.type === "TSArrayType") return true;
-  if (
-    node.type === "TSTypeReference" &&
-    node.typeName.type === "Identifier" &&
-    node.typeName.name === "Array"
-  )
-    return true;
+  if (node.type === "TSTypeReference") {
+    const { typeName } = node;
+    if (typeName.type === "Identifier" && (typeName.name === "Array" || typeName.name === "ReadonlyArray"))
+      return true;
+    if (typeName.type === "TSQualifiedName" && typeName.right.name === "Array")
+      return true;
+    if (typeName.type === "TSQualifiedName" && typeName.right.name === "ReadonlyArray")
+      return true;
+  }
   return false;
 }
 
