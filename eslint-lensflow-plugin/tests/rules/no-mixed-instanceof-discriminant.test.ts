@@ -84,5 +84,13 @@ type UIEvent =
 type Event = ClickEvent | { kind: true; x: number };`,
       errors: [{ messageId: "mixed" }],
     },
+    // Type reference to plain object + class — mixed narrowing strategy
+    {
+      filename: TEST_FILENAME,
+      code: `class ClickEvent {}
+type ScrollShape = { kind: "scroll"; top: number };
+type Event = ClickEvent | ScrollShape;`,
+      errors: [{ messageId: "mixed" }],
+    },
   ],
 });
