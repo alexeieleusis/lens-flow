@@ -28,6 +28,18 @@ function parse(input: unknown): unknown {
 declare function foo(x: string): string;
 declare function foo(x: boolean): string;
 declare function foo(x: unknown): string;`,
+    {
+      code: `function render(tag: "div"): HTMLDivElement;
+function render(tag: "span"): HTMLSpanElement;
+function render(tag: "p"): HTMLParagraphElement;
+function render(tag: "input"): HTMLInputElement;
+function render(tag: "button"): HTMLButtonElement;
+function render(tag: "a"): HTMLAnchorElement;
+function render(tag: string): HTMLElement {
+  return document.createElement(tag);
+}`,
+      options: [{ maxOverloads: 6 }],
+    },
   ],
   invalid: [
     {
@@ -59,6 +71,16 @@ function f(a: 4): void;
 function f(a: 5): void;
 function f(a: 6): void;
 function f(a: number): void {}`,
+      errors: [{ messageId: "tooManyOverloads" }],
+    },
+    {
+      code: `function parse(input: string): number;
+function parse(input: number): number;
+function parse(input: boolean): boolean;
+function parse(input: unknown): unknown {
+  return input;
+}`,
+      options: [{ maxOverloads: 2 }],
       errors: [{ messageId: "tooManyOverloads" }],
     },
   ],
