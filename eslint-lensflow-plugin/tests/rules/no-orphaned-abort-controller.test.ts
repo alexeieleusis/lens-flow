@@ -58,6 +58,16 @@ ruleTester.run("no-orphaned-abort-controller", rule, {
     controller.abort();
   }
 }`,
+
+    // let declaration with .abort() in finally block
+    `async function fetchData(): Promise<void> {
+  let controller = new AbortController();
+  try {
+    await fetch('/api/data', { signal: controller.signal });
+  } finally {
+    controller.abort();
+  }
+}`,
   ],
   invalid: [
     // Basic antipattern: AbortController never aborted
@@ -118,6 +128,15 @@ ruleTester.run("no-orphaned-abort-controller", rule, {
     // Expression-bodied arrow function with orphaned AbortController
     {
       code: `const fn = () => fetch("/api", { signal: new AbortController().signal });`,
+      errors: [{ messageId: "orphanedAbortController" }],
+    },
+
+    // var declaration with orphaned AbortController
+    {
+      code: `async function fetchWithSignal(): Promise<Response> {
+  var ac = new AbortController();
+  return myFetch('/api/data', { signal: ac.signal });
+}`,
       errors: [{ messageId: "orphanedAbortController" }],
     },
   ],
