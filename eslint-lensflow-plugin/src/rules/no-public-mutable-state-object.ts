@@ -35,14 +35,11 @@ function hasMutableStateType(typeAnnotation: TSESTree.TypeNode): boolean {
   if (isArrayType(unwrapped)) return true;
 
   if (type === "TSUnionType") {
-    return unwrapped.types.some((t: TSESTree.TypeNode) => {
-      const inner = unwrapParenthesized(t);
-      return (
-        inner.type === "TSNumberKeyword" ||
-        inner.type === "TSStringKeyword" ||
-        isArrayType(inner)
-      );
-    });
+    return unwrapped.types.some((t: TSESTree.TypeNode) => hasMutableStateType(t));
+  }
+
+  if (type === "TSIntersectionType") {
+    return unwrapped.types.some((t: TSESTree.TypeNode) => hasMutableStateType(t));
   }
 
   return false;
