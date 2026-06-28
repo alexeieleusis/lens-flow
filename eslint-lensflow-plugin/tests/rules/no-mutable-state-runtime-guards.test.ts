@@ -27,6 +27,15 @@ ruleTester.run("no-mutable-state-runtime-guards", rule, {
         if (this.count === 0) throw new Error("zero");
       }
     }`,
+    `class NestedCallback {
+      state: "a" | "b" = "a";
+      run() {
+        const handler = () => {
+          if (this.state !== "a") throw new Error();
+        };
+        handler();
+      }
+    }`,
   ],
   invalid: [
     {
