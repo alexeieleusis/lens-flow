@@ -46,6 +46,28 @@ ruleTester.run("no-god-interface", rule, {
       f: string;
       g: boolean;
     }`,
+    // 5 optional but minOptionalFields raised to 10 — should not trigger
+    {
+      code: `interface CustomThreshold {
+        a?: string;
+        b?: number;
+        c?: boolean;
+        d?: string;
+        e?: number;
+      }`,
+      options: [{ minOptionalFields: 10 }],
+    },
+    // 5 total with maxTotalFields: 8 (lowered from default still passes)
+    {
+      code: `interface WithinCustomTotal {
+        a: string;
+        b: number;
+        c: boolean;
+        d: string;
+        e: number;
+      }`,
+      options: [{ maxTotalFields: 8 }],
+    },
   ],
   invalid: [
     // Exactly 5 optional (boundary, >= 5 triggers), 5 total — verifies boundary behavior
@@ -110,6 +132,29 @@ ruleTester.run("no-god-interface", rule, {
         h?: number;
         i: string;
       }`,
+      errors: [{ messageId: "tooManyTotal" }],
+    },
+    // 3 optional (below default 5) but minOptionalFields lowered to 2 — triggers
+    {
+      code: `interface CustomLowered {
+        a?: string;
+        b?: number;
+        c?: boolean;
+      }`,
+      options: [{ minOptionalFields: 2 }],
+      errors: [{ messageId: "tooManyOptional" }],
+    },
+    // 6 total (below default 8) but maxTotalFields lowered to 5 — triggers
+    {
+      code: `interface CustomTotalLowered {
+        a: string;
+        b: number;
+        c: boolean;
+        d: string;
+        e: number;
+        f: string;
+      }`,
+      options: [{ maxTotalFields: 5 }],
       errors: [{ messageId: "tooManyTotal" }],
     },
   ],
