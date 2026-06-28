@@ -80,5 +80,19 @@ interface Doc {
       output: `class C { constructor(count: number) {} }`,
       errors: [{ messageId: "redundantReadonly" }],
     },
+    {
+      code: `interface Config {
+        readonly "id": string;
+        readonly "count": number;
+      }`,
+      output: `interface Config {
+        "id": string;
+        "count": number;
+      }`,
+      errors: [
+        { messageId: "redundantReadonly" },
+        { messageId: "redundantReadonly" },
+      ],
+    },
   ],
 });
