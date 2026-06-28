@@ -26,6 +26,10 @@ ruleTester.run("no-nested-generics-without-extraction-uc14", rule, {
     `interface Chain<T> {
       then<U>(fn: (t: T) => U): Chain<U>;
     }`,
+    // TSQualifiedName: qualified return type, only one self-referencing — below threshold
+    `interface Result<T, E> {
+      map<U>(f: (t: T) => U): NS_NS.Result<U, E>;
+    }`,
   ],
   invalid: [
     // Antipattern: multiple methods return the same interface with substituted generics
@@ -51,6 +55,14 @@ ruleTester.run("no-nested-generics-without-extraction-uc14", rule, {
       map<U>(f: (t: T) => U): Task<U, E>;
       chain: <U>(f: (t: T) => Task<U, E>) => Task<U, E>;
     }`,
+      errors: [{ messageId: "selfReferencingMethods" }],
+    },
+    // TSQualifiedName: qualified return type with multiple self-referencing methods
+    {
+      code: `interface Result<T, E> {
+        map<U>(f: (t: T) => U): NS_NS.Result<U, E>;
+        chain<U>(f: (t: T) => NS_NS.Result<U, E>): NS_NS.Result<U, E>;
+      }`,
       errors: [{ messageId: "selfReferencingMethods" }],
     },
   ],
