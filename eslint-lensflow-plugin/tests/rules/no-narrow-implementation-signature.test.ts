@@ -50,6 +50,14 @@ function parse(s: string): Date | string {
   return x;
 }`,
     },
+    {
+      filename: TEST_FILENAME,
+      code: `declare function get(x: string): string;
+declare function get(x: number): number;
+function get(x: string | number): string | number {
+  return typeof x === "string" ? x : x.toString();
+}`,
+    },
   ],
   invalid: [
     {
@@ -75,6 +83,13 @@ function process(x: number): number;
 function process(x: string | number): string {
   return String(x);
 }`,
+      errors: [{ messageId: "narrowImpl" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `declare function get(x: string): string;
+declare function get(x: number): number;
+function get(x) { return "always string"; }`,
       errors: [{ messageId: "narrowImpl" }],
     },
   ],
