@@ -97,7 +97,13 @@ export default createRule({
 
       const paramNames = new Set(
         node.params
-          .filter((p): p is TSESTree.Identifier => p.type === "Identifier")
+          .map((p) => {
+            if (p.type === "Identifier") return p;
+            if (p.type === "AssignmentPattern" && p.left.type === "Identifier")
+              return p.left;
+            return null;
+          })
+          .filter((p): p is TSESTree.Identifier => p !== null)
           .map((p) => p.name),
       );
 

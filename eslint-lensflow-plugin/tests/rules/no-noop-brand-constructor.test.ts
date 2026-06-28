@@ -75,5 +75,13 @@ ruleTester.run("no-noop-brand-constructor", rule, {
 };`,
       errors: [{ messageId: "noopBrandConstructor" }],
     },
+    // Noop constructor — default parameter (AssignmentPattern)
+    {
+      code: `const makeB = (
+  n: number = 0,
+): number & { readonly __brand: "B" } =>
+  n as (number & { readonly __brand: "B" });`,
+      errors: [{ messageId: "noopBrandConstructor" }],
+    },
   ],
 });
