@@ -1,72 +1,86 @@
 import { ruleTester } from "../helpers/rule-tester.js";
 import rule from "../../src/rules/require-variance-annotation-uc17.js";
 
-ruleTester.run("require-variance-annotation-uc17", rule, {
+// This rule is a deprecated alias of `require-explicit-variance`.
+// Tests mirror the base rule to verify the re-export works correctly.
+ruleTester.run("require-variance-annotation-uc17 (alias of require-explicit-variance)", rule, {
   valid: [
-    // Type parameter used in both input and output — invariant, no annotation needed
-    `interface Processor<T, U> {
-      process(input: T, outputFormat: U): T;
-      convert(input: U): U;
+    // Type parameter appears in both input and output positions — no variance suggestion needed
+    `interface Processor<T> {
+      process(item: T): T;
     }`,
-    // Already has \`in\` annotation
-    `interface Processor<T, in U> {
-      process(input: T, outputFormat: U): T;
+    // No type parameters — nothing to check
+    `interface NoGenerics {
+      value: string;
     }`,
-    // Already has \`out\` annotation
+    // Already annotated with `out` — should not trigger
     `interface Producer<out T> {
-      produce(input: string): T;
+      produce(): T;
     }`,
-    // Type parameter not used in any method
-    `interface Container<T> {
-      size(): number;
+    // Already annotated with `in` — should not trigger
+    `interface Consumer<in T> {
+      consume(item: T): void;
     }`,
-    // Type alias with already annotated parameter
-    `type Sink<in T> = {
-      consume(value: T): void;
-    };`,
-    // T used in both input and output via property function type
-    `interface Handler<T> {
-      handle: (input: T) => T;
+    // Type parameter appears in both positions — invariant, no annotation needed
+    `interface Store<T> {
+      get(): T;
+      set(value: T): void;
     }`,
+    // Type parameter only used as non-boolean property type (not in function positions)
+    `interface Wrapper<T> {
+      value: T;
+    }`,
+    // Type alias with no type parameters
+    `type SimpleAlias = string;`,
   ],
   invalid: [
-    // U only in input position — from antipattern_snippet
-    {
-      code: `interface Processor<T, U> {
-        process(input: T, outputFormat: U): T;
-      }`,
-      errors: [{ messageId: "suggestIn" }],
-    },
-    // T only in output position
+    // T only in return position — covariant, suggest `out`
     {
       code: `interface Producer<T> {
-        produce(input: string): T;
+        produce(): T;
       }`,
       errors: [{ messageId: "suggestOut" }],
     },
-    // Type alias: U only in input position
+    // T only in parameter position — contravariant, suggest `in`
     {
-      code: `type Processor<T, U> = {
-        process(input: T, outputFormat: U): T;
-      };`,
+      code: `interface Consumer<T> {
+        consume(item: T): void;
+      }`,
       errors: [{ messageId: "suggestIn" }],
     },
-    // Type alias: T only in output position
+    // Type alias: T only in parameter position of arrow function
     {
-      code: `type Producer<T> = {
-        produce(input: string): T;
-      };`,
+      code: `type Consumer<T> = (item: T) => void;`,
+      errors: [{ messageId: "suggestIn" }],
+    },
+    // Type alias: T only in return position of arrow function
+    {
+      code: `type Producer<T> = () => T;`,
       errors: [{ messageId: "suggestOut" }],
     },
-    // Property with function type: U only in input, T only in output
+    // Multiple type parameters: first covariant, second contravariant
     {
-      code: `interface Consumer<T, U> {
-        accept: (value: U) => T;
+      code: `interface Mapper<A, B> {
+        map(input: B): A;
       }`,
       errors: [
         { messageId: "suggestOut" },
         { messageId: "suggestIn" },
       ],
+    },
+    // T in array of return types — still covariant
+    {
+      code: `interface BatchProducer<T> {
+        produce(): T[];
+      }`,
+      errors: [{ messageId: "suggestOut" }],
+    },
+    // T in tuple parameter — contravariant
+    {
+      code: `interface TupleConsumer<T> {
+        accept(pair: [T, string]): void;
+      }`,
+      errors: [{ messageId: "suggestIn" }],
     },
   ],
 });

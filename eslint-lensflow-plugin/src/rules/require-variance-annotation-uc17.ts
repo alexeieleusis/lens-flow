@@ -1,57 +1,12 @@
-import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
-import {
-  createVarianceDeclarationVisitor,
-  isUsedAsInputInBody,
-  isUsedAsOutputInBody,
-} from "../utils/variance-checker.js";
-import type { TSESTree } from "@typescript-eslint/types";
+import requireExplicitVariance from "./require-explicit-variance.js";
 
-export default createRule({
-  name: "require-variance-annotation-uc17",
-  meta: {
-    type: "suggestion",
-    docs: {
-      description:
-        "Require `in` or `out` variance annotation on generic type parameters used exclusively in input or output positions",
-    },
-    messages: {
-      suggestIn:
-        "Type parameter '{{paramName}}' is only used in input (parameter) positions. Add the `in` variance annotation to make contravariant intent explicit. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC17-variance.md",
-      suggestOut:
-        "Type parameter '{{paramName}}' is only used in output (return) positions. Add the `out` variance annotation to make covariant intent explicit. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC17-variance.md",
-    },
-    schema: [],
-  },
-  defaultOptions: [],
-  create(context: TSESLint.RuleContext<"suggestIn" | "suggestOut", []>) {
-    function checkDeclaration(
-      typeParams: TSESTree.TSTypeParameter[],
-      body: TSESTree.TSInterfaceBody | TSESTree.TSTypeLiteral,
-    ): void {
-      for (const tp of typeParams) {
-        if (tp.in || tp.out) continue;
-
-        const name = tp.name.name;
-        const usedInInput = isUsedAsInputInBody(body, name);
-        const usedInOutput = isUsedAsOutputInBody(body, name);
-
-        if (usedInInput && !usedInOutput) {
-          context.report({
-            node: tp,
-            messageId: "suggestIn",
-            data: { paramName: name },
-          });
-        } else if (!usedInInput && usedInOutput) {
-          context.report({
-            node: tp,
-            messageId: "suggestOut",
-            data: { paramName: name },
-          });
-        }
-      }
-    }
-
-    return createVarianceDeclarationVisitor(checkDeclaration);
-  },
-});
+/**
+ * @deprecated Use `require-explicit-variance` instead.
+ * This rule is functionally equivalent to `require-explicit-variance`.
+ * Both rules visit `TSInterfaceDeclaration` and `TSTypeAliasDeclaration`,
+ * detect type parameters used in a single variance position, and suggest
+ * `in` or `out` annotations. This module re-exports the base rule to
+ * maintain backward compatibility. Migrate to `require-explicit-variance`
+ * for the canonical implementation.
+ */
+export default requireExplicitVariance;
