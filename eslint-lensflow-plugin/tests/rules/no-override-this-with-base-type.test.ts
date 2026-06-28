@@ -73,5 +73,16 @@ ruleTester.run("no-override-this-with-base-type", rule, {
       }`,
       errors: [{ messageId: "overrideThisWithBaseType" }],
     },
+    {
+      code: `class Base {}
+      class Child extends Base {
+        getName(): string { return "child"; }
+      }
+      function f() {
+        class Base { getSelf(): this { return this; } }
+        class Inner extends Base { getSelf(): number { return 1; } }
+      }`,
+      errors: [{ messageId: "overrideThisWithBaseType" }],
+    },
   ],
 });
