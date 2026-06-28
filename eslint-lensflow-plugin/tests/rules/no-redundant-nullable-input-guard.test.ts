@@ -63,6 +63,18 @@ ruleTester.run("no-redundant-nullable-input-guard", rule, {
       ],
     },
     {
+      code: `const handleA = function(input: string | null | undefined) {
+        if (!input) { return ""; }
+      };
+      const handleB = function(input: string | null | undefined) {
+        if (!input) { return "default"; }
+      };`,
+      errors: [
+        { messageId: "redundantGuard" },
+        { messageId: "redundantGuard" },
+      ],
+    },
+    {
       code: `function processA(id: string | null) {
         if (someCondition) {
           if (!id) { return; }
