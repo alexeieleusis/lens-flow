@@ -62,5 +62,11 @@ ruleTester.run("no-redundant-infer-conditional", rule, {
       code: `type OnlyGreetings<T extends "hello" | "world"> = T extends "hello" | "world" ? T : never;`,
       errors: [{ messageId: "redundantConditional" }],
     },
+    {
+      filename: TEST_FILENAME,
+      code: `namespace TE { type Either = string | number; type Task = () => void; }
+type X<T extends TE.Either | TE.Task> = T extends TE.Either | TE.Task ? T : never;`,
+      errors: [{ messageId: "redundantConditional" }],
+    },
   ],
 });
