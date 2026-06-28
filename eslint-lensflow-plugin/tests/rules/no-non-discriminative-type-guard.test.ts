@@ -56,6 +56,32 @@ function isA(x: A | B): x is A {
   return "foo" in x;
 }`,
     },
+    {
+      // Nested non-type-guard function must not suppress outer guard check
+      filename: TEST_FILENAME,
+      code: `interface Cat { name: string; meow(): void }
+interface Dog { name: string; bark(): void }
+function isCat(a: Cat | Dog): a is Cat {
+  function helper(): boolean {
+    return true;
+  }
+  return "meow" in a;
+}`,
+    },
+    {
+      // Nested type guard with discriminating property — both valid
+      filename: TEST_FILENAME,
+      code: `interface Cat { name: string; meow(): void }
+interface Dog { name: string; bark(): void }
+interface Bird { name: string; fly(): void }
+interface Fish { name: string; swim(): void }
+function outer(a: Cat | Dog): a is Cat {
+  function inner(b: Bird | Fish): b is Bird {
+    return "fly" in b;
+  }
+  return "meow" in a;
+}`,
+    },
   ],
   invalid: [
     {
@@ -82,6 +108,34 @@ function isBird(a: Bird | Fish): a is Bird {
 interface B { id: number; y: string }
 const check = (v: A | B): v is A => "id" in v;`,
       errors: [{ messageId: "nonDiscriminative" }],
+    },
+    {
+      // Regression: nested non-type-guard function must not break outer guard detection
+      filename: TEST_FILENAME,
+      code: `interface Cat { name: string; meow(): void }
+interface Dog { name: string; bark(): void }
+function isCat(a: Cat | Dog): a is Cat {
+  function helper(): boolean {
+    return "meow" in ({} as any);
+  }
+  return "name" in a;
+}`,
+      errors: [{ messageId: "nonDiscriminative" }],
+    },
+    {
+      // Regression: nested type guard with own union must not clear outer guard
+      filename: TEST_FILENAME,
+      code: `interface Cat { name: string; meow(): void }
+interface Dog { name: string; bark(): void }
+interface Bird { name: string; fly(): void }
+interface Fish { name: string; swim(): void }
+function outer(a: Cat | Dog): a is Cat {
+  function inner(b: Bird | Fish): b is Bird {
+    return "name" in b;
+  }
+  return "name" in a;
+}`,
+      errors: [{ messageId: "nonDiscriminative" }, { messageId: "nonDiscriminative" }],
     },
   ],
 });
