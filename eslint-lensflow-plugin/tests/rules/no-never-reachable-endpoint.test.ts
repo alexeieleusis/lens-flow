@@ -69,5 +69,9 @@ ruleTester.run("no-never-reachable-endpoint", rule, {
       }`,
       errors: [{ messageId: "reachableEnd" }],
     },
+    {
+      code: `const exprArrow = (): never => someValue;`,
+      errors: [{ messageId: "reachableEnd" }],
+    },
   ],
 });

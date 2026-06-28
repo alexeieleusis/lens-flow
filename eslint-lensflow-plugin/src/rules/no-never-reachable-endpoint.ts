@@ -96,7 +96,12 @@ export default createRule({
         | TSESTree.FunctionExpression
         | TSESTree.ArrowFunctionExpression,
     ): void {
-      if (!node.body || node.body.type !== "BlockStatement") return;
+      if (!node.body) return;
+
+      if (node.body.type !== "BlockStatement") {
+        context.report({ node, messageId: "reachableEnd" });
+        return;
+      }
 
       const { body } = node.body;
       if (body.length === 0) {
