@@ -26,6 +26,8 @@ function dissolve(liquid: string) { /* ... */ }`,
     `function checkIsValid(valid: string) { /* ... */ }
 function setWidth(width: string) { /* ... */ }
 function getRadius(radius: string) { /* ... */ }`,
+    // Valid — single FunctionExpression callback, not enough to flag
+    `processArray(items, function(id: string) { return id; })`,
   ],
   invalid: [
     {
@@ -57,6 +59,14 @@ function getProduct(productId: string) { /* ... */ }`,
     {
       code: `const getUser = (id: string) => { /* ... */ };
 const getOrder = (id: string) => { /* ... */ };`,
+      errors: [
+        { messageId: "plainStringId" },
+        { messageId: "plainStringId" },
+      ],
+    },
+    {
+      code: `processArray(items, function(id: string) { return id; });
+processArray(orders, function(id: string) { return id; });`,
       errors: [
         { messageId: "plainStringId" },
         { messageId: "plainStringId" },
