@@ -19,6 +19,13 @@ function bar(label: string) { /* ... */ }`,
     // No type annotation on params
     `function getUser(id) { /* ... */ }
 function getOrder(id) { /* ... */ }`,
+    // Valid — names ending in "id" that are not IDs (regression test for regex false positives)
+    `function draw(grid: string) { /* ... */ }
+function dissolve(liquid: string) { /* ... */ }`,
+    // More false-positive regression cases
+    `function checkIsValid(valid: string) { /* ... */ }
+function setWidth(width: string) { /* ... */ }
+function getRadius(radius: string) { /* ... */ }`,
   ],
   invalid: [
     {
