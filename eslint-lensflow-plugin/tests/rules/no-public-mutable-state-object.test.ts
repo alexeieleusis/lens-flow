@@ -72,5 +72,43 @@ ruleTester.run("no-public-mutable-state-object", rule, {
       };`,
       errors: [{ messageId: "mutableStateObject" }],
     },
+    // Array<T> (TSTypeReference)
+    {
+      code: `type Account = {
+        balance: number;
+        items: Array<number>;
+      };`,
+      errors: [{ messageId: "mutableStateObject" }],
+    },
+    // ReadonlyArray<T> (TSTypeReference)
+    {
+      code: `type Wallet = {
+        transactions: ReadonlyArray<string>;
+      };`,
+      errors: [{ messageId: "mutableStateObject" }],
+    },
+    // Quoted string-literal key
+    {
+      code: `type BalanceTracker = {
+        "balance": number;
+        "owner": string;
+      };`,
+      errors: [{ messageId: "mutableStateObject" }],
+    },
+    // Parenthesized type (TSParenthesizedType)
+    {
+      code: `type Counter = {
+        count: (number);
+        label: (string);
+      };`,
+      errors: [{ messageId: "mutableStateObject" }],
+    },
+    // Intersection type (TSIntersectionType)
+    {
+      code: `type State = {
+        value: number & { tag: "x" };
+      };`,
+      errors: [{ messageId: "mutableStateObject" }],
+    },
   ],
 });
