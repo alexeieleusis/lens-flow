@@ -69,6 +69,34 @@ function hasSubsequentUse(
   return false;
 }
 
+function findNodeIndexInStatements(
+  statements: TSESTree.Statement[],
+  target: TSESTree.Node,
+): number {
+  for (let i = 0; i < statements.length; i++) {
+    if (statements[i] === target) return i;
+    for (const child of getChildren(statements[i], { skipTypeAnnotations: true })) {
+      if (FUNCTION_BOUNDARY_TYPES.has(child.type)) continue;
+      const nestedIdx = findNodeIndexInNode(child, target);
+      if (nestedIdx !== -1) return nestedIdx;
+    }
+  }
+  return -1;
+}
+
+function findNodeIndexInNode(
+  node: TSESTree.Node,
+  target: TSESTree.Node,
+): number {
+  for (const child of getChildren(node, { skipTypeAnnotations: true })) {
+    if (FUNCTION_BOUNDARY_TYPES.has(child.type)) continue;
+    if (child === target) return 0;
+    const nestedIdx = findNodeIndexInNode(child, target);
+    if (nestedIdx !== -1) return nestedIdx;
+  }
+  return -1;
+}
+
 export default createRule({
   name: "require-typestate-rebinding",
   meta: {
@@ -154,7 +182,7 @@ export default createRule({
     function checkAndReportConstDeclarator(
       declNode: TSESTree.VariableDeclaration,
       declarator: TSESTree.VariableDeclarator,
-      body: TSESTree.Statement[],
+      scopeBody: TSESTree.Statement[],
       idx: number,
       objId: TSESTree.Identifier,
     ) {
@@ -171,7 +199,7 @@ export default createRule({
 
       if (
         hasSubsequentUse(
-          body,
+          scopeBody,
           idx + 1,
           objId.name,
         )
@@ -191,7 +219,7 @@ export default createRule({
     function processConstDeclarations(
       node: TSESTree.VariableDeclaration,
       currentScope: ScopeFrame,
-      body: TSESTree.Statement[],
+      scopeBody: TSESTree.Statement[],
       idx: number,
     ) {
       for (const declarator of node.declarations) {
@@ -204,16 +232,14 @@ export default createRule({
         const foundBinding = findLetBinding(objId.name);
         if (!foundBinding) continue;
 
-        if (
-          foundBinding.scopeBody !== body ||
-          foundBinding.letIdx >= idx
-        )
-          continue;
+        if (foundBinding.letIdx >= idx) continue;
+
+        if (currentScope.stmtBody !== foundBinding.scopeBody) continue;
 
         checkAndReportConstDeclarator(
           node,
           declarator,
-          body,
+          scopeBody,
           idx,
           objId,
         );
@@ -235,17 +261,20 @@ export default createRule({
       },
 
       VariableDeclaration(node) {
-        const currentScope = getCurrentScope();
-        const body = currentScope.stmtBody;
-        if (!body) return;
+        for (let i = scopeStack.length - 1; i >= 0; i--) {
+          const scope = scopeStack[i];
+          const body = scope.stmtBody;
+          if (!body) continue;
 
-        const idx = body.indexOf(node);
-        if (idx === -1) return;
+          const idx = findNodeIndexInStatements(body, node);
+          if (idx === -1) continue;
 
-        if (node.kind === "let") {
-          registerLetBindings(node, currentScope, body, idx);
-        } else if (node.kind === "const") {
-          processConstDeclarations(node, currentScope, body, idx);
+          if (node.kind === "let") {
+            registerLetBindings(node, scope, body, idx);
+          } else if (node.kind === "const") {
+            processConstDeclarations(node, scope, body, idx);
+          }
+          return;
         }
       },
     };
