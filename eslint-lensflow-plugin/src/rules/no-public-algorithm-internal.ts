@@ -72,20 +72,33 @@ function unwrapAndCheckType(typeNode: TSESTree.TypeNode): boolean {
 }
 
 function hasMethodAccessingProperty(classBody: TSESTree.ClassBody, propertyName: string): boolean {
+  const accessesProperty = (body: TSESTree.Node) =>
+    walkNodes(body, (node) => {
+      return (
+        node.type === "MemberExpression" &&
+        node.object.type === "ThisExpression" &&
+        node.property.type === "Identifier" &&
+        node.property.name === propertyName
+      );
+    });
+
   for (const member of classBody.body) {
-    if (
-      member.type === "MethodDefinition" &&
-      member.value.body
-    ) {
+    if (member.type === "MethodDefinition" && member.value.body) {
+      if (accessesProperty(member.value.body)) {
+        return true;
+      }
+    }
+    if (member.type === "PropertyDefinition" && member.value) {
       if (
-        walkNodes(member.value.body, (node) => {
-          return (
-            node.type === "MemberExpression" &&
-            node.object.type === "ThisExpression" &&
-            node.property.type === "Identifier" &&
-            node.property.name === propertyName
-          );
-        })
+        member.value.type === "ArrowFunctionExpression" &&
+        accessesProperty(member.value)
+      ) {
+        return true;
+      }
+      if (
+        member.value.type === "FunctionExpression" &&
+        member.value.body &&
+        accessesProperty(member.value.body)
       ) {
         return true;
       }

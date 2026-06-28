@@ -124,5 +124,16 @@ ruleTester.run("no-public-algorithm-internal", rule, {
       }`,
       errors: [{ messageId: "publicInternalState" }],
     },
+    // Class-field arrow function accessing internal property
+    {
+      code: `class Sorter {
+        buffer: number[] = [];
+        sort = (nums: number[]) => {
+          this.buffer.push(...nums);
+          return this.buffer;
+        }
+      }`,
+      errors: [{ messageId: "publicInternalState" }],
+    },
   ],
 });
