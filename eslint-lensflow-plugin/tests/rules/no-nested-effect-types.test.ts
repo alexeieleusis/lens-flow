@@ -18,6 +18,20 @@ ruleTester.run("no-nested-effect-types", rule, {
     `type State =
   | { kind: "pending" }
   | { kind: "complete" };`,
+    // ArrowFunctionExpression — valid
+    `const fetchUser = async (id: string): Promise<User> => {
+  return fetch(\`/users/\${id}\`).then(r => r.json());
+}`,
+    // FunctionExpression — valid
+    `const handler = function(): Result<User, Error> {
+  return ok({ name: "test" });
+}`,
+    // TSDeclareFunction — valid
+    `declare function init(): Promise<void>;`,
+    // TSMethodSignature — valid
+    `interface Service {
+  getUser(id: string): Promise<User>;
+}`,
   ],
   invalid: [
     {
@@ -51,6 +65,32 @@ ruleTester.run("no-nested-effect-types", rule, {
     {
       code: `function f(): TE.TaskEither<E, Promise<A>> {
   throw new Error();
+}`,
+      errors: [{ messageId: "nestedEffect" }],
+    },
+    // ArrowFunctionExpression — invalid
+    {
+      code: `const fetchUser = async (id: string): Promise<Promise<User>> => {
+  return Promise.resolve(fetch(\`/users/\${id}\`).then(r => r.json()));
+}`,
+      errors: [{ messageId: "nestedEffect" }],
+    },
+    // FunctionExpression — invalid
+    {
+      code: `const handler = function(): Promise<Promise<number>> {
+  return Promise.resolve(Promise.resolve(42));
+}`,
+      errors: [{ messageId: "nestedEffect" }],
+    },
+    // TSDeclareFunction — invalid
+    {
+      code: `declare function loadData(): Promise<Result<Promise<User>, Error>>;`,
+      errors: [{ messageId: "nestedEffect" }],
+    },
+    // TSMethodSignature — invalid
+    {
+      code: `interface Service {
+  getUser(id: string): Promise<Promise<User>>;
 }`,
       errors: [{ messageId: "nestedEffect" }],
     },
