@@ -24,5 +24,30 @@ ruleTester.run("no-object-freeze-without-readonly-annotation", rule, {
       code: `const x = wrap(Object.freeze({ a: 1 }));`,
       errors: [{ messageId: "missingReadonly" }],
     },
+    {
+      code: `
+        const handler = (): Readonly<{ a: number }> => {
+          const inner = Object.freeze({ a: 1 });
+          return inner as Readonly<{ a: number }>;
+        };
+      `,
+      errors: [{ messageId: "missingReadonly" }],
+    },
+    {
+      code: `const fn = () => Object.freeze({ a: 1 });`,
+      errors: [{ messageId: "missingReadonly" }],
+    },
+    {
+      code: `let config = Object.freeze({ a: 1 });`,
+      errors: [{ messageId: "missingReadonly" }],
+    },
+    {
+      code: `var config = Object.freeze({ a: 1 });`,
+      errors: [{ messageId: "missingReadonly" }],
+    },
+    {
+      code: `const { config } = Object.freeze({ config: { a: 1 } });`,
+      errors: [{ messageId: "missingReadonly" }],
+    },
   ],
 });
