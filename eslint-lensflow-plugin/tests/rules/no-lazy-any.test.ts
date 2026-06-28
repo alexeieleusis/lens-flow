@@ -88,5 +88,20 @@ function processData(x: Input): number {
       code: `function f([a, b]: any): any { return a + b; }`,
       errors: [{ messageId: "lazyAny" }],
     },
+    // TSDeclareFunction
+    {
+      code: `declare function external(x: any): any;`,
+      errors: [{ messageId: "lazyAny" }],
+    },
+    // TSMethodSignature
+    {
+      code: `interface I { handle(x: any): any }`,
+      errors: [{ messageId: "lazyAny" }],
+    },
+    // MethodDefinition
+    {
+      code: `class C { handle(x: any): any { return x; } }`,
+      errors: [{ messageId: "lazyAny" }],
+    },
   ],
 });

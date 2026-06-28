@@ -72,12 +72,7 @@ export default createRule({
       TSFunctionType: checkFunctionNode,
       TSDeclareFunction: checkFunctionNode,
       TSMethodSignature: checkFunctionNode,
-      TSCallSignatureDeclaration: checkFunctionNode,
-      MethodDefinition(node: TSESTree.MethodDefinition) {
-        if (node.value.body !== null) {
-          checkFunctionNode(node.value);
-        }
-      },
+     TSCallSignatureDeclaration: checkFunctionNode,
     };
   },
 });
