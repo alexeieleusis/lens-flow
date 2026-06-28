@@ -8,6 +8,14 @@ ruleTester.run("no-overly-complex-bound", rule, {
       name: string;
       value: number;
     }`,
+    // Interface without constructor but with deep nesting (should NOT flag)
+    `interface DeepConfig {
+      options: {
+        level: {
+          nested: string;
+        };
+      };
+    }`,
     // Correct: split interfaces with 2-member intersection (below threshold)
     `interface Constructable<T> { new(): T }
 interface HasId { id: string }
