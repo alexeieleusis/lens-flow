@@ -16,5 +16,13 @@ ruleTester.run("no-partial-record", rule, {
       code: `type Handlers = Partial<Record<string, number>>;`,
       errors: [{ messageId: "noPartialRecord" }],
     },
+    {
+      code: `type Handlers = Utils.Partial<Utils.Record<HttpMethod, Handler>>;`,
+      errors: [{ messageId: "noPartialRecord" }],
+    },
+    {
+      code: `type M = NS.Partial<NS.Record<string, boolean>>;`,
+      errors: [{ messageId: "noPartialRecord" }],
+    },
   ],
 });

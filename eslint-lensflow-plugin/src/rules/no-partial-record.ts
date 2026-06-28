@@ -21,22 +21,29 @@ export default createRule({
     return {
       TSTypeReference(node) {
         const typeName = node.typeName;
-        if (
-          typeName.type === "Identifier" &&
-          typeName.name === "Partial"
-        ) {
+        const outerName =
+          typeName.type === "Identifier"
+            ? typeName.name
+            : typeName.type === "TSQualifiedName"
+              ? typeName.right.name
+              : null;
+        if (outerName === "Partial") {
           const params = node.typeArguments?.params;
           if (params && params.length >= 1) {
             const innerType = params[0];
-            if (
-              innerType.type === "TSTypeReference" &&
-              innerType.typeName.type === "Identifier" &&
-              innerType.typeName.name === "Record"
-            ) {
-              context.report({
-                node,
-                messageId: "noPartialRecord",
-              });
+            if (innerType.type === "TSTypeReference") {
+              const innerName =
+                innerType.typeName.type === "Identifier"
+                  ? innerType.typeName.name
+                  : innerType.typeName.type === "TSQualifiedName"
+                    ? innerType.typeName.right.name
+                    : null;
+              if (innerName === "Record") {
+                context.report({
+                  node,
+                  messageId: "noPartialRecord",
+                });
+              }
             }
           }
         }
