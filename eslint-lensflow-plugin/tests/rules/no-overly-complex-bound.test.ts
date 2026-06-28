@@ -52,6 +52,12 @@ function process<T extends Constructable<T> & HasId>(x: T): void {}`,
     `const fn = <T extends { a: string; b: number }>() => {}`,
     // TSFunctionType inside type alias with 2 properties (below threshold)
     `type Handler = <T extends { a: string; b: number }>() => void`,
+    // Parenthesized type with 2 properties (below threshold) — unwrapped correctly
+    `function foo<T extends ({ a: string; b: number })>(x: T): void {}`,
+    // Union with non-object member and 2-property literal — unwrapped correctly
+    `function foo<T extends string | { a: string; b: number }>(x: T): void {}`,
+    // Intersection nested inside a parenthesized type, 2 members (below threshold)
+    `function foo<T extends ({ a: string } & { b: number })>(x: T): void {}`,
   ],
   invalid: [
     // Antipattern: interface with construct signature + nested type literal with 3 properties
@@ -135,6 +141,21 @@ function bar<T extends { first: string; second: number }>(x: T): void {}`,
     {
       code: `type Handler = <T extends { a: string; b: number; c: boolean }>() => void`,
       errors: [{ messageId: "complexTypeLiteral" }],
+    },
+    // Parenthesized type literal with 3+ properties — must unwrap and detect
+    {
+      code: `function foo<T extends ({ a: string; b: number; c: boolean })>(x: T): void {}`,
+      errors: [{ messageId: "complexTypeLiteral" }],
+    },
+    // Union-wrapped constraint with 3+ property literal — must unwrap and detect
+    {
+      code: `function foo<T extends string | { a: string; b: number; c: boolean }>(x: T): void {}`,
+      errors: [{ messageId: "complexTypeLiteral" }],
+    },
+    // Intersection nested inside a parenthesized type, 3+ members — must unwrap and detect
+    {
+      code: `function foo<T extends ({ a: string } & { b: number } & { c: boolean })>(x: T): void {}`,
+      errors: [{ messageId: "complexIntersection" }],
     },
   ],
 });

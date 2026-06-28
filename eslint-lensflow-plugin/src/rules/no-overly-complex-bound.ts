@@ -25,11 +25,22 @@ function getMaxIntersectionDepth(types: TSESTree.TypeNode[]): number {
 }
 
 function getNestingDepth(node: TSESTree.TypeNode): number {
+  if (node.type === "TSParenthesizedType") {
+    return getNestingDepth(node.typeAnnotation);
+  }
   if (node.type === "TSTypeLiteral") {
     return 1 + getMaxPropertyDepth(node.members);
   }
   if (node.type === "TSIntersectionType") {
     return getMaxIntersectionDepth(node.types);
+  }
+  if (node.type === "TSUnionType") {
+    let maxDepth = 0;
+    for (const member of node.types) {
+      const depth = getNestingDepth(member);
+      if (depth > maxDepth) maxDepth = depth;
+    }
+    return maxDepth;
   }
   return 0;
 }
@@ -164,8 +175,14 @@ export default createRule({
       }
 
       for (const member of constraint.types) {
-        if (member.type === "TSTypeLiteral") {
-          checkTypeLiteral(member, member);
+        let inner = member;
+        if (inner.type === "TSParenthesizedType") {
+          inner = inner.typeAnnotation;
+        }
+        if (inner.type === "TSTypeLiteral") {
+          checkTypeLiteral(inner, member);
+        } else if (inner.type === "TSIntersectionType") {
+          checkIntersection(inner, reportNode);
         }
       }
     }
@@ -174,8 +191,20 @@ export default createRule({
       constraint: TSESTree.TypeNode,
       reportNode: TSESTree.TSTypeParameter,
     ) {
+      if (constraint.type === "TSParenthesizedType") {
+        checkConstraint(constraint.typeAnnotation, reportNode);
+        return;
+      }
+
       if (constraint.type === "TSIntersectionType") {
         checkIntersection(constraint, reportNode);
+        return;
+      }
+
+      if (constraint.type === "TSUnionType") {
+        for (const member of constraint.types) {
+          checkConstraint(member, reportNode);
+        }
         return;
       }
 
