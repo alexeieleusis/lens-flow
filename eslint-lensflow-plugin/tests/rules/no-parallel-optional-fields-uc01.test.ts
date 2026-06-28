@@ -46,6 +46,13 @@ ruleTester.run("no-parallel-optional-fields-uc01", rule, {
       };`,
       options: [{ minOptionalFields: 2, minTotalFields: 3 }],
     },
+    {
+      code: `interface Border {
+        a?: string;
+        b?: number;
+      }`,
+      options: [{ minOptionalFields: 2, minTotalFields: 3 }],
+    },
   ],
   invalid: [
     {
