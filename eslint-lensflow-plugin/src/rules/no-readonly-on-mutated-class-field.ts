@@ -18,8 +18,8 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"mutationOfReadonly", []>) {
-    let currentReadonlyFields: Set<string> | null = null;
-    let isInConstructor = false;
+    const readonlyFieldsStack: (Set<string> | null)[] = [];
+    let constructorDepth = 0;
 
     return {
       ClassBody(node) {
@@ -33,25 +33,41 @@ export default createRule({
           ) {
             readonlyFields.add(member.key.name);
           }
+
+          if (
+            member.type === "MethodDefinition" &&
+            member.kind === "constructor" &&
+            member.value
+          ) {
+            for (const param of member.value.params) {
+              if (param.type === "TSParameterProperty") {
+                const inner = param.parameter;
+                if (inner.type === "Identifier") {
+                  readonlyFields.add(inner.name);
+                }
+              }
+            }
+          }
         }
 
-        currentReadonlyFields = readonlyFields.size > 0 ? readonlyFields : null;
+        readonlyFieldsStack.push(readonlyFields.size > 0 ? readonlyFields : null);
       },
       "ClassBody:exit"() {
-        currentReadonlyFields = null;
+        readonlyFieldsStack.pop();
       },
       MethodDefinition(node) {
         if (node.kind === "constructor") {
-          isInConstructor = true;
+          constructorDepth++;
         }
       },
       "MethodDefinition:exit"(node) {
         if (node.kind === "constructor") {
-          isInConstructor = false;
+          constructorDepth--;
         }
       },
       AssignmentExpression(node) {
-        if (!currentReadonlyFields || isInConstructor) return;
+        const currentReadonlyFields = readonlyFieldsStack[readonlyFieldsStack.length - 1];
+        if (!currentReadonlyFields || constructorDepth > 0) return;
 
         if (
           node.left.type === "MemberExpression" &&
@@ -69,7 +85,8 @@ export default createRule({
         }
       },
       UpdateExpression(node) {
-        if (!currentReadonlyFields || isInConstructor) return;
+        const currentReadonlyFields = readonlyFieldsStack[readonlyFieldsStack.length - 1];
+        if (!currentReadonlyFields || constructorDepth > 0) return;
 
         if (
           node.argument.type === "MemberExpression" &&

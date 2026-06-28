@@ -22,6 +22,16 @@ ruleTester.run("no-readonly-on-mutated-class-field", rule, {
       readonly count = 0;
       reset() { this.other = 5; }
     }`,
+    `class Outer {
+      readonly count = 0;
+      constructor() {
+        class Inner {
+          readonly x = 1;
+          constructor() { this.x = 2; }
+        }
+        this.count = 1;
+      }
+    }`,
   ],
   invalid: [
     {
@@ -67,5 +77,17 @@ ruleTester.run("no-readonly-on-mutated-class-field", rule, {
       }`,
       errors: [{ messageId: "mutationOfReadonly" }],
     },
-  ],
+    {
+      code: `class Outer {
+        readonly count = 0;
+        inner() {
+          class Inner {
+            readonly x = 1;
+          }
+          this.count = 1;
+        }
+      }`,
+      errors: [{ messageId: "mutationOfReadonly" }],
+    },
+   ],
 });
