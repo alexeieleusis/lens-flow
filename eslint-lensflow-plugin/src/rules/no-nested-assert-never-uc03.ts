@@ -65,6 +65,11 @@ function findAncestorIf(node: TSESTree.Node): TSESTree.IfStatement | null {
   while (current) {
     const parent = (current as unknown as Record<string, unknown>)["parent"] as TSESTree.Node | null;
     if (!parent) return null;
+    if (
+      parent.type === "FunctionDeclaration" ||
+      parent.type === "FunctionExpression" ||
+      parent.type === "ArrowFunctionExpression"
+    ) return null;
     if (parent.type === "IfStatement") return parent;
     current = parent;
   }

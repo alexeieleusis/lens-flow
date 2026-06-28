@@ -52,6 +52,19 @@ function handle(a: Action) {
     }
   }
 }`,
+    // Switch inside nested function scope — must not attribute outer if as ancestor
+    `type Action = { type: "a" } | { type: "b" };
+
+function handle(a: Action) {
+  if (a.type !== "b") {
+    fn(() => {
+      switch (a.type) {
+        case "a": console.log("a"); break;
+        default: assertNever(a);
+      }
+    });
+  }
+}`,
   ],
   invalid: [
     // Basic pattern: if filters on same discriminant, nested switch has assertNever
