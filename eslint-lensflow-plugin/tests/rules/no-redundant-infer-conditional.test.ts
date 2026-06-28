@@ -50,6 +50,10 @@ ruleTester.run("no-redundant-infer-conditional", rule, {
       filename: TEST_FILENAME,
       code: `type OnlyGreetings<T> = T extends "hello" | "world" ? T : never;`,
     },
+    {
+      filename: TEST_FILENAME,
+      code: `type X<T> = T extends string ? T : never;`,
+    },
   ],
   invalid: [
     {
