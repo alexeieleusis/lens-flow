@@ -76,6 +76,10 @@ ruleTester.run("no-redundant-nullable-input-guard", rule, {
         if (!id) { return; }
       });
     }`,
+    // Single function with symbol | null — no duplicate to flag
+    `function handleSymbol(sym: symbol | null) {
+      if (!sym) { return; }
+    }`,
   ],
   invalid: [
     {
@@ -136,6 +140,18 @@ ruleTester.run("no-redundant-nullable-input-guard", rule, {
         for (const x of list) {
           if (!id) { break; }
         }
+      }`,
+      errors: [
+        { messageId: "redundantGuard" },
+        { messageId: "redundantGuard" },
+      ],
+    },
+    {
+      code: `function handleSym(sym: symbol | null) {
+        if (!sym) { return; }
+      }
+      function checkSym(sym: symbol | null) {
+        if (!sym) { return; }
       }`,
       errors: [
         { messageId: "redundantGuard" },

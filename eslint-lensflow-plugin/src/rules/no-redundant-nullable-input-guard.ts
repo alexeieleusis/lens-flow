@@ -66,7 +66,29 @@ function getNullableTypeSignature(typeAnn: TSESTree.TypeNode): string | null {
   if (primitiveType === "TSStringKeyword") return "string-nullable";
   if (primitiveType === "TSNumberKeyword") return "number-nullable";
   if (primitiveType === "TSBooleanKeyword") return "boolean-nullable";
+  if (primitiveType === "TSSymbolKeyword") return "symbol-nullable";
   return "other-nullable";
+}
+
+function hasNestedFunction(node: TSESTree.Node): boolean {
+  if (node.type === "ArrowFunctionExpression" || node.type === "FunctionExpression")
+    return true;
+  const children: TSESTree.Node[] = [];
+  const skipProps = new Set(["loc", "range", "parent", "start", "end"]);
+  for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
+    if (skipProps.has(key) || !value || typeof value !== "object") continue;
+    if ("type" in value) {
+      if (Array.isArray(value)) {
+        for (const item of value) {
+          if (item && typeof item === "object" && "type" in item)
+            children.push(item as TSESTree.Node);
+        }
+      } else {
+        children.push(value as TSESTree.Node);
+      }
+    }
+  }
+  return children.some(hasNestedFunction);
 }
 
 function referencesParam(expr: TSESTree.Expression | TSESTree.PrivateIdentifier | null | undefined, paramName: string): boolean {
@@ -159,6 +181,9 @@ function findGuardInBody(body: TSESTree.BlockStatement, paramName: string): stri
     if (depth > NESTING_LIMIT) return null;
 
     for (const stmt of stmts.slice(0, 10)) {
+      // Skip statements containing nested functions — guards inside belong to different scope
+      if (hasNestedFunction(stmt)) continue;
+
       if (stmt.type === "IfStatement") {
         const pattern = normalizeGuardPattern(stmt.test, paramName);
         if (pattern) return pattern;
