@@ -18,11 +18,11 @@ const defaults = { host: "localhost", port: 5432 };
 function mergeDb(overrides: Partial<DbConfig>) {
   return { ...defaults, ...overrides };
 }`,
-    // Non-matching type names (lowercase after prefix)
-    `type Withhost = HasState<"Withhost">;
-type Withport = HasState<"Withport">;
-type Withdbname = HasState<"Withdbname">;
-type Withpool = HasState<"Withpool">;`,
+    // Types that don't match /^With[A-Z] or /^No[A-Z]/ — below threshold
+    `type MyWithhost = HasState<"MyWithhost">;
+type MyWithport = HasState<"MyWithport">;
+type MyWithdbname = HasState<"MyWithdbname">;
+type MyWithpool = HasState<"MyWithpool">;`,
     // Custom threshold — 4 markers but maxMarkers set to 5
     {
       code: `type WithHost = HasState<"WithHost">;
