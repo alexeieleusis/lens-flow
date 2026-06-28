@@ -1,5 +1,5 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 const INTRINSIC_TRANSFORMS = new Set([
   "Uppercase",
@@ -7,6 +7,13 @@ const INTRINSIC_TRANSFORMS = new Set([
   "Capitalize",
   "Uncapitalize",
 ]);
+
+function isWideStringType(node: TSESTree.TSType): boolean {
+  if (node.type === "TSStringKeyword") return true;
+  if (node.type === "TSIntersectionType" || node.type === "TSUnionType")
+    return node.types.every(isWideStringType);
+  return false;
+}
 
 export default createRule({
   name: "no-intrinsic-transform-on-wide-string",
@@ -36,8 +43,7 @@ export default createRule({
         const params = node.typeArguments?.params;
         if (params?.length !== 1) return;
 
-        let typeParam = params[0];
-        if (typeParam.type !== "TSStringKeyword") return;
+        if (!isWideStringType(params[0])) return;
 
         context.report({
           node,

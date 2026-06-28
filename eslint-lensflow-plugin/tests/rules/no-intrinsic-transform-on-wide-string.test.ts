@@ -38,5 +38,37 @@ type Lower = Lowercase<string>;`,
       code: `type Wrapper<T> = { upper: Uppercase<string>; };`,
       errors: [{ messageId: "noEffect" }],
     },
+    {
+      code: `type Result = Uppercase<string & string>;`,
+      errors: [{ messageId: "noEffect" }],
+    },
+    {
+      code: `type Result = Lowercase<string & string>;`,
+      errors: [{ messageId: "noEffect" }],
+    },
+    {
+      code: `type Result = Capitalize<string & string>;`,
+      errors: [{ messageId: "noEffect" }],
+    },
+    {
+      code: `type Result = Uncapitalize<string & string>;`,
+      errors: [{ messageId: "noEffect" }],
+    },
+    {
+      code: `type Result = Uppercase<string | string>;`,
+      errors: [{ messageId: "noEffect" }],
+    },
+    {
+      code: `type Result = Lowercase<string | string>;`,
+      errors: [{ messageId: "noEffect" }],
+    },
+    {
+      code: `type Result = Capitalize<string | string>;`,
+      errors: [{ messageId: "noEffect" }],
+    },
+    {
+      code: `type Result = Uncapitalize<string | string>;`,
+      errors: [{ messageId: "noEffect" }],
+    },
   ],
 });
