@@ -36,6 +36,16 @@ ruleTester.run("no-mutable-state-runtime-guards", rule, {
         handler();
       }
     }`,
+    `class ElseThrowNonState {
+      count: number = 0;
+      check() {
+        if (this.count === 0) {
+          // do something
+        } else {
+          throw new Error("must be zero");
+        }
+      }
+    }`,
   ],
   invalid: [
     {
@@ -76,6 +86,19 @@ ruleTester.run("no-mutable-state-runtime-guards", rule, {
         { messageId: "mutableStateRuntimeGuard" },
         { messageId: "mutableStateRuntimeGuard" },
       ],
+    },
+    {
+      code: `class ElseThrowGuard {
+        state: "a" | "b" = "a";
+        run() {
+          if (this.state === "b") {
+            // do something
+          } else {
+            throw new Error("must be b");
+          }
+        }
+      }`,
+      errors: [{ messageId: "mutableStateRuntimeGuard" }],
     },
   ],
 });
