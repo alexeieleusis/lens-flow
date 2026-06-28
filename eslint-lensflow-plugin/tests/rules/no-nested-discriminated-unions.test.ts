@@ -19,6 +19,10 @@ ruleTester.run("no-nested-discriminated-unions", rule, {
     `type DeeplyNested =
       | { kind: "a"; data: { nested: { kind: "x" | "y"; val: number } } }
       | { kind: "b"; data: { nested: { kind: "x"; val: string } } };`,
+    // Union nested inside a deeper object is NOT a direct property union
+    `type NotDirectUnion =
+      | { kind: "outer"; data: { inner: { kind: "x" } | { kind: "y" } } }
+      | { kind: "err"; code: number };`,
   ],
   invalid: [
     {
@@ -43,6 +47,18 @@ ruleTester.run("no-nested-discriminated-unions", rule, {
       code: `type QuotedKind =
         | { "kind": "ok"; inner: { "kind": "a"; x: number } | { "kind": "b"; y: string } }
         | { "kind": "err"; code: number };`,
+      errors: [{ messageId: "nestedDiscriminatedUnion" }],
+    },
+    {
+      code: `type Parenthesized =
+        | { kind: "outer"; child: ({ kind: "a"; x: number } | { kind: "b"; y: string }) }
+        | { kind: "err"; code: number };`,
+      errors: [{ messageId: "nestedDiscriminatedUnion" }],
+    },
+    {
+      code: `type IntersectionUnion =
+        | { kind: "outer"; prop: Base & ({ kind: "a"; x: number } | { kind: "b"; y: string }) }
+        | { kind: "err"; code: number };`,
       errors: [{ messageId: "nestedDiscriminatedUnion" }],
     },
   ],
