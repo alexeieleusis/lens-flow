@@ -92,5 +92,12 @@ type ScrollShape = { kind: "scroll"; top: number };
 type Event = ClickEvent | ScrollShape;`,
       errors: [{ messageId: "mixed" }],
     },
+    // Parenthesized type literal + class — TSParenthesizedType must be unwrapped
+    {
+      filename: TEST_FILENAME,
+      code: `class ClickEvent { x: number }
+type Event = ClickEvent | ({ kind: "scroll"; top: number });`,
+      errors: [{ messageId: "mixed" }],
+    },
   ],
 });

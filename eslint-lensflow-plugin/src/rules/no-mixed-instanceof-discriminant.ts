@@ -71,7 +71,9 @@ export default createRule({
         let hasLiteralObjectMember = false;
 
         for (const member of members) {
-          const memberTsType = parserServices.getTypeAtLocation(member);
+          const unwrapped =
+            member.type === "TSParenthesizedType" ? member.typeAnnotation : member;
+          const memberTsType = parserServices.getTypeAtLocation(unwrapped);
 
           if (isClassType(memberTsType)) {
             hasClassMember = true;
