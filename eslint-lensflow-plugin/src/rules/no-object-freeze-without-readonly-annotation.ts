@@ -2,14 +2,20 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { AST_NODE_TYPES } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
+function getTypeNameIdentifier(node: TSESTree.Node | undefined): string | null {
+  if (!node) return null;
+  if (node.type === AST_NODE_TYPES.Identifier) return node.name;
+  if (node.type === AST_NODE_TYPES.TSQualifiedName) return getTypeNameIdentifier(node.right);
+  return null;
+}
+
 function hasAsConst(declarator: TSESTree.VariableDeclarator): boolean {
   const init = declarator.init;
   if (!init) return false;
   if (
     init.type === AST_NODE_TYPES.TSAsExpression &&
     init.typeAnnotation.type === AST_NODE_TYPES.TSTypeReference &&
-    init.typeAnnotation.typeName?.type === AST_NODE_TYPES.Identifier &&
-    init.typeAnnotation.typeName.name === "const"
+    getTypeNameIdentifier(init.typeAnnotation.typeName) === "const"
   ) {
     return true;
   }
@@ -21,8 +27,7 @@ function hasReadonlyAnnotation(declarator: TSESTree.VariableDeclarator): boolean
     const ann = declarator.id.typeAnnotation;
     if (
       ann.typeAnnotation?.type === AST_NODE_TYPES.TSTypeReference &&
-      ann.typeAnnotation.typeName?.type === AST_NODE_TYPES.Identifier &&
-      ann.typeAnnotation.typeName.name === "Readonly"
+      getTypeNameIdentifier(ann.typeAnnotation.typeName) === "Readonly"
     ) {
       return true;
     }
@@ -32,8 +37,7 @@ function hasReadonlyAnnotation(declarator: TSESTree.VariableDeclarator): boolean
     if (
       init.type === AST_NODE_TYPES.TSAsExpression &&
       init.typeAnnotation?.type === AST_NODE_TYPES.TSTypeReference &&
-      init.typeAnnotation.typeName?.type === AST_NODE_TYPES.Identifier &&
-      init.typeAnnotation.typeName.name === "Readonly"
+      getTypeNameIdentifier(init.typeAnnotation.typeName) === "Readonly"
     ) {
       return true;
     }
