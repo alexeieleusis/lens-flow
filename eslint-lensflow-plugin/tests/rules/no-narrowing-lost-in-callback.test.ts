@@ -61,6 +61,26 @@ ruleTester.run("no-narrowing-lost-in-callback", rule, {
   }
 }`,
     },
+    {
+      filename: TEST_FILENAME,
+      code: `function render(value: string | null) {
+  if (value != null) {
+    setTimeout((value) => console.log(value.length), 0);
+  }
+}`,
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `function render(value: string | null) {
+  if (value != null) {
+    someFn(() => {
+      const inner = (value: string) => {
+        setTimeout(() => console.log(value.length), 0);
+      };
+    });
+  }
+}`,
+    },
   ],
   invalid: [
     {
