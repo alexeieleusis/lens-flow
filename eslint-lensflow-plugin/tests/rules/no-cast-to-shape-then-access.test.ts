@@ -40,5 +40,11 @@ ruleTester.run("no-cast-to-shape-then-access", rule, {
 }`,
       errors: [{ messageId: "castToShapeThenAccess" }],
     },
+    {
+      code: `function getIdNonNull(obj: { data: any }) {
+  return (obj.data as { id: string })!.id;
+}`,
+      errors: [{ messageId: "castToShapeThenAccess" }],
+    },
   ],
 });
