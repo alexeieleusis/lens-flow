@@ -42,6 +42,34 @@ ruleTester.run("no-redundant-nullable-input-guard", rule, {
     `function handle([id]: [string | null]) {
       if (!id) { return; }
     }`,
+    // Guard nested inside an inner if — single function, no duplicate to flag
+    `function processNestedIf(id: string | null) {
+      if (someCondition) {
+        if (!id) { return; }
+      }
+    }`,
+    // Guard nested inside a for loop — single function, no duplicate to flag
+    `function processInLoop(id: string | null) {
+      for (const item of items) {
+        if (!id) { break; }
+      }
+    }`,
+    // Guard nested inside a try block — single function, no duplicate to flag
+    `function processInTry(id: string | null) {
+      try {
+        if (!id) { throw new Error("missing"); }
+      } catch (e) {
+        console.error(e);
+      }
+    }`,
+    // Guard nested inside for + inner if — single function, no duplicate to flag
+    `function processDeeplyNested(id: string | null) {
+      for (const item of items) {
+        if (item.active) {
+          if (!id) { continue; }
+        }
+      }
+    }`,
   ],
   invalid: [
     {
