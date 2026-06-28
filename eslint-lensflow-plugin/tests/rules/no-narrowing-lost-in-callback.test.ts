@@ -99,6 +99,36 @@ ruleTester.run("no-narrowing-lost-in-callback", rule, {
   }
 }`,
     },
+    {
+      // Scope shadowing regression: a nested function parameter with the same name
+      // as the outer narrowed variable should NOT trigger the rule. The only
+      // references to `value` in the callback body are inside the nested function
+      // where it's shadowed by the parameter. findIdentifierInNode stops at function
+      // boundaries, so the shadowed `value` should not be found.
+      filename: TEST_FILENAME,
+      code: `function render(value: string | null) {
+  if (value != null) {
+    setTimeout(() => {
+      const handler = (value: string) => console.log(value.length);
+      handler("test");
+    }, 0);
+  }
+}`,
+    },
+    {
+      // Nested function boundary test: a callback defined inside a nested function
+      // within the if block. The findCallbacks walker skips function bodies, so the
+      // inner setTimeout should NOT be discovered as a callback of the outer if block.
+      // Only the outer callback (if any) at the direct if-block level should be found.
+      filename: TEST_FILENAME,
+      code: `function render(value: string | null) {
+  if (value != null) {
+    const nested = () => {
+      setTimeout(() => console.log(value.length), 0);
+    };
+  }
+}`,
+    },
   ],
   invalid: [
     {
@@ -151,6 +181,19 @@ ruleTester.run("no-narrowing-lost-in-callback", rule, {
       code: `function render(value: string | undefined) {
   if (value === undefined) {
     setTimeout(() => console.log(value), 0);
+  }
+}`,
+      errors: [{ messageId: "narrowingLost" }],
+    },
+    {
+      // Covers `string | undefined` with `!== undefined` guard — the common
+      // pattern from optional parameters or `?.` results. Without this test,
+      // a regression in undefined handling by typeIncludesNullable would go
+      // undetected, since all other invalid cases use `string | null`.
+      filename: TEST_FILENAME,
+      code: `function render(value: string | undefined) {
+  if (value !== undefined) {
+    setTimeout(() => console.log(value.length), 0);
   }
 }`,
       errors: [{ messageId: "narrowingLost" }],
