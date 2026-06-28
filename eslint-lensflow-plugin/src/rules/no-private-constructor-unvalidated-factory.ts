@@ -51,15 +51,27 @@ function hasValidCall(body: TSESTree.BlockStatement): boolean {
   });
 }
 
-function bodyHasValidation(body: TSESTree.BlockStatement): boolean {
+function bodyHasValidation(
+  body: TSESTree.BlockStatement,
+  className: string,
+): boolean {
   return body.body.some((stmt) => {
     if (stmt.type === AST_NODE_TYPES.ThrowStatement) return true;
-    if (stmt.type === AST_NODE_TYPES.ReturnStatement) return true;
+    if (
+      stmt.type === AST_NODE_TYPES.ReturnStatement &&
+      stmt.argument?.type === AST_NODE_TYPES.NewExpression &&
+      stmt.argument.callee.type === AST_NODE_TYPES.Identifier &&
+      stmt.argument.callee.name === className
+    )
+      return true;
     if (
       stmt.type === AST_NODE_TYPES.ExpressionStatement &&
       stmt.expression.type === AST_NODE_TYPES.CallExpression
     ) {
       return isValidationCall(stmt.expression);
+    }
+    if (stmt.type === AST_NODE_TYPES.IfStatement) {
+      return isValidationGuard(stmt, className);
     }
     return false;
   });
@@ -70,7 +82,7 @@ function isValidationGuard(
   className: string,
 ): boolean {
   if (node.consequent.type === AST_NODE_TYPES.BlockStatement) {
-    if (bodyHasValidation(node.consequent)) return true;
+    if (bodyHasValidation(node.consequent, className)) return true;
   }
   if (node.consequent.type === AST_NODE_TYPES.ThrowStatement) {
     return true;
@@ -90,7 +102,7 @@ function isValidationGuard(
     if (isValidationCall(node.consequent.expression)) return true;
   }
   if (node.alternate && node.alternate.type === AST_NODE_TYPES.BlockStatement) {
-    if (bodyHasValidation(node.alternate)) return true;
+    if (bodyHasValidation(node.alternate, className)) return true;
   }
   if (
     node.alternate &&
