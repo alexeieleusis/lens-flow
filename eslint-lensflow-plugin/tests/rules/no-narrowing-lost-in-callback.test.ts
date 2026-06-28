@@ -99,5 +99,41 @@ ruleTester.run("no-narrowing-lost-in-callback", rule, {
 }`,
       errors: [{ messageId: "narrowingLost" }],
     },
+    {
+      filename: TEST_FILENAME,
+      code: `function render(value: string | null) {
+  if (value === null) {
+    setTimeout(() => console.log(value), 0);
+  }
+}`,
+      errors: [{ messageId: "narrowingLost" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `function render(value: string | undefined) {
+  if (value === undefined) {
+    setTimeout(() => console.log(value), 0);
+  }
+}`,
+      errors: [{ messageId: "narrowingLost" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `function render(value: string | null) {
+  if (value == null) {
+    Promise.resolve().then(() => console.log(value));
+  }
+}`,
+      errors: [{ messageId: "narrowingLost" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `function render(value: string | null) {
+  if (null === value) {
+    setInterval(() => console.log(value), 1000);
+  }
+}`,
+      errors: [{ messageId: "narrowingLost" }],
+    },
   ],
 });
