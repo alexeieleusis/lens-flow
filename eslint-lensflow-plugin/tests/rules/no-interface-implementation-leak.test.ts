@@ -80,5 +80,14 @@ ruleTester.run("no-interface-implementation-leak", rule, {
         { messageId: "exposedCollection" },
       ],
     },
+    {
+      code: `interface Store {
+        internalData: Collections.Map<string, any>;
+      }`,
+      errors: [
+        { messageId: "internalName" },
+        { messageId: "exposedCollection" },
+      ],
+    },
   ],
 });
