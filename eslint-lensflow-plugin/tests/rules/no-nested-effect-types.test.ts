@@ -48,5 +48,11 @@ ruleTester.run("no-nested-effect-types", rule, {
 }`,
       errors: [{ messageId: "nestedEffect" }],
     },
+    {
+      code: `function f(): TE.TaskEither<E, Promise<A>> {
+  throw new Error();
+}`,
+      errors: [{ messageId: "nestedEffect" }],
+    },
   ],
 });
