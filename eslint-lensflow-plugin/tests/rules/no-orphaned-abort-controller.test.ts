@@ -46,13 +46,25 @@ ruleTester.run("no-orphaned-abort-controller", rule, {
 
     // AbortController assigned to destructuring (not tracked)
     `const { ctrl } = { ctrl: new AbortController() };`,
+
+    // Outer-scope .abort() in finally — nested function has its own .abort()
+    `async function search(query: string): Promise<SearchResult[]> {
+  const controller = new AbortController();
+  const handler = () => controller.abort();
+  try {
+    const res = await fetch(\`/api/search?q=\${query}\`, { signal: controller.signal });
+    return res.json();
+  } finally {
+    controller.abort();
+  }
+}`,
   ],
   invalid: [
     // Basic antipattern: AbortController never aborted
     {
       code: `async function search(query: string): Promise<SearchResult[]> {
   const controller = new AbortController();
-  const res = await fetch(\`/api/search?q=\${query}\`, { signal: controller.signal });
+  const res = await myApi(\`/api/search?q=\${query}\`, { signal: controller.signal });
   return res.json();
 }`,
       errors: [{ messageId: "orphanedAbortController" }],
@@ -62,7 +74,7 @@ ruleTester.run("no-orphaned-abort-controller", rule, {
     {
       code: `async function fetchWithSignal(): Promise<Response> {
   const ac = new AbortController();
-  return fetch('/api/data', { signal: ac.signal });
+  return myFetch('/api/data', { signal: ac.signal });
 }`,
       errors: [{ messageId: "orphanedAbortController" }],
     },
@@ -72,9 +84,19 @@ ruleTester.run("no-orphaned-abort-controller", rule, {
       code: `async function dualFetch(): Promise<void> {
   const good = new AbortController();
   const bad = new AbortController();
-  await fetch('/a', { signal: good.signal });
+  await myApi('/a', { signal: good.signal });
   good.abort();
-  await fetch('/b', { signal: bad.signal });
+  await myApi('/b', { signal: bad.signal });
+}`,
+      errors: [{ messageId: "orphanedAbortController" }],
+    },
+
+    // .abort() only inside a nested function — not outer-scope cleanup
+    {
+      code: `async function search() {
+  const controller = new AbortController();
+  const handler = () => controller.abort();
+  doSomething(controller.signal);
 }`,
       errors: [{ messageId: "orphanedAbortController" }],
     },
