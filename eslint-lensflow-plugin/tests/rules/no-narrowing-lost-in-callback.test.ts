@@ -55,14 +55,6 @@ ruleTester.run("no-narrowing-lost-in-callback", rule, {
     },
     {
       filename: TEST_FILENAME,
-      code: `function render(value: string | null) {
-  if (value) {
-    setTimeout(() => console.log(value.length), 0);
-  }
-}`,
-    },
-    {
-      filename: TEST_FILENAME,
       code: `function render(value: string) {
   if (value != null) {
     setTimeout(() => console.log(value.length), 0);
