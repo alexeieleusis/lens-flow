@@ -103,7 +103,7 @@ items.forEach((item) => console.log(item));
 interface Data { results?: { count: number } }
 declare const data: Data;
 const count = data.results?.count;
-return count + 1;
+const incremented = count + 1;
 `,
       errors: [{ messageId: "undefinedType" }],
     },
