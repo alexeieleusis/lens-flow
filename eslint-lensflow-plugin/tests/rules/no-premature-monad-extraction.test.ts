@@ -21,6 +21,8 @@ ruleTester.run("no-premature-monad-extraction", rule, {
       fetchUser(),
       E.getOrElse(() => defaultUser)
     );`,
+    // Extraction outside any pipe (standalone call)
+    `E.getOrElse(eitherValue, () => defaultUser);`,
   ],
   invalid: [
     {
