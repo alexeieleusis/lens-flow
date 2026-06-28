@@ -21,6 +21,15 @@ ruleTester.run("no-parallel-boolean-state-flags", rule, {
       label: string;
       ready: boolean;
     }`,
+    // Raising minCount to 4 allows 3 boolean flags to pass.
+    {
+      code: `type Config = {
+        isEnabled: boolean;
+        isDebug: boolean;
+        isVerbose: boolean;
+      }`,
+      options: [{ minCount: 4 }],
+    },
   ],
   invalid: [
     // From the antipattern snippet: 4 boolean properties in an interface.
@@ -40,6 +49,15 @@ ruleTester.run("no-parallel-boolean-state-flags", rule, {
         isDebug: boolean;
         isVerbose: boolean;
       }`,
+      errors: [{ messageId: "tooManyBooleanFlags" }],
+    },
+    // Lowering minCount to 2 makes 2 boolean flags fail.
+    {
+      code: `interface Fine {
+        isPending: boolean;
+        isComplete: boolean;
+      }`,
+      options: [{ minCount: 2 }],
       errors: [{ messageId: "tooManyBooleanFlags" }],
     },
   ],
