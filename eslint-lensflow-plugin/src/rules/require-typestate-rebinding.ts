@@ -107,7 +107,7 @@ export default createRule({
     },
     messages: {
       staleStateRef:
-        "The result of a type-state transition method should be rebound to the original `{{letName}}` variable instead of assigned to `{{constName}}`. The stale reference remains accessible and bypasses the type-state guarantee. Prefer `{{letName}} = {{letName}}.{{methodName}}()`. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T57-typestate.md",
+        "The result of a type-state transition method should be rebound to the original `{{letName}}` variable instead of assigned to `{{constName}}`. The stale reference remains accessible and bypasses the type-state guarantee. Prefer `{{letName}} = {{letName}}.{{methodName}}()`. See: https://github.com/alexeieleusis/lens-flow/tree/main/eslint-lensflow-plugin/docs/rules/require-typestate-rebinding.md",
     },
     schema: [],
     fixable: undefined,
