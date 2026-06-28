@@ -21,12 +21,16 @@ type Bar = string & { readonly bar: string };
 type Baz = string & { readonly baz: boolean };
 type Qux = string & { readonly qux: symbol };`,
     {
-      code: `type FirstName = string & { readonly __brand: "FirstName" };
+      code:    `type FirstName = string & { readonly __brand: "FirstName" };
 type LastName  = string & { readonly __brand: "LastName" };
 type Address   = string & { readonly __brand: "Address" };
 type Phone     = string & { readonly __brand: "Phone" };`,
       options: [{ maxBrandsPerPrimitive: 5 }],
     },
+    // Near-miss patterns that should NOT trigger
+    `type Foo = string | number`,
+    `type Foo = { a: number } & { b: string }`,
+    `type Foo = string & number & { readonly __brand: "Foo" }`,
   ],
   invalid: [
     {
