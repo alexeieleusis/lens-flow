@@ -16,6 +16,16 @@ type WithExtras = Core & D & E;`,
     `type AtLimit = A & B & C & D;`,
     // Exactly 6 flattened members — at the threshold, allowed
     `type AtFlattenLimit = (A & B & C) & (D & E & F);`,
+    // Raised maxMembers: 5 direct members passes when threshold is 10
+    {
+      code: `type OverDefault = A & B & C & D & E;`,
+      options: [{ maxMembers: 10 }],
+    },
+    // Raised maxFlattenedMembers: 7 flattened passes when threshold is 10
+    {
+      code: `type OverFlattenDefault = A & B & C & (D & E & F & G);`,
+      options: [{ maxFlattenedMembers: 10 }],
+    },
   ],
   invalid: [
     // 6 direct (> 4) triggers; 6 flattened (not > 6) does not
@@ -51,6 +61,28 @@ function process(x: Complex) { /* ... */ }`,
     {
       code: `type JustOver = A & B & C & D & E;`,
       errors: [{ messageId: "tooManyDirect" }],
+    },
+    // Lowered maxMembers: 3 direct members triggers when threshold is 2
+    {
+      code: `type ThreeMember = A & B & C;`,
+      options: [{ maxMembers: 2 }],
+      errors: [{ messageId: "tooManyDirect" }],
+    },
+    // Lowered maxFlattenedMembers: 5 flattened triggers when threshold is 4
+    {
+      code: `type FiveFlattened = (A & B & C) & (D & E);`,
+      options: [{ maxFlattenedMembers: 4 }],
+      errors: [{ messageId: "tooManyFlattened" }],
+    },
+    // Both thresholds lowered: outer triggers both, inner nested also triggers
+    {
+      code: `type BothTriggers = A & B & C & (D & E & F & G);`,
+      options: [{ maxMembers: 2, maxFlattenedMembers: 5 }],
+      errors: [
+        { messageId: "tooManyDirect" },
+        { messageId: "tooManyFlattened" },
+        { messageId: "tooManyDirect" },
+      ],
     },
   ],
 });
