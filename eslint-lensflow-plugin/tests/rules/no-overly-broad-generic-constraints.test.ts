@@ -43,6 +43,10 @@ ruleTester.run("no-overly-broad-generic-constraints", rule, {
       errors: [{ messageId: "anyTypeArg" }, { messageId: "anyTypeArg" }],
     },
     {
+      code: `const x: Box<List<any>> = null;`,
+      errors: [{ messageId: "anyTypeArg" }, { messageId: "anyTypeArg" }],
+    },
+    {
       code: `type Wrapper = Box<any | string>;`,
       errors: [{ messageId: "anyTypeArg" }],
     },
