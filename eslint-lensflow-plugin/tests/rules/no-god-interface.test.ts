@@ -157,5 +157,22 @@ ruleTester.run("no-god-interface", rule, {
       options: [{ maxTotalFields: 5 }],
       errors: [{ messageId: "tooManyTotal" }],
     },
+    // Anonymous inline type literal in function parameter — triggers, name renders as "anonymous"
+    {
+      code: `function config(opts: {
+        host?: string;
+        port?: number;
+        timeout?: number;
+        retries?: number;
+        logger?: Logger;
+        cache?: Cache;
+      }) {}`,
+      errors: [
+        {
+          message:
+            "Type 'anonymous' has 6 optional properties (max 5). Consider splitting into smaller, focused types. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC05-structural-contracts.md",
+        },
+      ],
+    },
   ],
 });

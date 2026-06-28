@@ -59,32 +59,36 @@ export default createRule({
 
       const reportNode = parent || node;
 
+      let name: string;
       if (
         parent &&
         (parent.type === "TSInterfaceDeclaration" || parent.type === "TSTypeAliasDeclaration")
       ) {
-        const name = parent.id ? parent.id.name : "anonymous";
-        if (optionalCount >= thresholdOptional) {
-          context.report({
-            node: reportNode,
-            messageId: "tooManyOptional",
-            data: {
-              name,
-              optionalCount: String(optionalCount),
-              maxOptional: String(thresholdOptional),
-            },
-          });
-        } else if (totalCount >= thresholdTotal) {
-          context.report({
-            node: reportNode,
-            messageId: "tooManyTotal",
-            data: {
-              name,
-              totalCount: String(totalCount),
-              maxTotal: String(thresholdTotal),
-            },
-          });
-        }
+        name = parent.id ? parent.id.name : "anonymous";
+      } else {
+        name = "anonymous";
+      }
+
+      if (optionalCount >= thresholdOptional) {
+        context.report({
+          node: reportNode,
+          messageId: "tooManyOptional",
+          data: {
+            name,
+            optionalCount: String(optionalCount),
+            maxOptional: String(thresholdOptional),
+          },
+        });
+      } else if (totalCount >= thresholdTotal) {
+        context.report({
+          node: reportNode,
+          messageId: "tooManyTotal",
+          data: {
+            name,
+            totalCount: String(totalCount),
+            maxTotal: String(thresholdTotal),
+          },
+        });
       }
     }
 
