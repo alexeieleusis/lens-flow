@@ -61,6 +61,16 @@ ruleTester.run("no-never-as-catchall", rule, {
     },
     {
       filename: TEST_FILENAME,
+      code: `function handle(x: "a" | "b") {
+  if (x === "a") return;
+  else {
+    const _: never = x;
+    throw new Error(_);
+  }
+}`,
+    },
+    {
+      filename: TEST_FILENAME,
       code: `class Foo {
   constructor(readonly x: never) {}
 }`,
@@ -83,8 +93,14 @@ ruleTester.run("no-never-as-catchall", rule, {
   return "hi";
 }
 const msg: never = greet();`,
+     errors: [{ messageId: "neverAsCatchall" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `class Foo {
+  constructor(readonly x: never = JSON.parse("{}")) {}
+}`,
       errors: [{ messageId: "neverAsCatchall" }],
     },
- 
   ],
 });
