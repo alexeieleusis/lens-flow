@@ -70,6 +70,12 @@ ruleTester.run("no-redundant-nullable-input-guard", rule, {
         }
       }
     }`,
+    // Nested arrow function shadows parameter — guard belongs to inner scope
+    `function outer(id: string | null) {
+      inner((id: string | null) => {
+        if (!id) { return; }
+      });
+    }`,
   ],
   invalid: [
     {
