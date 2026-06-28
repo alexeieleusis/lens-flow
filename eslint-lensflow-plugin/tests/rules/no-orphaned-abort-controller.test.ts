@@ -100,5 +100,19 @@ ruleTester.run("no-orphaned-abort-controller", rule, {
 }`,
       errors: [{ messageId: "orphanedAbortController" }],
     },
+
+    // Variable shadowing: nested scope redeclares same name, outer controller is orphaned
+    {
+      code: `async function outer() {
+  const controller = new AbortController();
+  async function inner() {
+    const controller = new AbortController();
+    await fetch("/a", { signal: controller.signal });
+    controller.abort();
+  }
+  process(controller.signal);
+}`,
+      errors: [{ messageId: "orphanedAbortController" }],
+    },
   ],
 });
