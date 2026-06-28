@@ -10,6 +10,9 @@ ruleTester.run("no-mixed-null-undefined", rule, {
     `function f(x: string | undefined) {}`,
     `function f(): string | null {}`,
     `function f(): string | undefined {}`,
+    `type DuplicateNull = null | null;`,
+    `type Parenthesized = (string | null);`,
+    `type Wrapper = Array<string | null>;`,
   ],
   invalid: [
     {
