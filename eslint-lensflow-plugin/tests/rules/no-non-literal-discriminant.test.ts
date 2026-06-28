@@ -31,6 +31,11 @@ ruleTester.run("no-non-literal-discriminant", rule, {
     `type Mixed =
       | { kind: "a"; count: string }
       | { kind: "b"; label: string };`,
+
+    // Quoted literal discriminant — exercises the Literal key branch
+    `type Quoted =
+      | { "kind": "a"; x: number }
+      | { "kind": "b"; y: string };`,
   ],
   invalid: [
     // One member has literal, other has widened string for same property
@@ -62,6 +67,13 @@ ruleTester.run("no-non-literal-discriminant", rule, {
         | { kind: string; y: string }
         | { kind: string; z: boolean };`,
       errors: [{ messageId: "nonLiteralDiscriminant" }, { messageId: "nonLiteralDiscriminant" }],
+    },
+    // Quoted key with widened discriminant — exercises the Literal key branch
+    {
+      code: `type QuotedBroken =
+        | { "kind": "a"; x: number }
+        | { "kind": string; y: string };`,
+      errors: [{ messageId: "nonLiteralDiscriminant" }],
     },
   ],
 });
