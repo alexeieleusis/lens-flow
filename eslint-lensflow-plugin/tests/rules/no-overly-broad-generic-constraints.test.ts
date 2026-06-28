@@ -18,6 +18,7 @@ ruleTester.run("no-overly-broad-generic-constraints", rule, {
     `class Repository<T> {
       find(): T { throw new Error(); }
     }`,
+    `interface Safe<T extends unknown> { get(): T; }`,
   ],
   invalid: [
     {
