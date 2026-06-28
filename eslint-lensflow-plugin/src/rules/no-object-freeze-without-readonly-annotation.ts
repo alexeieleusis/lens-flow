@@ -57,7 +57,7 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"missingReadonly", []>) {
-    function findVariableDeclarator(node: TSESTree.Node): TSESTree.VariableDeclarator | null {
+    function findDirectDeclarator(node: TSESTree.Node): TSESTree.VariableDeclarator | null {
       const ancestors = context.sourceCode.getAncestors(node);
       for (const ancestor of ancestors) {
         if (
@@ -70,6 +70,24 @@ export default createRule({
         if (ancestor.type === AST_NODE_TYPES.VariableDeclarator) return ancestor;
       }
       return null;
+    }
+
+    function isDirectInit(declarator: TSESTree.VariableDeclarator, target: TSESTree.Node): boolean {
+      if (!declarator.init) return false;
+      let unwrapped = declarator.init;
+      while (
+        unwrapped.type === AST_NODE_TYPES.TSAsExpression ||
+        unwrapped.type === AST_NODE_TYPES.TSNonNullExpression ||
+        unwrapped.type === AST_NODE_TYPES.TSSatisfiesExpression
+      ) {
+        unwrapped =
+          unwrapped.type === AST_NODE_TYPES.TSAsExpression
+            ? unwrapped.expression
+            : unwrapped.type === AST_NODE_TYPES.TSNonNullExpression
+              ? unwrapped.expression
+              : unwrapped.expression;
+      }
+      return unwrapped === target;
     }
 
     return {
@@ -85,32 +103,41 @@ export default createRule({
           return;
         }
 
-        const declarator = findVariableDeclarator(node);
+        const declarator = findDirectDeclarator(node);
         if (!declarator) return;
 
-        const init = declarator.init;
-        if (!init) return;
-        let unwrapped = init;
-        while (
-          unwrapped.type === AST_NODE_TYPES.TSAsExpression ||
-          unwrapped.type === AST_NODE_TYPES.TSNonNullExpression ||
-          unwrapped.type === AST_NODE_TYPES.TSSatisfiesExpression
-        ) {
-          unwrapped =
-            unwrapped.type === AST_NODE_TYPES.TSAsExpression
-              ? unwrapped.expression
-              : unwrapped.type === AST_NODE_TYPES.TSNonNullExpression
-                ? unwrapped.expression
-                : unwrapped.expression;
+        if (isDirectInit(declarator, node)) {
+          if (hasAsConst(declarator) || hasReadonlyAnnotation(declarator)) return;
+          context.report({
+            node,
+            messageId: "missingReadonly",
+          });
+        } else {
+          const ancestors = context.sourceCode.getAncestors(node);
+          for (let i = ancestors.length - 1; i >= 0; i--) {
+            const ancestor = ancestors[i];
+            if (ancestor === declarator) break;
+            if (
+              ancestor.type === AST_NODE_TYPES.Property ||
+              ancestor.type === AST_NODE_TYPES.ArrayExpression
+            ) {
+              return;
+            }
+            if (
+              ancestor.type === AST_NODE_TYPES.FunctionDeclaration ||
+              ancestor.type === AST_NODE_TYPES.FunctionExpression ||
+              ancestor.type === AST_NODE_TYPES.ArrowFunctionExpression
+            ) {
+              return;
+            }
+          }
+
+          if (hasAsConst(declarator) || hasReadonlyAnnotation(declarator)) return;
+          context.report({
+            node,
+            messageId: "missingReadonly",
+          });
         }
-        if (unwrapped !== node) return;
-
-        if (hasAsConst(declarator) || hasReadonlyAnnotation(declarator)) return;
-
-        context.report({
-          node,
-          messageId: "missingReadonly",
-        });
       },
     };
   },

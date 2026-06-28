@@ -9,6 +9,7 @@ ruleTester.run("no-object-freeze-without-readonly-annotation", rule, {
     `Object.freeze({ host: "localhost", port: 8080 });`,
     `const result = someOtherFunction({ host: "localhost" });`,
     `const wrapper = { data: Object.freeze({ a: 1 }) };`,
+    `const x: Readonly<{ a: number }> = wrap(Object.freeze({ a: 1 }));`,
   ],
   invalid: [
     {
@@ -17,6 +18,10 @@ ruleTester.run("no-object-freeze-without-readonly-annotation", rule, {
     },
     {
       code: `const settings = Object.freeze({ debug: true, verbose: false });`,
+      errors: [{ messageId: "missingReadonly" }],
+    },
+    {
+      code: `const x = wrap(Object.freeze({ a: 1 }));`,
       errors: [{ messageId: "missingReadonly" }],
     },
   ],
