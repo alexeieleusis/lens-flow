@@ -52,5 +52,18 @@ ruleTester.run("no-overly-complex-infer-chain-t63", rule, {
       options: [{ maxDepth: 1 }],
       errors: [{ messageId: "complexInferChain" }],
     },
+    // False-branch recursion — chain continues through falseType, exceeds maxDepth 3
+    {
+      code: "type FalseBranch<S> = S extends `${infer H1}`\n" +
+        "  ? H1\n" +
+        "  : S extends `${infer H2}`\n" +
+        "  ? H2\n" +
+        "  : S extends `${infer H3}`\n" +
+        "  ? H3\n" +
+        "  : S extends `${infer H4}`\n" +
+        "  ? H4\n" +
+        "  : never;",
+      errors: [{ messageId: "complexInferChain" }],
+    },
   ],
 });
