@@ -92,5 +92,23 @@ declare function get(x: number): number;
 function get(x) { return "always string"; }`,
       errors: [{ messageId: "narrowImpl" }],
     },
+    {
+      filename: TEST_FILENAME,
+      code: `function get(x: string): string;
+function get(x: number): number;
+function get(x: string | number, extra: boolean): string | number {
+  return typeof x === "string" ? x : x.toString();
+}`,
+      errors: [{ messageId: "narrowImpl" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `function get(x: string): string;
+function get(x: number): number;
+function get(): string | number {
+  return "default";
+}`,
+      errors: [{ messageId: "narrowImpl" }],
+    },
   ],
 });
