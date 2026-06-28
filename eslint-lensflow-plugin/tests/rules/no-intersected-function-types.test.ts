@@ -23,5 +23,9 @@ ruleTester.run("no-intersected-function-types", rule, {
       code: `type NoParams = (() => void) & (() => number);`,
       errors: [{ messageId: "intersectedFunctions" }],
     },
+    {
+      code: `type MixedNonFunc = { tag: "a" } & ((x: string) => void) & ((x: number) => void);`,
+      errors: [{ messageId: "intersectedFunctions" }],
+    },
   ],
 });
