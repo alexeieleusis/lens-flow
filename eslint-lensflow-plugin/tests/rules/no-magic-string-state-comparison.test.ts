@@ -47,6 +47,16 @@ ruleTester.run("no-magic-string-state-comparison", rule, {
         }
       }
     }`,
+
+    // Assignment inside nested arrow function — should NOT report
+    `class Order {
+      status: string;
+      ship() {
+        if (this.status === "confirmed") {
+          const handler = () => { this.status = "shipped"; };
+        }
+      }
+    }`,
   ],
   invalid: [
     {

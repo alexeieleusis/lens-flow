@@ -19,6 +19,12 @@ function shouldSkipNodeKey(key: string): boolean {
   return key === "parent" || key === "loc" || key === "range";
 }
 
+const FunctionBoundaryTypes = new Set([
+  "FunctionDeclaration",
+  "FunctionExpression",
+  "ArrowFunctionExpression",
+]);
+
 function traverseChildren(node: TSESTree.Node, check: (n: TSESTree.Node) => boolean): boolean {
   for (const key of Object.keys(node)) {
     if (shouldSkipNodeKey(key)) continue;
@@ -48,6 +54,10 @@ function findAssignmentInConsequent(consequent: TSESTree.BlockStatement, propNam
   function checkNode(node: TSESTree.Node): boolean {
     if (visited.has(node)) return false;
     visited.add(node);
+
+    // Stop at function boundaries — don't attribute inner-function
+    // constructs to the outer scope.
+    if (FunctionBoundaryTypes.has(node.type)) return false;
 
     if (isStateAssignmentMatch(node, propName)) return true;
     return traverseChildren(node, checkNode);
