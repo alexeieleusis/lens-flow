@@ -6,6 +6,10 @@ ruleTester.run("no-mixed-null-undefined", rule, {
     `type ExplicitAbsent = string | null;`,
     `type NotYetProvided = string | undefined;`,
     `type Safe = string | number | boolean;`,
+    `function f(x: string | null) {}`,
+    `function f(x: string | undefined) {}`,
+    `function f(): string | null {}`,
+    `function f(): string | undefined {}`,
   ],
   invalid: [
     {
@@ -18,6 +22,14 @@ ruleTester.run("no-mixed-null-undefined", rule, {
     },
     {
       code: `type Messy = number | null | undefined | string;`,
+      errors: [{ messageId: "mixedNullUndefined" }],
+    },
+    {
+      code: `function f(x: string | null | undefined) {}`,
+      errors: [{ messageId: "mixedNullUndefined" }],
+    },
+    {
+      code: `function f(): string | null | undefined {}`,
       errors: [{ messageId: "mixedNullUndefined" }],
     },
   ],
