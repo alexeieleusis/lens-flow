@@ -115,5 +115,18 @@ ruleTester.run("no-magic-string-state-comparison", rule, {
     }`,
       errors: [{ messageId: "magicStringStateComparison" }],
     },
+    {
+      code: `class Order {
+      status: string;
+      process() {
+        if (this.status === "pending") {
+          for (const item of this.items) {
+            this.status = "processing";
+          }
+        }
+      }
+    }`,
+      errors: [{ messageId: "magicStringStateComparison" }],
+    },
   ],
 });
