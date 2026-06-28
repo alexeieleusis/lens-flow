@@ -45,7 +45,7 @@ export default createRule({
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"redundantReadonly", []>) {
     function checkFieldNode(
-      node: TSESTree.TSPropertySignature | TSESTree.PropertyDefinition,
+      node: TSESTree.TSPropertySignature | TSESTree.PropertyDefinition | TSESTree.TSAbstractPropertyDefinition,
     ) {
       if (!node.readonly) return;
 
@@ -155,6 +155,9 @@ export default createRule({
         checkFieldNode(node);
       },
       PropertyDefinition(node) {
+        checkFieldNode(node);
+      },
+      TSAbstractPropertyDefinition(node) {
         checkFieldNode(node);
       },
       TSParameterProperty(node) {

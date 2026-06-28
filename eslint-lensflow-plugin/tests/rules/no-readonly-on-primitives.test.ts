@@ -94,5 +94,19 @@ interface Doc {
         { messageId: "redundantReadonly" },
       ],
     },
+    {
+      code: `abstract class Base {
+        abstract readonly id: string;
+        abstract readonly count: number;
+      }`,
+      output: `abstract class Base {
+        abstract id: string;
+        abstract count: number;
+      }`,
+      errors: [
+        { messageId: "redundantReadonly" },
+        { messageId: "redundantReadonly" },
+      ],
+    },
   ],
 });
