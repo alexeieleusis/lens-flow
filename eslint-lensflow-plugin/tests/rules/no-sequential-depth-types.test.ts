@@ -102,6 +102,28 @@ type Level3 = { id: string };`,
         { messageId: "sequentialDepthType" },
       ],
     },
+    // ReadonlyArray<T> syntax - should be detected same as T[]
+    {
+      code: `type Level1 = { id: string; children?: ReadonlyArray<Level2> };
+type Level2 = { id: string; children?: ReadonlyArray<Level3> };
+type Level3 = { id: string };`,
+      errors: [
+        { messageId: "sequentialDepthType" },
+        { messageId: "sequentialDepthType" },
+        { messageId: "sequentialDepthType" },
+      ],
+    },
+    // readonly T[] syntax - should be detected same as T[]
+    {
+      code: `type Level1 = { id: string; children?: readonly Level2[] };
+type Level2 = { id: string; children?: readonly Level3[] };
+type Level3 = { id: string };`,
+      errors: [
+        { messageId: "sequentialDepthType" },
+        { messageId: "sequentialDepthType" },
+        { messageId: "sequentialDepthType" },
+      ],
+    },
     // Union-wrapped array type - should detect array inside union
     {
       code: `type Level1 = { id: string; children?: Level2[] | null };
@@ -120,6 +142,17 @@ type Level3 = { id: string };`,
   export type Level2 = { id: string; children?: NS.Level3[] };
   export type Level3 = { id: string };
 }`,
+      errors: [
+        { messageId: "sequentialDepthType" },
+        { messageId: "sequentialDepthType" },
+        { messageId: "sequentialDepthType" },
+      ],
+    },
+    // Non-consecutive numbering - chain should still be detected by reference, not numeric gap
+    {
+      code: `type Level1 = { id: string; children?: Level3[] };
+type Level3 = { id: string; children?: Level5[] };
+type Level5 = { id: string };`,
       errors: [
         { messageId: "sequentialDepthType" },
         { messageId: "sequentialDepthType" },
