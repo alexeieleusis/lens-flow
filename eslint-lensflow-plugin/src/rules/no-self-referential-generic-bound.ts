@@ -160,6 +160,12 @@ function containsTypeParamReference(
   if (node.type === "TSIndexedAccessType") {
     return checkIndexedAccessType(node, paramName);
   }
+  if (node.type === "TSParenthesizedType") {
+    return containsTypeParamReference(
+      (node as unknown as { typeAnnotation: TSESTree.Node }).typeAnnotation,
+      paramName
+    );
+  }
   return false;
 }
 
