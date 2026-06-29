@@ -41,6 +41,17 @@ ruleTester.run("no-runtime-init-guard", rule, {
       errors: [{ messageId: "runtimeInitGuard" }],
     },
     {
+      code: `class HttpArrow {
+        url: string | undefined;
+        setUrl(url: string) { this.url = url; }
+        send = () => {
+          if (!this.url) throw new Error("url not set");
+          return fetch(this.url);
+        };
+      }`,
+      errors: [{ messageId: "runtimeInitGuard" }],
+    },
+    {
       code: `class Client {
         token: string | undefined;
         authenticate(t: string) { this.token = t; }

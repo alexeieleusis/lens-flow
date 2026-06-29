@@ -33,6 +33,14 @@ export default createRule({
             isInsideMethod = true;
             break;
           }
+          if (
+            a.type === "PropertyDefinition" &&
+            (a.value?.type === "ArrowFunctionExpression" ||
+              a.value?.type === "FunctionExpression")
+          ) {
+            isInsideMethod = true;
+            break;
+          }
         }
         if (!isInsideMethod) return;
 
