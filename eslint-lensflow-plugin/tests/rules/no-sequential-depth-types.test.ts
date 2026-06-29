@@ -91,5 +91,16 @@ type Level3 = { id: string };`,
         { messageId: "sequentialDepthType" },
       ],
     },
+    // Array<T> syntax - should be detected same as T[]
+    {
+      code: `type Level1 = { id: string; children?: Array<Level2> };
+type Level2 = { id: string; children?: Array<Level3> };
+type Level3 = { id: string };`,
+      errors: [
+        { messageId: "sequentialDepthType" },
+        { messageId: "sequentialDepthType" },
+        { messageId: "sequentialDepthType" },
+      ],
+    },
   ],
 });
