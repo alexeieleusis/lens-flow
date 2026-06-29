@@ -17,6 +17,7 @@ export interface Payment {
   refund?(): Promise<void>;
 }`,
     // Sealed interface with 5+ members (not brittle by count)
+    // Boundary: exactly 5 total members (>= 5, not brittle)
     `declare const _sealed: unique symbol;
 
 export interface Payment {
@@ -25,6 +26,17 @@ export interface Payment {
   refund(): Promise<void>;
   status(): string;
   amount(): number;
+}`,
+    // Above boundary: 6 total members
+    `declare const _sealed: unique symbol;
+
+export interface Payment {
+  readonly [_sealed]: never;
+  charge(amount: number): Promise<void>;
+  refund(): Promise<void>;
+  status(): string;
+  amount(): number;
+  cancel(): Promise<void>;
 }`,
     // Computed key but identifier does not start with underscore
     `declare const brand: unique symbol;
@@ -57,6 +69,18 @@ export interface Config {
       code: `export interface Payment {
   readonly ["_sealed"]: never;
   charge(amount: number): Promise<void>;
+}`,
+      errors: [{ messageId: "sealedNoEvolution" }],
+    },
+    // Boundary: exactly 4 members total (< 5, brittle)
+    {
+      code: `declare const _sealed: unique symbol;
+
+export interface Payment {
+  readonly [_sealed]: never;
+  charge(amount: number): Promise<void>;
+  refund(): Promise<void>;
+  status(): string;
 }`,
       errors: [{ messageId: "sealedNoEvolution" }],
     },
