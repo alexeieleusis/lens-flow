@@ -48,5 +48,13 @@ ruleTester.run("no-redundant-overload-signature", rule, {
     }`,
       errors: [{ messageId: "redundantOverload" }],
     },
+    // TSDeclareFunction — declare function with identical implementation
+    {
+      code: `declare function add(a: number, b: number): number;
+    function add(a: number, b: number): number {
+      return a + b;
+    }`,
+      errors: [{ messageId: "redundantOverload" }],
+    },
   ],
 });
