@@ -8,13 +8,21 @@ ruleTester.run("no-sealed-interface-without-evolution-path", rule, {
       charge(amount: number): Promise<void>;
       refund?(): Promise<void>;
     }`,
-    // Sealed interface with optional member (has evolution path)
+    // Sealed interface with optional property (has evolution path — TSPropertySignature)
     `declare const _sealed: unique symbol;
 
 export interface Payment {
   readonly [_sealed]: never;
   charge(amount: number): Promise<void>;
   refund?(): Promise<void>;
+}`,
+    // Sealed interface with optional method signature (has evolution path — TSMethodSignature)
+    `declare const _sealed: unique symbol;
+
+export interface Wallet {
+  readonly [_sealed]: never;
+  deposit(amount: number): void;
+  withdraw?(amount: number): Promise<void>;
 }`,
     // Sealed interface with 5+ members (not brittle by count)
     // Boundary: exactly 5 total members (>= 5, not brittle)
@@ -69,6 +77,17 @@ export interface Config {
       code: `export interface Payment {
   readonly ["_sealed"]: never;
   charge(amount: number): Promise<void>;
+}`,
+      errors: [{ messageId: "sealedNoEvolution" }],
+    },
+    // Sealed interface with all required methods — no optional TSMethodSignature (brittle)
+    {
+      code: `declare const _sealed: unique symbol;
+
+export interface Wallet {
+  readonly [_sealed]: never;
+  deposit(amount: number): void;
+  withdraw(amount: number): Promise<void>;
 }`,
       errors: [{ messageId: "sealedNoEvolution" }],
     },
