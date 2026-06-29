@@ -5,11 +5,13 @@ function checkTypeReference(
   node: TSESTree.TSTypeReference,
   paramName: string,
 ): boolean {
-  if (
-    node.typeName.type === "Identifier" &&
-    node.typeName.name === paramName
-  ) {
-    return true;
+  if (node.typeName.type === "Identifier") {
+    if (node.typeName.name === paramName) return true;
+  }
+  if (node.typeName.type === "TSQualifiedName") {
+    if (containsTypeParamReference(node.typeName, paramName)) {
+      return true;
+    }
   }
   if (node.typeArguments) {
     for (const arg of node.typeArguments.params) {
@@ -164,6 +166,17 @@ function containsTypeParamReference(
     return containsTypeParamReference(
       (node as unknown as { typeAnnotation: TSESTree.Node }).typeAnnotation,
       paramName
+    );
+  }
+  if (node.type === "TSQualifiedName") {
+    return (
+      containsTypeParamReference(
+        (node as unknown as { left: TSESTree.Node; right: TSESTree.Node }).left,
+        paramName
+      ) || containsTypeParamReference(
+        (node as unknown as { left: TSESTree.Node; right: TSESTree.Node }).right,
+        paramName
+      )
     );
   }
   return false;

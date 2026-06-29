@@ -42,5 +42,29 @@ function link<T extends Node<T>>(a: T, b: T): void {
 }`,
       errors: [{ messageId: "selfReferentialBound" }],
     },
+    {
+      code: `type X<T extends Node<T> | string> = T`,
+      errors: [{ messageId: "selfReferentialBound" }],
+    },
+    {
+      code: `type X<T extends { id: number } & T> = T`,
+      errors: [{ messageId: "selfReferentialBound" }],
+    },
+    {
+      code: `type X<T extends (Node<T>)> = T`,
+      errors: [{ messageId: "selfReferentialBound" }],
+    },
+    {
+      code: `type X<T extends T extends string ? T : never> = T`,
+      errors: [{ messageId: "selfReferentialBound" }],
+    },
+    {
+      code: `type X<T extends Map<string, T>> = T`,
+      errors: [{ messageId: "selfReferentialBound" }],
+    },
+    {
+      code: `type X<T extends NS.Container<T>> = T`,
+      errors: [{ messageId: "selfReferentialBound" }],
+    },
   ],
 });
