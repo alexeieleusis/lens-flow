@@ -36,6 +36,18 @@ function second<T>(x: T) { return x; }`,
   }
   return inner;
 }`,
+    // Separate declare functions with same type param name — not nested
+    `declare function outer<T>(x: T): void;
+declare function inner<T>(y: T): void;`,
+    // Declare function with non-shadowing nested function
+    `declare function outer<T>(x: T): void;
+declare function outer<U>(x: U): void;`,
+    // Class expression with distinct names — no shadowing
+    `const Factory = class Outer<T> {
+  map<U>(fn: (v: T) => U): Outer<U> {
+    return new Outer(fn);
+  }
+};`,
   ],
   invalid: [
     // Basic shadowing from the spec
@@ -80,6 +92,20 @@ function second<T>(x: T) { return x; }`,
 }`,
       errors: [{ messageId: "shadowedTypeParam" }],
     },
+    // Anonymous class expression shadowing
+    {
+      code: `const Factory = class Outer<T> {
+  method<T>(x: T): T { return x; }
+};`,
+      errors: [{ messageId: "shadowedTypeParam" }],
+    },
+    // Named class expression shadowing
+    {
+      code: `const Factory = class Box<T> {
+  map<T>(fn: (v: T) => T): Box<T> { return new Box(fn); }
+};`,
+      errors: [{ messageId: "shadowedTypeParam" }],
+    },
     // Multiple params where one shadows
     {
       code: `function outer<T, U>(a: T, b: U) {
@@ -97,6 +123,23 @@ function second<T>(x: T) { return x; }`,
     return [c, d];
   }
   return inner(a, b);
+}`,
+      errors: [
+        { messageId: "shadowedTypeParam" },
+        { messageId: "shadowedTypeParam" },
+      ],
+    },
+    // TSDeclareFunction: ambient method in generic class shadows outer type param
+    {
+      code: `declare class Container<T> {
+  helper<T>(x: T): void;
+}`,
+      errors: [{ messageId: "shadowedTypeParam" }],
+    },
+    // TSDeclareFunction: multiple shadowed params in ambient class method
+    {
+      code: `declare class Box<T, U> {
+  process<T, U>(a: T, b: U): void;
 }`,
       errors: [
         { messageId: "shadowedTypeParam" },
