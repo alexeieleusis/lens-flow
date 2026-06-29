@@ -113,5 +113,18 @@ type Level3 = { id: string };`,
         { messageId: "sequentialDepthType" },
       ],
     },
+    // Namespaced (qualified) type references - should detect the chain
+    {
+      code: `namespace NS {
+  export type Level1 = { id: string; children?: NS.Level2[] };
+  export type Level2 = { id: string; children?: NS.Level3[] };
+  export type Level3 = { id: string };
+}`,
+      errors: [
+        { messageId: "sequentialDepthType" },
+        { messageId: "sequentialDepthType" },
+        { messageId: "sequentialDepthType" },
+      ],
+    },
   ],
 });

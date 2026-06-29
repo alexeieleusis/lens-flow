@@ -217,9 +217,7 @@ function getRefName(typeName: TSESTree.EntityName): string | null {
     return typeName.name;
   }
   if (typeName.type === "TSQualifiedName") {
-    const left = getRefName(typeName.left);
-    const right = getRefName(typeName.right);
-    return left && right ? `${left}.${right}` : null;
+    return getRefName(typeName.right);
   }
   return null;
 }
