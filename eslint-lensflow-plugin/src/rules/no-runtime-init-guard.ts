@@ -21,27 +21,28 @@ export default createRule({
     return {
       IfStatement(node) {
         const ancestors = context.sourceCode.getAncestors(node);
-        let isInsideMethod = false;
-        for (const a of ancestors) {
+        // Walk innermost-to-outermost to find the immediate enclosing function.
+        let enclosingFnIndex = -1;
+        for (let i = ancestors.length - 1; i >= 0; i--) {
+          const a = ancestors[i];
           if (
             a.type === "FunctionDeclaration" ||
             a.type === "FunctionExpression" ||
             a.type === "ArrowFunctionExpression"
-          )
-            break;
-          if (a.type === "MethodDefinition") {
-            isInsideMethod = true;
-            break;
-          }
-          if (
-            a.type === "PropertyDefinition" &&
-            (a.value?.type === "ArrowFunctionExpression" ||
-              a.value?.type === "FunctionExpression")
           ) {
-            isInsideMethod = true;
+            enclosingFnIndex = i;
             break;
           }
         }
+        if (enclosingFnIndex < 0) return;
+
+        // Only flag when that function is the direct body of a class method.
+        const parent = ancestors[enclosingFnIndex - 1];
+        const isInsideMethod =
+          parent?.type === "MethodDefinition" ||
+          (parent?.type === "PropertyDefinition" &&
+            (parent.value?.type === "ArrowFunctionExpression" ||
+              parent.value?.type === "FunctionExpression"));
         if (!isInsideMethod) return;
 
         let throwStmt: TSESTree.ThrowStatement | null = null;
