@@ -21,16 +21,23 @@ function isSealedSymbolMember(member: TSESTree.TSInterfaceBody["body"][number]):
     }
   }
 
-  // Computed property with underscore-prefixed key and never type: [_sealed]: never
+  // Computed property with underscore-prefixed key and never type: [_sealed]: never or ["_sealed"]: never
   if (
     member.type === "TSPropertySignature" &&
-    member.computed &&
-    member.key.type === "Identifier" &&
-    member.key.name.startsWith("_")
+    member.computed
   ) {
-    const typeAnn = member.typeAnnotation?.typeAnnotation;
-    if (typeAnn && typeAnn.type === "TSNeverKeyword") {
-      return true;
+    const keyName =
+      member.key.type === "Identifier"
+        ? member.key.name
+        : member.key.type === "Literal"
+          ? String(member.key.value)
+          : null;
+
+    if (keyName && keyName.startsWith("_")) {
+      const typeAnn = member.typeAnnotation?.typeAnnotation;
+      if (typeAnn && typeAnn.type === "TSNeverKeyword") {
+        return true;
+      }
     }
   }
 

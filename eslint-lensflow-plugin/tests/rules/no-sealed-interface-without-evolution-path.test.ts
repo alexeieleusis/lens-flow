@@ -53,5 +53,12 @@ export interface Config {
 }`,
       errors: [{ messageId: "sealedNoEvolution" }],
     },
+    {
+      code: `export interface Payment {
+  readonly ["_sealed"]: never;
+  charge(amount: number): Promise<void>;
+}`,
+      errors: [{ messageId: "sealedNoEvolution" }],
+    },
   ],
 });
