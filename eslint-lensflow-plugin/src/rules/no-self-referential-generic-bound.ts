@@ -210,7 +210,7 @@ export default createRule({
             node.constraint.type === "TSTypeReference" &&
             node.constraint.typeName.type === "Identifier"
               ? node.constraint.typeName.name
-              : `${node.constraint.type}`;
+              : context.sourceCode.getText(node.constraint);
 
           context.report({
             node,
