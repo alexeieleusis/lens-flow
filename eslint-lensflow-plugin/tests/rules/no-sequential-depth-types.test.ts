@@ -102,5 +102,16 @@ type Level3 = { id: string };`,
         { messageId: "sequentialDepthType" },
       ],
     },
+    // Union-wrapped array type - should detect array inside union
+    {
+      code: `type Level1 = { id: string; children?: Level2[] | null };
+type Level2 = { id: string; children?: Level3[] | null };
+type Level3 = { id: string };`,
+      errors: [
+        { messageId: "sequentialDepthType" },
+        { messageId: "sequentialDepthType" },
+        { messageId: "sequentialDepthType" },
+      ],
+    },
   ],
 });
