@@ -23,6 +23,13 @@ function calculateTax(order: Order) {
     // but this rule specifically targets the comparison-guard pattern
     // So this is valid for this rule:
     `items.map(x => x.value);`,
+    // Nested function inside callback with its own guard + throw should not trigger false positive
+    `items.map(x => {
+  const validate = (v: number) => {
+    if (v < 0) throw new Error("negative");
+  };
+  return x.value;
+})`,
   ],
   invalid: [
     {
