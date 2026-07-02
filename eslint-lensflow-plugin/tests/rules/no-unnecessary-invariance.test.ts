@@ -35,6 +35,10 @@ ruleTester.run("no-unnecessary-invariance", rule, {
     `interface Handler<in out T> {
       process: (input: T) => T;
     }`,
+    // in out with callable signature in both positions — correct
+    `interface Callable<in out T> {
+      (t: T): T;
+    }`,
   ],
   invalid: [
     // in out T used only in return position — should be out
@@ -90,6 +94,20 @@ ruleTester.run("no-unnecessary-invariance", rule, {
     {
       code: `interface ArrayConsumer<in out T> {
         setItems(items: T[]): void;
+      }`,
+      errors: [{ messageId: "onlyInput" }],
+    },
+    // in out with callable signature return only — should be out
+    {
+      code: `interface CallableProducer<in out T> {
+        (x: number): T;
+      }`,
+      errors: [{ messageId: "onlyOutput" }],
+    },
+    // in out with callable signature params only — should be in
+    {
+      code: `interface CallableConsumer<in out T> {
+        (t: T): void;
       }`,
       errors: [{ messageId: "onlyInput" }],
     },
