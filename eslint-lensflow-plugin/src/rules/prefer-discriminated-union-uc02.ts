@@ -22,32 +22,54 @@ function resolveUnionNode(
   annotation: TSESTree.TypeNode,
   typeAliases: Map<string, TSESTree.TypeNode>,
 ): TSESTree.TSUnionType | null {
-  while (annotation.type === "TSParenthesizedType") {
-    annotation = (annotation as TSESTree.TSParenthesizedType).typeAnnotation;
+  let current: TSESTree.TypeNode = annotation;
+
+  while (current.type === "TSParenthesizedType") {
+    current = (current as TSESTree.TSParenthesizedType).typeAnnotation;
   }
 
-  if (annotation.type === "TSUnionType") {
-    return annotation;
+  if (current.type === "TSUnionType") {
+    return current;
   }
 
-  if (annotation.type !== "TSTypeReference") {
+  if (current.type !== "TSTypeReference") {
     return null;
   }
 
-  const typeName =
-    annotation.typeName.type === "Identifier"
-      ? annotation.typeName.name
-      : annotation.typeName.type === "TSQualifiedName"
-        ? annotation.typeName.right.name
-        : null;
+  // Follow alias chains: type A = B; type B = "x" | "y";
+  let visited = new Set<string>();
+  let node: TSESTree.TypeNode = current;
 
-  if (!typeName || !typeAliases.has(typeName)) {
-    return null;
-  }
+  while (node.type === "TSTypeReference") {
+    const typeName =
+      node.typeName.type === "Identifier"
+        ? node.typeName.name
+        : node.typeName.type === "TSQualifiedName"
+          ? node.typeName.right.name
+          : null;
 
-  const aliasType = typeAliases.get(typeName)!;
-  if (aliasType.type === "TSUnionType") {
-    return aliasType;
+    if (!typeName || !typeAliases.has(typeName)) {
+      return null;
+    }
+
+    if (visited.has(typeName)) {
+      return null;
+    }
+    visited.add(typeName);
+
+    const aliasType = typeAliases.get(typeName)!;
+
+    if (aliasType.type === "TSUnionType") {
+      return aliasType;
+    }
+
+    if (aliasType.type === "TSParenthesizedType") {
+      node = aliasType.typeAnnotation;
+    } else if (aliasType.type === "TSTypeReference") {
+      node = aliasType;
+    } else {
+      return null;
+    }
   }
 
   return null;

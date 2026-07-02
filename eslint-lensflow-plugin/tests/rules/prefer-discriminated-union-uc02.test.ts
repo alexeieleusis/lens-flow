@@ -61,5 +61,12 @@ type Widget = { status: Status; value: string };`,
 type Widget = { status: NS.Status };`,
       errors: [{ messageId: "literalUnionField" }],
     },
+    // Antipattern: multi-level type alias chain
+    {
+      code: `type A = B;
+type B = "x" | "y";
+type X = { status: A };`,
+      errors: [{ messageId: "literalUnionField" }],
+    },
   ],
 });
