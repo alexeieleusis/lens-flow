@@ -2,7 +2,7 @@ import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
 const DISCRIMINANT_PATTERN = /^(kind|tag|code|type)$/;
-const ERROR_NAME_PATTERN = /[Ee]rror|[Ff]ail|[Ee]xception/;
+const ERROR_NAME_PATTERN = /Error|Fail|Exception/;
 
 function isStringType(node: TSESTree.TypeNode): boolean {
   return node.type === AST_NODE_TYPES.TSStringKeyword;
