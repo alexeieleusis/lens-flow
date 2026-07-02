@@ -80,5 +80,15 @@ if (!result.ok) {
 }`,
       errors: [{ messageId: "stringMatchOnError" }],
     },
+    {
+      code: `try {
+  fetchData();
+} catch (err) {
+  if (err.name.includes("Network")) {
+    handleNetwork();
+  }
+}`,
+      errors: [{ messageId: "stringMatchOnError" }],
+    },
   ],
 });
