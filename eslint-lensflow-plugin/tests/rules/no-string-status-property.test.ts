@@ -69,5 +69,11 @@ ruleTester.run("no-string-status-property", rule, {
 }`,
       errors: [{ messageId: "stringStatusField" }],
     },
+    {
+      code: `interface Api {
+  Status: string;
+}`,
+      errors: [{ messageId: "stringStatusField" }],
+    },
   ],
 });
