@@ -29,5 +29,9 @@ ruleTester.run("no-union-without-common-shape", rule, {
       code: `type QuotedBad = { "msg": string } | { "code": number } | { "data": unknown };`,
       errors: [{ messageId: "noCommonShape" }],
     },
+    {
+      code: `type WithMethods = { foo(): void } | { bar(): number };`,
+      errors: [{ messageId: "noCommonShape" }],
+    },
   ],
 });
