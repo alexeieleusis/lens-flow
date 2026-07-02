@@ -48,6 +48,16 @@ ruleTester.run("no-silent-error-catch", rule, {
     return null;
   }
 }`,
+    // Valid: nested function shadows catch parameter — no false positive
+    `async function f() {
+  try {
+    await riskyOp();
+  } catch (e) {
+    const fn = (e) => { console.log(e); };
+    fn(e);
+    throw new Error("Failed");
+  }
+}`,
     // Valid: catch with destructured parameter — rule early-returns on non-Identifier params
     `async function f() {
   try {
