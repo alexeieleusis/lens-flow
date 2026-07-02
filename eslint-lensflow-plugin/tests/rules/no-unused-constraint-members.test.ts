@@ -33,6 +33,18 @@ ruleTester.run("no-unused-constraint-members", rule, {
     `function showId<T extends { id: string; secret: string }>(x: T) {
       alert(x.id);
     }`,
+    // Outer access counts even when a nested function is present
+    `function process<T extends { name: string }>(item: T) {
+      console.log(item.name);
+      items.map(inner => inner.name);
+    }`,
+    // minUnusedMembers: 3 — only 2 unused members, should NOT report
+    {
+      code: `function log<T extends { id: string; secret: string }>(x: T) {
+        console.log("logged");
+      }`,
+      options: [{ minUnusedMembers: 3 }],
+    },
   ],
   invalid: [
     // Antipattern from spec — neither id nor secret accessed
@@ -54,6 +66,28 @@ ruleTester.run("no-unused-constraint-members", rule, {
       code: `const fn = function<T extends { foo: string; bar: boolean }>(x: T) {
         return 42;
       };`,
+      errors: [{ messageId: "unusedConstraintMembers" }],
+    },
+    // Nested function accesses property on different variable — outer constraint unused
+    {
+      code: `function log<T extends { name: string }>(item: T) {
+        items.map(inner => inner.name);
+      }`,
+      errors: [{ messageId: "unusedConstraintMembers" }],
+    },
+    // Nested function accesses same param — should NOT count as outer access
+    {
+      code: `function process<T extends { name: string }>(item: T) {
+        items.map(inner => item.name);
+      }`,
+      errors: [{ messageId: "unusedConstraintMembers" }],
+    },
+    // minUnusedMembers: 2 — exactly 2 unused members, should report
+    {
+      code: `function log<T extends { id: string; secret: string }>(x: T) {
+        console.log("logged");
+      }`,
+      options: [{ minUnusedMembers: 2 }],
       errors: [{ messageId: "unusedConstraintMembers" }],
     },
   ],
