@@ -78,6 +78,13 @@ ruleTester.run("no-undiscriminated-error-type", rule, {
       }`,
       errors: [{ messageId: "undiscriminatedError" }],
     },
+    // Non-string single property on error-named type (Case 3)
+    {
+      code: `interface Exception {
+        details: number;
+      }`,
+      errors: [{ messageId: "undiscriminatedError" }],
+    },
     // String-literal property key (quoted key)
     {
       code: `interface Error { "message": string; }`,
