@@ -125,6 +125,22 @@ ruleTester.run("no-unsafe-task-either-error-map", rule, {
   );
 }`,
     },
+    // Correct: union return type containing TaskEither — typed error is correct
+    {
+      filename: TEST_FILENAME,
+      code: TE_TYPES +
+        `function fetchUserOrNone(id: string): TE.TaskEither<NetworkError, User> | null {
+  if (!id) return null;
+  return TE.tryCatch(
+    async () => {
+      const res = await fetch(\`/api/users/\${id}\`);
+      if (!res.ok) throw { tag: "NetworkError" as const, status: res.status };
+      return res.json();
+    },
+    () => ({ tag: "NetworkError", status: 0 }) as const,
+  );
+}`,
+    },
   ],
   invalid: [
     // Throws generic Error, mapper uses unsafe `as` cast — two errors
@@ -200,6 +216,23 @@ ruleTester.run("no-unsafe-task-either-error-map", rule, {
     async () => {
       const res = await fetch(\`/api/users/\${id}\`);
       if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+    () => ({ tag: "NetworkError", status: 0 }) as const,
+  );
+}`,
+      errors: [{ messageId: "unsafeThrow" }],
+    },
+    // Union return type: unsafe throw — union should not hide the error
+    {
+      filename: TEST_FILENAME,
+      code: TE_TYPES +
+        `function fetchUserOrNone(id: string): TE.TaskEither<NetworkError, User> | null {
+  if (!id) return null;
+  return TE.tryCatch(
+    async () => {
+      const res = await fetch(\`/api/users/\${id}\`);
+      if (!res.ok) throw new Error("Network failed");
       return res.json();
     },
     () => ({ tag: "NetworkError", status: 0 }) as const,
