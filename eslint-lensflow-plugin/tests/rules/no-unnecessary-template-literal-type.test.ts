@@ -12,6 +12,9 @@ ruleTester.run("no-unnecessary-template-literal-type", rule, {
     `type MixedLiterals = \`\${"a" | 1}\`;`,
     `type Bool = \`\${true | false}\`;`,
     `type Ref = \`\${string}\`;`,
+    `function f(): \`pre_\${"a" | "b"}\` { return "pre_a"; }`,
+    `const f = (): \`\${"x" | "y"}_suffix\` => "x_suffix";`,
+    `function g<T extends \`tag-\${"a" | "b"}\`>() {}`,
   ],
   invalid: [
     {
@@ -28,6 +31,18 @@ ruleTester.run("no-unnecessary-template-literal-type", rule, {
     },
     {
       code: `type Single = \`\${"one"}\`;`,
+      errors: [{ messageId: "unnecessaryTemplateLiteral" }],
+    },
+    {
+      code: `function f(): \`\${"a" | "b"}\` { return "a"; }`,
+      errors: [{ messageId: "unnecessaryTemplateLiteral" }],
+    },
+    {
+      code: `const f = (): \`\${"x" | "y"}\` => "x";`,
+      errors: [{ messageId: "unnecessaryTemplateLiteral" }],
+    },
+    {
+      code: `function g<T extends \`\${"a" | "b"}\`>() {}`,
       errors: [{ messageId: "unnecessaryTemplateLiteral" }],
     },
   ],
