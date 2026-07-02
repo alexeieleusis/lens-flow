@@ -36,6 +36,15 @@ ruleTester.run("no-unnecessary-variadic-generic", rule, {
     `const sum = (arr: number[]): number => {
       return arr.reduce((a, b) => a + b, 0);
     };`,
+    // Nested function — outer generic is necessary (non-simple method on arr)
+    `function process<T extends unknown[]>(arr: T): number {
+      const [first, ...rest] = arr;
+      const fn = () => {
+        arr.push(first);
+        return rest.length;
+      };
+      return fn();
+    }`,
   ],
   invalid: [
     // Basic antipattern from spec
@@ -86,6 +95,17 @@ ruleTester.run("no-unnecessary-variadic-generic", rule, {
     {
       code: `function mixed<T, U extends number[]>(key: T, arr: U): number {
         return arr.reduce((a, b) => a + b, 0);
+      }`,
+      errors: [{ messageId: "unnecessaryGeneric" }],
+    },
+    // Nested function without generics — outer function should still be reported
+    {
+      code: `function outer<T extends number[]>(arr: T): number {
+        const inner = () => {
+          const doubled = arr.map(x => x * 2);
+          return doubled.reduce((a, b) => a + b, 0);
+        };
+        return inner();
       }`,
       errors: [{ messageId: "unnecessaryGeneric" }],
     },
