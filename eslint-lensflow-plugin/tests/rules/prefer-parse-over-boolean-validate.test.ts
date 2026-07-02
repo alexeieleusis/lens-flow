@@ -81,5 +81,14 @@ ruleTester.run("prefer-parse-over-boolean-validate", rule, {
     };`,
       errors: [{ messageId: "preferParse" }],
     },
+    // Shorthand method syntax inside object literal
+    {
+      code: `const obj = {
+      isValidEmail(s: string): boolean {
+        return /.+@.+.+/.test(s);
+      },
+    };`,
+      errors: [{ messageId: "preferParse" }],
+    },
   ],
 });
