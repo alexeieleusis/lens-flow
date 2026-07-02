@@ -10,6 +10,8 @@ ruleTester.run("no-union-without-common-shape", rule, {
     `type Single = { a: number; b: string };`,
     `type Mixed = { type: string } | number;`,
     `type WithCommon = { a: string; x: number } | { a: string; y: boolean };`,
+    `type QuotedCommon = { "type": "ok"; msg: string } | { "type": "error"; code: number };`,
+    `type QuotedMixed = { "msg": string } | number;`,
   ],
   invalid: [
     {
@@ -20,6 +22,10 @@ ruleTester.run("no-union-without-common-shape", rule, {
       code: `type Fragments =
         | { name: string }
         | { age: number };`,
+      errors: [{ messageId: "noCommonShape" }],
+    },
+    {
+      code: `type QuotedBad = { "msg": string } | { "code": number } | { "data": unknown };`,
       errors: [{ messageId: "noCommonShape" }],
     },
   ],
