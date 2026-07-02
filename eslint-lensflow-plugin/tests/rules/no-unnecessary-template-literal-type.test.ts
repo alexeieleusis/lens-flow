@@ -8,6 +8,10 @@ ruleTester.run("no-unnecessary-template-literal-type", rule, {
     `type Code = \`\${"x" | "y"}_suffix\`;`,
     `type Tag = \`a\${T}b\${U}\`;`,
    `type Mixed = \`status-\${"ok" | "err"}\` | "other";`,
+    `type Numeric = \`\${1 | 2 | 3}\`;`,
+    `type MixedLiterals = \`\${"a" | 1}\`;`,
+    `type Bool = \`\${true | false}\`;`,
+    `type Ref = \`\${string}\`;`,
   ],
   invalid: [
     {
