@@ -50,6 +50,7 @@ export default createRule({
       if (hasConstructorParamProperties) return;
       if (concreteMethods.length > 0) return;
       if (abstractMethods.length === 0) return;
+      if (abstractMethods.some((m) => m.static)) return;
 
       const name = node.id?.name ?? "unknown";
       context.report({

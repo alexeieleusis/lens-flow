@@ -25,6 +25,9 @@ ruleTester.run("prefer-interface-over-pure-abstract-class", rule, {
     `class Concrete {
       doSomething() {}
     }`,
+    `abstract class Base {
+      static abstract create(): Base;
+    }`,
   ],
   invalid: [
     {
