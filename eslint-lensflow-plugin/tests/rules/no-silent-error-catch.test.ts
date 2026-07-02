@@ -67,6 +67,14 @@ ruleTester.run("no-silent-error-catch", rule, {
     throw new Error("Failed");
   }
 }`,
+    // Valid: parameterless catch clause (ES2019+) — node.param is undefined
+    `function f() {
+  try {
+    riskyOp();
+  } catch {
+    throw new Error("Failed");
+  }
+}`,
   ],
   invalid: [
     {
