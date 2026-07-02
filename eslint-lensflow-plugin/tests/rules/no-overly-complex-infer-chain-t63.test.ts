@@ -14,6 +14,10 @@ ruleTester.run("no-overly-complex-infer-chain-t63", rule, {
     "type T2<S> = S extends `${infer H1},${infer R1}` ? R1 extends `${infer H2}` ? [H1, H2] : never : never;",
     // Three levels — equals default maxDepth 3, so valid
     "type T3<S> = S extends `${infer H1},${infer R1}` ? R1 extends `${infer H2},${infer R2}` ? R2 extends `${infer H3}` ? [H1, H2, H3] : never : never : never;",
+    // Union-wrapped infer in template literal — exercises TSUnionType branch in containsInfer
+    "type UnionInfer<S> = S extends `${infer U | string}` ? U : never;",
+    // Intersection-wrapped infer in template literal — exercises TSIntersectionType branch
+    "type IntersectionInfer<S> = S extends `${string & infer U}` ? U : never;",
   ],
   invalid: [
     // Four levels of nested infer conditionals — exceeds default maxDepth 3
@@ -50,6 +54,19 @@ ruleTester.run("no-overly-complex-infer-chain-t63", rule, {
         "  : never\n" +
         "  : never;",
       options: [{ maxDepth: 1 }],
+      errors: [{ messageId: "complexInferChain" }],
+    },
+    // Union-wrapped infer in template literal — 4 levels, exceeds maxDepth 3
+    {
+      code: "type UnionDeep<S> = S extends `${infer A | string}`\n" +
+        "  ? A extends `${infer B | string}`\n" +
+        "  ? B extends `${infer C | string}`\n" +
+        "  ? C extends `${infer D | string}`\n" +
+        "  ? [A, B, C, D]\n" +
+        "  : never\n" +
+        "  : never\n" +
+        "  : never\n" +
+        "  : never;",
       errors: [{ messageId: "complexInferChain" }],
     },
     // False-branch recursion — chain continues through falseType, exceeds maxDepth 3
