@@ -51,5 +51,13 @@ ruleTester.run("prefer-property-function-signature", rule, {
         { messageId: "preferPropertyFunction" },
       ],
     },
+    {
+      code: `interface Handler {
+        "handle"(req: Request): void;
+      }`,
+      errors: [
+        { messageId: "preferPropertyFunction", data: { name: "handle" } },
+      ],
+    },
   ],
 });
