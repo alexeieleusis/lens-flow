@@ -20,6 +20,9 @@ ruleTester.run("no-throw-in-result-function", rule, {
     `function fail(message: string): never {
       throw new Error(message);
     }`,
+    `function assertNonNull(x: unknown): asserts x is NonNullable<unknown> {
+      if (x == null) throw new Error("null");
+    }`,
     `function assertCondition(cond: boolean): Result<void, Error> {
       return ok(undefined);
     }`,
