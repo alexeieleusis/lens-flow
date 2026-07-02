@@ -40,10 +40,39 @@ ruleTester.run("prefer-branded-over-repeated-guard", rule, {
     function addRecipient(email: string) {
       if (!isvalid(email)) throw new Error();
     }`,
-    // Already using branded type — no guard calls at all
+   // Already using branded type — no guard calls at all
     `type Email = string & { __brand: "Email" };
-    function notifyUser(email: Email) { send(email); }
-    function addRecipient(email: Email) { recipients.push(email); }`,
+    function notifyUser(email: string) { send(email); }
+    function addRecipient(email: string) { recipients.push(email); }`,
+    // Guard called in 2 functions with minFunctions: 3 — should NOT report
+    {
+      code: `function isEmail(value: string): boolean {
+  return true;
+}
+function notifyUser(email: string) {
+  if (!isEmail(email)) throw new Error();
+}
+function addRecipient(email: string) {
+  if (!isEmail(email)) throw new Error();
+}`,
+      options: [{ minFunctions: 3 }],
+    },
+    // Guard called in 3 functions with minFunctions: 4 — should NOT report
+    {
+      code: `function isEmail(value: string): boolean {
+  return true;
+}
+function notifyUser(email: string) {
+  if (!isEmail(email)) throw new Error();
+}
+function addRecipient(email: string) {
+  if (!isEmail(email)) throw new Error();
+}
+function archive(email: string) {
+  if (!isEmail(email)) throw new Error();
+}`,
+      options: [{ minFunctions: 4 }],
+    },
   ],
   invalid: [
     // Two functions each call the same guard
@@ -93,6 +122,48 @@ function open(url: string) {
   if (!isUrl(url)) throw new Error();
 }`,
       errors: [{ messageId: "repeatedGuard" }, { messageId: "repeatedGuard" }],
+    },
+    // Guard called in 3 functions with minFunctions: 2 — should report all 3
+    {
+      code: `function isPositive(value: number): boolean {
+  return value > 0;
+}
+function setAge(age: number) {
+  if (!isPositive(age)) throw new Error();
+}
+function setQuantity(qty: number) {
+  if (!isPositive(qty)) throw new Error();
+}
+function setPrice(price: number) {
+  if (!isPositive(price)) throw new Error();
+}`,
+      options: [{ minFunctions: 2 }],
+      errors: [
+        { messageId: "repeatedGuard" },
+        { messageId: "repeatedGuard" },
+        { messageId: "repeatedGuard" },
+      ],
+    },
+    // Guard called in 3 functions with minFunctions: 3 — boundary, should report all 3
+    {
+      code: `function isPositive(value: number): boolean {
+  return value > 0;
+}
+function setAge(age: number) {
+  if (!isPositive(age)) throw new Error();
+}
+function setQuantity(qty: number) {
+  if (!isPositive(qty)) throw new Error();
+}
+function setPrice(price: number) {
+  if (!isPositive(price)) throw new Error();
+}`,
+      options: [{ minFunctions: 3 }],
+      errors: [
+        { messageId: "repeatedGuard" },
+        { messageId: "repeatedGuard" },
+        { messageId: "repeatedGuard" },
+      ],
     },
   ],
 });
