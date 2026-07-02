@@ -10,6 +10,12 @@ ruleTester.run("no-template-literal-number-catchall", rule, {
     `type Path = \`/\${string}\`;`,
     `type Tag = \`<\${"div" | "span"}>\`;`,
     `type Mixed = \`prefix-\${string}-suffix\`;`,
+    // Function return type
+    `function getUrl(): \`http://\${"localhost" | "example.com"}\` { return "http://localhost"; }`,
+    // Interface property type
+    `interface Config { port: \`port-\${"80" | "443"}\`; }`,
+    // Type argument
+    `type Wrapper<T> = { value: T };\ntype W = Wrapper<\`id-\${"a" | "b"}\`>;`,
   ],
   invalid: [
     {
@@ -27,6 +33,26 @@ ruleTester.run("no-template-literal-number-catchall", rule, {
     {
       code: `type Port = \`\${number}\`;\ntype Host = \`example.com:\${Port}\`;`,
       errors: [{ messageId: "bareNumber" }],
+    },
+    // Function return type
+    {
+      code: `function getPort(): \`\${number}\` { return "80"; }`,
+      errors: [{ messageId: "bareNumber" }],
+    },
+    // Interface property type
+    {
+      code: `interface Config { port: \`\${number}\`; }`,
+      errors: [{ messageId: "bareNumber" }],
+    },
+    // Type argument
+    {
+      code: `type Wrapper<T> = { value: T };\ntype W = Wrapper<\`\${number}\`>;`,
+      errors: [{ messageId: "bareNumber" }],
+    },
+    // Nested template literal in interface property
+    {
+      code: `interface Config { host: \`a-\${"x" | "y"}-\${string}\`; }`,
+      errors: [{ messageId: "bareString" }],
     },
   ],
 });
