@@ -54,5 +54,17 @@ ruleTester.run("prefer-contravariance-over-union-uc17", rule, {
       options: [{ minUnionMembers: 2 }],
       errors: [{ messageId: "preferContravariance" }],
     },
+    {
+      code: `interface Handler {
+        handle: (v: NS.Cat | NS.Dog | NS.Animal) => void;
+      }`,
+      errors: [{ messageId: "preferContravariance" }],
+    },
+    {
+      code: `type MixedHandler = {
+        process: (x: string | number | boolean | Cat) => void;
+      };`,
+      errors: [{ messageId: "preferContravariance" }],
+    },
   ],
 });
