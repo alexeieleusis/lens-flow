@@ -56,5 +56,15 @@ ruleTester.run("no-unbounded-plugin-registration", rule, {
       }`,
       errors: [{ messageId: "unboundedRegister" }],
     },
+    {
+      code: `class Host {
+        plugins: Plugin[] = [];
+        register(p: Plugin) {
+          if (debugMode) console.log("debug");
+          this.plugins.push(p);
+        }
+      }`,
+      errors: [{ messageId: "unboundedRegister" }],
+    },
   ],
 });
