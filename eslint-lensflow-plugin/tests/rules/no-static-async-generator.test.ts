@@ -38,6 +38,16 @@ ruleTester.run("no-static-async-generator", rule, {
       const arr = [1, 2, 3];
       return arr;
     }`,
+    // Object literals are NOT considered "literal nodes" — should be valid
+    `async function* withObjectLiterals(): AsyncGenerator<object> {
+      const items = [{a: 1}, {b: 2}];
+      for (const item of items) yield item;
+    }`,
+    // Sparse array (elision holes) — null elements should not match
+    `async function* withSparseArray(): AsyncGenerator<number> {
+      const arr = [1, , 3];
+      for (const x of arr) yield x;
+    }`,
   ],
   invalid: [
     {
@@ -73,6 +83,22 @@ ruleTester.run("no-static-async-generator", rule, {
         const words = ["hello", "world"];
         for (const w of words) yield w;
       }`,
+      errors: [{ messageId: "staticAsyncGenerator" }],
+    },
+    // Negative numeric literals are considered literal nodes
+    {
+      code: `async function* withNegativeNumbers(): AsyncGenerator<number> {
+        const nums = [-1, -2, -3];
+        for (const n of nums) yield n;
+      }`,
+      errors: [{ messageId: "staticAsyncGenerator" }],
+    },
+    // Template literals (without expressions) are considered literal nodes
+    {
+      code: "async function* withTemplateLiterals(): AsyncGenerator<string> {\n" +
+        "  const strs = ['a', `hello`];\n" +
+        "  for (const s of strs) yield s;\n" +
+        "}",
       errors: [{ messageId: "staticAsyncGenerator" }],
     },
   ],
