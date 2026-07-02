@@ -25,6 +25,8 @@ ruleTester.run("no-or-or-for-default-values", rule, {
     `const x = a || null;`,
     // || with undefined RHS — ?? is a no-op
     `const y = b || undefined;`,
+    // || with negative numeric literal RHS — UnaryExpression, not Literal
+    `const x = a || -1;`,
   ],
   invalid: [
     // String default via ||
