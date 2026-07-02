@@ -48,6 +48,15 @@ ruleTester.run("no-silent-error-catch", rule, {
     return null;
   }
 }`,
+    // Valid: catch with destructured parameter — rule early-returns on non-Identifier params
+    `async function f() {
+  try {
+    await riskyOp();
+  } catch ({ message }) {
+    console.error(message);
+    throw new Error("Failed");
+  }
+}`,
   ],
   invalid: [
     {
