@@ -121,6 +121,19 @@ function getNextRef(node: TSESTree.TSTypeAliasDeclaration): string | null {
           if (typeName) return typeName;
         }
       }
+
+      if (propType.type === "TSTypeReference") {
+        const baseName = getRefName(propType.typeName);
+        if (baseName === "Array" || baseName === "ReadonlyArray") {
+          if (propType.typeArguments?.params[0]) {
+            const refs = extractTypeRefs(propType.typeArguments.params[0]);
+            for (const ref of refs) {
+              const typeName = getRefName(ref.typeName);
+              if (typeName) return typeName;
+            }
+          }
+        }
+      }
     }
   }
 
@@ -131,6 +144,11 @@ function getNextRef(node: TSESTree.TSTypeAliasDeclaration): string | null {
       if (!propType) continue;
 
       if (propType.type === "TSArrayType") continue;
+
+      if (propType.type === "TSTypeReference") {
+        const baseName = getRefName(propType.typeName);
+        if (baseName === "Array" || baseName === "ReadonlyArray") continue;
+      }
 
       const refs = extractTypeRefs(propType);
       for (const ref of refs) {
