@@ -81,5 +81,49 @@ ruleTester.run("no-this-method-reference-assignment", rule, {
       let ref = instance.chain;`,
       errors: [{ messageId: "methodRefAssignment" }],
     },
+    {
+      filename: TEST_FILENAME,
+      code: `
+        const Builder = class {
+          setFlag(v: string): this { return this; }
+        };
+        const b = new Builder();
+        const fn = b.setFlag;
+      `,
+      errors: [{ messageId: "methodRefAssignment" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `
+        abstract class Base {
+          abstract build(): this;
+        }
+        class Derived extends Base {
+          build(): this { return this; }
+        }
+        const b = new Derived();
+        const fn = b.build;
+      `,
+      errors: [{ messageId: "methodRefAssignment" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `
+        class C { m(): this | undefined { return this; } }
+        const c = new C();
+        const fn = c.m;
+      `,
+      errors: [{ messageId: "methodRefAssignment" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `
+        interface Extra { extra(): void; }
+        class C { m(): this & Extra { return this as any; } }
+        const c = new C();
+        const fn = c.m;
+      `,
+      errors: [{ messageId: "methodRefAssignment" }],
+    },
   ],
 });
