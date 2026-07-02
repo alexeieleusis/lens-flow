@@ -77,16 +77,7 @@ function astEquals(
 function sigEquals(a: FnLikeNode, b: FnLikeNode): boolean {
   if (a.params.length !== b.params.length) return false;
   for (let i = 0; i < a.params.length; i++) {
-    const ap = a.params[i];
-    const bp = b.params[i];
-    if (ap.type !== bp.type) return false;
-    if (
-      ap.type === "Identifier" &&
-      bp.type === "Identifier" &&
-      ap.name !== bp.name
-    )
-      return false;
-    if (!astEquals((ap as any).typeAnnotation, (bp as any).typeAnnotation)) return false;
+    if (!astEquals(a.params[i], b.params[i])) return false;
   }
   return astEquals(a.returnType, b.returnType);
 }
