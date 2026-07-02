@@ -75,8 +75,6 @@ export default createRule({
       >
     > = [];
 
-    let fnDepth = 0;
-
     function getArrayConstraintText(
       constraint: TSESTree.TypeNode,
     ): string | undefined {
@@ -128,12 +126,6 @@ export default createRule({
         | TSESTree.FunctionExpression
         | TSESTree.ArrowFunctionExpression,
     ) {
-      fnDepth++;
-
-      if (fnDepth !== 1) {
-        return;
-      }
-
       const typeParams = node.typeParameters;
       if (!typeParams || typeParams.params.length === 0) {
         fnStack.push(new Map());
@@ -205,8 +197,6 @@ export default createRule({
           });
         }
       }
-
-      fnDepth--;
     }
 
     return {
