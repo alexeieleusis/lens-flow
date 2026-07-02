@@ -21,6 +21,10 @@ ruleTester.run("no-or-or-for-default-values", rule, {
       code: `const x = adminFlag || "fallback";`,
       options: [{ ignorePatterns: ["^admin"] }],
     },
+    // || with null RHS — ?? is a no-op (still falls through on null/undefined)
+    `const x = a || null;`,
+    // || with undefined RHS — ?? is a no-op
+    `const y = b || undefined;`,
   ],
   invalid: [
     // String default via ||

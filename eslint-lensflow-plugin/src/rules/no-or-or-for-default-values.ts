@@ -8,8 +8,11 @@ function isLikelyTarget(node: TSESTree.Node): boolean {
 }
 
 function isDefaultValueType(node: TSESTree.Node): boolean {
+  if (node.type === "Literal") {
+    // Skip null — `x || null` -> `x ?? null` is a semantic no-op
+    return node.value !== null;
+  }
   return (
-    node.type === "Literal" ||
     node.type === "ArrayExpression" ||
     node.type === "ObjectExpression"
   );
