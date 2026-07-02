@@ -23,6 +23,12 @@ const age = 25 as Age;`,
 function getUser(req: { userId: string }): UserId {
   return req.userId as UserId;
 }`,
+    // Identifier shadowing — shadowed parameter must NOT trace to outer JSON.parse
+    `type UserId = string & { readonly __brand: "UserId" };
+const data = JSON.parse(json);
+function validate(data: { id: UserId }): UserId {
+  return data.id as UserId;
+}`,
   ],
   invalid: [
     // Direct property access on JSON.parse result cast to branded type
