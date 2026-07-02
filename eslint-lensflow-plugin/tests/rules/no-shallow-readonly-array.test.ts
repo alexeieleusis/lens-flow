@@ -16,6 +16,16 @@ ruleTester.run("no-shallow-readonly-array", rule, {
       readonly value: string;
     }`,
     `type State = { readonly items: readonly string[] };`,
+    `interface Node {
+      readonly children: ReadonlyArray<Node>;
+    }`,
+    `interface Config {
+      items: Array<string>;
+    }`,
+    `class Container {
+      readonly data: ReadonlyArray<number>;
+    }`,
+    `type State = { readonly items: ReadonlyArray<string> };`,
   ],
   invalid: [
     {
@@ -45,6 +55,24 @@ ruleTester.run("no-shallow-readonly-array", rule, {
         readonly plugins: Plugin[];
       }`,
       errors: [{ messageId: "shallowReadonlyArray" }],
+    },
+    {
+      code: `interface Node {
+        readonly children: Array<Node>;
+      }`,
+      errors: [{ messageId: "shallowReadonlyArrayRef" }],
+    },
+    {
+      code: `class Container {
+        readonly items: Array<string>;
+      }`,
+      errors: [{ messageId: "shallowReadonlyArrayRef" }],
+    },
+    {
+      code: `type Config = {
+        readonly plugins: Array<Plugin>;
+      }`,
+      errors: [{ messageId: "shallowReadonlyArrayRef" }],
     },
   ],
 });
