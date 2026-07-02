@@ -37,5 +37,10 @@ ruleTester.run("no-typestate-any-bypass", rule, {
       code: `const result = factory.create().configure().build() as any;`,
       errors: [{ messageId: "typestateBypass" }],
     },
+    // Optional chaining (ChainExpression) cast to `any`
+    {
+      code: `request()?.method("POST")?.send() as any;`,
+      errors: [{ messageId: "typestateBypass" }],
+    },
   ],
 });
