@@ -15,6 +15,18 @@ ruleTester.run("prefer-contravariance-over-union-uc17", rule, {
     `interface Handler {
       handle: (v: Cat) => void;
     }`,
+    {
+      code: `interface Handler {
+        handle: (v: Cat | Dog | Animal) => void;
+      }`,
+      options: [{ minUnionMembers: 5 }],
+    },
+    {
+      code: `interface Handler {
+        handle: (v: Cat | Dog | Animal) => void;
+      }`,
+      options: [{}],
+    },
   ],
   invalid: [
     {
@@ -33,6 +45,13 @@ ruleTester.run("prefer-contravariance-over-union-uc17", rule, {
       code: `interface MultiHandler {
         handle: (x: A | B | C | D) => void;
       }`,
+      errors: [{ messageId: "preferContravariance" }],
+    },
+    {
+      code: `interface Handler {
+        handle: (v: Cat | Dog) => void;
+      }`,
+      options: [{ minUnionMembers: 2 }],
       errors: [{ messageId: "preferContravariance" }],
     },
   ],
