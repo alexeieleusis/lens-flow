@@ -31,6 +31,10 @@ ruleTester.run("no-throw-in-result-function", rule, {
       if (x < 0) throw new Error("negative");
       return String(x);
     };`,
+    `function process(input: string): Result<Data, E> {
+      const callback = (): string => { throw new Error("inner"); };
+      return ok(callback());
+    }`,
   ],
   invalid: [
     {
