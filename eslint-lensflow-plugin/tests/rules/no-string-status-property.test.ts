@@ -20,6 +20,20 @@ ruleTester.run("no-string-status-property", rule, {
     `interface WithTypeRef {
   status: Status;
 }`,
+    {
+      code: `interface ApiResponse {
+  status: string;
+}`,
+      options: [{ statusFieldNames: ["customStatus"] }],
+    },
+    {
+      code: `interface Config {
+  state: string;
+  kind: string;
+  mode: string;
+}`,
+      options: [{ statusFieldNames: ["customStatus"] }],
+    },
   ],
   invalid: [
     {
@@ -74,6 +88,25 @@ ruleTester.run("no-string-status-property", rule, {
   Status: string;
 }`,
       errors: [{ messageId: "stringStatusField" }],
+    },
+    {
+      code: `interface Handler {
+  customStatus: string;
+  name: string;
+}`,
+      options: [{ statusFieldNames: ["customStatus"] }],
+      errors: [{ messageId: "stringStatusField" }],
+    },
+    {
+      code: `interface Pipeline {
+  customStatus: string;
+  status: string;
+}`,
+      options: [{ statusFieldNames: ["customStatus", "status"] }],
+      errors: [
+        { messageId: "stringStatusField" },
+        { messageId: "stringStatusField" },
+      ],
     },
   ],
 });
