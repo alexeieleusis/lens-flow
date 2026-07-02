@@ -30,18 +30,29 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"staticThisReturn", []>) {
+    const visitMethod = (
+      node: TSESTree.MethodDefinition | TSESTree.TSAbstractMethodDefinition,
+    ) => {
+      if (!node.static) return;
+
+      const value = node.value;
+      if (!value) return;
+      // MethodDefinition has FunctionExpression; TSAbstractMethodDefinition has TSEmptyBodyFunctionExpression
+      const retType = value.returnType?.typeAnnotation;
+      if (retType && containsTSThisType(retType)) {
+        context.report({
+          node: value.returnType!,
+          messageId: "staticThisReturn",
+        });
+      }
+    };
+
     return {
       MethodDefinition(node) {
-        if (!node.static) return;
-        const value = node.value;
-        if (value.type !== "FunctionExpression") return;
-        const retType = value.returnType?.typeAnnotation;
-        if (retType && containsTSThisType(retType)) {
-          context.report({
-            node: value.returnType!,
-            messageId: "staticThisReturn",
-          });
-        }
+        visitMethod(node);
+      },
+      TSAbstractMethodDefinition(node) {
+        visitMethod(node);
       },
     };
   },
