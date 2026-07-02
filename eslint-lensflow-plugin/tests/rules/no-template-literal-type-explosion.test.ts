@@ -10,6 +10,14 @@ type Kind = "a" | "b";
 type Combined = \`\${Status}\${Kind}\`;`,
     `type Simple = "hello" | "world";
 type Result = \`\${Simple}_done\`;`,
+    // Near-miss: single union interpolation — counts.length === 1, so no violation
+    `type A = "a1" | "a2" | "a3" | "a4";
+type X = \`\${A}_id\`;`,
+    // Near-miss: non-union type reference — `string` is not in typeAliasMap
+    `type X = \`\${string}_id\`;`,
+    // Near-miss: qualified type reference — resolved name "Action" not in typeAliasMap
+    `type NS = { Action: "a" | "b" | "c" | "d" | "e" | "f" };
+type X = \`\${NS.Action}_id\`;`,
     {
       code: `type A = "a1" | "a2" | "a3" | "a4";
 type B = "b1" | "b2" | "b3" | "b4";
