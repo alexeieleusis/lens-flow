@@ -22,6 +22,12 @@ ruleTester.run("no-this-in-static-member", rule, {
     `class Base {
       clone(): this { return Object.create(this); }
     }`,
+    `class Base {
+      create = (): this => new this();
+    }`,
+    `class Base {
+      static create = (): Base => new Base();
+    }`,
   ],
   invalid: [
     {
@@ -68,6 +74,20 @@ ruleTester.run("no-this-in-static-member", rule, {
     {
       code: `abstract class Base {
         abstract static create(): this;
+      }`,
+      errors: [{ messageId: "staticThisReturn" }],
+    },
+    {
+      code: `class Base {
+        static create = (): this => new this();
+      }`,
+      errors: [{ messageId: "staticThisReturn" }],
+    },
+    {
+      code: `class Factory {
+        static build = (): this | null => {
+          return Math.random() > 0.5 ? new this() : null;
+        };
       }`,
       errors: [{ messageId: "staticThisReturn" }],
     },

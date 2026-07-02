@@ -30,6 +30,21 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"staticThisReturn", []>) {
+    const reportIfStaticThisReturn = (
+      funcNode:
+        | TSESTree.FunctionExpression
+        | TSESTree.ArrowFunctionExpression
+        | TSESTree.TSEmptyBodyFunctionExpression,
+    ) => {
+      const retType = funcNode.returnType?.typeAnnotation;
+      if (retType && containsTSThisType(retType)) {
+        context.report({
+          node: funcNode.returnType!,
+          messageId: "staticThisReturn",
+        });
+      }
+    };
+
     const visitMethod = (
       node: TSESTree.MethodDefinition | TSESTree.TSAbstractMethodDefinition,
     ) => {
@@ -37,13 +52,19 @@ export default createRule({
 
       const value = node.value;
       if (!value) return;
-      // MethodDefinition has FunctionExpression; TSAbstractMethodDefinition has TSEmptyBodyFunctionExpression
-      const retType = value.returnType?.typeAnnotation;
-      if (retType && containsTSThisType(retType)) {
-        context.report({
-          node: value.returnType!,
-          messageId: "staticThisReturn",
-        });
+      reportIfStaticThisReturn(value);
+    };
+
+    const visitProperty = (node: TSESTree.PropertyDefinition) => {
+      if (!node.static) return;
+      if (!node.value) return;
+
+      const value = node.value;
+      if (
+        value.type === "ArrowFunctionExpression" ||
+        value.type === "FunctionExpression"
+      ) {
+        reportIfStaticThisReturn(value);
       }
     };
 
@@ -53,6 +74,9 @@ export default createRule({
       },
       TSAbstractMethodDefinition(node) {
         visitMethod(node);
+      },
+      PropertyDefinition(node) {
+        visitProperty(node);
       },
     };
   },
