@@ -75,6 +75,26 @@ ruleTester.run("no-silent-error-catch", rule, {
     throw new Error("Failed");
   }
 }`,
+    // Valid sync: error is included in the rethrown Error message
+    `function fetchUser(id: string) {
+  try {
+    const res = fetch(\`/api/users/\${id}\`);
+    return res;
+  } catch (e) {
+    console.error(e);
+    throw new Error("Failed: " + e);
+  }
+}`,
+    // Valid sync: error is used for tracking, not just logging
+    `function doSomething() {
+  try {
+    riskyOperation();
+  } catch (e) {
+    console.error(e);
+    logger.trackError(e);
+    throw new Error("Failed");
+  }
+}`,
   ],
   invalid: [
     {
@@ -107,6 +127,19 @@ ruleTester.run("no-silent-error-catch", rule, {
   } catch (e) {
     console.warn(e);
     throw new Error();
+  }
+}`,
+      errors: [{ messageId: "silentErrorCatch" }],
+    },
+    // Invalid sync: error logged but not forwarded — same issue as async
+    {
+      code: `function fetchUser(id: string) {
+  try {
+    const res = fetch(\`/api/users/\${id}\`);
+    return res;
+  } catch (e) {
+    console.error(e);
+    throw new Error("Failed");
   }
 }`,
       errors: [{ messageId: "silentErrorCatch" }],
