@@ -36,28 +36,17 @@ function isStringProperty(member: TSESTree.TSPropertySignature): boolean {
 
 function getParentDeclarationName(
   node: TSESTree.TSTypeLiteral | TSESTree.TSInterfaceBody,
+  sourceCode: TSESLint.SourceCode,
 ): string | null {
-  const parent = node.parent;
-  if (!parent) return null;
-
-  // Direct parent is TSTypeAliasDeclaration (top-level type alias)
-  if (parent.type === AST_NODE_TYPES.TSTypeAliasDeclaration) {
-    return parent.id.name;
-  }
-
-  // Direct parent is TSTypeLiteral, go to grandparent for TSTypeAliasDeclaration
-  if (parent.type === AST_NODE_TYPES.TSTypeLiteral) {
-    const grandparent = parent.parent;
-    if (grandparent && grandparent.type === AST_NODE_TYPES.TSTypeAliasDeclaration) {
-      return grandparent.id.name;
+  const ancestors = sourceCode.getAncestors(node);
+  for (const ancestor of ancestors) {
+    if (ancestor.type === AST_NODE_TYPES.TSTypeAliasDeclaration) {
+      return ancestor.id.name;
     }
-    return null;
+    if (ancestor.type === AST_NODE_TYPES.TSInterfaceDeclaration) {
+      return ancestor.id.name;
+    }
   }
-
-  if (parent.type === AST_NODE_TYPES.TSInterfaceDeclaration) {
-    return parent.id.name;
-  }
-
   return null;
 }
 
@@ -93,7 +82,7 @@ export default createRule({
 
       if (members.length === 0) return;
 
-      const declName = getParentDeclarationName(node);
+      const declName = getParentDeclarationName(node, context.sourceCode);
       const hasDisc = hasDiscriminant(members);
 
       // Case 1: exactly one property named 'message' with type string
