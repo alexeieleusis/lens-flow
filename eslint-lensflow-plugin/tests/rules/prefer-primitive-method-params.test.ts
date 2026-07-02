@@ -28,6 +28,13 @@ ruleTester.run("prefer-primitive-method-params", rule, {
     `const handler = (data: { name: string; age: number }) => {
       console.log(data.name, data.age);
     };`,
+    // Nested function accessing single property — walk stops at function boundary
+    `class User {
+      setName(data: { name: string }) {
+        const fn = () => data.name;
+        fn();
+      }
+    }`,
   ],
   invalid: [
     {
