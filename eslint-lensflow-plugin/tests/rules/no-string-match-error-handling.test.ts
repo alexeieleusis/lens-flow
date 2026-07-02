@@ -33,6 +33,13 @@ if (!result.ok) {
     handleNotFound();
   }
 }`,
+    `try {
+  const data = process(input);
+} catch (err) {
+  if (outerError.message.includes("not found")) {
+    handleNotFound();
+  }
+}`,
   ],
   invalid: [
     {
