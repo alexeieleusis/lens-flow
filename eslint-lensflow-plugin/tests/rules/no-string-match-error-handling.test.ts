@@ -80,14 +80,37 @@ if (!result.ok) {
 }`,
       errors: [{ messageId: "stringMatchOnError" }],
     },
-    {
+   {
       code: `try {
   fetchData();
 } catch (err) {
   if (err.name.includes("Network")) {
     handleNetwork();
   }
-}`,
+}
+      `,
+      errors: [{ messageId: "stringMatchOnError" }],
+    },
+    {
+      code: `try {
+  const data = process(input);
+} catch (e) {
+  if (e.message.search(/not found/i) !== -1) {
+    handleNotFound();
+  }
+}
+      `,
+      errors: [{ messageId: "stringMatchOnError" }],
+    },
+    {
+      code: `try {
+  api.call();
+} catch (err) {
+  if (err.message.endsWith("timeout")) {
+    handleTimeout();
+  }
+}
+      `,
       errors: [{ messageId: "stringMatchOnError" }],
     },
   ],
