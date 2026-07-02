@@ -80,5 +80,10 @@ function g(x: string | number): void {
 };`,
       errors: [{ messageId: "unknownTypePredicate" }],
     },
+    {
+      filename: TEST_FILENAME,
+      code: `type Predicate = (x: unknown) => x is string;`,
+      errors: [{ messageId: "unknownTypePredicate" }],
+    },
   ],
 });
