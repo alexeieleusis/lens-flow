@@ -56,5 +56,9 @@ ruleTester.run("prefer-primitive-method-params", rule, {
     }`,
       errors: [{ messageId: "preferPrimitive" }],
     },
+    {
+      code: `function f(data: { name: string }) { return data["name"]; }`,
+      errors: [{ messageId: "preferPrimitive" }],
+    },
   ],
 });
