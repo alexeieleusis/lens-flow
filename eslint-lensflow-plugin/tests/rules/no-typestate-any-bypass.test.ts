@@ -42,5 +42,10 @@ ruleTester.run("no-typestate-any-bypass", rule, {
       code: `request()?.method("POST")?.send() as any;`,
       errors: [{ messageId: "typestateBypass" }],
     },
+    // Non-null assertion (TSNonNullExpression) cast to `any`
+    {
+      code: `request()! as any;`,
+      errors: [{ messageId: "typestateBypass" }],
+    },
   ],
 });
