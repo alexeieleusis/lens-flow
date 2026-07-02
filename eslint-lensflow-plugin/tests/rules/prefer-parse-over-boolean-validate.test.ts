@@ -72,5 +72,14 @@ ruleTester.run("prefer-parse-over-boolean-validate", rule, {
     };`,
       errors: [{ messageId: "preferParse" }],
     },
+    // Quoted string-literal property key
+    {
+      code: `const obj = {
+      "isValidEmail": function(s: string): boolean {
+        return /.+@.+/ .test(s);
+      },
+    };`,
+      errors: [{ messageId: "preferParse" }],
+    },
   ],
 });

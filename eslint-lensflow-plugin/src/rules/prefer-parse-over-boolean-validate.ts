@@ -17,11 +17,13 @@ function getName(
 ): string | null {
   if (node.type === "FunctionDeclaration" && node.id) return node.id.name;
   if (node.type === "FunctionExpression" && node.id) return node.id.name;
-  if (
-    node.parent?.type === "Property" &&
-    node.parent.key.type === "Identifier"
-  ) {
-    return node.parent.key.name;
+  if (node.parent?.type === "Property") {
+    if (node.parent.key.type === "Identifier") {
+      return node.parent.key.name;
+    }
+    if (node.parent.key.type === "Literal" && typeof node.parent.key.value === "string") {
+      return node.parent.key.value;
+    }
   }
   if (
     node.type === "ArrowFunctionExpression" &&
