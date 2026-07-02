@@ -54,5 +54,14 @@ ruleTester.run("no-template-literal-number-catchall", rule, {
       code: `interface Config { host: \`a-\${"x" | "y"}-\${string}\`; }`,
       errors: [{ messageId: "bareString" }],
     },
+    // ${number} takes priority over ${string} — both in same template literal
+    {
+      code: `type T = \`\${number}-\${string}\`;`,
+      errors: [{ messageId: "bareNumber" }],
+    },
+    {
+      code: `type T = \`\${string}-\${number}\`;`,
+      errors: [{ messageId: "bareNumber" }],
+    },
   ],
 });
