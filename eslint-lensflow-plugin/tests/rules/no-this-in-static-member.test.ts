@@ -49,5 +49,13 @@ ruleTester.run("no-this-in-static-member", rule, {
       }`,
       errors: [{ messageId: "staticThisReturn" }, { messageId: "staticThisReturn" }],
     },
+    {
+      code: `class Base {
+        static create(): this & { marker: true } {
+          return {} as this & { marker: true };
+        }
+      }`,
+      errors: [{ messageId: "staticThisReturn" }],
+    },
   ],
 });
