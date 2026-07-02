@@ -125,5 +125,15 @@ ruleTester.run("no-this-method-reference-assignment", rule, {
       `,
       errors: [{ messageId: "methodRefAssignment" }],
     },
+    {
+      filename: TEST_FILENAME,
+      code: `
+        class C { m(): this { return this; } }
+        const c = new C();
+        let fn;
+        fn = c.m;
+      `,
+      errors: [{ messageId: "methodRefAssignment" }],
+    },
   ],
 });
