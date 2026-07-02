@@ -144,5 +144,22 @@ ruleTester.run("no-unsafe-task-either-error-map", rule, {
 }`,
       errors: [{ messageId: "unsafeCast" }],
     },
+    // Regression: nested function should not corrupt enclosing scope
+    {
+      filename: TEST_FILENAME,
+      code: TE_TYPES +
+        `function fetchUser(id: string): TE.TaskEither<NetworkError, User> {
+  const mapFn = (x: string) => x.toUpperCase();
+  return TE.tryCatch(
+    async () => {
+      const res = await fetch(\`/api/users/\${id}\`);
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+    () => ({ tag: "NetworkError", status: 0 }) as const,
+  );
+}`,
+      errors: [{ messageId: "unsafeThrow" }],
+    },
   ],
 });
