@@ -58,5 +58,12 @@ validateConfig(config);`,
 }`,
       errors: [{ messageId: "preferSatisfies" }],
     },
+    {
+      code: `function validate(c: any = {}) {
+  if (!c.port) throw "missing port";
+  if (!c.host) throw "missing host";
+}`,
+      errors: [{ messageId: "preferSatisfies" }],
+    },
   ],
 });
