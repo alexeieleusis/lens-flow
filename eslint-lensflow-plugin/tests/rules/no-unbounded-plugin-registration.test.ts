@@ -28,6 +28,15 @@ ruleTester.run("no-unbounded-plugin-registration", rule, {
       plugins: Plugin[] = [];
       add(p: Plugin) { this.plugins.push(p); }
     }`,
+    `class Host {
+      plugins: Plugin[] = [];
+      register(p: Plugin) {
+        try {
+          if (this.plugins.includes(p)) throw new Error("duplicate");
+        } catch { /* noop */ }
+        this.plugins.push(p);
+      }
+    }`,
   ],
   invalid: [
     {
