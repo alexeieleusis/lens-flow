@@ -45,6 +45,10 @@ ruleTester.run("no-unused-constraint-members", rule, {
       }`,
       options: [{ minUnusedMembers: 3 }],
     },
+    // RestElement parameter — should not crash
+    `function h<T extends { id: string }>(...args: T[]) { console.log(args); }`,
+    // ArrayPattern destructured parameter — should not crash
+    `function k<T extends { id: string }>([first]: [T]) { console.log(first); }`,
   ],
   invalid: [
     // Antipattern from spec — neither id nor secret accessed
@@ -88,6 +92,16 @@ ruleTester.run("no-unused-constraint-members", rule, {
         console.log("logged");
       }`,
       options: [{ minUnusedMembers: 2 }],
+      errors: [{ messageId: "unusedConstraintMembers" }],
+    },
+    // Destructured parameter (ObjectPattern) — rule can't trace destructured access, reports unused
+    {
+      code: `function f<T extends { id: string }>({ id }: T) { console.log(id); }`,
+      errors: [{ messageId: "unusedConstraintMembers" }],
+    },
+    // Default parameter (AssignmentPattern) — constraint members unused in body
+    {
+      code: `function g<T extends { id: string }>(x: T = fallback) { console.log("ok"); }`,
       errors: [{ messageId: "unusedConstraintMembers" }],
     },
   ],
