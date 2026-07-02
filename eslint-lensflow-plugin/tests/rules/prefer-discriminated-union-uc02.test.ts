@@ -22,6 +22,8 @@ ruleTester.run("prefer-discriminated-union-uc02", rule, {
     }`,
     // Inline union with only one literal member
     `type Single = { tag: "a" | string };`,
+    // TSQualifiedName — unresolvable namespace (alias not in scope) — no false positive
+    `type Widget = { status: NS.Status };`,
   ],
   invalid: [
     // Antipattern: type alias reference with literal union
@@ -51,6 +53,12 @@ type Widget = { status: Status; value: string };`,
     // Antipattern: exactly 2 literal members
     {
       code: `type Toggle = { mode: "on" | "off" };`,
+      errors: [{ messageId: "literalUnionField" }],
+    },
+    // Antipattern: TSQualifiedName — namespaced type alias reference resolves to literal union
+    {
+      code: `type Status = "idle" | "loading" | "ready";
+type Widget = { status: NS.Status };`,
       errors: [{ messageId: "literalUnionField" }],
     },
   ],
