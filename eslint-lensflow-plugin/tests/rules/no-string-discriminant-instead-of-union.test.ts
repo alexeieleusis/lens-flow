@@ -64,5 +64,12 @@ ruleTester.run("no-string-discriminant-instead-of-union", rule, {
       }`,
       errors: [{ messageId: "stringDiscriminant" }],
     },
+    {
+      code: `interface QuotedKey {
+        "kind": "a" | "b";
+        value: number;
+      }`,
+      errors: [{ messageId: "stringDiscriminant" }],
+    },
   ],
 });
