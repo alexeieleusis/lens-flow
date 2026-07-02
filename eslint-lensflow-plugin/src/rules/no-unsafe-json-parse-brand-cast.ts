@@ -83,12 +83,36 @@ export default createRule({
         );
         if (!variable) return false;
 
-        return variable.defs.some((def) => {
+        const targetLoc = node.loc.start;
+        const writeSources: TSESTree.Expression[] = [];
+
+        variable.defs.forEach((def) => {
           if (def.node.type === "VariableDeclarator" && def.node.init) {
-            return originatesFromJsonParse(def.node.init, visitedIds);
+            if (def.node.loc && def.node.loc.start.line <= targetLoc.line) {
+              writeSources.push(def.node.init);
+            }
           }
-          return false;
         });
+
+        variable.references.forEach((ref) => {
+          if (ref.isWrite() && ref.writeExpr) {
+            if (
+              ref.identifier.loc &&
+              ref.identifier.loc.start.line <= targetLoc.line
+            ) {
+              writeSources.push(ref.writeExpr);
+            }
+          }
+        });
+
+        writeSources.sort((a, b) => {
+          if (!a.loc || !b.loc) return 0;
+          return a.loc.start.line - b.loc.start.line;
+        });
+
+        if (writeSources.length === 0) return false;
+
+        return originatesFromJsonParse(writeSources[writeSources.length - 1], visitedIds);
       }
 
       return false;

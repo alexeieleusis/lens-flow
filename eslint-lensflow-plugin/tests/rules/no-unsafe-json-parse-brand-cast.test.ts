@@ -29,6 +29,13 @@ const data = JSON.parse(json);
 function validate(data: { id: UserId }): UserId {
   return data.id as UserId;
 }`,
+    // Reassignment — let variable reassigned to validated value should NOT report
+    `type UserId = string & { readonly __brand: "UserId" };
+function loadUser(json: string, validatedData: { id: UserId }): UserId {
+  let data = JSON.parse(json);
+  data = validatedData;
+  return data.id as UserId;
+}`,
   ],
   invalid: [
     // Direct property access on JSON.parse result cast to branded type
@@ -68,6 +75,17 @@ function loadScore(json: string): Score {
 function loadUser(json: string): { id: UserId } {
   const data = JSON.parse(json);
   return { id: data.id as UserId };
+}`,
+      errors: [{ messageId: "unsafeBrandCast" }],
+    },
+    // Destructured variable from JSON.parse cast to branded type
+    {
+      code: `type UserId = string & { readonly __brand: "UserId" };
+
+function loadUser(json: string): UserId {
+  const data = JSON.parse(json);
+  const { id } = data;
+  return id as UserId;
 }`,
       errors: [{ messageId: "unsafeBrandCast" }],
     },
