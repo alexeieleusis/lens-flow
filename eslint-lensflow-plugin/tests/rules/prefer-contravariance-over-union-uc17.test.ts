@@ -66,5 +66,17 @@ ruleTester.run("prefer-contravariance-over-union-uc17", rule, {
       };`,
       errors: [{ messageId: "preferContravariance" }],
     },
+    {
+      code: `interface Handler {
+        handle: (v: (Cat | Dog | Animal)) => void;
+      }`,
+      errors: [{ messageId: "preferContravariance" }],
+    },
+    {
+      code: `type EventProcessor = {
+        process: (event: (ClickEvent | KeyEvent | ScrollEvent)) => void;
+      };`,
+      errors: [{ messageId: "preferContravariance" }],
+    },
   ],
 });

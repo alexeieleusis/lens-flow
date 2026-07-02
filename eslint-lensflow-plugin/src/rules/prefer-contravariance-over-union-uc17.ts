@@ -33,10 +33,14 @@ export default createRule({
       { minUnionMembers: 3 },
     ];
 
+    function unwrapType(node: TSESTree.TypeNode): TSESTree.TypeNode {
+      return node.type === "TSParenthesizedType" ? unwrapType(node.typeAnnotation) : node;
+    }
+
     function checkFunctionParams(funcNode: TSESTree.TSFunctionType) {
       for (const param of funcNode.params) {
         if (param.type !== "Identifier") continue;
-        const typeAnn = param.typeAnnotation?.typeAnnotation;
+        const typeAnn = unwrapType(param.typeAnnotation?.typeAnnotation);
         if (typeAnn?.type === "TSUnionType" && typeAnn.types.length >= minUnionMembers) {
           const typeNames = typeAnn.types
             .map((t: TSESTree.TypeNode) => {
