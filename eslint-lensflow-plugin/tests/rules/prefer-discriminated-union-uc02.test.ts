@@ -68,5 +68,10 @@ type B = "x" | "y";
 type X = { status: A };`,
       errors: [{ messageId: "literalUnionField" }],
     },
+    // Antipattern: quoted string-literal property key (Literal key branch)
+    {
+      code: `type X = { "status": "a" | "b" };`,
+      errors: [{ messageId: "literalUnionField" }],
+    },
   ],
 });
