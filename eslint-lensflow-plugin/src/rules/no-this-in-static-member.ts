@@ -6,6 +6,11 @@ function containsTSThisType(node: TSESTree.TypeNode): boolean {
   if (node.type === "TSUnionType" || node.type === "TSIntersectionType") {
     return node.types.some(containsTSThisType);
   }
+  // TSParenthesizedType exists at runtime but isn't in @typescript-eslint's types
+  if (node.type === ("TSParenthesizedType" as TSESTree.TypeNode["type"])) {
+    const casted = node as unknown as { typeAnnotation: TSESTree.TypeNode };
+    return containsTSThisType(casted.typeAnnotation);
+  }
   return false;
 }
 

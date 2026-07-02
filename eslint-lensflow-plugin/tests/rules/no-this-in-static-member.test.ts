@@ -57,5 +57,13 @@ ruleTester.run("no-this-in-static-member", rule, {
       }`,
       errors: [{ messageId: "staticThisReturn" }],
     },
+    {
+      code: `class Factory {
+        static build(): (this | null) {
+          return Math.random() > 0.5 ? new this() : null;
+        }
+      }`,
+      errors: [{ messageId: "staticThisReturn" }],
+    },
   ],
 });
