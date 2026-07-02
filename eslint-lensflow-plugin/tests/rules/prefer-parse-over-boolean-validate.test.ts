@@ -28,6 +28,11 @@ ruleTester.run("prefer-parse-over-boolean-validate", rule, {
     `function islowercase(s: string): boolean {
       return /.+@.+/.test(s);
     }`,
+    // Nested function with .test() — inner scope should not trigger the rule
+    `function isValidData(data: unknown): boolean {
+      const inner = (s: string) => /.+/.test(s);
+      return true;
+    }`,
   ],
   invalid: [
     // Classic antipattern: boolean validator with .test()
