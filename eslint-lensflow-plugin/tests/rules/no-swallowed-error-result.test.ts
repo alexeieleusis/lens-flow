@@ -91,5 +91,12 @@ if (result.ok) {
 }`,
       errors: [{ messageId: "trivialLog" }],
     },
+    {
+      code: `const result = parseInput(data);
+if (result.ok) {
+  use(result.value);
+} else console.log("error");`,
+      errors: [{ messageId: "trivialLog" }],
+    },
   ],
 });
