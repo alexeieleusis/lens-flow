@@ -48,6 +48,12 @@ function setMode(mode: Mode) {
 }`,
       options: [{ minComparisons: 2 }],
     },
+    // Comparison of outer param inside nested callback should not be attributed to outer scope
+    `function setMode(mode: string) {
+  const handler = (other: number) => {
+    if (mode === "dark") { /* ... */ }
+  };
+}`,
   ],
   invalid: [
     // Basic case from antipattern snippet
