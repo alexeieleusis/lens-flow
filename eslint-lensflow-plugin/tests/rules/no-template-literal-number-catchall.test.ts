@@ -3,7 +3,7 @@ import rule from "../../src/rules/no-template-literal-number-catchall.js";
 
 ruleTester.run("no-template-literal-number-catchall", rule, {
   valid: [
-    `type Port = "80" | "443" | "8080" | "3000";`,
+    `type T = \`port-\${"80" | "443"}\`;`,
     `type Port = "80" | "443";\ntype Url = \`http://localhost:\${Port}\`;`,
     `type Greeting = \`Hello, \${Name}\`;`,
     `type Id = \`\${string}\`;`,
