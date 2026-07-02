@@ -101,5 +101,12 @@ ruleTester.run("no-throw-in-result-function", rule, {
       };`,
       errors: [{ messageId: "throwInResultFunction" }],
     },
+    {
+      code: `function tryParse(s: string): Result<number, E> | null {
+        if (!s) throw new Error("empty");
+        return ok(Number(s));
+      }`,
+      errors: [{ messageId: "throwInResultFunction" }],
+    },
   ],
 });
