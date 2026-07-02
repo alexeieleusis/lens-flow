@@ -12,6 +12,7 @@ ruleTester.run("no-union-without-common-shape", rule, {
     `type WithCommon = { a: string; x: number } | { a: string; y: boolean };`,
     `type QuotedCommon = { "type": "ok"; msg: string } | { "type": "error"; code: number };`,
     `type QuotedMixed = { "msg": string } | number;`,
+    `type NearMiss = { type: string; extra: number } | { type: number; other: boolean };`,
   ],
   invalid: [
     {
