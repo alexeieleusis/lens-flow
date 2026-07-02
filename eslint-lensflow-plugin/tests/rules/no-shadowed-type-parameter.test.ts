@@ -36,18 +36,35 @@ function second<T>(x: T) { return x; }`,
   }
   return inner;
 }`,
-    // Separate declare functions with same type param name — not nested
+   // Separate declare functions with same type param name — not nested
     `declare function outer<T>(x: T): void;
-declare function inner<T>(y: T): void;`,
+ declare function inner<T>(y: T): void;`,
     // Declare function with non-shadowing nested function
     `declare function outer<T>(x: T): void;
-declare function outer<U>(x: U): void;`,
+ declare function outer<U>(x: U): void;`,
+    // TSDeclareFunction: declare function with distinct type param — no shadow
+    `declare function create<U>(item: U): U { return item; }`,
+    // TSDeclareFunction: standalone declare function — no nesting, no shadow
+    `declare function init<T>(value: T): void;`,
+    // TSDeclareFunction: inside module with distinct type param — no shadow
+    `declare module M {
+  declare function create<T>(item: T): T;
+  declare function wrap<U>(item: U): U;
+}`,
+    // TSDeclareFunction: declare function inside generic declare class with distinct param
+    `declare class Container<T> {
+  create<U>(item: U): T;
+}`,
     // Class expression with distinct names — no shadowing
     `const Factory = class Outer<T> {
   map<U>(fn: (v: T) => U): Outer<U> {
     return new Outer(fn);
   }
 };`,
+    // Abstract method with distinct type param — no shadow
+    `abstract class Base<T> {
+  abstract method<U>(x: U): U;
+}`,
   ],
   invalid: [
     // Basic shadowing from the spec
@@ -106,6 +123,13 @@ declare function outer<U>(x: U): void;`,
 };`,
       errors: [{ messageId: "shadowedTypeParam" }],
     },
+    // TSEmptyBodyFunctionExpression: abstract method shadows outer class type param
+    {
+      code: `abstract class Base<T> {
+  abstract method<T>(x: T): T;
+}`,
+      errors: [{ messageId: "shadowedTypeParam" }],
+    },
     // Multiple params where one shadows
     {
       code: `function outer<T, U>(a: T, b: U) {
@@ -145,6 +169,16 @@ declare function outer<U>(x: U): void;`,
         { messageId: "shadowedTypeParam" },
         { messageId: "shadowedTypeParam" },
       ],
+    },
+    // TSDeclareFunction: declare function with arrow function shadowing inside
+    {
+      code: `declare function outer<T>(cb: <T>(x: T) => T): void;`,
+      errors: [{ messageId: "shadowedTypeParam" }],
+    },
+    // TSDeclareFunction: declare function with nested arrow shadowing outer type param
+    {
+      code: `declare function pipe<T>(input: T, fn: <T>(v: T) => T): T;`,
+      errors: [{ messageId: "shadowedTypeParam" }],
     },
   ],
 });

@@ -34,7 +34,8 @@ export default createRule({
         | TSESTree.ClassExpression
         | TSESTree.TSDeclareFunction
         | TSESTree.TSInterfaceDeclaration
-        | TSESTree.TSTypeAliasDeclaration,
+        | TSESTree.TSTypeAliasDeclaration
+        | TSESTree.TSEmptyBodyFunctionExpression,
     ) {
       const typeParams = node.typeParameters;
       if (!typeParams || typeParams.params.length === 0) return;
@@ -64,7 +65,8 @@ export default createRule({
         | TSESTree.ClassExpression
         | TSESTree.TSDeclareFunction
         | TSESTree.TSInterfaceDeclaration
-        | TSESTree.TSTypeAliasDeclaration,
+        | TSESTree.TSTypeAliasDeclaration
+        | TSESTree.TSEmptyBodyFunctionExpression,
     ) {
       if (node.typeParameters && node.typeParameters.params.length > 0) {
         const names = scopeStack.pop();
@@ -162,6 +164,35 @@ export default createRule({
       }
     }
 
+    function enterFunctionType(node: TSESTree.TSFunctionType) {
+      const typeParams = node.typeParameters;
+      if (!typeParams || typeParams.params.length === 0) return;
+
+      const names = typeParams.params.map((p) => p.name.name);
+
+      for (let i = 0; i < names.length; i++) {
+        if (activeNames.has(names[i])) {
+          context.report({
+            node: typeParams.params[i],
+            messageId: "shadowedTypeParam",
+            data: { name: names[i] },
+          });
+        }
+      }
+
+      for (const name of names) activeNames.add(name);
+      scopeStack.push(names);
+    }
+
+    function exitFunctionType(node: TSESTree.TSFunctionType) {
+      if (node.typeParameters && node.typeParameters.params.length > 0) {
+        const names = scopeStack.pop();
+        if (names) {
+          for (const name of names) activeNames.delete(name);
+        }
+      }
+    }
+
     function enterMethodDefinition(node: TSESTree.MethodDefinition) {
       const typeParams = (node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters;
       if (!typeParams || typeParams.params.length === 0) return;
@@ -227,6 +258,12 @@ export default createRule({
         enterWithParams(node);
       },
       "TSDeclareFunction:exit"(node) {
+        exitWithParams(node);
+      },
+      TSEmptyBodyFunctionExpression(node) {
+        enterWithParams(node);
+      },
+      "TSEmptyBodyFunctionExpression:exit"(node) {
         exitWithParams(node);
       },
       TSInterfaceDeclaration(node) {
