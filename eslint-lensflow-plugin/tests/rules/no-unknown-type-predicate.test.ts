@@ -52,6 +52,11 @@ function g(x: string | number): void {
   return typeof x === "string";
 }`,
     },
+    {
+      filename: TEST_FILENAME,
+      code: `function isString(x: string | number): x is string;
+function isString(x) { return typeof x === "string"; }`,
+    },
   ],
   invalid: [
     {
@@ -84,6 +89,12 @@ function g(x: string | number): void {
       filename: TEST_FILENAME,
       code: `type Predicate = (x: unknown) => x is string;`,
       errors: [{ messageId: "unknownTypePredicate" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `function isString(x: unknown): x is string;
+function isString(x): x is string { return typeof x === "string"; }`,
+      errors: [{ messageId: "unknownTypePredicate" }, { messageId: "unknownTypePredicate" }],
     },
   ],
 });
