@@ -65,6 +65,12 @@ function handleAuth(data: unknown): void {
   return data as unknown;
 }`,
     },
+    {
+      filename: TEST_FILENAME,
+      code: `function cast(data: unknown): never {
+  return data as never;
+}`,
+    },
   ],
   invalid: [
     {
