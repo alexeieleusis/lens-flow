@@ -35,6 +35,16 @@ ruleTester.run("no-throw-in-result-function", rule, {
       const callback = (): string => { throw new Error("inner"); };
       return ok(callback());
     }`,
+    `function fetch(url: string): TE.TaskEither<Error, Response> {
+      return TE.right(new Response());
+    }`,
+    `const handler = (input: string): E.Either<Data, E> => {
+      if (!input) return E.left(new Error("empty"));
+      return E.right(input as Data);
+    };`,
+    `function parse(id: string): Result<User, Error> | null {
+      return ok({ id } as User);
+    }`,
   ],
   invalid: [
     {
@@ -74,6 +84,20 @@ ruleTester.run("no-throw-in-result-function", rule, {
       code: `const fn = function (x: string): Result<string, Error> {
         if (x.length === 0) throw new Error("empty");
         return ok(x);
+      };`,
+      errors: [{ messageId: "throwInResultFunction" }],
+    },
+    {
+      code: `function fetch(url: string): TE.TaskEither<Error, Response> {
+        if (!url) throw new Error("url required");
+        return TE.right(new Response());
+      }`,
+      errors: [{ messageId: "throwInResultFunction" }],
+    },
+    {
+      code: `const handler = (input: string): E.Either<Data, Err> => {
+        if (!input) throw new Error("empty input");
+        return E.right(input as Data);
       };`,
       errors: [{ messageId: "throwInResultFunction" }],
     },
