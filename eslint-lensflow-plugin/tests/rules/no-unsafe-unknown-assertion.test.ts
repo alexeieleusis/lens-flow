@@ -55,6 +55,10 @@ function handleAuth(data: unknown): void {
     },
     {
       filename: TEST_FILENAME,
+      code: `const isToken = (v: unknown): v is AuthToken => v as AuthToken !== null;`,
+    },
+    {
+      filename: TEST_FILENAME,
       code: `function parse(data: string): string {
   return data as string;
 }`,
