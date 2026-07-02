@@ -60,6 +60,14 @@ function setMode(mode: Mode) {
     if (mode === 42) { /* ... */ }
   };
 }`,
+    // Defaulted parameter with no literal comparisons
+    `function greet(name: string = "world") {
+  console.log(name);
+}`,
+    // Template literal with expression is not a simple string literal
+    `function check(mode: string) {
+  if (mode === \`\${"dark"}\`) { /* ... */ }
+}`,
   ],
   invalid: [
     // Basic case from antipattern snippet
@@ -158,6 +166,29 @@ function setMode(mode: Mode) {
     if (y === "a") return true;
     if (y === "b") return false;
   };
+}`,
+      errors: [{ messageId: "stringParamWithLiteralComparison" }],
+    },
+    // Template literal without expressions
+    {
+      code: `function setMode(mode: string) {
+  if (mode === \`dark\`) { /* ... */ }
+  if (mode === \`light\`) { /* ... */ }
+}`,
+      errors: [{ messageId: "stringParamWithLiteralComparison" }],
+    },
+    // Template literal on the left side of comparison
+    {
+      code: `function check(env: string) {
+  if (\`prod\` === env) { /* ... */ }
+}`,
+      errors: [{ messageId: "stringParamWithLiteralComparison" }],
+    },
+    // Mixed literal and template literal
+    {
+      code: `function classify(category: string) {
+  if (category === "a") return 1;
+  if (category === \`b\`) return 2;
 }`,
       errors: [{ messageId: "stringParamWithLiteralComparison" }],
     },

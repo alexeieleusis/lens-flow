@@ -17,6 +17,18 @@ function normalizeParam(param: TSESTree.Parameter): TSESTree.Node {
   return param;
 }
 
+function getLiteralStringValue(node: TSESTree.Node): string | null {
+  if (node.type === "Literal" && typeof node.value === "string") return node.value;
+  if (
+    node.type === "TemplateLiteral" &&
+    node.quasis.length === 1 &&
+    node.expressions.length === 0
+  ) {
+    return node.quasis[0].value.cooked ?? node.quasis[0].value.raw;
+  }
+  return null;
+}
+
 function getStringParamIdent(
   param: TSESTree.Parameter,
 ): (TSESTree.Identifier & { typeAnnotation: TSESTree.TSTypeAnnotation }) | null {
@@ -157,20 +169,21 @@ export default createRule({
         let paramScope: ParamScope | undefined;
         let literalValue: string | undefined;
 
+        const rightLiteral = getLiteralStringValue(right);
+        const leftLiteral = getLiteralStringValue(left);
+
         if (
           left.type === "Identifier" &&
-          right.type === "Literal" &&
-          typeof right.value === "string"
+          rightLiteral !== null
         ) {
           paramScope = resolveParamScope(left);
-          literalValue = paramScope ? right.value : undefined;
+          literalValue = paramScope ? rightLiteral : undefined;
         } else if (
           right.type === "Identifier" &&
-          left.type === "Literal" &&
-          typeof left.value === "string"
+          leftLiteral !== null
         ) {
           paramScope = resolveParamScope(right);
-          literalValue = paramScope ? left.value : undefined;
+          literalValue = paramScope ? leftLiteral : undefined;
         }
 
         if (paramScope && literalValue !== undefined) {
