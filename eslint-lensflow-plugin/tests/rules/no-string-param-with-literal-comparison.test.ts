@@ -54,6 +54,12 @@ function setMode(mode: Mode) {
     if (mode === "dark") { /* ... */ }
   };
 }`,
+    // Nested function shadows parameter — should NOT report
+    `function setMode(mode: string) {
+  const inner = (mode: number) => {
+    if (mode === 42) { /* ... */ }
+  };
+}`,
   ],
   invalid: [
     // Basic case from antipattern snippet
