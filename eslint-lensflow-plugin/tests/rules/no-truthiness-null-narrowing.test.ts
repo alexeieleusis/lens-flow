@@ -52,6 +52,18 @@ ruleTester.run("no-truthiness-null-narrowing", rule, {
   if (val) console.log(val);
 }`,
     },
+    {
+      filename: TEST_FILENAME,
+      code: `function handle(s: string | undefined) {
+  if (s !== undefined) console.log(s.length);
+}`,
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `function handle(s: string | undefined) {
+  if (s != null) console.log(s.length);
+}`,
+    },
   ],
   invalid: [
     {
@@ -86,6 +98,20 @@ ruleTester.run("no-truthiness-null-narrowing", rule, {
       filename: TEST_FILENAME,
       code: `function handle(flag: boolean | null) {
   if (flag) console.log(flag);
+}`,
+      errors: [{ messageId: "truthinessNullNarrowing" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `function handle(s: string | undefined) {
+  if (s) console.log(s.length);
+}`,
+      errors: [{ messageId: "truthinessNullNarrowing" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `function handle(s: string | undefined) {
+  s && console.log(s.length);
 }`,
       errors: [{ messageId: "truthinessNullNarrowing" }],
     },
