@@ -29,14 +29,30 @@ function isCallback(
   return node.type === "ArrowFunctionExpression" || node.type === "FunctionExpression";
 }
 
+function extractIdentifiers(node: TSESTree.Node, names: Set<string>): void {
+  if (node.type === "Identifier") {
+    names.add(node.name);
+  } else if (node.type === "ObjectPattern") {
+    for (const prop of (node as TSESTree.ObjectPattern).properties) {
+      extractIdentifiers(prop.value, names);
+    }
+  } else if (node.type === "ArrayPattern") {
+    for (const element of (node as TSESTree.ArrayPattern).elements) {
+      if (element) extractIdentifiers(element, names);
+    }
+  } else if (node.type === "RestElement") {
+    extractIdentifiers((node as TSESTree.RestElement).argument, names);
+  } else if (node.type === "AssignmentPattern") {
+    extractIdentifiers((node as TSESTree.AssignmentPattern).left, names);
+  }
+}
+
 function getParamNames(
   cb: TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression,
 ): Set<string> {
   const names = new Set<string>();
   for (const param of cb.params) {
-    if (param.type === "Identifier") {
-      names.add(param.name);
-    }
+    extractIdentifiers(param, names);
   }
   return names;
 }

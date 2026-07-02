@@ -78,5 +78,14 @@ function calculateTax(order: Order) {
 });`,
       errors: [{ messageId: "validationInIterator" }],
     },
+    // Destructured callback parameter — getParamNames() only extracts Identifiers,
+    // so ObjectPattern/ArrayPattern params are missed and validation leaks go unreported
+    {
+      code: `items.map(({ price }) => {
+  if (price < 0) throw new Error("negative price");
+  return price;
+});`,
+      errors: [{ messageId: "validationInIterator" }],
+    },
   ],
 });
