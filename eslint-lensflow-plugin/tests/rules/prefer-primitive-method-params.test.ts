@@ -3,7 +3,7 @@ import rule from "../../src/rules/prefer-primitive-method-params.js";
 
 ruleTester.run("prefer-primitive-method-params", rule, {
   valid: [
-    // Only one boolean flag — below threshold
+    // Multiple properties accessed — not a single-property extraction
     `class User {
       #name: string;
       setName(data: { name: string; email: string }) {
