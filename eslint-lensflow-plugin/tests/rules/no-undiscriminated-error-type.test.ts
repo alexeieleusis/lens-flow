@@ -78,5 +78,10 @@ ruleTester.run("no-undiscriminated-error-type", rule, {
       }`,
       errors: [{ messageId: "undiscriminatedError" }],
     },
+    // String-literal property key (quoted key)
+    {
+      code: `interface Error { "message": string; }`,
+      errors: [{ messageId: "singleMessageProperty" }],
+    },
   ],
 });
