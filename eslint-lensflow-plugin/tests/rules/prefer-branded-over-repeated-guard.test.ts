@@ -73,6 +73,23 @@ function archive(email: string) {
 }`,
       options: [{ minFunctions: 4 }],
     },
+    // FunctionExpression guard called in only 1 function — no issue
+    `const isEmail = function isEmail(value: string): boolean {
+  return true;
+};
+function notifyUser(email: string) {
+  if (!isEmail(email)) throw new Error();
+}`,
+    // Anonymous FunctionExpression — no id, should NOT be detected as a guard
+    `const isEmail = function(value: string): boolean {
+  return true;
+};
+function notifyUser(email: string) {
+  if (!isEmail(email)) throw new Error();
+}
+function addRecipient(email: string) {
+  if (!isEmail(email)) throw new Error();
+}`,
   ],
   invalid: [
     // Two functions each call the same guard
@@ -164,6 +181,32 @@ function setPrice(price: number) {
         { messageId: "repeatedGuard" },
         { messageId: "repeatedGuard" },
       ],
+    },
+    // FunctionExpression guard called in 2 functions
+    {
+      code: `const isEmail = function isEmail(value: string): boolean {
+  return true;
+};
+function notifyUser(email: string) {
+  if (!isEmail(email)) throw new Error();
+}
+function addRecipient(email: string) {
+  if (!isEmail(email)) throw new Error();
+}`,
+      errors: [{ messageId: "repeatedGuard" }, { messageId: "repeatedGuard" }],
+    },
+    // FunctionExpression guard with findEnclosingFunction attributing to named FunctionExpression
+    {
+      code: `const isEmail = function isEmail(value: string): boolean {
+  return true;
+};
+const handler = function process(data: string) {
+  if (!isEmail(data)) throw new Error();
+};
+const handler2 = function process2(data: string) {
+  if (!isEmail(data)) throw new Error();
+}`,
+      errors: [{ messageId: "repeatedGuard" }, { messageId: "repeatedGuard" }],
     },
   ],
 });
