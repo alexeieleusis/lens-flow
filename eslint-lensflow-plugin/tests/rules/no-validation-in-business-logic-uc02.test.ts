@@ -71,5 +71,12 @@ function calculateTax(order: Order) {
 });`,
       errors: [{ messageId: "validationInIterator" }],
     },
+    {
+      code: `arr.map((x) => {
+  if (x.value >= 0) return x.value * 2;
+  else throw new Error("negative value");
+});`,
+      errors: [{ messageId: "validationInIterator" }],
+    },
   ],
 });
