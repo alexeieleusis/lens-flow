@@ -115,5 +115,19 @@ ruleTester.run("no-truthiness-null-narrowing", rule, {
 }`,
       errors: [{ messageId: "truthinessNullNarrowing" }],
     },
+    {
+      filename: TEST_FILENAME,
+      code: `function handle(n: number | null) {
+  n || console.log("default");
+}`,
+      errors: [{ messageId: "truthinessNullNarrowing" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `function handle(s: string | undefined) {
+  s || console.log("default");
+}`,
+      errors: [{ messageId: "truthinessNullNarrowing" }],
+    },
   ],
 });
