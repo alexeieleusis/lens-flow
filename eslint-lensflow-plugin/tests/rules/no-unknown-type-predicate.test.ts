@@ -73,5 +73,12 @@ function g(x: string | number): void {
       code: `const isString = (x: unknown): x is string => typeof x === "string";`,
       errors: [{ messageId: "unknownTypePredicate" }],
     },
+    {
+      filename: TEST_FILENAME,
+      code: `const isString = function(x: unknown): x is string {
+  return typeof x === "string";
+};`,
+      errors: [{ messageId: "unknownTypePredicate" }],
+    },
   ],
 });
