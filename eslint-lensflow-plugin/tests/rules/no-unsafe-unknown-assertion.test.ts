@@ -97,5 +97,15 @@ function getUser(raw: unknown): User {
 }`,
       errors: [{ messageId: "unsafeCast" }],
     },
+    {
+      filename: TEST_FILENAME,
+      code: `interface AuthToken { token: string; expires: number }
+
+function isToken(v: unknown): v is AuthToken {
+  const fn = () => v as AuthToken;
+  return fn() !== null;
+}`,
+      errors: [{ messageId: "unsafeCast" }],
+    },
   ],
 });
