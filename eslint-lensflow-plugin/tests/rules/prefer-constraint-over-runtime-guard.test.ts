@@ -60,5 +60,13 @@ ruleTester.run("prefer-constraint-over-runtime-guard", rule, {
 };`,
       errors: [{ messageId: "preferConstraint" }],
     },
+    // Defaulted any parameter (AssignmentPattern)
+    {
+      code: `function process(x: any = {}) {
+  if (typeof x !== "object") throw new Error("bad");
+  return x.id.toUpperCase();
+}`,
+      errors: [{ messageId: "preferConstraint" }],
+    },
   ],
 });
