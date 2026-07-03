@@ -82,8 +82,18 @@ export default createRule({
     function visitClass(
       node: TSESTree.ClassDeclaration | TSESTree.ClassExpression,
     ) {
-      const { className, methodsWithThis, superClassName } =
+      const { className: explicitName, methodsWithThis, superClassName } =
         extractClassMethods(node);
+      let className = explicitName;
+      if (!className && node.type === "ClassExpression" && node.parent) {
+        const parent = node.parent;
+        if (
+          parent.type === "VariableDeclarator" &&
+          parent.id.type === "Identifier"
+        ) {
+          className = parent.id.name;
+        }
+      }
       if (!className) return;
       classInfo.set(className, { methodsWithThis, superClassName });
     }

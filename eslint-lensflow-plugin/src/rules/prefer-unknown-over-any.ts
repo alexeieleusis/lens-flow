@@ -77,10 +77,15 @@ function bodyOnlyNarrows(
   }
 
   function detectNarrowingParam(testNode: TSESTree.Node): boolean {
+    let narrowed = false;
     if (
       (testNode.type === "BinaryExpression" && (checkInstanceof(testNode) || checkBinaryExpression(testNode))) ||
       (testNode.type === "UnaryExpression" && checkUnaryTypeof(testNode))
     ) {
+      narrowed = true;
+    }
+
+    if (narrowed) {
       hasNarrowing = true;
       return true;
     }

@@ -21,8 +21,8 @@ ruleTester.run("no-infer-from-unconstrained-type", rule, {
     `class C<T extends { value: unknown }> { extract: T extends { value: infer V } ? V : never; }`,
     // TSMethodSignature with constrained type param
     `interface I { method<T extends { value: unknown }>() : T extends { value: infer V } ? V : never; }`,
-    // TSPropertySignature with constrained type param
-    `interface I { prop<T extends { value: unknown }>: T extends { value: infer V } ? V : never; }`,
+    // TSPropertySignature with constrained interface-level type param
+    `interface I<T extends { value: unknown }> { prop: T extends { value: infer V } ? V : never; }`,
     // TSMappedType — mapped key has constraint, outer T is constrained
     `type M<T extends { value: unknown }> = { [K in keyof T]: T extends { value: infer V } ? V : never; };`,
     // Nested scope — inner K shadows outer K, inner K is constrained
@@ -84,9 +84,9 @@ ruleTester.run("no-infer-from-unconstrained-type", rule, {
       code: `interface I { method<T>(): T extends infer U ? U : never; }`,
       errors: [{ messageId: "inferFromUnconstrained" }],
     },
-    // TSPropertySignature — property with its own unconstrained type param
+    // TSPropertySignature — interface-level unconstrained type param used in property conditional
     {
-      code: `interface I { prop<T>: T extends infer U ? U : never; }`,
+      code: `interface I<T> { prop: T extends infer U ? U : never; }`,
       errors: [{ messageId: "inferFromUnconstrained" }],
     },
     // TSMappedType — outer type alias param is unconstrained

@@ -70,7 +70,7 @@ function checkSymbolUnsafe(type: ts.Type): string[] | null {
   }
 
   if (symName === "Function") {
-    if (isFunctionDeclaration(type)) return ["Function"];
+ if (type.getCallSignatures().length > 0) return ["Function"];
     return null;
   }
 
@@ -134,6 +134,8 @@ function collectUnsafeTypes(
   if (symResult !== null) return symResult;
 
   if (isFunctionDeclaration(type)) return ["Function"];
+
+  if (type.getCallSignatures().length > 0) return ["Function"];
 
   if (hasToJSON(type, checker)) return [];
 

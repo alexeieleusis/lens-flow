@@ -179,6 +179,10 @@ export default createRule({
       checkFunctionLike(node, node);
     }
 
+    function checkTSCallSignatureDeclaration(node: TSESTree.TSCallSignatureDeclaration) {
+      checkFunctionLike(node, node);
+    }
+
    function checkMethodDefinition(node: TSESTree.MethodDefinition) {
       // MethodDefinition doesn't carry typeParameters directly — they're on
       // `node.value` (FunctionExpression), which is already visited by
@@ -194,6 +198,7 @@ export default createRule({
       TSDeclareFunction: checkTSDeclareFunction,
       TSFunctionType: checkTSFunctionType,
       TSMethodSignature: checkTSMethodSignature,
+      TSCallSignatureDeclaration: checkTSCallSignatureDeclaration,
       MethodDefinition: checkMethodDefinition,
     };
   },

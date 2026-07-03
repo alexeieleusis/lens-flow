@@ -22,6 +22,26 @@ ruleTester.run("no-redundant-overload-signature", rule, {
     function log(msg: string, meta?: unknown): void {
       console.log(msg, meta);
     }`,
+    // AssignmentPattern — default parameter, different names
+    `function foo(x: number = 1): number;
+    function foo(y: number = 2): number {
+      return y;
+    }`,
+    // AssignmentPattern — default parameter, same name different default
+    `function bar(x: number = 1): number;
+    function bar(x: number = 2): number {
+      return x;
+    }`,
+    // RestElement — rest parameter, different names
+    `function sum(first: number, ...rest: number[]): number;
+    function sum(first: number, ...values: number[]): number {
+      return first + values.reduce((a, b) => a + b, 0);
+    }`,
+    // ObjectPattern — destructured parameter, different types
+    `function getConfig({ host }: { host: string }): string;
+    function getConfig({ port }: { port: number }): string {
+      return String(port);
+    }`,
   ],
   invalid: [
     // Identical overload — exactly matches implementation
@@ -53,6 +73,30 @@ ruleTester.run("no-redundant-overload-signature", rule, {
       code: `declare function add(a: number, b: number): number;
     function add(a: number, b: number): number {
       return a + b;
+    }`,
+      errors: [{ messageId: "redundantOverload" }],
+    },
+    // Identical overload with default parameter — AssignmentPattern
+    {
+      code: `function foo(x: number = 1): number;
+    function foo(x: number = 1): number {
+      return x;
+    }`,
+      errors: [{ messageId: "redundantOverload" }],
+    },
+    // Identical overload with rest parameter — RestElement
+    {
+      code: `function flatten(...items: number[][]): number[];
+    function flatten(...items: number[][]): number[] {
+      return items.flat();
+    }`,
+      errors: [{ messageId: "redundantOverload" }],
+    },
+    // Identical overload with destructured parameter — ObjectPattern
+    {
+      code: `function getHost({ host }: { host: string }): string;
+    function getHost({ host }: { host: string }): string {
+      return host;
     }`,
       errors: [{ messageId: "redundantOverload" }],
     },

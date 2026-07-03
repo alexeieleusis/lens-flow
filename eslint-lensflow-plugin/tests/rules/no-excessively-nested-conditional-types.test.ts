@@ -75,7 +75,6 @@ ruleTester.run("no-excessively-nested-conditional-types", rule, {
     ? I extends { data: infer D }
       ? D : never
     : never
-  : never
   : never {
   return input as any;
 }`,

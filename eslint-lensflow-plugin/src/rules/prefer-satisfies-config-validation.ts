@@ -109,8 +109,39 @@ function countRuntimeChecks(
       if (checkContainsParamMemberExpression(node.test, paramName)) {
         count++;
       }
+    } else if (node.type === AST_NODE_TYPES.ForStatement) {
+      if (node.test && checkContainsParamMemberExpression(node.test, paramName)) {
+        count++;
+      }
+    } else if (node.type === AST_NODE_TYPES.ForInStatement) {
+      if (checkContainsParamMemberExpression(node.right, paramName)) {
+        count++;
+      }
+    } else if (node.type === AST_NODE_TYPES.ForOfStatement) {
+      if (checkContainsParamMemberExpression(node.right, paramName)) {
+        count++;
+      }
+      const loopInit = node.left;
+      if (loopInit && loopInit.type === AST_NODE_TYPES.VariableDeclaration) {
+        for (const decl of loopInit.declarations) {
+          if (decl.init && checkContainsParamMemberExpression(decl.init, paramName)) {
+            count++;
+          }
+        }
+      }
+    } else if (node.type === AST_NODE_TYPES.WhileStatement) {
+      if (checkContainsParamMemberExpression(node.test, paramName)) {
+        count++;
+      }
     } else if (node.type === AST_NODE_TYPES.CallExpression) {
       if (checkArrayMethodCallOnParam(node, paramName)) {
+        count++;
+      }
+    } else if (node.type === AST_NODE_TYPES.MemberExpression) {
+      if (
+        node.object.type === AST_NODE_TYPES.Identifier &&
+        node.object.name === paramName
+      ) {
         count++;
       }
     }

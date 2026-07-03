@@ -31,6 +31,23 @@ function isStringMatchCall(
   return true;
 }
 
+/**
+ * Checks whether a node is inside a nested TryStatement's catch handler
+ * within the given root node. This prevents attributing inner catch-block
+ * string matches to the outer catch scope.
+ */
+function isInsideNestedCatchHandler(
+  target: TSESTree.Node,
+  root: TSESTree.Node,
+): boolean {
+  return walkNodes(root, (node) => {
+    if (node.type === "TryStatement" && node !== root && node.handler?.param) {
+      return walkNodes(node.handler.body, (n) => n === target);
+    }
+    return false;
+  });
+}
+
 export default createRule({
   name: "no-string-match-error-handling",
   meta: {
@@ -41,7 +58,7 @@ export default createRule({
     },
     messages: {
       stringMatchOnError:
-        "Do not match error types by string searching on error.message or error.name. Use typed discriminated unions with exhaustive switch instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC08-error-handling.md",
+        "Do not match error types by string searching on error.message or error.name. Use typed discriminated unions with exhaustive switch instead. See: https://raw.githubusercontent.com/jpablo/visibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC08-error-handling.md",
     },
     schema: [],
     fixable: undefined,
@@ -58,12 +75,19 @@ export default createRule({
         const catchParamName = catchParam.name;
         const catchBody = node.handler.body;
 
-        if (walkNodes(catchBody, (node) => {
-          return (
-            node.type === "CallExpression" &&
-            isStringMatchCall(node, catchParamName)
-          );
-        })) {
+        const found = walkNodes(catchBody, (child) => {
+          if (
+            child.type === "CallExpression" &&
+            isStringMatchCall(child, catchParamName)
+          ) {
+            // Exclude matches that live inside a nested catch handler
+            if (isInsideNestedCatchHandler(child, catchBody)) return false;
+            return true;
+          }
+          return false;
+        });
+
+        if (found) {
           context.report({
             node,
             messageId: "stringMatchOnError",

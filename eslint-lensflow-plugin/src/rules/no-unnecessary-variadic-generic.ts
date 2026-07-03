@@ -70,6 +70,7 @@ export default createRule({
           node: TSESTree.TSTypeParameter;
           constraintText: string;
           paramBinding: TSESLint.Scope.Variable | undefined;
+          destructuredIds: Set<string>;
           calls: string[];
         }
       >
@@ -98,23 +99,117 @@ export default createRule({
       return undefined;
     }
 
+    function collectDestructuredIdentifiers(
+      node: TSESTree.Node,
+    ): string[] {
+      const identifiers: string[] = [];
+
+      if (node.type === AST_NODE_TYPES.Identifier) {
+        identifiers.push(node.name);
+      } else if (node.type === AST_NODE_TYPES.ObjectPattern) {
+        for (const prop of node.properties) {
+          if (prop.type === AST_NODE_TYPES.Property) {
+            identifiers.push(
+              ...collectDestructuredIdentifiers(prop.value),
+            );
+          }
+        }
+      } else if (node.type === AST_NODE_TYPES.ArrayPattern) {
+        for (const element of node.elements) {
+          if (element) {
+            identifiers.push(...collectDestructuredIdentifiers(element));
+          }
+        }
+      } else if (node.type === AST_NODE_TYPES.AssignmentPattern) {
+        identifiers.push(...collectDestructuredIdentifiers(node.left));
+      } else if (node.type === AST_NODE_TYPES.RestElement) {
+        identifiers.push(...collectDestructuredIdentifiers(node.argument));
+      }
+
+      return identifiers;
+    }
+
     function matchParamToGeneric(
       param: TSESTree.Parameter,
       generics: Map<string, unknown>,
-    ): string | undefined {
-      if (
-        param.type !== AST_NODE_TYPES.Identifier ||
-        !param.typeAnnotation
-      )
-        return undefined;
+    ): { genName: string; destructuredIds: string[] } | undefined {
+      if (!param.typeAnnotation) return undefined;
 
-      const typeAnn = param.typeAnnotation.typeAnnotation;
+      // Handle Identifier parameters
+      if (param.type === AST_NODE_TYPES.Identifier) {
+        const typeAnn = param.typeAnnotation.typeAnnotation;
+        if (
+          typeAnn.type === AST_NODE_TYPES.TSTypeReference &&
+          typeAnn.typeName.type === AST_NODE_TYPES.Identifier &&
+          generics.has(typeAnn.typeName.name)
+        ) {
+          return { genName: typeAnn.typeName.name, destructuredIds: [] };
+        }
+      }
+
+      // Handle destructured parameters (ObjectPattern / ArrayPattern)
       if (
-        typeAnn.type === AST_NODE_TYPES.TSTypeReference &&
-        typeAnn.typeName.type === AST_NODE_TYPES.Identifier &&
-        generics.has(typeAnn.typeName.name)
+        param.type === AST_NODE_TYPES.ObjectPattern ||
+        param.type === AST_NODE_TYPES.ArrayPattern
       ) {
-        return typeAnn.typeName.name;
+        const typeAnn = param.typeAnnotation.typeAnnotation;
+
+        // Recursively search the type annotation for a reference to a generic
+        function findGenericReference(
+          typeNode: TSESTree.TypeNode,
+        ): string | undefined {
+          if (
+            typeNode.type === AST_NODE_TYPES.TSTypeReference &&
+            typeNode.typeName.type === AST_NODE_TYPES.Identifier &&
+            generics.has(typeNode.typeName.name)
+          ) {
+            return typeNode.typeName.name;
+          }
+
+          // Recurse into nested types
+          if (
+            typeNode.type === AST_NODE_TYPES.TSIntersectionType
+          ) {
+            for (const left of typeNode.types) {
+              const found = findGenericReference(left);
+              if (found) return found;
+            }
+          } else if (
+            typeNode.type === AST_NODE_TYPES.TSUnionType
+          ) {
+            for (const left of typeNode.types) {
+              const found = findGenericReference(left);
+              if (found) return found;
+            }
+          } else if (
+            typeNode.type === AST_NODE_TYPES.TSTypeLiteral
+          ) {
+            for (const member of typeNode.members) {
+              if (member.type === AST_NODE_TYPES.TSPropertySignature && member.typeAnnotation) {
+                const found = findGenericReference(member.typeAnnotation.typeAnnotation);
+                if (found) return found;
+              } else if (member.type === AST_NODE_TYPES.TSCallSignatureDeclaration && member.returnType) {
+                const found = findGenericReference(member.returnType.typeAnnotation);
+                if (found) return found;
+              }
+            }
+          } else if (
+            typeNode.type === AST_NODE_TYPES.TSIndexedAccessType
+          ) {
+            const foundInType = findGenericReference(typeNode.objectType);
+            if (foundInType) return foundInType;
+            const foundInIndex = findGenericReference(typeNode.indexType);
+            if (foundInIndex) return foundInIndex;
+          }
+
+          return undefined;
+        }
+
+        const genName = findGenericReference(typeAnn);
+        if (genName) {
+          const destructuredIds = collectDestructuredIdentifiers(param);
+          return { genName, destructuredIds };
+        }
       }
 
       return undefined;
@@ -155,23 +250,27 @@ export default createRule({
           node: TSESTree.TSTypeParameter;
           constraintText: string;
           paramBinding: TSESLint.Scope.Variable | undefined;
+          destructuredIds: Set<string>;
           calls: string[];
         }
       >();
 
       for (const [genName, info] of arrayConstrained) {
-        generics.set(genName, { ...info, paramBinding: undefined, calls: [] });
+        generics.set(genName, { ...info, paramBinding: undefined, destructuredIds: new Set(), calls: [] });
       }
 
       // Match function parameters to generics by type annotation
       if (node.body) {
         const fnScope = context.sourceCode.getScope(node);
         for (const param of node.params) {
-          const genName = matchParamToGeneric(param, generics);
-          if (genName) {
-            if (param.type === AST_NODE_TYPES.Identifier) {
-              generics.get(genName)!.paramBinding =
-                fnScope.set.get(param.name);
+          const match = matchParamToGeneric(param, generics);
+          if (match) {
+            const genData = generics.get(match.genName);
+            if (genData) {
+              if (param.type === AST_NODE_TYPES.Identifier) {
+                genData.paramBinding = fnScope.set.get(param.name);
+              }
+              genData.destructuredIds = new Set(match.destructuredIds);
             }
           }
         }
@@ -239,7 +338,10 @@ export default createRule({
         // Walk the stack from innermost to outermost to find the matching generic
         for (let i = fnStack.length - 1; i >= 0; i--) {
           for (const data of fnStack[i].values()) {
-            if (resolved === data.paramBinding) {
+            if (
+              resolved === data.paramBinding ||
+              data.destructuredIds.has(varId.name)
+            ) {
               data.calls.push(methodName);
               return;
             }

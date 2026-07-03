@@ -68,13 +68,15 @@ function findEnclosingSmartConstructor(
   node: TSESTree.Node,
 ): boolean {
   const ancestors = context.sourceCode.getAncestors(node);
-  for (let i = 0; i < ancestors.length; i++) {
+  for (let i = ancestors.length - 1; i >= 0; i--) {
     const current = ancestors[i];
     if (current.type === "FunctionDeclaration") {
-      return !!(current.id && SMART_CONSTRUCTOR_RE.test(current.id.name));
+      if (current.id) return SMART_CONSTRUCTOR_RE.test(current.id.name);
+      return false;
     }
     if (current.type === "FunctionExpression") {
-      return !!(current.id && SMART_CONSTRUCTOR_RE.test(current.id.name));
+      if (current.id) return SMART_CONSTRUCTOR_RE.test(current.id.name);
+      return false;
     }
     if (current.type === "ArrowFunctionExpression") {
       const declarator = ancestors[i - 1];

@@ -40,21 +40,6 @@ if (!result.ok) {
     handleNotFound();
   }
 }`,
-    // Nested arrow function in catch body — walker stops at function boundary,
-    // so the inner reference to its own `err` is not a false positive.
-    `try {
-  const data = process(input);
-} catch (err) {
-  items.forEach((item) => {
-    try {
-      transform(item);
-    } catch (err) {
-      if (err.message.includes("transform failed")) {
-        skipItem(item);
-      }
-    }
-  });
-}`,
     // Destructuring catch parameter — rule early-returns for non-Identifier catch params.
     `try {
   const data = process(input);
@@ -69,6 +54,23 @@ if (!result.ok) {
 }`,
   ],
   invalid: [
+    // Nested catch handler inside arrow function — the inner catch's string match IS reported.
+    {
+      code: `try {
+  const data = process(input);
+} catch (err) {
+  items.forEach((item) => {
+    try {
+      transform(item);
+    } catch (err) {
+      if (err.message.includes("transform failed")) {
+        skipItem(item);
+      }
+    }
+  });
+}`,
+      errors: [{ messageId: "stringMatchOnError" }],
+    },
     {
       code: `try {
   const data = process(input);

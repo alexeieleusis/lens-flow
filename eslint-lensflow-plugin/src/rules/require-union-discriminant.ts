@@ -51,7 +51,7 @@ export default createRule({
 
         if (typeLiterals.length < 2) return;
 
-        const hasAllDiscriminant = typeLiterals.every((member) =>
+        const hasAnyDiscriminant = typeLiterals.some((member) =>
           member.members.some(
             (sig) =>
               sig.type === "TSPropertySignature" &&
@@ -63,7 +63,7 @@ export default createRule({
           ),
         );
 
-        if (!hasAllDiscriminant) {
+        if (!hasAnyDiscriminant) {
           context.report({
             node,
             messageId: "missingDiscriminant",

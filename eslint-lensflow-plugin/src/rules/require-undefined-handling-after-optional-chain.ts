@@ -57,12 +57,110 @@ function checkGuardedConsequent(
   return "stop";
 }
 
+function isNodeAfterInSameBlock(
+  ifStatement: TSESTree.Node,
+  node: TSESTree.Node,
+): boolean {
+  const parent = (ifStatement as { parent?: TSESTree.Node }).parent;
+  if (
+    parent &&
+    (parent.type === "BlockStatement" || parent.type === "Program")
+  ) {
+    const body =
+      parent.type === "BlockStatement"
+        ? parent.body
+        : (parent as TSESTree.Program).body;
+    const ifIndex = body.indexOf(ifStatement as any);
+    if (ifIndex < 0) return false;
+    for (let i = ifIndex + 1; i < body.length; i++) {
+      if (walkNodes(body[i], (n) => n === node, { skipTypeAnnotations: true })) return true;
+    }
+  }
+  return false;
+}
+
+function isTerminatingStatement(stmt: TSESTree.Node): boolean {
+  if (stmt.type === "ThrowStatement") return true;
+  if (stmt.type === "ReturnStatement") return true;
+  if (stmt.type === "BlockStatement") {
+    return (stmt as TSESTree.BlockStatement).body.some(isTerminatingStatement);
+  }
+  return false;
+}
+
+function testContainsIsNullGuard(
+  test: TSESTree.Node,
+  varName: string,
+): boolean {
+  if (test.type === "BinaryExpression") {
+    const bin = test as TSESTree.BinaryExpression;
+    const { left, right, operator } = bin;
+    const isGuardOperator = ["!=", "==", "===", "!=="].includes(operator);
+    if (!isGuardOperator) return false;
+
+    const leftIsVar = left.type === "Identifier" && left.name === varName;
+    const rightIsVar = right.type === "Identifier" && right.name === varName;
+    if (!(leftIsVar || rightIsVar)) return false;
+
+    const other = leftIsVar ? right : left;
+    const isNullCheck =
+      other.type === "Literal" &&
+      (other.value === null || other.value === undefined);
+    const isUndefinedId =
+      other.type === "Identifier" && other.name === "undefined";
+
+    if (isNullCheck || isUndefinedId) {
+      if (operator === "===" || operator === "==") return true;
+      return false;
+    }
+
+    const leftIsTypeofVar =
+      left.type === "UnaryExpression" &&
+      left.operator === "typeof" &&
+      left.argument.type === "Identifier" &&
+      left.argument.name === varName;
+    const rightIsStringLiteral =
+      right.type === "Literal" && typeof right.value === "string";
+    if (leftIsTypeofVar && rightIsStringLiteral) {
+      return operator === "===" || operator === "==";
+    }
+    const rightIsTypeofVar =
+      right.type === "UnaryExpression" &&
+      right.operator === "typeof" &&
+      right.argument.type === "Identifier" &&
+      right.argument.name === varName;
+    const leftIsStringLiteral =
+      left.type === "Literal" && typeof left.value === "string";
+    if (rightIsTypeofVar && leftIsStringLiteral) {
+      return operator === "===" || operator === "==";
+    }
+  }
+
+  if (test.type === "LogicalExpression") {
+    return testContainsIsNullGuard(
+      (test as TSESTree.LogicalExpression).left,
+      varName,
+    );
+  }
+
+  return false;
+}
+
 function isInsideIfGuard(
   current: TSESTree.IfStatement,
   node: TSESTree.Node,
   varName: string,
 ): boolean | "stop" {
-  return checkGuardedConsequent(current.test, current.consequent, node, varName);
+  const result = checkGuardedConsequent(current.test, current.consequent, node, varName);
+  if (result) return result;
+
+  if (
+    testContainsIsNullGuard(current.test, varName) &&
+    isTerminatingStatement(current.consequent) &&
+    isNodeAfterInSameBlock(current, node)
+  ) return true;
+
+  return "stop";
 }
 
 function isInsideTernaryGuard(
@@ -162,7 +260,9 @@ function isInsideGuard(
   varName: string,
   sourceCode: TSESLint.SourceCode,
 ): boolean {
-  const ancestors = sourceCode.getAncestors(node);
+  // getAncestors returns from root to immediate parent, so reverse for
+  // leaf-to-root traversal.
+  const ancestors = [...sourceCode.getAncestors(node)].reverse();
   for (let i = 0; i < ancestors.length; i++) {
     const current = ancestors[i];
     if (isScopeBoundary(current)) break;
@@ -173,8 +273,6 @@ function isInsideGuard(
   }
   return false;
 }
-
-
 
 function isBinaryGuard(
   test: TSESTree.BinaryExpression,
@@ -362,9 +460,71 @@ export default createRule({
         // (it's already safe)
         if (memberNode.optional) return;
 
-        // Skip type annotations and other non-runtime contexts
-        // The MemberExpression should be in an ExpressionStatement,
-        // VariableDeclarator, CallExpression argument, etc.
+        // getAncestors returns from root to immediate parent, so reverse for
+        // leaf-to-root traversal.
+        const ancestors = [...context.sourceCode.getAncestors(memberNode)].reverse();
+
+        // Skip if inside an IfStatement's test or ConditionalExpression's test
+        // — the guard short-circuits before evaluating.
+        for (const anc of ancestors) {
+          if (isScopeBoundary(anc)) break;
+          if (
+            anc.type === "IfStatement" &&
+            walkNodes(anc.test, (n) => n === memberNode, { skipTypeAnnotations: true })
+          ) return;
+          if (
+            anc.type === "ConditionalExpression" &&
+            walkNodes(anc.test, (n) => n === memberNode, { skipTypeAnnotations: true })
+          ) return;
+        }
+
+        // Check if inside an if-block whose test guards against null/undefined
+        for (const anc of ancestors) {
+          if (isScopeBoundary(anc)) break;
+          if (anc.type === "IfStatement") {
+            const ifTest = anc.test;
+            let isGuard = false;
+            if (ifTest.type === "BinaryExpression") {
+              const { left, right, operator } = ifTest;
+              const isGuardOp = ["!=", "!==", "==", "==="].includes(operator);
+              if (isGuardOp) {
+                const leftMatch = left.type === "Identifier" && left.name === varName;
+                const rightMatch = right.type === "Identifier" && right.name === varName;
+                if (leftMatch || rightMatch) {
+                  const other = leftMatch ? right : left;
+                  const isNullLit = other.type === "Literal" && other.value === null;
+                  const isUndefId = other.type === "Identifier" && other.name === "undefined";
+                  if ((isNullLit || isUndefId) && (operator === "!=" || operator === "!==")) {
+                    isGuard = true;
+                  }
+                }
+              }
+            } else if (ifTest.type === "LogicalExpression" && ifTest.operator === "&&") {
+              if (ifTest.left.type === "BinaryExpression") {
+                const { left, right, operator } = ifTest.left;
+                const isGuardOp = ["!=", "!==", "==", "==="].includes(operator);
+                if (isGuardOp) {
+                  const leftMatch = left.type === "Identifier" && left.name === varName;
+                  const rightMatch = right.type === "Identifier" && right.name === varName;
+                  if (leftMatch || rightMatch) {
+                    const other = leftMatch ? right : left;
+                    const isNullLit = other.type === "Literal" && other.value === null;
+                    const isUndefId = other.type === "Identifier" && other.name === "undefined";
+                    if ((isNullLit || isUndefId) && (operator === "!=" || operator === "!==")) {
+                      isGuard = true;
+                    }
+                  }
+                }
+              }
+            }
+            if (isGuard) {
+              if (walkNodes(anc.consequent, (n) => n === memberNode, { skipTypeAnnotations: true })) {
+                return;
+              }
+            }
+            break;
+          }
+        }
 
         // Check if this use is inside a guard
         if (isInsideGuard(memberNode, varName, context.sourceCode)) return;

@@ -38,6 +38,16 @@ function compare<T extends Comparable, U extends Comparable>(a: T, b: U) {
     `interface Service {
   transform<T extends { value: number }>(item: T): T;
 }`,
+    // MethodDefinition — return type references T, legitimate use
+    `class Service {
+  transform<T extends { value: number }>(item: T): T {
+    return item;
+  }
+}`,
+    // TSCallSignatureDeclaration — return type references T, legitimate use
+    `interface IdentityFn {
+  <T extends { value: number }>(item: T): T;
+}`,
   ],
   invalid: [
     // Basic case from the spec
@@ -99,6 +109,22 @@ function execute<T extends { run(): void }>(item: T): Result {
     {
       code: `interface Service {
   handle<T extends { id: string }>(item: T): void;
+}`,
+      errors: [{ messageId: "preferInterface" }],
+    },
+    // MethodDefinition — class method with inline type literal constraint
+    {
+      code: `class Service {
+  process<T extends { run(): void }>(item: T) {
+    item.run();
+  }
+}`,
+      errors: [{ messageId: "preferInterface" }],
+    },
+    // TSCallSignatureDeclaration — callable interface with inline type literal constraint
+    {
+      code: `interface Api {
+  <T extends { execute(): void }>(item: T): void;
 }`,
       errors: [{ messageId: "preferInterface" }],
     },

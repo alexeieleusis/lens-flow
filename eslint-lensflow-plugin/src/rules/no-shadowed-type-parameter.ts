@@ -302,6 +302,12 @@ export default createRule({
       "MethodDefinition:exit"(node) {
         exitMethodDefinition(node);
       },
+      TSFunctionType(node) {
+        enterFunctionType(node);
+      },
+      "TSFunctionType:exit"(node) {
+        exitFunctionType(node);
+      },
     };
   },
 });

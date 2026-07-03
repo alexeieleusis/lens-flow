@@ -69,6 +69,16 @@ export default createRule({
           parent = parent.parent;
         }
 
+        const funcInfo = findContainingFunctionBody(node);
+        if (!funcInfo) return;
+
+        const ifAncestor = findIfAncestorInBody(node, funcInfo.body);
+        if (ifAncestor) {
+          if (funcInfo.body.body[funcInfo.body.body.length - 1] !== ifAncestor) return;
+        } else {
+          if (funcInfo.body.body[funcInfo.body.body.length - 1] !== node) return;
+        }
+
         const info = collectSiblingIfChain(node);
         if (!info) return;
 
@@ -166,6 +176,18 @@ function collectBackwardsIfChain(
   let propName: string | null = null;
   const handledValues: (string | number)[] = [];
 
+  const startStmt = funcBody.body[startIndex];
+  if (startStmt && isChainableIf(startStmt)) {
+    const disc = extractBinaryDiscriminant(
+      startStmt.test as TSESTree.BinaryExpression,
+    );
+    if (disc) {
+      varName = disc.varName;
+      propName = disc.propName;
+      handledValues.push(disc.value);
+    }
+  }
+
   for (let i = startIndex - 1; i >= 0; i--) {
     const stmt = funcBody.body[i];
     if (!isChainableIf(stmt)) break;
@@ -176,8 +198,10 @@ function collectBackwardsIfChain(
     if (!disc) break;
     if (varName && (disc.varName !== varName || disc.propName !== propName)) break;
 
-    varName = disc.varName;
-    propName = disc.propName;
+    if (!varName) {
+      varName = disc.varName;
+      propName = disc.propName;
+    }
     handledValues.push(disc.value);
   }
 
@@ -371,6 +395,20 @@ function extractParamIdentifier(
         if (nested) return nested;
       }
     }
+  }
+  return null;
+}
+
+function findIfAncestorInBody(
+  node: TSESTree.Node,
+  funcBody: TSESTree.BlockStatement,
+): TSESTree.IfStatement | null {
+  let cur: TSESTree.Node | undefined = node.parent;
+  while (cur && cur !== funcBody) {
+    if (cur.type === "IfStatement") {
+      if (funcBody.body.includes(cur as TSESTree.Statement)) return cur;
+    }
+    cur = cur.parent;
   }
   return null;
 }

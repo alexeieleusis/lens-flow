@@ -45,20 +45,12 @@ export default createRule({
 
           if (!hasSymbolType && !matchesBrandNaming) continue;
 
-          if (hasSymbolType) {
+          if (matchesBrandNaming) {
             context.report({
               node: decl,
-              messageId: "symbolTypedBrand",
+              messageId: "requireDeclareBrand",
               data: { name: varName },
-            });
-            return;
-          }
-
-          context.report({
-            node: decl,
-            messageId: "requireDeclareBrand",
-            data: { name: varName },
-            ...(isSingleDeclarator
+              ...(isSingleDeclarator
               ? {
                   fix(fixer) {
                     const sourceCode = context.sourceCode;
@@ -71,7 +63,17 @@ export default createRule({
                   },
                 }
               : {}),
-          });
+            });
+            return;
+          }
+
+          if (hasSymbolType) {
+            context.report({
+              node: decl,
+              messageId: "symbolTypedBrand",
+              data: { name: varName },
+            });
+          }
         }
       },
     };

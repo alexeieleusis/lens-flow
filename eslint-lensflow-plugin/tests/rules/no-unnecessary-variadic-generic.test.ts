@@ -45,6 +45,15 @@ ruleTester.run("no-unnecessary-variadic-generic", rule, {
       };
       return fn();
     }`,
+    // Destructured parameter — generic is necessary (non-simple method on arr)
+    `function add<T extends number[]>({ arr }: { arr: T }): void {
+      arr.push(1);
+    }`,
+    // Destructured parameter with rest pattern — generic is necessary
+    `function head<T extends unknown[]>({ arr }: { arr: T }): T[0] | undefined {
+      const [first, ...rest] = arr;
+      return first;
+    }`,
   ],
   invalid: [
     // Basic antipattern from spec
@@ -106,6 +115,22 @@ ruleTester.run("no-unnecessary-variadic-generic", rule, {
           return doubled.reduce((a, b) => a + b, 0);
         };
         return inner();
+      }`,
+      errors: [{ messageId: "unnecessaryGeneric" }],
+    },
+    // Destructured parameter — only simple methods called
+    {
+      code: `function sum<T extends number[]>({ arr }: { arr: T }): number {
+        return arr.reduce((a, b) => a + b, 0);
+      }`,
+      errors: [{ messageId: "unnecessaryGeneric" }],
+    },
+    // Destructured parameter with multiple properties
+    {
+      code: `function stats<T extends number[]>({ items }: { items: T; label: string }): boolean {
+        const hasPos = items.some(x => x > 0);
+        const allPos = items.every(x => x > 0);
+        return hasPos && allPos;
       }`,
       errors: [{ messageId: "unnecessaryGeneric" }],
     },

@@ -91,7 +91,10 @@ export default createRule({
         handler(node.value);
       },
       FunctionDeclaration: handler,
-      FunctionExpression: handler,
+      FunctionExpression(node: TSESTree.FunctionExpression) {
+        if (node.parent?.type === "MethodDefinition") return;
+        handler(node);
+      },
       ArrowFunctionExpression: handler,
       TSEmptyBodyFunctionExpression: handler,
       TSDeclareFunction: handler,

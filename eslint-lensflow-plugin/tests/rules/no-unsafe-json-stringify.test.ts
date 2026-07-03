@@ -110,5 +110,35 @@ ruleTester.run("no-unsafe-json-stringify", rule, {
       JSON.stringify(event);`,
       errors: [{ messageId: "unsafeType" }],
     },
+    {
+      filename: TEST_FILENAME,
+      code: `interface Handler {
+        callback: () => void;
+        count: number;
+      }
+      const h: Handler = { callback: () => {}, count: 0 };
+      JSON.stringify(h);`,
+      errors: [{ messageId: "unsafeType" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `interface Store {
+        cache: WeakMap<object, string>;
+        key: string;
+      }
+      const store: Store = { cache: new WeakMap(), key: "x" };
+      JSON.stringify(store);`,
+      errors: [{ messageId: "unsafeType" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `interface AsyncData {
+        promise: Promise<string>;
+        id: number;
+      }
+      const data: AsyncData = { promise: Promise.resolve("ok"), id: 1 };
+      JSON.stringify(data);`,
+      errors: [{ messageId: "unsafeType" }],
+    },
   ],
 });

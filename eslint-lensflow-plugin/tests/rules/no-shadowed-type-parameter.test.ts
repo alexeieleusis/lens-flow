@@ -43,7 +43,7 @@ function second<T>(x: T) { return x; }`,
     `declare function outer<T>(x: T): void;
  declare function outer<U>(x: U): void;`,
     // TSDeclareFunction: declare function with distinct type param — no shadow
-    `declare function create<U>(item: U): U { return item; }`,
+    `declare function create<U>(item: U): U;`,
     // TSDeclareFunction: standalone declare function — no nesting, no shadow
     `declare function init<T>(value: T): void;`,
     // TSDeclareFunction: inside module with distinct type param — no shadow

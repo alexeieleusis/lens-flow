@@ -80,16 +80,14 @@ export default createRule({
       for (const [fingerprint, groupEntries] of unionGroups) {
         if (groupEntries.length >= 2) {
           const groupParams = groupEntries.map((e) => e.name);
-          for (const entry of groupEntries) {
-            context.report({
-              node: entry.param,
-              messageId: "sharedUnionWithoutGeneric",
-              data: {
-                params: groupParams.join(", "),
-                union: fingerprint.replace(/\|/g, " | "),
-              },
-            });
-          }
+          context.report({
+            node: groupEntries[0].param,
+            messageId: "sharedUnionWithoutGeneric",
+            data: {
+              params: groupParams.join(", "),
+              union: fingerprint.replace(/\|/g, " | "),
+            },
+          });
         }
       }
     }

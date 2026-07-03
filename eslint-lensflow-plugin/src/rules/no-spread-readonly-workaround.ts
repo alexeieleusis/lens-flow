@@ -55,7 +55,27 @@ function getTypeAnnotationFromDef(
       return null;
     }
     case "Parameter": {
-      const param = def.node as unknown as TSESTree.Parameter;
+      const node = def.node;
+      // def.node may be the parameter itself or the containing function
+      if (node.type === "FunctionDeclaration" || node.type === "FunctionExpression" || node.type === "ArrowFunctionExpression") {
+        const fn = node as TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression;
+        const params = fn.params;
+        const defName = def.name.name;
+        for (const param of params) {
+          const paramName = param.type === "Identifier" ? param.name :
+            param.type === "AssignmentPattern" && param.left.type === "Identifier" ? param.left.name : null;
+          if (paramName === defName) {
+            if (param.type === "Identifier" && param.typeAnnotation) {
+              return param.typeAnnotation.typeAnnotation;
+            }
+            if (param.type === "AssignmentPattern" && param.left.type === "Identifier" && param.left.typeAnnotation) {
+              return param.left.typeAnnotation.typeAnnotation;
+            }
+          }
+        }
+        return null;
+      }
+      const param = node as unknown as TSESTree.Parameter;
       if (param.type === "Identifier" && param.typeAnnotation) {
         return param.typeAnnotation.typeAnnotation;
       }
@@ -103,8 +123,17 @@ export default createRule({
 
             if (inner.type === "Identifier") {
               const spreadId = inner;
-              const scope = context.sourceCode.getScope(spreadId);
-              const variable = scope.set.get(spreadId.name);
+              let scope: TSESLint.Scope.Scope | null =
+                context.sourceCode.getScope(spreadId);
+              let variable: TSESLint.Scope.Variable | null = null;
+              while (scope) {
+                const v = scope.set.get(spreadId.name);
+                if (v) {
+                  variable = v;
+                  break;
+                }
+                scope = scope.upper;
+              }
 
               if (!variable) continue;
 
@@ -135,12 +164,21 @@ export default createRule({
 
               if (unwrappedObject.type !== "Identifier") continue;
 
-              const scope = context.sourceCode.getScope(unwrappedObject);
-              const variable = scope.set.get(unwrappedObject.name);
+              let objectScope: TSESLint.Scope.Scope | null =
+                context.sourceCode.getScope(unwrappedObject);
+              let objectVariable: TSESLint.Scope.Variable | null = null;
+              while (objectScope) {
+                const v = objectScope.set.get(unwrappedObject.name);
+                if (v) {
+                  objectVariable = v;
+                  break;
+                }
+                objectScope = objectScope.upper;
+              }
 
-              if (!variable) continue;
+              if (!objectVariable) continue;
 
-              const isReadonly = variable.defs.some((def) => {
+              const isReadonly = objectVariable.defs.some((def) => {
                 const typeAnn = getTypeAnnotationFromDef(def);
                 if (typeAnn?.type !== "TSTypeLiteral") return false;
 

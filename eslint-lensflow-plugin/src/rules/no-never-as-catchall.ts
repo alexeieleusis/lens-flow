@@ -115,8 +115,46 @@ export default createRule({
       }
     }
 
+    function checkNeverParamProperty(node: TSESTree.TSParameterProperty) {
+      const base = node.parameter;
+      let id: TSESTree.Node = base;
+      if (base.type === "AssignmentPattern") {
+        if (!base.right) return;
+        id = base.left;
+      } else if (base.type === "Identifier") {
+        id = base;
+      } else {
+        return;
+      }
+
+      const typeAnnotation = id.typeAnnotation;
+      if (!typeAnnotation) return;
+      if (typeAnnotation.typeAnnotation.type !== "TSNeverKeyword") return;
+
+      const initExpr = base.type === "AssignmentPattern" ? base.right : null;
+      if (!initExpr) return;
+
+      const tsInitNode = parserServices.esTreeNodeToTSNodeMap.get(initExpr);
+      if (!tsInitNode) return;
+
+      const initType = checker.getTypeAtLocation(tsInitNode as ts.Expression);
+      const typeName = checker.typeToString(initType);
+
+      if (typeName !== "never") {
+        context.report({
+          node: typeAnnotation.typeAnnotation,
+          messageId: "neverAsCatchall",
+          data: {
+            type: typeName,
+            url: URL,
+          },
+        });
+      }
+    }
+
     return {
       VariableDeclarator: checkNeverAssignment,
+      TSParameterProperty: checkNeverParamProperty,
     };
   },
 });

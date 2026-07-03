@@ -75,5 +75,15 @@ const obj: { readonlyItems: readonly number[] } = { readonlyItems: [1] };
 sum([...obj.readonlyItems]);`,
       errors: [{ messageId: "spreadReadonlyArray" }],
     },
+    // Readonly array as function parameter
+    {
+      code: `function helper(arr: Array<number>): number {
+  return arr[0];
+}
+function process(arr: readonly number[]) {
+  return helper([...arr]);
+}`,
+      errors: [{ messageId: "spreadReadonlyArray" }],
+    },
   ],
 });

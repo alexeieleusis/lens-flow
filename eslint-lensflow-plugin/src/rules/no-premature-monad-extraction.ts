@@ -52,7 +52,7 @@ function isExtractionCall(node: TSESTree.CallExpression): boolean {
 }
 
 function findPipeCall(
-  node: TSESTree.CallExpression,
+  node: TSESTree.Node,
   context: TSESLint.RuleContext<string, []>,
 ): TSESTree.CallExpression | null {
   const ancestors = context.sourceCode.getAncestors(node);
@@ -74,6 +74,18 @@ function findPipeCall(
   return null;
 }
 
+function isExtractionIdentifier(node: TSESTree.Identifier): boolean {
+  return EXTRACT_METHODS.has(node.name);
+}
+
+function isExtractionMemberExpression(node: TSESTree.MemberExpression): boolean {
+  if (node.object.type === "Identifier" && node.property.type === "Identifier") {
+    const nsKey = `${node.object.name}.${node.property.name}`;
+    return NS_EXTRACT_METHODS.has(nsKey);
+  }
+  return false;
+}
+
 export default createRule({
   name: "no-premature-monad-extraction",
   meta: {
@@ -91,20 +103,31 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"prematureExtraction", []>) {
+    const reportIfPremature = (node: TSESTree.Node) => {
+      const pipeCall = findPipeCall(node, context);
+      if (pipeCall) {
+        const lastArg = pipeCall.arguments[pipeCall.arguments.length - 1];
+        if (lastArg !== node) {
+          context.report({
+            node,
+            messageId: "prematureExtraction",
+          });
+        }
+      }
+    };
+
     return {
       CallExpression(node) {
         if (!isExtractionCall(node)) return;
-
-        const pipeCall = findPipeCall(node, context);
-        if (pipeCall) {
-          const lastArg = pipeCall.arguments[pipeCall.arguments.length - 1];
-          if (lastArg !== node) {
-            context.report({
-              node,
-              messageId: "prematureExtraction",
-            });
-          }
-        }
+        reportIfPremature(node);
+      },
+      Identifier(node) {
+        if (!isExtractionIdentifier(node)) return;
+        reportIfPremature(node);
+      },
+      MemberExpression(node) {
+        if (!isExtractionMemberExpression(node)) return;
+        reportIfPremature(node);
       },
     };
   },

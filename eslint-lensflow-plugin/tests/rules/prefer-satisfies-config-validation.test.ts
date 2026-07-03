@@ -76,5 +76,13 @@ validateConfig(config);`,
 }`,
       errors: [{ messageId: "preferSatisfies" }],
     },
+    {
+      code: `function validate(c: any) {
+  for (const key of ["port", "host"]) {
+    if (!c[key]) throw "missing " + key;
+  }
+}`,
+      errors: [{ messageId: "preferSatisfies" }],
+    },
   ],
 });
