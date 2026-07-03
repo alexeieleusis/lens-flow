@@ -117,17 +117,18 @@ export default createRule({
 
     function checkNeverParamProperty(node: TSESTree.TSParameterProperty) {
       const base = node.parameter;
-      let id: TSESTree.Node = base;
+      let id: TSESTree.Identifier | null = null;
       if (base.type === "AssignmentPattern") {
         if (!base.right) return;
-        id = base.left;
+        if (base.left.type === "Identifier") id = base.left;
+        else return;
       } else if (base.type === "Identifier") {
         id = base;
       } else {
         return;
       }
 
-      const typeAnnotation = id.typeAnnotation;
+      const typeAnnotation = id?.typeAnnotation;
       if (!typeAnnotation) return;
       if (typeAnnotation.typeAnnotation.type !== "TSNeverKeyword") return;
 

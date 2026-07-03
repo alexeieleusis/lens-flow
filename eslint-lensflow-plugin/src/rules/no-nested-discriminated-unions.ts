@@ -18,8 +18,6 @@ function hasKindProperty(typeNode: TSESTree.TypeNode): boolean {
 }
 
 function isNestedDiscriminatedUnion(typeNode: TSESTree.TypeNode): boolean {
-  if (typeNode.type === "TSParenthesizedType")
-    return isNestedDiscriminatedUnion(typeNode.typeAnnotation);
   if (typeNode.type === "TSIntersectionType") {
     return typeNode.types.some((member) => isNestedDiscriminatedUnion(member));
   }

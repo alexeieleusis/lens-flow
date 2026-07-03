@@ -24,10 +24,6 @@ function resolveUnionNode(
 ): TSESTree.TSUnionType | null {
   let current: TSESTree.TypeNode = annotation;
 
-  while (current.type === "TSParenthesizedType") {
-    current = (current as TSESTree.TSParenthesizedType).typeAnnotation;
-  }
-
   if (current.type === "TSUnionType") {
     return current;
   }
@@ -37,15 +33,15 @@ function resolveUnionNode(
   }
 
   // Follow alias chains: type A = B; type B = "x" | "y";
-  let visited = new Set<string>();
-  let node: TSESTree.TypeNode = current;
+  const visited = new Set<string>();
+  let currentNode: TSESTree.TypeNode = current;
 
-  while (node.type === "TSTypeReference") {
-    const typeName =
-      node.typeName.type === "Identifier"
-        ? node.typeName.name
-        : node.typeName.type === "TSQualifiedName"
-          ? node.typeName.right.name
+  while (currentNode.type === "TSTypeReference") {
+    const typeName: string | null =
+      currentNode.typeName.type === "Identifier"
+        ? currentNode.typeName.name
+        : currentNode.typeName.type === "TSQualifiedName"
+          ? currentNode.typeName.right.name
           : null;
 
     if (!typeName || !typeAliases.has(typeName)) {
@@ -57,16 +53,14 @@ function resolveUnionNode(
     }
     visited.add(typeName);
 
-    const aliasType = typeAliases.get(typeName)!;
+    const aliasType: TSESTree.TypeNode = typeAliases.get(typeName)!;
 
     if (aliasType.type === "TSUnionType") {
       return aliasType;
     }
 
-    if (aliasType.type === "TSParenthesizedType") {
-      node = aliasType.typeAnnotation;
-    } else if (aliasType.type === "TSTypeReference") {
-      node = aliasType;
+    if (aliasType.type === "TSTypeReference") {
+      currentNode = aliasType;
     } else {
       return null;
     }

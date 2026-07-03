@@ -90,8 +90,6 @@ function referencesTypeParam(
         return node.typeAnnotation ? walk(node.typeAnnotation) : false;
       case "TSIndexedAccessType":
         return walk(node.objectType) || walk(node.indexType);
-      case "TSParenthesizedType":
-        return walk(node.typeAnnotation);
       case "TSTypeQuery":
         return false;
       default:

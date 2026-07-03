@@ -25,9 +25,6 @@ function getMaxIntersectionDepth(types: TSESTree.TypeNode[]): number {
 }
 
 function getNestingDepth(node: TSESTree.TypeNode): number {
-  if (node.type === "TSParenthesizedType") {
-    return getNestingDepth(node.typeAnnotation);
-  }
   if (node.type === "TSTypeLiteral") {
     return 1 + getMaxPropertyDepth(node.members);
   }
@@ -176,9 +173,6 @@ export default createRule({
 
       for (const member of constraint.types) {
         let inner = member;
-        if (inner.type === "TSParenthesizedType") {
-          inner = inner.typeAnnotation;
-        }
         if (inner.type === "TSTypeLiteral") {
           checkTypeLiteral(inner, member);
         } else if (inner.type === "TSIntersectionType") {
@@ -191,11 +185,6 @@ export default createRule({
       constraint: TSESTree.TypeNode,
       reportNode: TSESTree.TSTypeParameter,
     ) {
-      if (constraint.type === "TSParenthesizedType") {
-        checkConstraint(constraint.typeAnnotation, reportNode);
-        return;
-      }
-
       if (constraint.type === "TSIntersectionType") {
         checkIntersection(constraint, reportNode);
         return;

@@ -13,7 +13,8 @@ function getParamTypeAnnotation(
   }
   if (param.type === "RestElement") {
     if (param.typeAnnotation?.typeAnnotation) return param.typeAnnotation.typeAnnotation;
-    return param.argument.typeAnnotation?.typeAnnotation;
+    if (param.argument.type === "Identifier") return param.argument.typeAnnotation?.typeAnnotation;
+    return undefined;
   }
   if ("typeAnnotation" in param && param.typeAnnotation) {
     return param.typeAnnotation.typeAnnotation;

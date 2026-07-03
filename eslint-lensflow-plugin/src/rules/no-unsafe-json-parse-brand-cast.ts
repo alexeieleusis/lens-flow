@@ -100,7 +100,7 @@ export default createRule({
               ref.identifier.loc &&
               ref.identifier.loc.start.line <= targetLoc.line
             ) {
-              writeSources.push(ref.writeExpr);
+              writeSources.push(ref.writeExpr as unknown as TSESTree.Expression);
             }
           }
         });

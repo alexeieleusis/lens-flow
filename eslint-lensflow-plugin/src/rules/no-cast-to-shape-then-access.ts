@@ -12,7 +12,6 @@ function unwrapExpression(
 function unwrapTypeAnnotation(
   node: TSESTree.TypeNode,
 ): TSESTree.TypeNode {
-  if (node.type === "TSParenthesizedType") return node.typeAnnotation;
   if (node.type === "TSIntersectionType") {
     for (const type of node.types) {
       if (type.type === "TSTypeLiteral") return type;

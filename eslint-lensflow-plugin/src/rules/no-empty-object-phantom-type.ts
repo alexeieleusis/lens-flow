@@ -21,9 +21,6 @@ export default createRule({
     return {
       TSTypeAliasDeclaration(node) {
         let typeNode = node.typeAnnotation;
-        while (typeNode.type === "TSParenthesizedType") {
-          typeNode = typeNode.typeAnnotation;
-        }
         if (
           typeNode.type === "TSTypeLiteral" &&
           typeNode.members.length === 0

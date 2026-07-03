@@ -34,14 +34,15 @@ export default createRule({
     ];
 
     function unwrapType(node: TSESTree.TypeNode): TSESTree.TypeNode {
-      return node.type === "TSParenthesizedType" ? unwrapType(node.typeAnnotation) : node;
+      return node;
     }
 
     function checkFunctionParams(funcNode: TSESTree.TSFunctionType) {
       for (const param of funcNode.params) {
         if (param.type !== "Identifier") continue;
-        const typeAnn = unwrapType(param.typeAnnotation?.typeAnnotation);
-        if (typeAnn?.type === "TSUnionType" && typeAnn.types.length >= minUnionMembers) {
+        const typeAnn = param.typeAnnotation?.typeAnnotation;
+        if (!typeAnn) continue;
+        if (typeAnn.type === "TSUnionType" && typeAnn.types.length >= minUnionMembers) {
           const typeNames = typeAnn.types
             .map((t: TSESTree.TypeNode) => {
               if (t.type === "TSTypeReference") {

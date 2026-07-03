@@ -8,7 +8,7 @@ const INTRINSIC_TRANSFORMS = new Set([
   "Uncapitalize",
 ]);
 
-function isWideStringType(node: TSESTree.TSType): boolean {
+function isWideStringType(node: TSESTree.TypeNode): boolean {
   if (node.type === "TSStringKeyword") return true;
   if (node.type === "TSIntersectionType" || node.type === "TSUnionType")
     return node.types.every(isWideStringType);

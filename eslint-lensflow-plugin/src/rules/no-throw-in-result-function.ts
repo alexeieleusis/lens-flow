@@ -55,13 +55,6 @@ function getFunctionName(
   ) {
     return node.id?.name ?? "";
   }
-  if (node.type === "MethodDefinition" || node.type === "TSAbstractMethodDefinition") {
-    const key = (node as TSESTree.MethodDefinition).key;
-    if (key.type === "Identifier") return key.name;
-    if (key.type === "Literal" && typeof key.value === "string")
-      return key.value;
-    return "";
-  }
   return "";
 }
 
@@ -127,10 +120,7 @@ export default createRule({
 
       MethodDefinition(node) {
         const func = node.value;
-        if (
-          func.type !== "FunctionExpression" &&
-          func.type !== "ArrowFunctionExpression"
-        ) return;
+        if (func.type !== "FunctionExpression") return;
         if (!hasResultReturnType(func)) return;
         if (isExcludedFunction(func)) return;
         if (func.body.type !== "BlockStatement") return;
@@ -144,23 +134,9 @@ export default createRule({
         }
       },
 
-      TSAbstractMethodDefinition(node) {
-        const func = node.value;
-        if (
-          func.type !== "FunctionExpression" &&
-          func.type !== "ArrowFunctionExpression"
-        ) return;
-        if (!hasResultReturnType(func)) return;
-        if (isExcludedFunction(func)) return;
-        if (func.body.type !== "BlockStatement") return;
-        if (!hasThrow(func.body)) return;
-        const throwNode = findFirstThrow(func.body);
-        if (throwNode) {
-          context.report({
-            node: throwNode,
-            messageId: "throwInResultFunction",
-          });
-        }
+      TSAbstractMethodDefinition(_node) {
+        // Abstract methods have TSEmptyBodyFunctionExpression as value — no body to check
+        return;
       },
     };
   },

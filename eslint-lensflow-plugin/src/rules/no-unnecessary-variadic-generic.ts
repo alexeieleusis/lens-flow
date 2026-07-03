@@ -133,6 +133,7 @@ export default createRule({
       param: TSESTree.Parameter,
       generics: Map<string, unknown>,
     ): { genName: string; destructuredIds: string[] } | undefined {
+      if (param.type === AST_NODE_TYPES.TSParameterProperty) return undefined;
       if (!param.typeAnnotation) return undefined;
 
       // Handle Identifier parameters

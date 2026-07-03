@@ -27,11 +27,7 @@ export default createRule({
     if (!program) return {};
     const checker = program.getTypeChecker();
     function analyzeUnionMember(member: TSESTree.TypeNode): { isUnion: boolean; refName: string } {
-      // Unwrap parenthesized types to get the inner type
       let current = member;
-      while (current.type === "TSParenthesizedType") {
-        current = current.typeAnnotation;
-      }
 
       // If the unwrapped node is itself a union (e.g. (A | B)), recurse into its members
       if (current.type === "TSUnionType") {

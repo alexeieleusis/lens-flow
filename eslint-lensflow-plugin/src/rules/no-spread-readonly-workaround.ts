@@ -60,18 +60,17 @@ function getTypeAnnotationFromDef(
       if (node.type === "FunctionDeclaration" || node.type === "FunctionExpression" || node.type === "ArrowFunctionExpression") {
         const fn = node as TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression;
         const params = fn.params;
-        const defName = def.name.name;
+        const defName = def.name.type === "Identifier" ? def.name.name : null;
         for (const param of params) {
           const paramName = param.type === "Identifier" ? param.name :
             param.type === "AssignmentPattern" && param.left.type === "Identifier" ? param.left.name : null;
-          if (paramName === defName) {
-            if (param.type === "Identifier" && param.typeAnnotation) {
+          if (!defName || paramName !== defName) continue;
+          if (param.type === "Identifier" && param.typeAnnotation) {
               return param.typeAnnotation.typeAnnotation;
             }
             if (param.type === "AssignmentPattern" && param.left.type === "Identifier" && param.left.typeAnnotation) {
               return param.left.typeAnnotation.typeAnnotation;
             }
-          }
         }
         return null;
       }

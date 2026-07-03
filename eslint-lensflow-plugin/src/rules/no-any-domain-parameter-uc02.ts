@@ -20,9 +20,6 @@ function containsAnyKeyword(node: TSESTree.TypeNode): TSESTree.TSAnyKeyword | nu
     }
     return null;
   }
-  if (node.type === "TSParenthesizedType") {
-    return containsAnyKeyword(node.typeAnnotation);
-  }
   if (node.type === "TSTypeReference") {
     const name = node.typeName;
     if (

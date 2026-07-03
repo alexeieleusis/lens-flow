@@ -75,7 +75,7 @@ function hasNestedFunction(node: TSESTree.Node): boolean {
     return true;
   const children: TSESTree.Node[] = [];
   const skipProps = new Set(["loc", "range", "parent", "start", "end"]);
-  for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
+  for (const [key, value] of Object.entries(node as unknown as Record<string, unknown>)) {
     if (skipProps.has(key) || !value || typeof value !== "object") continue;
     if ("type" in value) {
       if (Array.isArray(value)) {

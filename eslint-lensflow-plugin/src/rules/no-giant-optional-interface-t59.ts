@@ -1,5 +1,6 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESTree } from "@typescript-eslint/utils";
 
 export default createRule({
   name: "no-giant-optional-interface-t59",
@@ -31,7 +32,7 @@ export default createRule({
   create(context: TSESLint.RuleContext<"tooManyOptional", [{ maxOptional: number }]>) {
     const { maxOptional = 10 } = context.options[0] ?? {};
 
-    function countOptionalProps(members: TSESLint.ASTNode[]) {
+    function countOptionalProps(members: TSESTree.Node[]) {
       return members.filter(
         (member) =>
           (member as any).type === "TSPropertySignature" && (member as any).optional,
