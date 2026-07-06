@@ -105,9 +105,12 @@ function isDerivedFromParam(expr: TSESTree.Node, paramNames: Set<string>): boole
   }
 
   if (expr.type === "MemberExpression") {
-    const rootObj = expr.object;
-    if (rootObj.type === "Identifier") {
-      return paramNames.has(rootObj.name);
+    let root: TSESTree.Node = expr;
+    while (root.type === "MemberExpression") {
+      root = root.object;
+    }
+    if (root.type === "Identifier") {
+      return paramNames.has(root.name);
     }
   }
 
