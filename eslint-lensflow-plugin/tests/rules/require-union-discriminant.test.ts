@@ -14,6 +14,11 @@ ruleTester.run("require-union-discriminant", rule, {
       | { code: 404; error: string }
       | { code: 500; details: unknown };`,
 
+    // Boolean literal discriminant
+    `type Toggle =
+      | { flag: true; on: string }
+      | { flag: false; off: string };`,
+
     // Single type literal — not a union
     `type Single = { x: number; y: number };`,
 
