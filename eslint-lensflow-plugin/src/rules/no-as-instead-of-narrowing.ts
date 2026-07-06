@@ -3,7 +3,7 @@ import { ESLintUtils, type TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T18-conversions-coercions.md");
+const DOCS_URL = knowledgeUrl("catalog/T18-conversions-coercions.md");
 
 function isAsConst(node: TSESTree.TSAsExpression): boolean {
   const ta = node.typeAnnotation;
@@ -74,7 +74,7 @@ export default createRule({
           data: {
             targetType: checker.typeToString(targetType),
             sourceType: checker.typeToString(exprType),
-            url: URL,
+            url: DOCS_URL,
           },
         });
       },
