@@ -29,7 +29,7 @@ function findAnyParams(
 function bodyOnlyNarrows(
   body: TSESTree.BlockStatement,
   paramIdentifier: TSESTree.Identifier,
-  scopeManager: TSESLint.Scope.ScopeManager,
+  funcScope: TSESLint.Scope.Scope,
 ): boolean {
   let hasNarrowing = false;
   let hasUnsafeDirectAccess = false;
@@ -38,10 +38,10 @@ function bodyOnlyNarrows(
   const narrowingScope: boolean[] = [];
 
   const isParamBinding = (identifier: TSESTree.Identifier): boolean => {
-    const identifierScope = scopeManager.acquire(identifier);
-    if (!identifierScope || !identifierScope.set.has(identifier.name)) return false;
-    const binding = identifierScope.set.get(identifier.name);
-    return binding !== undefined && binding.identifiers[0] === paramIdentifier;
+    if (identifier.name !== paramIdentifier.name) return false;
+    const binding = funcScope.variables.find((v) => v.name === identifier.name);
+    if (!binding) return false;
+    return binding.identifiers[0] === paramIdentifier;
   };
 
   function checkInstanceof(n: TSESTree.BinaryExpression): boolean {
@@ -214,8 +214,18 @@ export default createRule({
 
       const anyParams = findAnyParams(node.params);
 
+      let funcScope: TSESLint.Scope.Scope | null = scopeManager.acquire(node) ?? scopeManager.acquire(node.body);
+      if (!funcScope) {
+        funcScope = scopeManager.scopes.find(
+          (s) => s.type === "function" && s.variables.some((v) => v.name === anyParams[0]?.name),
+        ) ?? null;
+      }
+      if (!funcScope) {
+        return;
+      }
+
       for (const { name, anyNode, paramNode } of anyParams) {
-        if (paramNode && paramNode.type === "Identifier" && bodyOnlyNarrows(body, paramNode, scopeManager)) {
+        if (paramNode && paramNode.type === "Identifier" && bodyOnlyNarrows(body, paramNode, funcScope)) {
           context.report({
             node: anyNode,
             messageId: "preferUnknown",

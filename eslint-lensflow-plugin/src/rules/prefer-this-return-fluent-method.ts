@@ -1,21 +1,14 @@
 import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { getChildren } from "../utils/ast-helpers.js";
 
 function collectReturns(node: TSESTree.Node): TSESTree.ReturnStatement[] {
   const results: TSESTree.ReturnStatement[] = [];
   if (node.type === AST_NODE_TYPES.ReturnStatement) {
     results.push(node);
   }
-  for (const child of Object.values(node)) {
-    if (Array.isArray(child)) {
-      for (const item of child) {
-        if (item && typeof item === "object" && "type" in item) {
-          results.push(...collectReturns(item as TSESTree.Node));
-        }
-      }
-    } else if (child && typeof child === "object" && "type" in child) {
-      results.push(...collectReturns(child as TSESTree.Node));
-    }
+  for (const child of getChildren(node)) {
+    results.push(...collectReturns(child));
   }
   return results;
 }

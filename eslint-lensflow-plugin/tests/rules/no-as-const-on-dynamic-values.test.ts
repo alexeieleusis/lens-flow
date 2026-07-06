@@ -20,7 +20,7 @@ ruleTester.run("no-as-const-on-dynamic-values", rule, {
     // Static object with negative number literal
     `const neg = { value: -42 } as const;`,
     // Static object with plain template literal (no interpolation)
-    `const tpl = { msg: `hello` } as const;`,
+    `const tpl = { msg: \`hello\` } as const;`,
     // Mixed nested structure with all literal values
     `const mixed = {
       literal: 1,
@@ -84,7 +84,7 @@ ruleTester.run("no-as-const-on-dynamic-values", rule, {
     },
     // Template literal with interpolation
     {
-      code: `const x = { a: `hello ${name}` } as const;`,
+      code: `const x = { a: \`hello \${name}\` } as const;`,
       errors: [{ messageId: "dynamicAsConst" }],
     },
     // Optional chaining with method call
@@ -94,7 +94,7 @@ ruleTester.run("no-as-const-on-dynamic-values", rule, {
     },
     // Tagged template literal
     {
-      code: `const x = { a: tag`template` } as const;`,
+      code: `const x = { a: tag\`template\` } as const;`,
       errors: [{ messageId: "dynamicAsConst" }],
     },
     // Computed property key from identifier

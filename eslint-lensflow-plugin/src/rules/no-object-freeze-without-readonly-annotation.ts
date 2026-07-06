@@ -64,13 +64,6 @@ export default createRule({
     function findDirectDeclarator(node: TSESTree.Node): TSESTree.VariableDeclarator | null {
       const ancestors = context.sourceCode.getAncestors(node);
       for (const ancestor of ancestors) {
-        if (
-          ancestor.type === AST_NODE_TYPES.FunctionDeclaration ||
-          ancestor.type === AST_NODE_TYPES.FunctionExpression ||
-          ancestor.type === AST_NODE_TYPES.ArrowFunctionExpression
-        ) {
-          return null;
-        }
         if (ancestor.type === AST_NODE_TYPES.VariableDeclarator) return ancestor;
       }
       return null;
@@ -132,6 +125,10 @@ export default createRule({
               ancestor.type === AST_NODE_TYPES.FunctionExpression ||
               ancestor.type === AST_NODE_TYPES.ArrowFunctionExpression
             ) {
+              context.report({
+                node,
+                messageId: "missingReadonly",
+              });
               return;
             }
           }

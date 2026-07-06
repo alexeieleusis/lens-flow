@@ -102,52 +102,31 @@ function countRuntimeChecks(
   body: TSESTree.Node,
   paramName: string,
 ): number {
-  let count = 0;
+  const seenMemberExprs = new Set<TSESTree.Node>();
+  let arrayCallChecks = 0;
+  let hasComputedAccess = 0;
 
   walk(body, (node) => {
-    if (node.type === AST_NODE_TYPES.IfStatement) {
-      if (checkContainsParamMemberExpression(node.test, paramName)) {
-        count++;
-      }
-    } else if (node.type === AST_NODE_TYPES.ForStatement) {
-      if (node.test && checkContainsParamMemberExpression(node.test, paramName)) {
-        count++;
-      }
-    } else if (node.type === AST_NODE_TYPES.ForInStatement) {
-      if (checkContainsParamMemberExpression(node.right, paramName)) {
-        count++;
-      }
-    } else if (node.type === AST_NODE_TYPES.ForOfStatement) {
-      if (checkContainsParamMemberExpression(node.right, paramName)) {
-        count++;
-      }
-      const loopInit = node.left;
-      if (loopInit && loopInit.type === AST_NODE_TYPES.VariableDeclaration) {
-        for (const decl of loopInit.declarations) {
-          if (decl.init && checkContainsParamMemberExpression(decl.init, paramName)) {
-            count++;
-          }
-        }
-      }
-    } else if (node.type === AST_NODE_TYPES.WhileStatement) {
-      if (checkContainsParamMemberExpression(node.test, paramName)) {
-        count++;
-      }
-    } else if (node.type === AST_NODE_TYPES.CallExpression) {
+    if (node.type === AST_NODE_TYPES.CallExpression) {
       if (checkArrayMethodCallOnParam(node, paramName)) {
-        count++;
+        arrayCallChecks++;
       }
     } else if (node.type === AST_NODE_TYPES.MemberExpression) {
       if (
         node.object.type === AST_NODE_TYPES.Identifier &&
         node.object.name === paramName
       ) {
-        count++;
+        if (!seenMemberExprs.has(node)) {
+          seenMemberExprs.add(node);
+          if (node.computed) {
+            hasComputedAccess = 1;
+          }
+        }
       }
     }
   });
 
-  return count;
+  return seenMemberExprs.size + arrayCallChecks + hasComputedAccess;
 }
 
 export default createRule({

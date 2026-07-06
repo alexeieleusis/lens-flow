@@ -64,12 +64,37 @@ export default createRule({
         parserServices.esTreeNodeToTSNodeMap.get(ancestor);
       if (!tsAncestor) return;
 
-      enclosingType = checker.getTypeAtLocation(tsAncestor as ts.Node);
+      if (ts.isClassDeclaration(tsAncestor) || ts.isClassExpression(tsAncestor)) {
+        const classLike = tsAncestor as ts.ClassLikeDeclaration;
+        if (classLike.name) {
+          const classSym = checker.getSymbolAtLocation(classLike.name);
+          if (classSym) {
+            enclosingType = checker.getDeclaredTypeOfSymbol(classSym);
+          }
+        }
+      } else if (ts.isInterfaceDeclaration(tsAncestor)) {
+        const ifaceSym = checker.getSymbolAtLocation(tsAncestor.name);
+        if (ifaceSym) {
+          enclosingType = checker.getDeclaredTypeOfSymbol(ifaceSym);
+        }
+      }
       if (!enclosingType) return;
 
       const enclosingTypeStr = checker.typeToString(enclosingType);
 
-      if (!checker.isTypeAssignableTo(predicateType, enclosingType)) {
+      function isSubtype(pred: ts.Type, enc: ts.Type): boolean {
+        if (checker.isTypeAssignableTo(pred, enc)) return true;
+        const encName = enc.symbol?.escapedName as string;
+        try {
+          const bases = checker.getBaseTypes(pred as ts.InterfaceType);
+          for (const base of bases) {
+            if (base === enc || (base.symbol?.escapedName as string) === encName || isSubtype(base, enc)) return true;
+          }
+        } catch { /* no base types */ }
+        return false;
+      }
+
+      if (!isSubtype(predicateType, enclosingType)) {
         context.report({
           node: pred,
           messageId: "notSubtype",

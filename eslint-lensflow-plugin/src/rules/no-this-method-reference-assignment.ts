@@ -78,6 +78,7 @@ export default createRule({
       string,
       { methodsWithThis: Set<string>; superClassName: string | null }
     >();
+    const variableToClass = new Map<string, string>();
 
     function visitClass(
       node: TSESTree.ClassDeclaration | TSESTree.ClassExpression,
@@ -96,6 +97,17 @@ export default createRule({
       }
       if (!className) return;
       classInfo.set(className, { methodsWithThis, superClassName });
+
+      if (node.type === "ClassExpression" && node.parent) {
+        const parent = node.parent;
+        if (
+          parent.type === "VariableDeclarator" &&
+          parent.id.type === "Identifier" &&
+          parent.init === node
+        ) {
+          variableToClass.set(parent.id.name, className);
+        }
+      }
     }
 
     function classHasMethodWithThisReturn(
@@ -109,6 +121,44 @@ export default createRule({
         return classHasMethodWithThisReturn(info.superClassName, methodName);
       }
       return false;
+    }
+
+    function resolveClassName(base: ts.Expression): string | null {
+      const baseType = checker.getApparentType(checker.getTypeAtLocation(base));
+      if (baseType.flags & ts.TypeFlags.Object) {
+        const sym = baseType.getSymbol();
+        if (sym) return checker.symbolToString(sym);
+      }
+      return null;
+    }
+
+    function resolveClassNameFromAST(baseExpr: TSESTree.Expression): string | null {
+      if (baseExpr.type !== "Identifier") return null;
+      const varName = baseExpr.name;
+      const ancestors = context.sourceCode.getAncestors(baseExpr);
+      for (const ancestor of ancestors) {
+        if (ancestor.type === "VariableDeclarator" && ancestor.id === baseExpr) {
+          if (ancestor.init?.type === "NewExpression") {
+            const callee = ancestor.init.callee;
+            if (callee.type === "Identifier") {
+              return callee.name;
+            }
+          }
+          break;
+        }
+        if (
+          ancestor.type === "Program" ||
+          ancestor.type === "FunctionDeclaration" ||
+          ancestor.type === "FunctionExpression" ||
+          ancestor.type === "ArrowFunctionExpression"
+        ) {
+          break;
+        }
+      }
+
+      const className = variableToClass.get(varName);
+      if (className) return className;
+      return null;
     }
 
     function checkAssignment(
@@ -129,14 +179,12 @@ export default createRule({
       if (!memberTsNode.name) return;
       const methodName = (memberTsNode.name as ts.Identifier).text;
       const baseTsNode = memberTsNode.expression as ts.Expression;
-      const baseType = checker.getTypeAtLocation(baseTsNode);
 
-      if (!(baseType.flags & ts.TypeFlags.Object)) return;
-
-      const baseSymbol = baseType.getSymbol();
-      if (!baseSymbol) return;
-
-      const className = baseSymbol.name;
+      let className = resolveClassName(baseTsNode);
+      if (!className) {
+        className = resolveClassNameFromAST(member.object);
+      }
+      if (!className) return;
 
       if (!classHasMethodWithThisReturn(className, methodName)) return;
 

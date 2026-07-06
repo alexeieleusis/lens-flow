@@ -67,8 +67,8 @@ export default createRule({
     return {
       ClassBody(node) {
         const getters = node.body.filter(
-          (member): member is TSESTree.MethodDefinition =>
-            member.type === "MethodDefinition" && member.kind === "get",
+          (member): member is TSESTree.MethodDefinition | TSESTree.TSAbstractMethodDefinition =>
+            (member.type === "MethodDefinition" || member.type === "TSAbstractMethodDefinition") && member.kind === "get",
         );
 
         for (const getter of getters) {

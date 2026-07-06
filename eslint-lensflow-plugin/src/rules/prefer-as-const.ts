@@ -31,15 +31,12 @@ function isAsConstSafeReplacement(
     (m) => m.type === "TSPropertySignature"
   );
 
-  if (typeMembers.length !== objectExpr.properties.length) {
-    return false;
-  }
+  const ownProperties = objectExpr.properties.filter(
+    (p) => p.type === "Property"
+  );
 
-  for (const member of typeMembers) {
-    if (member.type !== "TSPropertySignature" || !member.typeAnnotation) continue;
-    if (isWidenedPrimitiveType(member.typeAnnotation.typeAnnotation)) {
-      return false;
-    }
+  if (typeMembers.length !== ownProperties.length) {
+    return false;
   }
 
   const typeKeys = new Set<string>();
@@ -49,8 +46,8 @@ function isAsConstSafeReplacement(
     if (key !== null) typeKeys.add(key);
   }
 
-  for (const prop of objectExpr.properties) {
-    if (prop.type !== "Property") continue;
+  for (const prop of ownProperties) {
+    if (prop.computed) continue;
     const key = getPropertyName(prop.key);
     if (key !== null && !typeKeys.has(key)) {
       return false;
