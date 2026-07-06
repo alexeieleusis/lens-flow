@@ -67,5 +67,11 @@ ruleTester.run("require-generic-coupling-for-shared-union", rule, {
       }`,
       errors: [{ messageId: "sharedUnionWithoutGeneric" }],
     },
+    {
+      code: `class Service {
+        constructor(public url: string | number, public port: string | number) {}
+      }`,
+      errors: [{ messageId: "sharedUnionWithoutGeneric" }],
+    },
   ],
 });
