@@ -10,18 +10,38 @@ type FunctionLikeNode =
   | TSESTree.TSCallSignatureDeclaration
   | TSESTree.TSMethodSignature;
 
-function getParamName(param: TSESTree.Parameter): string {
+function getParamName(
+  param: TSESTree.Parameter,
+  sourceCode: TSESLint.SourceCode,
+): string {
   if (param.type === "TSParameterProperty") {
-    return getParamName(param.parameter);
+    return getParamName(param.parameter, sourceCode);
   }
   if (param.type === "AssignmentPattern") {
-    return param.left.type === "Identifier" ? param.left.name : "unnamed";
+    if (param.left.type === "Identifier") return param.left.name;
+    if (
+      param.left.type === "ObjectPattern" ||
+      param.left.type === "ArrayPattern"
+    ) {
+      return sourceCode.getText(param.left);
+    }
+    return "unnamed";
   }
   if (param.type === "Identifier") {
     return param.name;
   }
   if (param.type === "RestElement") {
-    return param.argument.type === "Identifier" ? param.argument.name : "unnamed";
+    if (param.argument.type === "Identifier") return param.argument.name;
+    if (
+      param.argument.type === "ObjectPattern" ||
+      param.argument.type === "ArrayPattern"
+    ) {
+      return sourceCode.getText(param.argument);
+    }
+    return "unnamed";
+  }
+  if (param.type === "ObjectPattern" || param.type === "ArrayPattern") {
+    return sourceCode.getText(param);
   }
   return "unnamed";
 }
@@ -135,7 +155,7 @@ export default createRule({
         context.report({
           node: anyParam,
           messageId: "anyParam",
-          data: { name: getParamName(anyParam) },
+          data: { name: getParamName(anyParam, context.sourceCode) },
         });
       }
 
