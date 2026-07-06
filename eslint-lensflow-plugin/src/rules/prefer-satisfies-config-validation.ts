@@ -23,6 +23,8 @@ function normalizeParam(
   param: TSESTree.Parameter,
 ): { node: TSESTree.Node; name: string } | null {
   let inner: TSESTree.Node = param;
+  const typeAnn: TSESTree.TSTypeAnnotation | undefined | null =
+    "typeAnnotation" in param ? param.typeAnnotation : null;
   if (param.type === AST_NODE_TYPES.AssignmentPattern) {
     inner = param.left;
   } else if (param.type === AST_NODE_TYPES.RestElement) {
@@ -34,9 +36,10 @@ function normalizeParam(
     inner.type === AST_NODE_TYPES.ObjectPattern ||
     inner.type === AST_NODE_TYPES.ArrayPattern
   ) {
+    const resolvedAnn = typeAnn ?? inner.typeAnnotation;
     if (
-      inner.typeAnnotation != null &&
-      inner.typeAnnotation.typeAnnotation?.type === AST_NODE_TYPES.TSAnyKeyword
+      resolvedAnn != null &&
+      resolvedAnn.typeAnnotation?.type === AST_NODE_TYPES.TSAnyKeyword
     ) {
       const name = getNameFromPattern(inner);
       if (name) return { node: inner, name };

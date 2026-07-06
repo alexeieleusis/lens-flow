@@ -88,5 +88,33 @@ validateConfig(config);`,
 }`,
       errors: [{ messageId: "preferSatisfies" }],
     },
+    {
+      code: `function validate(...rest: any) {
+  if (!rest[0].port) throw "missing port";
+  if (!rest[0].host) throw "missing host";
+}`,
+      errors: [{ messageId: "preferSatisfies" }],
+    },
+    {
+      code: `function handle({ a }: any) {
+  if (!a.port) throw "missing port";
+  if (!a.host) throw "missing host";
+}`,
+      errors: [{ messageId: "preferSatisfies" }],
+    },
+    {
+      code: `function handle([first]: any) {
+  if (!first.port) throw "missing port";
+  if (!first.host) throw "missing host";
+}`,
+      errors: [{ messageId: "preferSatisfies" }],
+    },
+    {
+      code: `const validate = ({ c }: any) => {
+  if (!c.port) throw "no port";
+  if (!["debug", "info"].includes(c.logLevel)) throw "bad level";
+}`,
+      errors: [{ messageId: "preferSatisfies" }],
+    },
   ],
 });
