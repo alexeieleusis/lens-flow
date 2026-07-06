@@ -6,6 +6,13 @@ type FunctionNode =
   | TSESTree.FunctionExpression
   | TSESTree.ArrowFunctionExpression;
 
+type ExtractablePattern =
+  | TSESTree.Identifier
+  | TSESTree.ObjectPattern
+  | TSESTree.ArrayPattern
+  | TSESTree.TSParameterProperty
+  | TSESTree.AssignmentPattern;
+
 function isFunctionNode(node: TSESTree.Node): node is FunctionNode {
   return (
     node.type === "FunctionDeclaration" ||
@@ -37,7 +44,7 @@ function isUnionType(
 }
 
 function extractIdentifiersFromParam(
-  node: TSESTree.DestructuringPattern,
+  node: ExtractablePattern | TSESTree.RestElement,
   ids: Set<TSESTree.Identifier>,
 ): void {
   switch (node.type) {
@@ -47,7 +54,7 @@ function extractIdentifiersFromParam(
     case "ObjectPattern":
       for (const prop of node.properties) {
         if (prop.type === "Property") {
-          extractIdentifiersFromParam(prop.value as TSESTree.DestructuringPattern, ids);
+          extractIdentifiersFromParam(prop.value, ids);
         } else if (prop.type === "RestElement") {
           extractIdentifiersFromParam(prop.argument, ids);
         }
@@ -63,10 +70,16 @@ function extractIdentifiersFromParam(
     case "RestElement":
       extractIdentifiersFromParam(node.argument, ids);
       break;
+    case "TSParameterProperty":
+      extractIdentifiersFromParam(node.parameter, ids);
+      break;
+    case "AssignmentPattern":
+      extractIdentifiersFromParam(node.left, ids);
+      break;
   }
 }
 
-function getParamBaseNode(param: TSESTree.Parameter): TSESTree.DestructuringPattern {
+function getParamBaseNode(param: TSESTree.Parameter): ExtractablePattern {
   if (param.type === "AssignmentPattern") {
     return param.left;
   }
@@ -74,9 +87,9 @@ function getParamBaseNode(param: TSESTree.Parameter): TSESTree.DestructuringPatt
     return param.argument;
   }
   if (param.type === "TSParameterProperty") {
-    return (param as TSESTree.TSParameterProperty).parameter as TSESTree.DestructuringPattern;
+    return param.parameter;
   }
-  return param as TSESTree.DestructuringPattern;
+  return param;
 }
 
 function getUnionParamIdentifiers(fnNode: FunctionNode): Set<TSESTree.Identifier> {
@@ -84,7 +97,7 @@ function getUnionParamIdentifiers(fnNode: FunctionNode): Set<TSESTree.Identifier
   const ids = new Set<TSESTree.Identifier>();
   for (const param of params) {
     const baseNode = getParamBaseNode(param);
-    const typeAnn = (baseNode as TSESTree.Identifier | TSESTree.ObjectPattern | TSESTree.ArrayPattern).typeAnnotation;
+    const typeAnn = (baseNode as TSESTree.Identifier | TSESTree.ObjectPattern | TSESTree.ArrayPattern | TSESTree.TSParameterProperty | TSESTree.AssignmentPattern).typeAnnotation;
     if (!isUnionType(typeAnn)) continue;
     extractIdentifiersFromParam(baseNode, ids);
   }
@@ -100,39 +113,44 @@ function findAncestorFunctionWithUnionParam(
     const node = ancestors[i];
     if (!isFunctionNode(node)) continue;
 
-    if (isDerivedFromParam(sourceCode, expression, node)) {
-      const unionParamIds = getUnionParamIdentifiers(node);
-      if (unionParamIds.size > 0) {
-        return { fn: node, unionParamIds };
-      }
-      return undefined;
+    const unionParamIds = getUnionParamIdentifiers(node);
+    if (unionParamIds.size > 0 && isDerivedFromParam(sourceCode, expression, node)) {
+      return { fn: node, unionParamIds };
     }
+    return undefined;
   }
   return undefined;
 }
 
-const TS_WRAPPER_TYPES = new Set([
-  "TSAsExpression",
-  "TSTypeAssertion",
-  "TSNonNullExpression",
-  "TSSatisfiesExpression",
-]);
+function isTSAsExpression(node: TSESTree.Node): node is TSESTree.TSAsExpression {
+  return node.type === "TSAsExpression";
+}
+
+function isTSTypeAssertion(node: TSESTree.Node): node is TSESTree.TSTypeAssertion {
+  return node.type === "TSTypeAssertion";
+}
+
+function isTSNonNullExpression(node: TSESTree.Node): node is TSESTree.TSNonNullExpression {
+  return node.type === "TSNonNullExpression";
+}
+
+function isTSSatisfiesExpression(node: TSESTree.Node): node is TSESTree.TSSatisfiesExpression {
+  return node.type === "TSSatisfiesExpression";
+}
 
 function unwrapTSWrapper(node: TSESTree.Node): TSESTree.Node {
   let current: TSESTree.Node = node;
-  while (TS_WRAPPER_TYPES.has(current.type)) {
-    if (
-      current.type === "TSAsExpression" ||
-      current.type === "TSTypeAssertion" ||
-      current.type === "TSNonNullExpression"
-    ) {
-      current = (current as TSESTree.TSAsExpression | TSESTree.TSTypeAssertion | TSESTree.TSNonNullExpression).expression;
-    } else if (current.type === "TSSatisfiesExpression") {
-      current = (current as TSESTree.TSSatisfiesExpression).expression;
+
+  while (true) {
+    if (isTSAsExpression(current) || isTSTypeAssertion(current) || isTSNonNullExpression(current)) {
+      current = current.expression;
+    } else if (isTSSatisfiesExpression(current)) {
+      current = current.expression;
     } else {
       break;
     }
   }
+
   return current;
 }
 
