@@ -30,16 +30,20 @@ function isUnionType(
   return unwrapped?.type === "TSUnionType";
 }
 
-function findNearestEnclosingFunction(
-  ancestors: TSESTree.Node[],
-): FunctionNode | undefined {
-  for (let i = ancestors.length - 1; i >= 0; i--) {
-    const node = ancestors[i];
-    if (isFunctionNode(node)) {
-      return node;
+function getAllParamNames(fnNode: FunctionNode): Set<string> {
+  const params = fnNode.params;
+  const names = new Set<string>();
+  for (const param of params) {
+    if (param.type === "Identifier") {
+      names.add(param.name);
+    } else if (
+      param.type === "AssignmentPattern" &&
+      param.left.type === "Identifier"
+    ) {
+      names.add(param.left.name);
     }
   }
-  return;
+  return names;
 }
 
 function getUnionParamNames(fnNode: FunctionNode): Set<string> {
@@ -65,6 +69,34 @@ function getUnionParamNames(fnNode: FunctionNode): Set<string> {
     }
   }
   return names;
+}
+
+function findAncestorFunctionWithUnionParam(
+  ancestors: TSESTree.Node[],
+  expression: TSESTree.Node,
+): { fn: FunctionNode; unionParams: Set<string> } | undefined {
+  for (let i = ancestors.length - 1; i >= 0; i--) {
+    const node = ancestors[i];
+    if (!isFunctionNode(node)) continue;
+
+    const allParams = getAllParamNames(node);
+
+    // If the expression derives from THIS function's params, this is the
+    // authoritative scope — only report if it has union-typed params.
+    if (isDerivedFromParam(expression, allParams)) {
+      const unionParams = getUnionParamNames(node);
+      if (unionParams.size > 0) {
+        return { fn: node, unionParams };
+      }
+      return undefined;
+    }
+
+    // The expression does NOT derive from this function's params.
+    // It comes from an outer scope. This function is a boundary for its
+    // own params, but we continue walking outward to find the function
+    // whose union-typed param the expression actually derives from.
+  }
+  return undefined;
 }
 
 function isDerivedFromParam(expr: TSESTree.Node, paramNames: Set<string>): boolean {
@@ -103,15 +135,12 @@ export default createRule({
       TSAsExpression(node) {
         if (node.typeAnnotation.type !== "TSAnyKeyword") return;
 
-        const ancestors = context.sourceCode.getAncestors(node);
-        const fnNode = findNearestEnclosingFunction(ancestors);
-        if (!fnNode) return;
-
-        const unionParamNames = getUnionParamNames(fnNode);
-        if (unionParamNames.size === 0) return;
         const expression = node.expression;
+        const ancestors = context.sourceCode.getAncestors(node);
+        const result = findAncestorFunctionWithUnionParam(ancestors, expression);
+        if (!result) return;
 
-        if (!isDerivedFromParam(expression, unionParamNames)) return;
+        if (!isDerivedFromParam(expression, result.unionParams)) return;
 
         const exprName =
           expression.type === "Identifier"
