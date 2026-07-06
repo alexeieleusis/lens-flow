@@ -28,6 +28,13 @@ ruleTester.run("prefer-z-infer", rule, {
     interface User { name: string; }`,
     `const ConfigSchema = 42;
     type Config = { port: number; };`,
+    // Scope traversal should stop at function boundaries — outer ConfigSchema
+    // must not match a type Config declared inside a nested function.
+    `const ConfigSchema = z.object({ port: z.number(), host: z.string() });
+
+    function handler() {
+      type Config = { port: number; host: string };
+    }`,
   ],
   invalid: [
     {
