@@ -96,5 +96,19 @@ ruleTester.run("require-variance-annotation-uc17 (alias of require-explicit-vari
       }`,
       errors: [{ messageId: "suggestOut" }],
     },
+    // T inside a union in parameter position — contravariant, suggest `in`
+    {
+      code: `interface Handler<T> {
+        process(input: T | string): void;
+      }`,
+      errors: [{ messageId: "suggestIn" }],
+    },
+    // T inside an intersection in return position — covariant, suggest `out`
+    {
+      code: `interface Result<T> {
+        data(): T & { meta: string };
+      }`,
+      errors: [{ messageId: "suggestOut" }],
+    },
   ],
 });
