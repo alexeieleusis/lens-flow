@@ -30,21 +30,57 @@ function isUnionType(
   return unwrapped?.type === "TSUnionType";
 }
 
+function extractIdentifiersFromParam(
+  node: TSESTree.DestructuringPattern,
+  ids: Set<TSESTree.Identifier>,
+): void {
+  switch (node.type) {
+    case "Identifier":
+      ids.add(node);
+      break;
+    case "ObjectPattern":
+      for (const prop of node.properties) {
+        if (prop.type === "Property") {
+          extractIdentifiersFromParam(prop.value as TSESTree.DestructuringPattern, ids);
+        } else if (prop.type === "RestElement") {
+          extractIdentifiersFromParam(prop.argument, ids);
+        }
+      }
+      break;
+    case "ArrayPattern":
+      for (const element of node.elements) {
+        if (element) {
+          extractIdentifiersFromParam(element, ids);
+        }
+      }
+      break;
+    case "RestElement":
+      extractIdentifiersFromParam(node.argument, ids);
+      break;
+  }
+}
+
+function getParamBaseNode(param: TSESTree.Parameter): TSESTree.DestructuringPattern {
+  if (param.type === "AssignmentPattern") {
+    return param.left;
+  }
+  if (param.type === "RestElement") {
+    return param.argument;
+  }
+  if (param.type === "TSParameterProperty") {
+    return (param as TSESTree.TSParameterProperty).parameter as TSESTree.DestructuringPattern;
+  }
+  return param as TSESTree.DestructuringPattern;
+}
+
 function getUnionParamIdentifiers(fnNode: FunctionNode): Set<TSESTree.Identifier> {
   const params = fnNode.params;
   const ids = new Set<TSESTree.Identifier>();
   for (const param of params) {
-    let typeAnn: TSESTree.TSTypeAnnotation | undefined;
-    let ident: TSESTree.Identifier | undefined;
-    if (param.type === "AssignmentPattern" && param.left.type === "Identifier") {
-      typeAnn = param.left.typeAnnotation;
-      ident = param.left;
-    } else if (param.type === "Identifier") {
-      typeAnn = param.typeAnnotation;
-      ident = param;
-    }
-    if (!isUnionType(typeAnn) || !ident) continue;
-    ids.add(ident);
+    const baseNode = getParamBaseNode(param);
+    const typeAnn = (baseNode as TSESTree.Identifier | TSESTree.ObjectPattern | TSESTree.ArrayPattern).typeAnnotation;
+    if (!isUnionType(typeAnn)) continue;
+    extractIdentifiersFromParam(baseNode, ids);
   }
   return ids;
 }
