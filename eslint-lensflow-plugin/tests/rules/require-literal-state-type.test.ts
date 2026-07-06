@@ -23,6 +23,10 @@ ruleTester.run("require-literal-state-type", rule, {
       name: string;
       value: string;
     }`,
+    `type S = { "status": "a" | "b"; }`,
+    `interface Quoted {
+      "state": "open" | "closed";
+    }`,
   ],
   invalid: [
     {
@@ -60,6 +64,10 @@ ruleTester.run("require-literal-state-type", rule, {
       function approve(w: Workflow) {
         if (w.state !== "draft") return { error: "Can only approve drafts" };
       }`,
+      errors: [{ messageId: "bareStringState" }],
+    },
+    {
+      code: `interface S { "state": string; }`,
       errors: [{ messageId: "bareStringState" }],
     },
   ],
