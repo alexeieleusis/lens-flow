@@ -1,4 +1,5 @@
 import { createRule } from "../utils/rule-creator.js";
+import { walk } from "../utils/ast-helpers.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 type ParamNode =
@@ -45,12 +46,8 @@ function collectAnyParams(
   return anyParams;
 }
 
-function isNode(value: unknown): value is TSESTree.BaseNode {
-  return value != null && typeof value === "object" && "type" in value;
-}
-
 function isTypeguardNode(
-  node: TSESTree.BaseNode,
+  node: TSESTree.Node,
 ): { paramName: string; kind: string } | null {
   if (node.type === "UnaryExpression") {
     const unaryNode = node as TSESTree.UnaryExpression;
@@ -69,47 +66,15 @@ function isTypeguardNode(
   return null;
 }
 
-function extractChildren(node: TSESTree.BaseNode): TSESTree.BaseNode[] {
-  const children: TSESTree.BaseNode[] = [];
-  const nodeRecord = node as unknown as Record<string, unknown>;
-  for (const key of Object.keys(nodeRecord)) {
-    if (key === "parent" || key === "scope") continue;
-    const child = nodeRecord[key];
-    if (Array.isArray(child)) {
-      const filtered = child.filter((item): item is TSESTree.BaseNode => isNode(item));
-      children.push(...filtered);
-    } else if (isNode(child)) {
-      children.push(child);
-    }
-  }
-  return children;
-}
-
 function collectTypeguardTargets(
-  body: TSESTree.BaseNode,
+  body: TSESTree.Node,
 ): Array<{ paramName: string; kind: string }> {
   const results: Array<{ paramName: string; kind: string }> = [];
-  const stack: TSESTree.BaseNode[] = [body];
 
-  while (stack.length > 0) {
-    const n = stack.pop();
-    if (!n) continue;
-
-    const tg = isTypeguardNode(n);
+  walk(body, (node) => {
+    const tg = isTypeguardNode(node);
     if (tg) results.push(tg);
-
-    // Do not traverse into nested functions — their typeguards target
-    // their own parameters, not the outer function's parameters.
-    if (
-      n.type === "FunctionDeclaration" ||
-      n.type === "FunctionExpression" ||
-      n.type === "ArrowFunctionExpression"
-    ) {
-      continue;
-    }
-
-    stack.push(...extractChildren(n));
-  }
+  }, { stopAtFunctionBoundaries: true });
 
   return results;
 }
@@ -171,7 +136,7 @@ export default createRule({
       const body = node.body;
       if (!body) return;
 
-      const typeguards = collectTypeguardTargets(body as TSESTree.BaseNode);
+      const typeguards = collectTypeguardTargets(body as TSESTree.Node);
 
       reportAnyParamTypeguards(anyParams, typeguards);
     }
