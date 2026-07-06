@@ -13,6 +13,7 @@ ruleTester.run("require-generic-coupling-for-shared-union", rule, {
       console.log(a, b);
     }`,
     `const fn = <T>(a: T, b: T): T => a;`,
+    `const fn = function<T>(a: T, b: T): T { return a; };`,
     `type G = <T>(a: T, b: T) => T;`,
   ],
   invalid: [
@@ -31,6 +32,12 @@ ruleTester.run("require-generic-coupling-for-shared-union", rule, {
     {
       code: `const process = (a: number | string, b: number | string) => {
         return a + b;
+      };`,
+      errors: [{ messageId: "sharedUnionWithoutGeneric" }],
+    },
+    {
+      code: `const fn = function(a: number | string, b: number | string): number {
+        return Number(a) + Number(b);
       };`,
       errors: [{ messageId: "sharedUnionWithoutGeneric" }],
     },
