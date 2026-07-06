@@ -78,5 +78,17 @@ ruleTester.run("require-readonly-domain-props-uc02", rule, {
         { messageId: "mutableDomainProp", data: { name: "status" } },
       ],
     },
+    // Method signatures are excluded — only properties are flagged
+    {
+      code: `interface Service {
+        id: string;
+        name: string;
+        process(): void;
+      }`,
+      errors: [
+        { messageId: "mutableDomainProp", data: { name: "id" } },
+        { messageId: "mutableDomainProp", data: { name: "name" } },
+      ],
+    },
   ],
 });
