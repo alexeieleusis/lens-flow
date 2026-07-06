@@ -30,6 +30,11 @@ const s: State = { status: "idle", count: 0 };`,
       errors: [{ messageId: "preferSatisfies" }],
     },
     {
+      code: `interface Config { mode: "production"; count: number }
+const cfg: Config = { mode: "production", count: getValue() };`,
+      errors: [{ messageId: "preferSatisfies" }],
+    },
+    {
       code: `interface Config { mode: "production" }
 interface Options { mode: "development" }
 const x: Config | Options = { mode: "production" };`,
