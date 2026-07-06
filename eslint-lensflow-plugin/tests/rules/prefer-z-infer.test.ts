@@ -35,6 +35,12 @@ ruleTester.run("prefer-z-infer", rule, {
     function handler() {
       type Config = { port: number; host: string };
     }`,
+    // Non-zod `.infer` types are NOT treated as z.infer exemptions.
+    // foo.infer is a TSTypeReference, not a type literal, so it won't
+    // trigger the rule, but it also doesn't get the z.infer bypass.
+    `type Config = foo.infer<typeof ConfigSchema>;
+
+    const ConfigSchema = z.object({ port: z.number(), host: z.string() });`,
   ],
   invalid: [
     {

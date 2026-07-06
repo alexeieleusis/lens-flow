@@ -18,6 +18,8 @@ function isZInferType(node: unknown): boolean {
 
     const isMemberInfer =
       typeName.type === "TSQualifiedName" &&
+      typeName.left?.type === "Identifier" &&
+      typeName.left?.name === "z" &&
       typeName.right?.type === "Identifier" &&
       typeName.right?.name === "infer";
     const isDirectInfer =
