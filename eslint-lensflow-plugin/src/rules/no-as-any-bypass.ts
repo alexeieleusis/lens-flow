@@ -22,17 +22,21 @@ export default createRule({
   create(context: TSESLint.RuleContext<"doubleCastBypass" | "anyCast", []>) {
     return {
       TSAsExpression(node) {
-        if (node.typeAnnotation.type === "TSAnyKeyword") {
-          const innerIsAnyCast =
-            node.expression.type === "TSAsExpression" &&
-            node.expression.typeAnnotation.type === "TSAnyKeyword";
+        const isAnyCast = node.typeAnnotation.type === "TSAnyKeyword";
+        const hasAnyIntermediate =
+          node.expression.type === "TSAsExpression" &&
+          node.expression.typeAnnotation.type === "TSAnyKeyword";
 
-          if (innerIsAnyCast) {
-            context.report({
-              node,
-              messageId: "doubleCastBypass",
-            });
-          } else {
+        if (hasAnyIntermediate) {
+          context.report({
+            node,
+            messageId: "doubleCastBypass",
+          });
+        } else if (isAnyCast) {
+          const parentIsAsExpression =
+            node.parent?.type === "TSAsExpression";
+
+          if (!parentIsAsExpression) {
             context.report({
               node,
               messageId: "anyCast",

@@ -15,7 +15,7 @@ ruleTester.run("no-as-any-bypass", rule, {
       code: `function parseEmail(raw: string): Email | null {
   return (raw as any) as Email;
 }`,
-      errors: [{ messageId: "anyCast" }],
+      errors: [{ messageId: "doubleCastBypass" }],
     },
     {
       code: `const x = value as any;`,
@@ -27,7 +27,7 @@ ruleTester.run("no-as-any-bypass", rule, {
 }`,
       errors: [
         { messageId: "doubleCastBypass" },
-        { messageId: "anyCast" },
+        { messageId: "doubleCastBypass" },
       ],
     },
     {
