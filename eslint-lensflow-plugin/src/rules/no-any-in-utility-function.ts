@@ -1,5 +1,14 @@
-import { TSESTree, TSESLint } from "@typescript-eslint/utils";
+import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+
+type FunctionLikeNode =
+  | TSESTree.FunctionDeclaration
+  | TSESTree.FunctionExpression
+  | TSESTree.ArrowFunctionExpression
+  | TSESTree.TSDeclareFunction
+  | TSESTree.TSFunctionType
+  | TSESTree.TSCallSignatureDeclaration
+  | TSESTree.TSMethodSignature;
 
 function getParamName(param: TSESTree.Parameter): string {
   if (param.type === "TSParameterProperty") {
@@ -82,15 +91,33 @@ export default createRule({
         }
       }
 
+      // Top-level type alias: `type Foo = (x: any) => any`
+      if (parent.type === "TSTypeAliasDeclaration") {
+        const scope = parent.parent;
+        return (
+          scope?.type === "Program" ||
+          scope?.type === "ExportNamedDeclaration" ||
+          scope?.type === "ExportDefaultDeclaration"
+        );
+      }
+
+      // Inside top-level interface: `interface Foo { (x: any): any; bar(): any; }`
+      if (parent.type === "TSInterfaceBody") {
+        const iface = parent.parent;
+        if (iface?.type === "TSInterfaceDeclaration") {
+          const scope = iface.parent;
+          return (
+            scope?.type === "Program" ||
+            scope?.type === "ExportNamedDeclaration" ||
+            scope?.type === "ExportDefaultDeclaration"
+          );
+        }
+      }
+
       return false;
     }
 
-    function checkFunction(
-      node:
-        | TSESTree.FunctionDeclaration
-        | TSESTree.FunctionExpression
-        | TSESTree.ArrowFunctionExpression,
-    ) {
+    function checkFunction(node: FunctionLikeNode) {
       if (!isStandalone(node)) {
         return;
       }
@@ -124,6 +151,10 @@ export default createRule({
       FunctionDeclaration: checkFunction,
       FunctionExpression: checkFunction,
       ArrowFunctionExpression: checkFunction,
+      TSDeclareFunction: checkFunction,
+      TSFunctionType: checkFunction,
+      TSCallSignatureDeclaration: checkFunction,
+      TSMethodSignature: checkFunction,
     };
   },
 });
