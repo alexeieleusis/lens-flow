@@ -83,5 +83,14 @@ function mkEmail(s: string): Email {
 }`,
       errors: [{ messageId: "noValidation" }],
     },
+    // Invalid: nested callback validation does NOT satisfy outer smart constructor
+    {
+      code: `type Token = string & { __brand: "Token" };
+function mkToken(s: string): Token {
+  setTimeout(() => { if (!s) return; }, 0);
+  return s as Token;
+}`,
+      errors: [{ messageId: "noValidation" }],
+    },
   ],
 });
