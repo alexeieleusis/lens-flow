@@ -145,5 +145,18 @@ ruleTester.run("no-any-in-utility-function", rule, {
       }`,
       errors: [{ messageId: "anyParam" }],
     },
+    {
+      code: `function process<T>(data: any, config: T): any {
+        return config;
+      }`,
+      errors: [
+        { messageId: "anyParam" },
+        { messageId: "anyReturn" },
+      ],
+    },
+    {
+      code: `export const map = <T>(items: any): T => items as T`,
+      errors: [{ messageId: "anyParam" }],
+    },
   ],
 });

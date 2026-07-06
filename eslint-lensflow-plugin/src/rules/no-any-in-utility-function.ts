@@ -95,10 +95,6 @@ export default createRule({
         return;
       }
 
-      if (node.typeParameters) {
-        return;
-      }
-
       let anyParam: TSESTree.Parameter | null = null;
 
       for (const param of node.params) {
