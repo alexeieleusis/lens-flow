@@ -101,5 +101,10 @@ console.log(data.key);`,
       code: `const x = JSON.parse('{"a": 1}') as string;`,
       errors: [{ messageId: "missingUnknownCast" }],
     },
+    {
+      filename: TEST_FILENAME,
+      code: `const val = JSON.parse('{ "key": "value" }')?.key;`,
+      errors: [{ messageId: "missingUnknownCast" }],
+    },
   ],
 });
