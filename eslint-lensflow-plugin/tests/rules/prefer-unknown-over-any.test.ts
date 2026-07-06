@@ -75,5 +75,21 @@ ruleTester.run("prefer-unknown-over-any", rule, {
 }`,
       errors: [{ messageId: "preferUnknown" }],
     },
+    {
+      filename: TEST_FILENAME,
+      code: `const handler = (data: any) => {
+  if (typeof data === "string") return data;
+  return String(data);
+};`,
+      errors: [{ messageId: "preferUnknown" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `const fn = function (json: any) {
+  if (json instanceof Error) return json.message;
+  return String(json);
+};`,
+      errors: [{ messageId: "preferUnknown" }],
+    },
   ],
 });
