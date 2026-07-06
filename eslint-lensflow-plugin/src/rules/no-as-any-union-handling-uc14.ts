@@ -1,83 +1,81 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-const FUNCTION_NODES = new Set([
-  "FunctionDeclaration",
-  "FunctionExpression",
-  "ArrowFunctionExpression",
-]);
+type FunctionNode =
+  | TSESTree.FunctionDeclaration
+  | TSESTree.FunctionExpression
+  | TSESTree.ArrowFunctionExpression;
 
-function unwrapTSTypeAnnotation(node: unknown): unknown {
-  if (
-    node &&
-    typeof node === "object" &&
-    (node as Record<string, unknown>).type === "TSTypeAnnotation"
-  ) {
-    return (node as Record<string, unknown>).typeAnnotation;
-  }
-  return node;
+function isFunctionNode(node: TSESTree.Node): node is FunctionNode {
+  return (
+    node.type === "FunctionDeclaration" ||
+    node.type === "FunctionExpression" ||
+    node.type === "ArrowFunctionExpression"
+  );
 }
 
-function isUnionType(typeAnnotation: unknown): boolean {
+function unwrapTSTypeAnnotation(
+  node: TSESTree.TSTypeAnnotation | TSESTree.TypeNode | undefined,
+): TSESTree.TypeNode | undefined {
+  if (node?.type === "TSTypeAnnotation") {
+    return node.typeAnnotation;
+  }
+  return node as TSESTree.TypeNode | undefined;
+}
+
+function isUnionType(
+  typeAnnotation: TSESTree.TSTypeAnnotation | undefined,
+): boolean {
   const unwrapped = unwrapTSTypeAnnotation(typeAnnotation);
-  if (!unwrapped || typeof unwrapped !== "object") return false;
-  const { type } = unwrapped as { type?: string };
-  return type === "TSUnionType";
+  return unwrapped?.type === "TSUnionType";
 }
 
 function findNearestEnclosingFunction(
-  ancestors: unknown[],
-): unknown {
+  ancestors: TSESTree.Node[],
+): FunctionNode | undefined {
   for (let i = ancestors.length - 1; i >= 0; i--) {
-    const obj = ancestors[i] as Record<string, unknown>;
-    if (FUNCTION_NODES.has(obj.type as string)) {
-      return obj;
+    const node = ancestors[i];
+    if (isFunctionNode(node)) {
+      return node;
     }
   }
-  return null;
+  return;
 }
 
-function getUnionParamNames(fnNode: unknown): Set<string> {
-  const params = (fnNode as { params?: unknown[] }).params ?? [];
+function getUnionParamNames(fnNode: FunctionNode): Set<string> {
+  const params = fnNode.params;
   const names = new Set<string>();
   for (const param of params) {
-    const obj = param as Record<string, unknown>;
     // For AssignmentPattern, type annotation is on the left Identifier, not the pattern itself
-    const typeAnn = obj.type === "AssignmentPattern" && obj.left && typeof obj.left === "object"
-      ? ((obj.left as Record<string, unknown>).typeAnnotation ?? obj.typeAnnotation)
-      : (obj as { typeAnnotation?: unknown }).typeAnnotation;
+    let typeAnn: TSESTree.TSTypeAnnotation | undefined;
+    if (param.type === "AssignmentPattern" && param.left.type === "Identifier") {
+      typeAnn = param.left.typeAnnotation;
+    } else if (param.type === "Identifier") {
+      typeAnn = param.typeAnnotation;
+    }
     if (!isUnionType(typeAnn)) continue;
 
-    if (obj.type === "Identifier") {
-      names.add(obj.name as string);
+    if (param.type === "Identifier") {
+      names.add(param.name);
     } else if (
-      obj.type === "AssignmentPattern" &&
-      obj.left &&
-      typeof obj.left === "object" &&
-      (obj.left as Record<string, unknown>).type === "Identifier"
+      param.type === "AssignmentPattern" &&
+      param.left.type === "Identifier"
     ) {
-      names.add((obj.left as Record<string, unknown>).name as string);
+      names.add(param.left.name);
     }
   }
   return names;
 }
 
-function isDerivedFromParam(expr: unknown, paramNames: Set<string>): boolean {
-  if (!expr || typeof expr !== "object") return false;
-  const obj = expr as Record<string, unknown>;
-
-  if (obj.type === "Identifier") {
-    return paramNames.has(obj.name as string);
+function isDerivedFromParam(expr: TSESTree.Node, paramNames: Set<string>): boolean {
+  if (expr.type === "Identifier") {
+    return paramNames.has(expr.name);
   }
 
-  if (
-    obj.type === "MemberExpression" &&
-    obj.object &&
-    typeof obj.object === "object"
-  ) {
-    const rootObj = obj.object as Record<string, unknown>;
+  if (expr.type === "MemberExpression") {
+    const rootObj = expr.object;
     if (rootObj.type === "Identifier") {
-      return paramNames.has(rootObj.name as string);
+      return paramNames.has(rootObj.name);
     }
   }
 
@@ -116,10 +114,8 @@ export default createRule({
         if (!isDerivedFromParam(expression, unionParamNames)) return;
 
         const exprName =
-          expression &&
-          typeof expression === "object" &&
-          (expression as unknown as Record<string, unknown>).type === "Identifier"
-            ? (expression as unknown as Record<string, unknown>).name
+          expression.type === "Identifier"
+            ? expression.name
             : "expression";
 
         context.report({
