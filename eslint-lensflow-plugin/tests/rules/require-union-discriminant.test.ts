@@ -34,6 +34,14 @@ ruleTester.run("require-union-discriminant", rule, {
     `type Shape =
       | { "kind": "circle"; radius: number }
       | { "kind": "rect"; width: number };`,
+
+    // Known limitation: type alias members are skipped.
+    // The rule only inspects TSTypeLiteral nodes directly and cannot
+    // resolve TSTypeReference nodes (e.g., `type A = { x: string }; type U = A | B`).
+    // Such unions pass silently because zero TSTypeLiteral members are found (< 2 threshold).
+    `type Circle = { x: number };
+    type Rect = { y: number };
+    type Shape = Circle | Rect;`,
   ],
   invalid: [
     // No literal-typed discriminant — all widened or primitive types
