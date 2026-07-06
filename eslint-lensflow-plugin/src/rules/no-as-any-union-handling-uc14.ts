@@ -30,88 +30,75 @@ function isUnionType(
   return unwrapped?.type === "TSUnionType";
 }
 
-function getAllParamNames(fnNode: FunctionNode): Set<string> {
+function getUnionParamIdentifiers(fnNode: FunctionNode): Set<TSESTree.Identifier> {
   const params = fnNode.params;
-  const names = new Set<string>();
+  const ids = new Set<TSESTree.Identifier>();
   for (const param of params) {
-    if (param.type === "Identifier") {
-      names.add(param.name);
-    } else if (
-      param.type === "AssignmentPattern" &&
-      param.left.type === "Identifier"
-    ) {
-      names.add(param.left.name);
-    }
-  }
-  return names;
-}
-
-function getUnionParamNames(fnNode: FunctionNode): Set<string> {
-  const params = fnNode.params;
-  const names = new Set<string>();
-  for (const param of params) {
-    // For AssignmentPattern, type annotation is on the left Identifier, not the pattern itself
     let typeAnn: TSESTree.TSTypeAnnotation | undefined;
+    let ident: TSESTree.Identifier | undefined;
     if (param.type === "AssignmentPattern" && param.left.type === "Identifier") {
       typeAnn = param.left.typeAnnotation;
+      ident = param.left;
     } else if (param.type === "Identifier") {
       typeAnn = param.typeAnnotation;
+      ident = param;
     }
-    if (!isUnionType(typeAnn)) continue;
-
-    if (param.type === "Identifier") {
-      names.add(param.name);
-    } else if (
-      param.type === "AssignmentPattern" &&
-      param.left.type === "Identifier"
-    ) {
-      names.add(param.left.name);
-    }
+    if (!isUnionType(typeAnn) || !ident) continue;
+    ids.add(ident);
   }
-  return names;
+  return ids;
 }
 
 function findAncestorFunctionWithUnionParam(
+  sourceCode: TSESLint.SourceCode,
   ancestors: TSESTree.Node[],
   expression: TSESTree.Node,
-): { fn: FunctionNode; unionParams: Set<string> } | undefined {
+): { fn: FunctionNode; unionParamIds: Set<TSESTree.Identifier> } | undefined {
   for (let i = ancestors.length - 1; i >= 0; i--) {
     const node = ancestors[i];
     if (!isFunctionNode(node)) continue;
 
-    const allParams = getAllParamNames(node);
-
-    // If the expression derives from THIS function's params, this is the
-    // authoritative scope — only report if it has union-typed params.
-    if (isDerivedFromParam(expression, allParams)) {
-      const unionParams = getUnionParamNames(node);
-      if (unionParams.size > 0) {
-        return { fn: node, unionParams };
+    if (isDerivedFromParam(sourceCode, expression, node)) {
+      const unionParamIds = getUnionParamIdentifiers(node);
+      if (unionParamIds.size > 0) {
+        return { fn: node, unionParamIds };
       }
       return undefined;
     }
-
-    // The expression does NOT derive from this function's params.
-    // It comes from an outer scope. This function is a boundary for its
-    // own params, but we continue walking outward to find the function
-    // whose union-typed param the expression actually derives from.
   }
   return undefined;
 }
 
-function isDerivedFromParam(expr: TSESTree.Node, paramNames: Set<string>): boolean {
-  if (expr.type === "Identifier") {
-    return paramNames.has(expr.name);
-  }
+function isDerivedFromParam(
+  sourceCode: TSESLint.SourceCode,
+  expr: TSESTree.Node,
+  fnNode: FunctionNode,
+): boolean {
+  let rootIdent: TSESTree.Identifier | undefined;
 
-  if (expr.type === "MemberExpression") {
+  if (expr.type === "Identifier") {
+    rootIdent = expr;
+  } else if (expr.type === "MemberExpression") {
     let root: TSESTree.Node = expr;
     while (root.type === "MemberExpression") {
       root = root.object;
     }
     if (root.type === "Identifier") {
-      return paramNames.has(root.name);
+      rootIdent = root;
     }
+  }
+
+  if (!rootIdent) return false;
+
+  let currentScope: TSESLint.Scope.Scope | null = sourceCode.getScope(rootIdent);
+  while (currentScope) {
+    const variable = currentScope.set.get(rootIdent.name);
+    if (variable) {
+      return variable.defs.some(
+        d => d.type === "Parameter" && d.parent === fnNode,
+      );
+    }
+    currentScope = currentScope.upper;
   }
 
   return false;
@@ -134,16 +121,18 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"asAnyBypassNarrowing", []>) {
+    const sourceCode = context.sourceCode;
+
     return {
       TSAsExpression(node) {
         if (node.typeAnnotation.type !== "TSAnyKeyword") return;
 
         const expression = node.expression;
-        const ancestors = context.sourceCode.getAncestors(node);
-        const result = findAncestorFunctionWithUnionParam(ancestors, expression);
+        const ancestors = sourceCode.getAncestors(node);
+        const result = findAncestorFunctionWithUnionParam(sourceCode, ancestors, expression);
         if (!result) return;
 
-        if (!isDerivedFromParam(expression, result.unionParams)) return;
+        if (!isDerivedFromParam(sourceCode, expression, result.fn)) return;
 
         const exprName =
           expression.type === "Identifier"
