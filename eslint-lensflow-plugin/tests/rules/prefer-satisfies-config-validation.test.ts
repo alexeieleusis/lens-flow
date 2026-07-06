@@ -29,6 +29,10 @@ const config = {
   }
   return false;
 };`,
+    `function validateConfig(c: any): void;
+function validateConfig(c: any) {
+  if (!c.port) throw "missing port";
+}`,
   ],
   invalid: [
     {
