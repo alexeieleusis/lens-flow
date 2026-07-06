@@ -145,6 +145,18 @@ function handle(s: Status) {
 }`,
       errors: [{ messageId: "missingDefaultExhaustiveness" }],
     },
+    // Missing variants, default calls non-never-assertion function
+    {
+      filename: TEST_FILENAME,
+      code: `type State = "a" | "b" | "c";
+function handle(s: State) {
+  switch (s) {
+    case "a": break;
+    default: logUnhandled(s);
+  }
+}`,
+      errors: [{ messageId: "missingDefaultExhaustiveness" }],
+    },
     // Number literal union missing variants
     {
       filename: TEST_FILENAME,
@@ -152,6 +164,17 @@ function handle(s: Status) {
 function handle(c: Code) {
   switch (c) {
     case 1: break;
+  }
+}`,
+      errors: [{ messageId: "missingDefaultExhaustiveness" }],
+    },
+    // Boolean literal union missing variants
+    {
+      filename: TEST_FILENAME,
+      code: `type B = true | false;
+function handle(b: B) {
+  switch (b) {
+    case true: break;
   }
 }`,
       errors: [{ messageId: "missingDefaultExhaustiveness" }],
