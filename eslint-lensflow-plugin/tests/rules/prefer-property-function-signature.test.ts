@@ -11,7 +11,7 @@ ruleTester.run("prefer-property-function-signature", rule, {
       onError: (err: Error) => void;
     }`,
     `type Handler = {
-      handle(req: Request): void;
+      handle: (req: Request) => void;
     };`,
     `class Handler {
       handle(req: Request): void {}
@@ -23,7 +23,7 @@ ruleTester.run("prefer-property-function-signature", rule, {
       code: `interface Handler {
         handle(req: Request): void;
       }`,
-      errors: [{ messageId: "preferPropertyFunction" }],
+      errors: [{ messageId: "methodSyntax" }],
     },
     {
       code: `interface Callback {
@@ -31,15 +31,15 @@ ruleTester.run("prefer-property-function-signature", rule, {
         onError(err: Error): void;
       }`,
       errors: [
-        { messageId: "preferPropertyFunction" },
-        { messageId: "preferPropertyFunction" },
+        { messageId: "methodSyntax" },
+        { messageId: "methodSyntax" },
       ],
     },
     {
       code: `interface Generic<T> {
         map<U>(fn: (t: T) => U): Generic<U>;
       }`,
-      errors: [{ messageId: "preferPropertyFunction" }],
+      errors: [{ messageId: "methodSyntax" }],
     },
     {
       code: `interface Api {
@@ -47,8 +47,8 @@ ruleTester.run("prefer-property-function-signature", rule, {
         post(url: string, body: unknown): Promise<void>;
       }`,
       errors: [
-        { messageId: "preferPropertyFunction" },
-        { messageId: "preferPropertyFunction" },
+        { messageId: "methodSyntax" },
+        { messageId: "methodSyntax" },
       ],
     },
     {
@@ -56,7 +56,7 @@ ruleTester.run("prefer-property-function-signature", rule, {
         "handle"(req: Request): void;
       }`,
       errors: [
-        { messageId: "preferPropertyFunction", data: { name: "handle" } },
+        { messageId: "methodSyntax" },
       ],
     },
     {
@@ -64,8 +64,14 @@ ruleTester.run("prefer-property-function-signature", rule, {
         handle?(req: Request): void;
       }`,
       errors: [
-        { messageId: "preferPropertyFunction", data: { name: "handle" } },
+        { messageId: "methodSyntax" },
       ],
+    },
+    {
+      code: `type Handler = {
+        handle(req: Request): void;
+      };`,
+      errors: [{ messageId: "methodSyntax" }],
     },
   ],
 });
