@@ -173,7 +173,7 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow `as any` type assertions inside functions that handle discriminated union values, which bypass type narrowing and lose all type safety.",
+        "Disallow `as any` type assertions inside functions that handle union-typed parameter values, which bypass type narrowing and lose all type safety.",
     },
     messages: {
       asAnyBypassNarrowing:
