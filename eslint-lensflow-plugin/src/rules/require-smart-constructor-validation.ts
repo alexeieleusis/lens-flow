@@ -85,6 +85,21 @@ function hasBrandedCastInBody(
   return found;
 }
 
+function callArgsContainBrandedCast(node: TSESTree.CallExpression): boolean {
+  let found = false;
+  for (const arg of node.arguments) {
+    walkNodes(arg, (n) => {
+      if (n.type === "TSAsExpression" || n.type === "TSSatisfiesExpression") {
+        found = true;
+        return true;
+      }
+      return false;
+    });
+    if (found) return true;
+  }
+  return false;
+}
+
 function hasValidationLogic(node: TSESTree.Node): boolean {
   return walkNodes(node, (current) => {
     if (
@@ -113,6 +128,9 @@ function hasValidationLogic(node: TSESTree.Node): boolean {
     }
 
     if (current.type === "CallExpression") {
+      if (callArgsContainBrandedCast(current)) {
+        return false;
+      }
       return isValidatorCall(current.callee);
     }
 
@@ -149,16 +167,6 @@ function isValidatorCall(callee: TSESTree.Expression): boolean {
   return false;
 }
 
-function isOnlyReturnWithCast(
-  body: TSESTree.BlockStatement,
-): boolean {
-  if (body.body.length !== 1) return false;
-  const stmt = body.body[0];
-  if (stmt.type !== "ReturnStatement") return false;
-  if (!stmt.argument) return false;
-  const unwrapped = unwrapToCast(stmt.argument);
-  return unwrapped.type === "TSAsExpression" || unwrapped.type === "TSSatisfiesExpression";
-}
 
 function isArrowBareCast(
   body: TSESTree.Node,
@@ -194,10 +202,10 @@ export default createRule({
 
       const isArrowBareCastCheck =
         node.type === "ArrowFunctionExpression" && isArrowBareCast(node.body);
-      const isOnlyReturnCastCheck =
-        node.body.type === "BlockStatement" && isOnlyReturnWithCast(node.body);
+      const hasBlockBodyBrandedCast =
+        node.body.type === "BlockStatement" && hasBrandedCastInBody(node.body) !== null;
 
-      if (isArrowBareCastCheck || isOnlyReturnCastCheck) {
+      if (isArrowBareCastCheck || hasBlockBodyBrandedCast) {
         if (!hasValidationLogic(node)) {
           context.report({
             node,

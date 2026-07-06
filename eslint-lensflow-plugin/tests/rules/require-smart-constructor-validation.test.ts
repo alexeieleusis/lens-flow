@@ -66,5 +66,22 @@ function mkHost(h: string): Host {
 }`,
       errors: [{ messageId: "noValidation" }],
     },
+    // Invalid: multi-statement body with bare cast, no validation
+    {
+      code: `type Port = number & { __brand: "Port" };
+function mkPort(n: number): Port {
+  const v = n;
+  return v as Port;
+}`,
+      errors: [{ messageId: "noValidation" }],
+    },
+    // Invalid: call expression wraps a branded cast without actual validation
+    {
+      code: `type Email = string & { __brand: "Email" };
+function mkEmail(s: string): Email {
+  return isValidEmail(s as Email);
+}`,
+      errors: [{ messageId: "noValidation" }],
+    },
   ],
 });
