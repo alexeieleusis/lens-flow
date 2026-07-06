@@ -33,5 +33,9 @@ type UserId = string & { readonly [__userBrand]: true };`,
       code: `const myVar: symbol = Symbol("test");`,
       errors: [{ messageId: "symbolTypedBrand" }],
     },
+    {
+      code: `const __userBrand = Symbol("UserId"), other = 42;`,
+      errors: [{ messageId: "requireDeclareBrand" }],
+    },
   ],
 });
