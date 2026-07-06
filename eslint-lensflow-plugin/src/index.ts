@@ -312,7 +312,7 @@ const plugin: {
     "no-as-any-bypass-exhaustiveness": noAsAnyBypassExhaustiveness,
     "no-as-any-capability-check-t59": noAsAnyCapabilityCheckT59,
     "no-as-any-in-narrowed-branch": noAsAnyInNarrowedBranch,
-     "no-as-any-union-handling-uc14": noAsAnyUnionHandlingUc14,
+    "no-as-any-union-handling-uc14": noAsAnyUnionHandlingUc14,
     "no-as-const-on-dynamic-values": noAsConstOnDynamicValues,
     "no-as-const-on-let": noAsConstOnLet,
     "no-as-instead-of-narrowing": noAsInsteadOfNarrowing,
