@@ -1,6 +1,27 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
+/**
+ * Recursively checks whether an expression contains runtime-computed values.
+ *
+ * Considered **static** (returns `false`):
+ * - `Literal` — string, number, boolean, null, RegExp literals
+ * - `TemplateLiteral` with zero expressions — plain template strings
+ * - `UnaryExpression` with `typeof` or `void` — always resolve to a known value
+ * - `UnaryExpression` with `-` applied to a `Literal` — negated numeric/string literal
+ * - `ObjectExpression` / `ArrayExpression` where every nested value is static
+ *
+ * Considered **dynamic** (returns `true`):
+ * - `TemplateLiteral` with expressions — `${...}` interpolations
+ * - `UnaryExpression` with any other operator (e.g., `!`, `~`, `+`, `++`, `--`)
+ * - Any other expression type, including but not limited to:
+ *   `Identifier`, `MemberExpression`, `CallExpression`, `NewExpression`,
+ *   `BinaryExpression`, `LogicalExpression`, `ConditionalExpression`,
+ *   `AwaitExpression`, `YieldExpression`, `TaggedTemplateExpression`,
+ *   `ArrowFunctionExpression`, `FunctionExpression`, `ClassExpression`,
+ *   `UpdateExpression`, `AssignmentExpression`, `SequenceExpression`,
+ *   `Super`, `Import`, `MetaProperty`, `ChainExpression`, `JSX*`, `TS*`
+ */
 function hasDynamicValue(node: TSESTree.Expression | null | undefined): boolean {
   if (!node) return false;
 
@@ -11,7 +32,6 @@ function hasDynamicValue(node: TSESTree.Expression | null | undefined): boolean 
   }
 
   if (node.type === "UnaryExpression") {
-    // typeof and void always produce static results; - is static only with literal operand
     if (node.operator === "typeof" || node.operator === "void") return false;
     return node.operator !== "-" || node.argument.type !== "Literal";
   }
@@ -43,7 +63,7 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow `as const` on objects or arrays whose values are computed at runtime",
+        "Disallow `as const` on objects or arrays containing runtime-computed expressions",
     },
     messages: {
       dynamicAsConst:
