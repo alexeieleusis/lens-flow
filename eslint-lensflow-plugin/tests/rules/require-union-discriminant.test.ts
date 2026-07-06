@@ -29,6 +29,11 @@ ruleTester.run("require-union-discriminant", rule, {
     `type Partial =
       | { kind: "active"; x: number }
       | { status: string; y: string };`,
+
+    // Quoted string-literal property keys
+    `type Shape =
+      | { "kind": "circle"; radius: number }
+      | { "kind": "rect"; width: number };`,
   ],
   invalid: [
     // No literal-typed discriminant — all widened or primitive types
