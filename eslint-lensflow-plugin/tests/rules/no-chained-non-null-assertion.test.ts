@@ -22,5 +22,9 @@ const b = y!.bar;`,
       code: `const x = arr!.length!;`,
       errors: [{ messageId: "chainedNonNull" }],
     },
+    {
+      code: `const x = a!.b.c!;`,
+      errors: [{ messageId: "chainedNonNull" }],
+    },
   ],
 });

@@ -18,7 +18,7 @@ function getChain(
       nodes.push(current.object);
       current = current.object.expression;
     } else {
-      break;
+      current = current.object;
     }
   }
 
