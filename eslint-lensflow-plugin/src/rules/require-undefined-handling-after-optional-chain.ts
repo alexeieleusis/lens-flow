@@ -160,6 +160,14 @@ function isInsideIfGuard(
     isNodeAfterInSameBlock(current, node)
   ) return true;
 
+  // if (x != null) { ... } else { throw }; — code after is guarded
+  if (
+    current.alternate &&
+    testContainsGuard(current.test, varName) &&
+    isTerminatingStatement(current.alternate) &&
+    isNodeAfterInSameBlock(current, node)
+  ) return true;
+
   return "stop";
 }
 
