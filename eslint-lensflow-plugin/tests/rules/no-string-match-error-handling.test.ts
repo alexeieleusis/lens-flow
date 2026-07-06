@@ -52,6 +52,17 @@ if (!result.ok) {
 } catch {
   console.error("Something went wrong");
 }`,
+    // Nested arrow function in catch body — walker stops at function boundary,
+    // so the inner `e` (shadowing the outer catch param) is not flagged.
+    `try {
+  const data = process(input);
+} catch (e) {
+  items.forEach((e) => {
+    if (e.message.includes("bad")) {
+      handleBad(e);
+    }
+  });
+}`,
   ],
   invalid: [
     // Nested catch handler inside arrow function — the inner catch's string match IS reported.
