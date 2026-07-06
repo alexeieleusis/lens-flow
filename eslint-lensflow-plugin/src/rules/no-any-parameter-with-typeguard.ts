@@ -152,7 +152,15 @@ export default createRule({
       const body = node.body;
       if (!body) return;
 
-      const typeguards = collectTypeguardTargets(body as TSESTree.Node);
+      // For expression-bodied arrow functions (e.g., `(x) => typeof x === "string"`),
+      // `node.body` is an Expression, not a BlockStatement. Wrap it in a synthetic
+      // BlockStatement so the traversal treats it consistently with block bodies.
+      const normalizedBody =
+        node.type === "ArrowFunctionExpression" && node.expression
+          ? { type: "BlockStatement", body: [body] } as TSESTree.BlockStatement
+          : body;
+
+      const typeguards = collectTypeguardTargets(normalizedBody as TSESTree.Node);
 
       reportAnyParamTypeguards(anyParams, typeguards);
     }
