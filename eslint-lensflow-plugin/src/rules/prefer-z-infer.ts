@@ -1,5 +1,5 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 import {
   deriveSchemaName,
   findVariableInScopeChain,
@@ -13,23 +13,23 @@ function isZInferType(node: unknown): boolean {
     "type" in node &&
     (node as { type: string }).type === "TSTypeReference"
   ) {
-    const tsRef = node as any;
+    const tsRef = node as TSESTree.TSTypeReference;
     const typeName = tsRef.typeName;
 
     const isMemberInfer =
       typeName.type === "TSQualifiedName" &&
-      typeName.left?.type === "Identifier" &&
-      typeName.left?.name === "z" &&
-      typeName.right?.type === "Identifier" &&
-      typeName.right?.name === "infer";
+      typeName.left.type === "Identifier" &&
+      typeName.left.name === "z" &&
+      typeName.right.type === "Identifier" &&
+      typeName.right.name === "infer";
     const isDirectInfer =
       typeName.type === "Identifier" && typeName.name === "infer";
 
     if (!isMemberInfer && !isDirectInfer) return false;
 
-    if (!tsRef.typeParameters?.params.length) return false;
+    if (!tsRef.typeArguments?.params.length) return false;
 
-    const typeParam = tsRef.typeParameters.params[0];
+    const typeParam = tsRef.typeArguments.params[0];
     if (
       typeParam &&
       typeof typeParam === "object" &&
@@ -49,18 +49,17 @@ function containsTypeLiteral(node: unknown): boolean {
   if (t === "TSTypeLiteral") return true;
 
   if (t === "TSUnionType") {
-    const unionNode = node as any;
+    const unionNode = node as TSESTree.TSUnionType;
     return unionNode.types.some(containsTypeLiteral);
   }
 
   if (t === "TSIntersectionType") {
-    const interNode = node as any;
+    const interNode = node as TSESTree.TSIntersectionType;
     return interNode.types.some(containsTypeLiteral);
   }
 
   if (t === "TSParenthesizedType") {
-    const parenNode = node as any;
-    return containsTypeLiteral(parenNode.typeAnnotation);
+    return containsTypeLiteral((node as unknown as { typeAnnotation: unknown }).typeAnnotation);
   }
 
   return false;
