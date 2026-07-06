@@ -17,10 +17,16 @@ function isFunctionNode(node: TSESTree.Node): node is FunctionNode {
 function unwrapTSTypeAnnotation(
   node: TSESTree.TSTypeAnnotation | TSESTree.TypeNode | undefined,
 ): TSESTree.TypeNode | undefined {
-  if (node?.type === "TSTypeAnnotation") {
-    return node.typeAnnotation;
+  if (!node) return undefined;
+
+  let current: TSESTree.TypeNode | undefined =
+    node.type === "TSTypeAnnotation" ? node.typeAnnotation : node;
+
+  while (current?.type === "TSOptionalType") {
+    current = current.typeAnnotation;
   }
-  return node as TSESTree.TypeNode | undefined;
+
+  return current;
 }
 
 function isUnionType(
