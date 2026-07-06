@@ -1,5 +1,5 @@
 import { createRule } from "../utils/rule-creator.js";
-import { walk } from "../utils/ast-helpers.js";
+import { getChildren } from "../utils/ast-helpers.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 type ParamNode =
@@ -70,11 +70,27 @@ function collectTypeguardTargets(
   body: TSESTree.Node,
 ): Array<{ paramName: string; kind: string }> {
   const results: Array<{ paramName: string; kind: string }> = [];
+  const visited = new WeakSet<TSESTree.Node>();
 
-  walk(body, (node) => {
+  function innerWalk(node: TSESTree.Node): void {
+    if (visited.has(node)) return;
+    visited.add(node);
+
     const tg = isTypeguardNode(node);
     if (tg) results.push(tg);
-  }, { stopAtFunctionBoundaries: true });
+
+    const children = getChildren(node, { stopAtFunctionBoundaries: true });
+    for (const child of children) {
+      if (child.type === "FunctionDeclaration" ||
+          child.type === "FunctionExpression" ||
+          child.type === "ArrowFunctionExpression") {
+        continue;
+      }
+      innerWalk(child);
+    }
+  }
+
+  innerWalk(body);
 
   return results;
 }
