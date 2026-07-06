@@ -1,11 +1,21 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-function collectAnyParams(params: any[]): Array<{ name: string; anyNode: any }> {
-  const anyParams: Array<{ name: string; anyNode: any }> = [];
+type ParamNode =
+  | TSESTree.Identifier
+  | TSESTree.AssignmentPattern
+  | TSESTree.RestElement
+  | TSESTree.ObjectPattern
+  | TSESTree.ArrayPattern
+  | TSESTree.TSParameterProperty;
+
+function collectAnyParams(
+  params: ParamNode[],
+): Array<{ name: string; anyNode: TSESTree.TSAnyKeyword }> {
+  const anyParams: Array<{ name: string; anyNode: TSESTree.TSAnyKeyword }> = [];
 
   for (const param of params) {
-    let base: any;
+    let base: TSESTree.Identifier | TSESTree.ObjectPattern | TSESTree.ArrayPattern | TSESTree.AssignmentPattern;
     if (param.type === "RestElement") {
       // typeAnnotation is on the RestElement itself, name on argument
       const typeAnn = param.typeAnnotation?.typeAnnotation;
@@ -35,38 +45,39 @@ function collectAnyParams(params: any[]): Array<{ name: string; anyNode: any }> 
   return anyParams;
 }
 
-function isNode(value: any): boolean {
+function isNode(value: unknown): value is TSESTree.BaseNode {
   return value != null && typeof value === "object" && "type" in value;
 }
 
 function isTypeguardNode(
-  node: any,
+  node: TSESTree.BaseNode,
 ): { paramName: string; kind: string } | null {
-  if (node.type === "UnaryExpression" && node.operator === "typeof") {
-    if (node.argument.type === "Identifier") {
-      return { paramName: node.argument.name, kind: "typeof" };
+  if (node.type === "UnaryExpression") {
+    const unaryNode = node as TSESTree.UnaryExpression;
+    if (unaryNode.operator === "typeof" && unaryNode.argument.type === "Identifier") {
+      return { paramName: (unaryNode.argument as TSESTree.Identifier).name, kind: "typeof" };
     }
     return null;
   }
-  if (
-    node.type === "BinaryExpression" &&
-    node.operator === "instanceof"
-  ) {
-    if (node.left.type === "Identifier") {
-      return { paramName: node.left.name, kind: "instanceof" };
+  if (node.type === "BinaryExpression") {
+    const binNode = node as TSESTree.BinaryExpression;
+    if (binNode.operator === "instanceof" && binNode.left.type === "Identifier") {
+      return { paramName: (binNode.left as TSESTree.Identifier).name, kind: "instanceof" };
     }
     return null;
   }
   return null;
 }
 
-function extractChildren(node: any): any[] {
-  const children: any[] = [];
-  for (const key of Object.keys(node)) {
+function extractChildren(node: TSESTree.BaseNode): TSESTree.BaseNode[] {
+  const children: TSESTree.BaseNode[] = [];
+  const nodeRecord = node as unknown as Record<string, unknown>;
+  for (const key of Object.keys(nodeRecord)) {
     if (key === "parent" || key === "scope") continue;
-    const child = node[key];
+    const child = nodeRecord[key];
     if (Array.isArray(child)) {
-      children.push(...child.filter((item) => isNode(item)));
+      const filtered = child.filter((item): item is TSESTree.BaseNode => isNode(item));
+      children.push(...filtered);
     } else if (isNode(child)) {
       children.push(child);
     }
@@ -75,14 +86,14 @@ function extractChildren(node: any): any[] {
 }
 
 function collectTypeguardTargets(
-  body: any,
+  body: TSESTree.BaseNode,
 ): Array<{ paramName: string; kind: string }> {
   const results: Array<{ paramName: string; kind: string }> = [];
-  const stack: any[] = [body];
+  const stack: TSESTree.BaseNode[] = [body];
 
   while (stack.length > 0) {
     const n = stack.pop();
-    if (!isNode(n)) continue;
+    if (!n) continue;
 
     const tg = isTypeguardNode(n);
     if (tg) results.push(tg);
@@ -121,7 +132,7 @@ export default createRule({
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"anyParamWithTypeguard", []>) {
     function reportAnyParamTypeguards(
-      anyParams: Array<{ name: string; anyNode: any }>,
+      anyParams: Array<{ name: string; anyNode: TSESTree.TSAnyKeyword }>,
       typeguards: Array<{ paramName: string; kind: string }>,
     ) {
       const anyParamNames = new Set(anyParams.map((p) => p.name));
@@ -147,16 +158,20 @@ export default createRule({
       }
     }
 
-    function visitFunction(node: {
-      params: any[];
-      body?: any;
-      expression?: boolean;
-    }) {
-      const anyParams = collectAnyParams(node.params);
+    type FunctionLike =
+      | TSESTree.FunctionDeclaration
+      | TSESTree.FunctionExpression
+      | TSESTree.ArrowFunctionExpression;
 
-      if (anyParams.length === 0 || !node.body) return;
+    function visitFunction(node: FunctionLike) {
+      const anyParams = collectAnyParams(node.params as ParamNode[]);
 
-      const typeguards = collectTypeguardTargets(node.body);
+      if (anyParams.length === 0) return;
+
+      const body = node.body;
+      if (!body) return;
+
+      const typeguards = collectTypeguardTargets(body as TSESTree.BaseNode);
 
       reportAnyParamTypeguards(anyParams, typeguards);
     }
