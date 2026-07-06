@@ -88,6 +88,24 @@ function findTypeParamUsage(
       }
       break;
     }
+    case "TSCallSignatureDeclaration": {
+      const csd = node as TSESTree.TSCallSignatureDeclaration;
+      (csd.params || []).forEach((p) => {
+        if ("typeAnnotation" in p && p.typeAnnotation)
+          findTypeParamUsage(p.typeAnnotation, paramName, false, result);
+      });
+      if (csd.returnType) findTypeParamUsage(csd.returnType.typeAnnotation, paramName, true, result);
+      break;
+    }
+    case "TSConstructSignatureDeclaration": {
+      const csd = node as TSESTree.TSConstructSignatureDeclaration;
+      (csd.params || []).forEach((p) => {
+        if ("typeAnnotation" in p && p.typeAnnotation)
+          findTypeParamUsage(p.typeAnnotation, paramName, false, result);
+      });
+      if (csd.returnType) findTypeParamUsage(csd.returnType.typeAnnotation, paramName, true, result);
+      break;
+    }
     case "TSMethodSignature": {
       const ms = node as TSESTree.TSMethodSignature;
       (ms.params || []).forEach((p) => {
@@ -173,7 +191,12 @@ export default createRule({
       const usage = { covariant: false, contravariant: false };
 
       members.forEach((member) => {
-        if (member.type === "TSPropertySignature" || member.type === "TSMethodSignature") {
+        if (
+          member.type === "TSPropertySignature" ||
+          member.type === "TSMethodSignature" ||
+          member.type === "TSCallSignatureDeclaration" ||
+          member.type === "TSConstructSignatureDeclaration"
+        ) {
           findTypeParamUsage(member, paramName, false, usage);
         }
       });

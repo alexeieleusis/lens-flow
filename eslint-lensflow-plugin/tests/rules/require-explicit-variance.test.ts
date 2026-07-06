@@ -30,6 +30,10 @@ ruleTester.run("require-explicit-variance", rule, {
     }`,
     // Type alias with no type parameters
     `type SimpleAlias = string;`,
+    // Construct signature: T in both param and return — invariant, no suggestion
+    `interface Cloneable<T> {
+      new (source: T): T;
+    }`,
   ],
   invalid: [
     // T only in return position — covariant, suggest `out`
@@ -91,6 +95,27 @@ ruleTester.run("require-explicit-variance", rule, {
     {
       code: `interface Producer<T> {
         produce(): (T);
+      }`,
+      errors: [{ messageId: "suggestOut" }],
+    },
+    // Callable signature: T only in return position — covariant, suggest `out`
+    {
+      code: `interface Factory<T> {
+        (config: string): T;
+      }`,
+      errors: [{ messageId: "suggestOut" }],
+    },
+    // Callable signature: T only in parameter position — contravariant, suggest `in`
+    {
+      code: `interface Handler<T> {
+        (event: T): void;
+      }`,
+      errors: [{ messageId: "suggestIn" }],
+    },
+    // Construct signature: T only in return position — covariant, suggest `out`
+    {
+      code: `interface Newable<T> {
+        new (id: number): T;
       }`,
       errors: [{ messageId: "suggestOut" }],
     },
