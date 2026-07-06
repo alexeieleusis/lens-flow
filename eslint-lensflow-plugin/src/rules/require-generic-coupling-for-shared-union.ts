@@ -95,7 +95,10 @@ export default createRule({
 
     return {
       FunctionDeclaration: checkFunction,
-      FunctionExpression: checkFunction,
+      FunctionExpression(node: TSESTree.FunctionExpression) {
+        if (node.parent?.type === "MethodDefinition") return;
+        checkFunction(node);
+      },
       ArrowFunctionExpression: checkFunction,
       TSFunctionType: checkFunction,
       TSMethodSignature: checkFunction,
