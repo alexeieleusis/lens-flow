@@ -59,6 +59,14 @@ ruleTester.run("require-unknown-after-json-parse", rule, {
       filename: TEST_FILENAME,
       code: `const data = JSON.parse('{ "key": "value" }') satisfies unknown;`,
     },
+    {
+      filename: TEST_FILENAME,
+      code: `const parsed = (JSON.parse('{ "key": "value" }')) as unknown;`,
+    },
+   {
+      filename: TEST_FILENAME,
+      code: `const data = JSON.parse('{ "key": "value" }')! satisfies unknown;`,
+    },
   ],
   invalid: [
     {

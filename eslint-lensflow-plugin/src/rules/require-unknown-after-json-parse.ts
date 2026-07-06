@@ -49,7 +49,10 @@ export default createRule({
       CallExpression(node) {
         if (!isJsonParseCall(node)) return;
 
-        const parent = node.parent;
+        let parent: TSESTree.Node = node.parent;
+        while (parent.type === "TSNonNullExpression") {
+          parent = parent.parent;
+        }
 
         if (parent.type === "TSAsExpression" && isCastToUnknown(parent)) {
           return;
