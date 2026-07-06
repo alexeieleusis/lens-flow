@@ -95,7 +95,7 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"blindCastUntrusted" | "blindCast", []>) {
-    const parserServices = ESLintUtils.getParserServices(context);
+    const parserServices = ESLintUtils.getParserServices(context, true);
     const program = parserServices.program;
     if (!program) return {};
 
