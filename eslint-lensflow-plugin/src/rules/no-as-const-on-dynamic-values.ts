@@ -11,6 +11,8 @@ function hasDynamicValue(node: TSESTree.Expression | null | undefined): boolean 
   }
 
   if (node.type === "UnaryExpression") {
+    // typeof and void always produce static results; - is static only with literal operand
+    if (node.operator === "typeof" || node.operator === "void") return false;
     return node.operator !== "-" || node.argument.type !== "Literal";
   }
 
