@@ -8,7 +8,7 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow broad `any` or `unknown` index signatures that eliminate structural type safety.",
+        "Disallow broad `any` or `unknown` index signatures that eliminate structural type safety. This rule subsumes the deprecated `no-any-index-signature` rule; enable only one of the two to avoid duplicate diagnostics.",
     },
     messages: {
       broadIndexSignature:
