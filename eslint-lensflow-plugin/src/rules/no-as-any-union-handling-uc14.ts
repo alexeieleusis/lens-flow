@@ -105,17 +105,44 @@ function findAncestorFunctionWithUnionParam(
   return undefined;
 }
 
+const TS_WRAPPER_TYPES = new Set([
+  "TSAsExpression",
+  "TSTypeAssertion",
+  "TSNonNullExpression",
+  "TSSatisfiesExpression",
+]);
+
+function unwrapTSWrapper(node: TSESTree.Node): TSESTree.Node {
+  let current: TSESTree.Node = node;
+  while (TS_WRAPPER_TYPES.has(current.type)) {
+    if (
+      current.type === "TSAsExpression" ||
+      current.type === "TSTypeAssertion" ||
+      current.type === "TSNonNullExpression"
+    ) {
+      current = (current as TSESTree.TSAsExpression | TSESTree.TSTypeAssertion | TSESTree.TSNonNullExpression).expression;
+    } else if (current.type === "TSSatisfiesExpression") {
+      current = (current as TSESTree.TSSatisfiesExpression).expression;
+    } else {
+      break;
+    }
+  }
+  return current;
+}
+
 function isDerivedFromParam(
   sourceCode: TSESLint.SourceCode,
   expr: TSESTree.Node,
   fnNode: FunctionNode,
 ): boolean {
+  const unwrapped = unwrapTSWrapper(expr);
+
   let rootIdent: TSESTree.Identifier | undefined;
 
-  if (expr.type === "Identifier") {
-    rootIdent = expr;
-  } else if (expr.type === "MemberExpression") {
-    let root: TSESTree.Node = expr;
+  if (unwrapped.type === "Identifier") {
+    rootIdent = unwrapped;
+  } else if (unwrapped.type === "MemberExpression") {
+    let root: TSESTree.Node = unwrapped;
     while (root.type === "MemberExpression") {
       root = root.object;
     }
