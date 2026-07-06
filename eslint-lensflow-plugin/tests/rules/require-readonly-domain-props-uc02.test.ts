@@ -65,5 +65,18 @@ ruleTester.run("require-readonly-domain-props-uc02", rule, {
         { messageId: "mutableDomainProp", data: { name: "price" } },
       ],
     },
+    // Mutable type literal with quoted string-literal keys
+    {
+      code: `type Order = {
+        "id": OrderId;
+        "amount": Money;
+        status: OrderStatus;
+      };`,
+      errors: [
+        { messageId: "mutableDomainProp", data: { name: "id" } },
+        { messageId: "mutableDomainProp", data: { name: "amount" } },
+        { messageId: "mutableDomainProp", data: { name: "status" } },
+      ],
+    },
   ],
 });
