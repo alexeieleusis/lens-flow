@@ -45,5 +45,11 @@ ruleTester.run("require-readonly-on-array-type", rule, {
       }`,
       errors: [{ messageId: "mutableArrayRefOnReadonlyProp" }],
     },
+    {
+      code: `interface Config {
+        readonly "allowed-hosts": string[];
+      }`,
+      errors: [{ messageId: "mutableArrayOnReadonlyProp" }],
+    },
   ],
 });
