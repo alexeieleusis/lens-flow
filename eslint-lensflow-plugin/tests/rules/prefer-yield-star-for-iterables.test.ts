@@ -62,6 +62,27 @@ ruleTester.run("prefer-yield-star-for-iterables", rule, {
   yield count;
 }`,
     },
+    {
+      filename: TEST_FILENAME,
+      code: `async function* yieldIterable(): AsyncGenerator<string, void> {
+  const items: Iterable<string> = ["a", "b", "c"];
+  yield* items;
+}`,
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `async function* yieldAsyncIterable(): AsyncGenerator<string, void> {
+  const items: AsyncIterable<string> = (async function*() { yield "a"; })();
+  yield* items;
+}`,
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `async function* gen(): AsyncGenerator<string, void> {
+  const handler = () => { yield ["a"]; };
+  yield* ["b"];
+}`,
+    },
   ],
   invalid: [
     {
@@ -90,6 +111,51 @@ ruleTester.run("prefer-yield-star-for-iterables", rule, {
       code: `async function* iterables(): AsyncGenerator<string, void> {
   const values: string[] = ["x", "y", "z"];
   yield values;
+}`,
+      errors: [{ messageId: "preferYieldStar" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `async function* badIterable(): AsyncGenerator<string, void> {
+  const items: Iterable<string> = ["a", "b", "c"];
+  yield items;
+}`,
+      errors: [{ messageId: "preferYieldStar" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `async function* badAsyncIterable(): AsyncGenerator<string, void> {
+  const items: AsyncIterable<string> = (async function*() { yield "a"; })();
+  yield items;
+}`,
+      errors: [{ messageId: "preferYieldStar" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `async function* badSet(): AsyncGenerator<string, void> {
+  const items = new Set(["a", "b", "c"]);
+  yield items;
+}`,
+      errors: [{ messageId: "preferYieldStar" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `async function* badMap(): AsyncGenerator<string, void> {
+  const items = new Map([["key", "value"]]);
+  yield items;
+}`,
+      errors: [{ messageId: "preferYieldStar" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `async function* badCustomIterable(): AsyncGenerator<string, void> {
+  const items: Iterable<string> = {
+    *[Symbol.iterator]() {
+      yield "a";
+      yield "b";
+    },
+  };
+  yield items;
 }`,
       errors: [{ messageId: "preferYieldStar" }],
     },
