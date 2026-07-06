@@ -9,6 +9,6 @@ export default createSwitchExhaustivenessRule({
     "Require exhaustive switch statements on discriminated unions with a never-assertion or throw in the default branch",
   messageKey: "missingVariants",
   messageTemplate:
-    "Switch statement is not exhaustive. Missing variants: {{missing}}. Handle all variants or add a default branch with assertNever. See: {{url}}",
+    "Switch statement is not exhaustive. Missing variants: {{missing}}. Handle all variants or add a default branch with assertNever or a throw statement. See: {{url}}",
   url: DOCS_URL,
 });
