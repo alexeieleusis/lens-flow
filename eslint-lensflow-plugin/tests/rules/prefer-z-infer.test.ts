@@ -99,5 +99,15 @@ ruleTester.run("prefer-z-infer", rule, {
       }`,
       errors: [{ messageId: "redundantInterface" }],
     },
+    // Multiple type aliases in the same scope — only `Config` matches
+    // `ConfigSchema`; `Other` has no corresponding `OtherSchema`, so only
+    // one error should be reported (no duplicates, no misses).
+    {
+      code: `const ConfigSchema = z.object({ port: z.number(), host: z.string() });
+
+      type Config = { port: number; host: string };
+      type Other = { name: string; age: number };`,
+      errors: [{ messageId: "preferInfer" }],
+    },
   ],
 });
