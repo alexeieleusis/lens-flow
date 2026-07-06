@@ -87,5 +87,12 @@ ruleTester.run("require-explicit-variance", rule, {
       }`,
       errors: [{ messageId: "suggestOut" }],
     },
+    // T wrapped in parentheses (TSParenthesizedType) in return position — covariant, suggest `out`
+    {
+      code: `interface Producer<T> {
+        produce(): (T);
+      }`,
+      errors: [{ messageId: "suggestOut" }],
+    },
   ],
 });
