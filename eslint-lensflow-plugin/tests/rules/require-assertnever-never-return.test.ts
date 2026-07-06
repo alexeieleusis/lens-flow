@@ -59,5 +59,11 @@ ruleTester.run("require-assertnever-never-return", rule, {
       };`,
       errors: [{ messageId: "wrongReturnType" }],
     },
+    {
+      code: `const fn = cb(function assertNever(x: never) {
+        throw new Error("unreachable");
+      });`,
+      errors: [{ messageId: "missingNeverReturn" }],
+    },
   ],
 });
