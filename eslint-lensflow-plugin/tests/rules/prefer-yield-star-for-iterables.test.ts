@@ -83,6 +83,32 @@ ruleTester.run("prefer-yield-star-for-iterables", rule, {
   yield* ["b"];
 }`,
     },
+    {
+      filename: TEST_FILENAME,
+      code: `async function* yieldSet(): AsyncGenerator<string, void> {
+  const items = new Set(["a", "b", "c"]);
+  yield* items;
+}`,
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `async function* yieldMap(): AsyncGenerator<string, void> {
+  const items = new Map([["key", "value"]]);
+  yield* items;
+}`,
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `async function* yieldCustomIterable(): AsyncGenerator<string, void> {
+  const items: Iterable<string> = {
+    *[Symbol.iterator]() {
+      yield "a";
+      yield "b";
+    },
+  };
+  yield* items;
+}`,
+    },
   ],
   invalid: [
     {
