@@ -5,7 +5,6 @@ import noAnyArrayForChildren from "./rules/no-any-array-for-children.js";
 import noAnyArrayParameter from "./rules/no-any-array-parameter.js";
 import noAnyArrayReturn from "./rules/no-any-array-return.js";
 import noAnyBoundary from "./rules/no-any-boundary.js";
-import noAnyCallbackParam from "./rules/no-any-callback-param.js";
 import noAnyCallbackType from "./rules/no-any-callback-type.js";
 import noAnyCastChain from "./rules/no-any-cast-chain.js";
 import noAnyDomainParameterUc02 from "./rules/no-any-domain-parameter-uc02.js";
@@ -291,8 +290,7 @@ const plugin: {
     "no-any-array-parameter": noAnyArrayParameter,
     "no-any-array-return": noAnyArrayReturn,
     "no-any-boundary": noAnyBoundary,
-    "no-any-callback-param": noAnyCallbackParam,
-    "no-any-callback-type": noAnyCallbackType,
+     "no-any-callback-type": noAnyCallbackType,
     "no-any-cast-chain": noAnyCastChain,
     "no-any-domain-parameter-uc02": noAnyDomainParameterUc02,
      "no-any-in-callable": noAnyInCallable,
