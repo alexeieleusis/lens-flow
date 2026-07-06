@@ -40,5 +40,11 @@ ruleTester.run("prefer-this-interface-return", rule, {
       }`,
       errors: [{ messageId: "preferThis" }],
     },
+    {
+      code: `interface Entity {
+        Creator: new () => Entity;
+      }`,
+      errors: [{ messageId: "preferThis" }],
+    },
   ],
 });
