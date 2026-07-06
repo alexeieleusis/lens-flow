@@ -9,5 +9,5 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["*.ts", "**/*.ts"]
+  "include": ["src/**/*.ts", "tests/**/*.ts"]
 }
