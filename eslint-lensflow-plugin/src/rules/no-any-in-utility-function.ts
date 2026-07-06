@@ -43,7 +43,7 @@ function getParamName(
   if (param.type === "ObjectPattern" || param.type === "ArrayPattern") {
     return sourceCode.getText(param);
   }
-  return "unnamed";
+  return sourceCode.getText(param);
 }
 
 function isParamAny(param: TSESTree.Parameter): boolean {
