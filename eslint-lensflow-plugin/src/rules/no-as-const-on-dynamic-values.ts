@@ -39,6 +39,7 @@ function hasDynamicValue(node: TSESTree.Expression | null | undefined): boolean 
 export default createRule({
   name: "no-as-const-on-dynamic-values",
   meta: {
+    fixable: undefined,
     type: "problem",
     docs: {
       description:
