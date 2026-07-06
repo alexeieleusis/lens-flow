@@ -124,5 +124,13 @@ ruleTester.run("prefer-unknown-over-any", rule, {
 };`,
       errors: [{ messageId: "preferUnknown" }],
     },
+    {
+      filename: TEST_FILENAME,
+      code: `function parse(json: any = {}) {
+  if (typeof json === "string") return json;
+  return json;
+}`,
+      errors: [{ messageId: "preferUnknown" }],
+    },
   ],
 });
