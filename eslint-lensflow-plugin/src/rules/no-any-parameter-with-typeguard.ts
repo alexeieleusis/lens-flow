@@ -12,6 +12,7 @@ type ParamNode =
 
 function collectAnyParams(
   params: ParamNode[],
+  sourceCode: TSESLint.SourceCode,
 ): Array<{ name: string; anyNode: TSESTree.TSAnyKeyword }> {
   const anyParams: Array<{ name: string; anyNode: TSESTree.TSAnyKeyword }> = [];
 
@@ -22,7 +23,7 @@ function collectAnyParams(
       const typeAnn = param.typeAnnotation?.typeAnnotation;
       if (typeAnn?.type === "TSAnyKeyword") {
         anyParams.push({
-          name: param.argument.type === "Identifier" ? param.argument.name : "(unknown)",
+          name: param.argument.type === "Identifier" ? param.argument.name : sourceCode.getText(param.argument),
           anyNode: typeAnn,
         });
       }
@@ -38,7 +39,7 @@ function collectAnyParams(
     const typeAnn = base.typeAnnotation?.typeAnnotation;
     if (typeAnn?.type === "TSAnyKeyword") {
       const paramName =
-        base.type === "Identifier" ? base.name : "(unknown)";
+        base.type === "Identifier" ? base.name : sourceCode.getText(base);
       anyParams.push({ name: paramName, anyNode: typeAnn });
     }
   }
@@ -145,7 +146,7 @@ export default createRule({
       | TSESTree.ArrowFunctionExpression;
 
     function visitFunction(node: FunctionLike) {
-      const anyParams = collectAnyParams(node.params as ParamNode[]);
+      const anyParams = collectAnyParams(node.params as ParamNode[], context.sourceCode);
 
       if (anyParams.length === 0) return;
 
