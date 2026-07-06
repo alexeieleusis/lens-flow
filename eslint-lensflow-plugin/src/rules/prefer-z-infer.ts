@@ -56,6 +56,11 @@ function containsTypeLiteral(node: unknown): boolean {
     return interNode.types.some(containsTypeLiteral);
   }
 
+  if (t === "TSParenthesizedType") {
+    const parenNode = node as any;
+    return containsTypeLiteral(parenNode.typeAnnotation);
+  }
+
   return false;
 }
 

@@ -57,6 +57,11 @@ ruleTester.run("prefer-z-infer", rule, {
       errors: [{ messageId: "preferInfer" }],
     },
     {
+      code: `const ConfigSchema = z.object({ port: z.number() });
+      type Config = ({ port: number });`,
+      errors: [{ messageId: "preferInfer" }],
+    },
+    {
       code: `interface User {
         id: number;
         name: string;
