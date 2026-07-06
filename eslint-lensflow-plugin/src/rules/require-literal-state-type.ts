@@ -32,7 +32,7 @@ export default createRule({
         if (member.type !== "TSPropertySignature") continue;
 
         const propName = extractPropertyName(member.key);
-        if (!propName || !/^(state|status)$/i.test(propName)) continue;
+        if (!propName || !/^(state|status)$/.test(propName)) continue;
 
         const typeAnn = member.typeAnnotation?.typeAnnotation;
         if (!typeAnn) continue;
