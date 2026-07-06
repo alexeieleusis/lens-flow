@@ -29,5 +29,11 @@ const opts: Options = { port: 3000, host: "localhost" };`,
 const s: State = { status: "idle", count: 0 };`,
       errors: [{ messageId: "preferSatisfies" }],
     },
+    {
+      code: `interface Config { mode: "production" }
+interface Options { mode: "development" }
+const x: Config | Options = { mode: "production" };`,
+      errors: [{ messageId: "preferSatisfies" }],
+    },
   ],
 });
