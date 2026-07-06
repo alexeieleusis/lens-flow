@@ -35,5 +35,10 @@ interface Options { mode: "development" }
 const x: Config | Options = { mode: "production" };`,
       errors: [{ messageId: "preferSatisfies" }],
     },
+    {
+      code: `namespace NS { export interface Config { mode: string } }
+const cfg: NS.Config = { mode: "production" };`,
+      errors: [{ messageId: "preferSatisfies" }],
+    },
   ],
 });
