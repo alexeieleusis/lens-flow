@@ -13,6 +13,14 @@ function collectReturns(node: TSESTree.Node): TSESTree.ReturnStatement[] {
   return results;
 }
 
+/**
+ * Checks whether all return statements in a method return `this` (or nothing).
+ *
+ * Intentionally shallow — does not verify reachability. A method with an
+ * unreachable `return this` as its last statement (e.g. after a
+ * `try { … } finally { throw … }`) will still match. Reachability analysis
+ * is out of scope for this rule.
+ */
 function returnsThis(node: TSESTree.MethodDefinition): boolean {
   if (node.value?.type !== AST_NODE_TYPES.FunctionExpression) return false;
   const fn = node.value;
