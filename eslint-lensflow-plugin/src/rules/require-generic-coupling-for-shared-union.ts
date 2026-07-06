@@ -10,6 +10,7 @@ function getUnionFingerprint(
 ): string {
   return node.types
     .map((t) => sourceCode.getText(t).replace(/\s+/g, " ").trim())
+    .sort()
     .join("|");
 }
 

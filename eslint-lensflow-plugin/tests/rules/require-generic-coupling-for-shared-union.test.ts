@@ -55,5 +55,11 @@ ruleTester.run("require-generic-coupling-for-shared-union", rule, {
       code: `type F = (a: number | string, b: number | string) => void;`,
       errors: [{ messageId: "sharedUnionWithoutGeneric" }],
     },
+    {
+      code: `function mixedOrder(a: number | string, b: string | number): void {
+        console.log(a, b);
+      }`,
+      errors: [{ messageId: "sharedUnionWithoutGeneric" }],
+    },
   ],
 });
