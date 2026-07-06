@@ -16,6 +16,9 @@ ruleTester.run("prefer-this-return-fluent-method", rule, {
       setA(a: string): Other { return other; }
     }`,
     `class Base {
+      create(): Base { return new Base(); }
+    }`,
+    `class Base {
       setA(): this { return this; }
     }
     class Derived extends Base {
