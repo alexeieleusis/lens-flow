@@ -29,5 +29,9 @@ type Email = string & { readonly [__emailBrand]: true };`,
       code: `type Email = string & { readonly "__brand": "Email" };`,
       errors: [{ messageId: "stringBrandForgery" }],
     },
+    {
+      code: `type Email = string & { __brand: "Email" };`,
+      errors: [{ messageId: "stringBrandForgery" }],
+    },
   ],
 });
