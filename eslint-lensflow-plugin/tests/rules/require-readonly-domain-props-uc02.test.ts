@@ -90,5 +90,31 @@ ruleTester.run("require-readonly-domain-props-uc02", rule, {
         { messageId: "mutableDomainProp", data: { name: "name" } },
       ],
     },
+    // Computed property key with Identifier — resolves to the identifier name
+    {
+      code: `type Dynamic = {
+        id: string;
+        [customKey]: number;
+        status: OrderStatus;
+      };`,
+      errors: [
+        { messageId: "mutableDomainProp", data: { name: "id" } },
+        { messageId: "mutableDomainProp", data: { name: "customKey" } },
+        { messageId: "mutableDomainProp", data: { name: "status" } },
+      ],
+    },
+    // Computed property key with complex expression — falls back to "?"
+    {
+      code: `type Dynamic = {
+        id: string;
+        [getKey()]: number;
+        status: OrderStatus;
+      };`,
+      errors: [
+        { messageId: "mutableDomainProp", data: { name: "id" } },
+        { messageId: "mutableDomainProp", data: { name: "?" } },
+        { messageId: "mutableDomainProp", data: { name: "status" } },
+      ],
+    },
   ],
 });
