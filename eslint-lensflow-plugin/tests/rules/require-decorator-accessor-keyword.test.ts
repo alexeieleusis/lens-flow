@@ -110,5 +110,56 @@ class MyClass {
 }`,
       errors: [{ messageId: "extraAccessorKeyword" }],
     },
+    // accessor-context decorator as VariableDeclarator on field missing accessor keyword
+    {
+      code: `const clamp = function (
+  _: ClassAccessorDecoratorTarget<unknown, number>,
+  ctx: ClassAccessorDecoratorContext,
+): ClassAccessorDecoratorResult<unknown, number> {
+  return {
+    get() { return _.get.call(this); },
+    set(v: number) { _.set.call(this, Math.min(100, Math.max(0, v))); },
+  };
+};
+
+class Sensor {
+  @clamp
+  value = 50;
+}`,
+      errors: [{ messageId: "missingAccessorKeyword" }],
+    },
+    // accessor-context decorator as arrow function VariableDeclarator on field missing accessor keyword
+    {
+      code: `const clamp = (_: ClassAccessorDecoratorTarget<unknown, number>, ctx: ClassAccessorDecoratorContext): ClassAccessorDecoratorResult<unknown, number> => ({
+  get() { return _.get.call(this); },
+  set(v: number) { _.set.call(this, Math.min(100, Math.max(0, v))); },
+});
+
+class Sensor {
+  @clamp
+  value = 50;
+}`,
+      errors: [{ messageId: "missingAccessorKeyword" }],
+    },
+    // accessor-context decorator factory as VariableDeclarator on field missing accessor keyword
+    {
+      code: `const clamp = (min: number, max: number) => {
+  return function (
+    _: ClassAccessorDecoratorTarget<unknown, number>,
+    ctx: ClassAccessorDecoratorContext,
+  ): ClassAccessorDecoratorResult<unknown, number> {
+    return {
+      get() { return _.get.call(this); },
+      set(v: number) { _.set.call(this, Math.min(max, Math.max(min, v))); },
+    };
+  };
+};
+
+class Sensor {
+  @clamp(0, 100)
+  value = 50;
+}`,
+      errors: [{ messageId: "missingAccessorKeyword" }],
+    },
   ],
 });
