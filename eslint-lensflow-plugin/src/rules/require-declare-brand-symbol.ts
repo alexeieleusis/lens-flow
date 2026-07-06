@@ -45,6 +45,12 @@ export default createRule({
 
           if (!hasSymbolType && !matchesBrandNaming) continue;
 
+          // `declare` only works with `const`, skip non-const declarations
+          const sourceCode = context.sourceCode;
+          const text = sourceCode.getText(node);
+          const isConst = text.startsWith("const");
+          if (!isConst && matchesBrandNaming) continue;
+
           if (matchesBrandNaming) {
             context.report({
               node: decl,
@@ -53,11 +59,6 @@ export default createRule({
               ...(isSingleDeclarator
               ? {
                   fix(fixer) {
-                    const sourceCode = context.sourceCode;
-                    const text = sourceCode.getText(node);
-                    const isConst = text.startsWith("const");
-                    if (!isConst) return null;
-
                     const replacement = `declare const ${varName}: unique symbol;`;
                     return fixer.replaceText(node, replacement);
                   },

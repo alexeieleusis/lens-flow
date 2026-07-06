@@ -10,6 +10,8 @@ type UserId = string & { readonly [UserIdBrand]: true };`,
     `const foo = "not a symbol";`,
     `const regularSym = Symbol("test");`,
     `const mySymbol = Symbol("description");`,
+    `let __userBrand = Symbol("UserId");`,
+    `var ItemBrand = Symbol("ItemId");`,
   ],
   invalid: [
     {
