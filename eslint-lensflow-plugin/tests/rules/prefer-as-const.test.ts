@@ -49,5 +49,10 @@ ruleTester.run("prefer-as-const", rule, {
       code: `const key = "a"; const x = { [key]: 1 } as { readonly a: number };`,
       errors: [{ messageId: "preferAsConst" }],
     },
+    // Method syntax with property signature type
+    {
+      code: `const x = { fn() {} } as { readonly fn: () => void };`,
+      errors: [{ messageId: "preferAsConst" }],
+    },
   ],
 });
