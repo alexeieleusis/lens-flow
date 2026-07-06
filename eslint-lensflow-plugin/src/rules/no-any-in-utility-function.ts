@@ -2,6 +2,9 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
 function getParamName(param: TSESTree.Parameter): string {
+  if (param.type === "TSParameterProperty") {
+    return getParamName(param.parameter);
+  }
   if (param.type === "AssignmentPattern") {
     return param.left.type === "Identifier" ? param.left.name : "unnamed";
   }
@@ -15,6 +18,9 @@ function getParamName(param: TSESTree.Parameter): string {
 }
 
 function isParamAny(param: TSESTree.Parameter): boolean {
+  if (param.type === "TSParameterProperty") {
+    return isParamAny(param.parameter);
+  }
   if (param.type === "AssignmentPattern") {
     return param.left.typeAnnotation?.typeAnnotation.type === "TSAnyKeyword";
   }
