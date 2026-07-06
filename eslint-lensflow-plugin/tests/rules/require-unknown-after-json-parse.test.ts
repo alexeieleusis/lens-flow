@@ -55,6 +55,10 @@ ruleTester.run("require-unknown-after-json-parse", rule, {
   return x;
 }`,
     },
+    {
+      filename: TEST_FILENAME,
+      code: `const data = JSON.parse('{ "key": "value" }') satisfies unknown;`,
+    },
   ],
   invalid: [
     {
@@ -82,6 +86,11 @@ console.log(data.key);`,
     {
       filename: TEST_FILENAME,
       code: `const result: Record<string, unknown> = JSON.parse('{"x": 1}');`,
+      errors: [{ messageId: "missingUnknownCast" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `const x = JSON.parse('{"a": 1}') as string;`,
       errors: [{ messageId: "missingUnknownCast" }],
     },
   ],

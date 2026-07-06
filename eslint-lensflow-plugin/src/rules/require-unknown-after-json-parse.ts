@@ -1,5 +1,4 @@
-import ts from "typescript";
-import { ESLintUtils, type TSESTree, TSESLint } from "@typescript-eslint/utils";
+import { type TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
 const KNOWLEDGE_URL =
@@ -46,26 +45,9 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"missingUnknownCast", []>) {
-    const parserServices = ESLintUtils.getParserServices(context, true);
-    const program = parserServices.program;
-    if (!program) return {};
-
-    const checker = program.getTypeChecker();
-
     return {
       CallExpression(node) {
         if (!isJsonParseCall(node)) return;
-
-        const callTs =
-          parserServices.esTreeNodeToTSNodeMap.get(node);
-        if (!callTs) return;
-
-        const callType = checker.getTypeAtLocation(
-          callTs as ts.Expression,
-        );
-        const callTypeStr = checker.typeToString(callType);
-
-        if (callTypeStr !== "any") return;
 
         const parent = node.parent;
 
