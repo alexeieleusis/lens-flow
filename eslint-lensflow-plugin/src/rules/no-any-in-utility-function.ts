@@ -106,7 +106,8 @@ export default createRule({
           const scope = decl.parent;
           return (
             scope?.type === "Program" ||
-            scope?.type === "ExportNamedDeclaration"
+            scope?.type === "ExportNamedDeclaration" ||
+            scope?.type === "ExportDefaultDeclaration"
           );
         }
       }
