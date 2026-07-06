@@ -1,5 +1,34 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+type FunctionLikeNode =
+  | TSESTree.FunctionDeclaration
+  | TSESTree.FunctionExpression
+  | TSESTree.ArrowFunctionExpression
+  | TSESTree.TSDeclareFunction;
+
+function checkTypeGuardParam(
+  context: TSESLint.RuleContext<"anyTypeGuardParam", []>,
+  node: FunctionLikeNode,
+) {
+  if (
+    node.returnType?.typeAnnotation.type === "TSTypePredicate" &&
+    node.params.length > 0
+  ) {
+    let firstParam = node.params[0];
+    if (firstParam.type === "TSParameterProperty") {
+      firstParam = firstParam.parameter;
+    }
+    if (
+      firstParam.typeAnnotation?.typeAnnotation.type === "TSAnyKeyword"
+    ) {
+      context.report({
+        node,
+        messageId: "anyTypeGuardParam",
+      });
+    }
+  }
+}
 
 export default createRule({
   name: "no-any-type-guard-parameter",
@@ -20,44 +49,16 @@ export default createRule({
   create(context: TSESLint.RuleContext<"anyTypeGuardParam", []>) {
     return {
       FunctionDeclaration(node) {
-        if (
-          node.returnType?.typeAnnotation.type === "TSTypePredicate" &&
-          node.params.length > 0
-        ) {
-          let firstParam = node.params[0];
-          if (firstParam.type === "TSParameterProperty") {
-            firstParam = firstParam.parameter;
-          }
-          if (
-            firstParam.typeAnnotation?.typeAnnotation.type ===
-            "TSAnyKeyword"
-          ) {
-            context.report({
-              node,
-              messageId: "anyTypeGuardParam",
-            });
-          }
-        }
+        checkTypeGuardParam(context, node);
+      },
+      FunctionExpression(node) {
+        checkTypeGuardParam(context, node);
+      },
+      ArrowFunctionExpression(node) {
+        checkTypeGuardParam(context, node);
       },
       TSDeclareFunction(node) {
-        if (
-          node.returnType?.typeAnnotation.type === "TSTypePredicate" &&
-          node.params.length > 0
-        ) {
-          let firstParam = node.params[0];
-          if (firstParam.type === "TSParameterProperty") {
-            firstParam = firstParam.parameter;
-          }
-          if (
-            firstParam.typeAnnotation?.typeAnnotation.type ===
-            "TSAnyKeyword"
-          ) {
-            context.report({
-              node,
-              messageId: "anyTypeGuardParam",
-            });
-          }
-        }
+        checkTypeGuardParam(context, node);
       },
     };
   },
