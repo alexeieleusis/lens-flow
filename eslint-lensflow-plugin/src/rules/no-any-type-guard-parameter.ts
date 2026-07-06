@@ -19,11 +19,10 @@ function checkTypeGuardParam(
     if (firstParam.type === "TSParameterProperty") {
       firstParam = firstParam.parameter;
     }
-    if (
-      firstParam.typeAnnotation?.typeAnnotation.type === "TSAnyKeyword"
-    ) {
+    const anyNode = firstParam.typeAnnotation?.typeAnnotation;
+    if (anyNode?.type === "TSAnyKeyword") {
       context.report({
-        node,
+        node: anyNode,
         messageId: "anyTypeGuardParam",
       });
     }
