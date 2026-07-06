@@ -106,7 +106,7 @@ export default createRule({
 
       if (anyParam) {
         context.report({
-          node,
+          node: anyParam,
           messageId: "anyParam",
           data: { name: getParamName(anyParam) },
         });
@@ -114,7 +114,7 @@ export default createRule({
 
       if (node.returnType?.typeAnnotation.type === "TSAnyKeyword") {
         context.report({
-          node,
+          node: node.returnType!.typeAnnotation,
           messageId: "anyReturn",
         });
       }
