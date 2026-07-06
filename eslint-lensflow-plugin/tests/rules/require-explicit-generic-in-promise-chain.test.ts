@@ -132,5 +132,17 @@ load().then((result) => {
 });`,
       errors: [{ messageId: "missingTypeArg" }],
     },
+    // FunctionExpression callback (not just ArrowFunctionExpression)
+    {
+      filename: TEST_FILENAME,
+      code: `function fetch<T>(): Promise<T> {
+  return {} as T;
+}
+
+fetch().then(function(data) {
+  return data.id;
+});`,
+      errors: [{ messageId: "missingTypeArg" }],
+    },
   ],
 });
