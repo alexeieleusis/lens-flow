@@ -24,7 +24,7 @@ ruleTester.run("require-explicit-variance", rule, {
       get(): T;
       set(value: T): void;
     }`,
-    // Type parameter only used as non-boolean property type (not in function positions)
+    // Mutable property — invariant position (both read and write), no annotation needed
     `interface Wrapper<T> {
       value: T;
     }`,
@@ -79,6 +79,13 @@ ruleTester.run("require-explicit-variance", rule, {
         accept(pair: [T, string]): void;
       }`,
       errors: [{ messageId: "suggestIn" }],
+    },
+    // Readonly property — T is purely covariant, suggest `out`
+    {
+      code: `interface ReadonlyWrapper<T> {
+        readonly value: T;
+      }`,
+      errors: [{ messageId: "suggestOut" }],
     },
   ],
 });
