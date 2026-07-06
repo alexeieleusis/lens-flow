@@ -56,6 +56,39 @@ ruleTester.run("prefer-unknown-over-any", rule, {
   return typeof x === "string";
 }`,
     },
+    // Nested function shadows outer any param — narrowing belongs to inner scope only
+    {
+      filename: TEST_FILENAME,
+      code: `function outer(x: any) {
+  const inner = (x: string | number) => {
+    if (typeof x === "string") return x;
+    return String(x);
+  };
+  return inner(x);
+}`,
+    },
+    // Arrow function shadowing with instanceof
+    {
+      filename: TEST_FILENAME,
+      code: `function outer(data: any) {
+  const fn = (data: Date | string) => {
+    if (data instanceof Date) return data;
+    return data;
+  };
+  return fn(data);
+}`,
+    },
+    // Nested function declaration shadowing
+    {
+      filename: TEST_FILENAME,
+      code: `function outer(x: any) {
+  function inner(x: string | number) {
+    if (typeof x === "string") return x;
+    return x;
+  }
+  return inner(42);
+}`,
+    },
   ],
   invalid: [
     {
