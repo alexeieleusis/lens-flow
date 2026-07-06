@@ -3,7 +3,7 @@ import { ESLintUtils, type TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T18-conversions-coercions.md");
+const RULE_URL = knowledgeUrl("catalog/T18-conversions-coercions.md");
 
 const untrustedCallNames = new Set([
   "JSON.parse",
@@ -130,7 +130,7 @@ export default createRule({
             context.report({
               node,
               messageId: "blindCastUntrusted",
-              data: { targetType: targetTypeStr, callName, url: URL },
+              data: { targetType: targetTypeStr, callName, url: RULE_URL },
             });
           } else {
             context.report({
@@ -139,7 +139,7 @@ export default createRule({
               data: {
                 targetType: targetTypeStr,
                 sourceType: sourceTypeStr,
-                url: URL,
+                url: RULE_URL,
               },
             });
           }
@@ -154,7 +154,7 @@ export default createRule({
             data: {
               targetType: targetTypeStr,
               callName: untrustedCall,
-              url: URL,
+              url: RULE_URL,
             },
           });
         }
