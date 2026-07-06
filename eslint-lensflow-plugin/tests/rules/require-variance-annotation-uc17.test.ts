@@ -82,5 +82,19 @@ ruleTester.run("require-variance-annotation-uc17 (alias of require-explicit-vari
       }`,
       errors: [{ messageId: "suggestIn" }],
     },
+    // Property with direct type reference — covariant
+    {
+      code: `interface Holder<T> {
+        value: T;
+      }`,
+      errors: [{ messageId: "suggestOut" }],
+    },
+    // Call signature: T only in return position — covariant
+    {
+      code: `interface Factory<T> {
+        (): T;
+      }`,
+      errors: [{ messageId: "suggestOut" }],
+    },
   ],
 });
