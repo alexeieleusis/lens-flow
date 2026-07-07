@@ -9,7 +9,7 @@ import {
   ComparisonInfo,
 } from "../utils/ast-helpers.js";
 
-const URL = knowledgeUrl("usecases/UC03-exhaustiveness.md");
+const DOC_URL = knowledgeUrl("usecases/UC03-exhaustiveness.md");
 
 function reportIfMissing(
   varName: string,
@@ -51,7 +51,7 @@ function reportIfMissing(
     data: {
       varName,
       missing: missing.map((v) => `"${v}"`).join(", "),
-      url: URL,
+      url: DOC_URL,
     },
   });
 }
