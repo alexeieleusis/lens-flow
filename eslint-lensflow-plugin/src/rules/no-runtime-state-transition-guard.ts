@@ -40,7 +40,9 @@ export default createRule({
         const propName =
           thisMember.property.type === "Identifier"
             ? thisMember.property.name
-            : String(literal.value);
+            : thisMember.property.type === "Literal"
+              ? String(thisMember.property.value)
+              : "?";
 
         context.report({
           node,
