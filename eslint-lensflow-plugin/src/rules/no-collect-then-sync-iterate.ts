@@ -5,7 +5,7 @@ import { createRule } from "../utils/rule-creator.js";
 import {
   ASYNC_ITERATION_URL,
   hasAsyncIteratorSignature,
-  findVariableInScopeChain,
+  findVariableByReference,
 } from "../utils/async-iteration.js";
 
 function isCollectionArray(type: ts.Type): boolean {
@@ -77,7 +77,7 @@ export default createRule({
 
         const rightIdent = node.right;
         const scope = context.sourceCode.getScope(rightIdent);
-        const variable = findVariableInScopeChain(scope, rightIdent.name);
+        const variable = findVariableByReference(scope, rightIdent);
         if (!variable || variable.defs.length === 0) return;
 
         const def = variable.defs.find(

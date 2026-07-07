@@ -1,5 +1,5 @@
 import ts from "typescript";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 export const ASYNC_ITERATION_URL =
   "https://raw.githubusercontent.com/jpablo/vibe-types/ebff3754e7ddc862d05c3cd1a19480bdf52dfc25/plugin/skills/typescript/catalog/T64-async-iteration.md";
@@ -22,14 +22,20 @@ export function hasAsyncIteratorSignature(
   return propType.getCallSignatures().length > 0;
 }
 
-export function findVariableInScopeChain(
+export function findVariableByReference(
   scope: TSESLint.Scope.Scope,
-  name: string,
+  identifier: TSESTree.Identifier,
 ): TSESLint.Scope.Variable | undefined {
   let current: TSESLint.Scope.Scope | null = scope;
   while (current) {
-    const variable = current.variables.find((v) => v.name === name);
-    if (variable) return variable;
+    const ref = current.references.find((r) => r.identifier === identifier);
+    if (ref?.resolved) return ref.resolved;
+
+    const throughRef = current.through.find(
+      (r) => r.identifier === identifier,
+    );
+    if (throughRef?.resolved) return throughRef.resolved;
+
     current = current.upper;
   }
   return undefined;

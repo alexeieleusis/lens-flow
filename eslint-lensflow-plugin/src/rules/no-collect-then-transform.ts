@@ -5,7 +5,7 @@ import { createRule } from "../utils/rule-creator.js";
 import {
   ASYNC_ITERATION_URL,
   hasAsyncIteratorSignature,
-  findVariableInScopeChain,
+  findVariableByReference,
 } from "../utils/async-iteration.js";
 
 const ARRAY_TRANSFORM_METHODS = new Set([
@@ -123,9 +123,8 @@ export default createRule({
         if (!ARRAY_TRANSFORM_METHODS.has(methodName)) return;
 
         if (callee.object.type === "Identifier") {
-          const varName = callee.object.name;
           const scope = context.sourceCode.getScope(callee.object);
-          const variable = findVariableInScopeChain(scope, varName);
+          const variable = findVariableByReference(scope, callee.object);
           if (!variable || variable.defs.length === 0) return;
 
           const def = variable.defs.find(
