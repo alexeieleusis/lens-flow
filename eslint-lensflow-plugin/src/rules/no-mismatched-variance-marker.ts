@@ -141,6 +141,30 @@ function walkMemberForInput(
         cb,
       );
     }
+  } else if (member.type === AST_NODE_TYPES.TSCallSignatureDeclaration) {
+    const cs = member as TSESTree.TSCallSignatureDeclaration;
+    for (const p of cs.params) {
+      walkParamAnnotation(p, paramName, cb);
+    }
+    if (cs.returnType?.typeAnnotation) {
+      walkPropertyTypeForInput(
+        cs.returnType.typeAnnotation,
+        paramName,
+        cb,
+      );
+    }
+  } else if (member.type === AST_NODE_TYPES.TSConstructSignatureDeclaration) {
+    const cs = member as TSESTree.TSConstructSignatureDeclaration;
+    for (const p of cs.params) {
+      walkParamAnnotation(p, paramName, cb);
+    }
+    if (cs.returnType?.typeAnnotation) {
+      walkPropertyTypeForInput(
+        cs.returnType.typeAnnotation,
+        paramName,
+        cb,
+      );
+    }
   }
 }
 
@@ -301,6 +325,24 @@ function walkMemberForOutput(
     if (member.typeAnnotation?.typeAnnotation) {
       walkOutputPositions(
         member.typeAnnotation.typeAnnotation,
+        paramName,
+        cb,
+      );
+    }
+  } else if (member.type === AST_NODE_TYPES.TSCallSignatureDeclaration) {
+    const cs = member as TSESTree.TSCallSignatureDeclaration;
+    if (cs.returnType?.typeAnnotation) {
+      walkOutputPositions(
+        cs.returnType.typeAnnotation,
+        paramName,
+        cb,
+      );
+    }
+  } else if (member.type === AST_NODE_TYPES.TSConstructSignatureDeclaration) {
+    const cs = member as TSESTree.TSConstructSignatureDeclaration;
+    if (cs.returnType?.typeAnnotation) {
+      walkOutputPositions(
+        cs.returnType.typeAnnotation,
         paramName,
         cb,
       );
