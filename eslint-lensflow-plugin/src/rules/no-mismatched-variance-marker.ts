@@ -124,6 +124,28 @@ function walkPropertyTypeForInput(
         cb,
       );
     }
+  } else if (node.type === AST_NODE_TYPES.TSCallSignatureDeclaration) {
+    for (const p of node.params) {
+      walkParamAnnotation(p, paramName, cb);
+    }
+    if (node.returnType?.typeAnnotation) {
+      walkPropertyTypeForInput(
+        node.returnType.typeAnnotation,
+        paramName,
+        cb,
+      );
+    }
+  } else if (node.type === AST_NODE_TYPES.TSConstructSignatureDeclaration) {
+    for (const p of node.params) {
+      walkParamAnnotation(p, paramName, cb);
+    }
+    if (node.returnType?.typeAnnotation) {
+      walkPropertyTypeForInput(
+        node.returnType.typeAnnotation,
+        paramName,
+        cb,
+      );
+    }
   } else if (node.type === AST_NODE_TYPES.TSTypeLiteral) {
     for (const member of node.members) {
       walkMemberForInput(member, paramName, cb);
