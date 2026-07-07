@@ -50,6 +50,7 @@ export default createRule({
   name: "no-mixed-decorator-apis",
   meta: {
     type: "problem",
+    fixable: undefined,
     docs: {
       description:
         "Disallow mixing stage-3 and experimental decorator APIs in the same file",
