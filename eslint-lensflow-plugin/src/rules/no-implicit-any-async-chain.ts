@@ -68,6 +68,7 @@ function checkThenCallback(
 export default createRule({
   name: "no-implicit-any-async-chain",
   meta: {
+    fixable: undefined,
     type: "problem",
     docs: {
       description:
