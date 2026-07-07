@@ -34,7 +34,7 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ minOptionalFields: 5, maxTotalFields: 8 }],
-  create(context: TSESLint.RuleContext<"tooManyOptional" | "tooManyTotal", [{ minOptionalFields: number, maxTotalFields: number }]>) {
+  create(context: TSESLint.RuleContext<"tooManyOptional" | "tooManyTotal", [{ minOptionalFields?: number, maxTotalFields?: number }]>) {
     const [{ minOptionalFields, maxTotalFields } = {}] =
       context.options ?? [];
     const thresholdOptional = minOptionalFields ?? 5;
