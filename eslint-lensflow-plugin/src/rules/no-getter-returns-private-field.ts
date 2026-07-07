@@ -1,22 +1,15 @@
+import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import { walkNodes } from "../utils/ast-helpers.js";
 
-function isPrivateFieldReturn(node: unknown): boolean {
-  if (!node || typeof node !== "object") return false;
-  const n = node as Record<string, unknown>;
-
-  if (
-    n.type === "MemberExpression" &&
-    (n.object as Record<string, unknown>)?.type === "ThisExpression" &&
-    ((n.property as Record<string, unknown>)?.type === "PrivateIdentifier" ||
-      ((n.property as Record<string, unknown>)?.type === "Identifier" &&
-        typeof (n.property as Record<string, unknown>).name === "string" &&
-        ((n.property as Record<string, unknown>).name as string).startsWith("#")))
-  ) {
-    return true;
-  }
-
-  return false;
+function isPrivateFieldReturn(expr: TSESTree.Node | null | undefined): boolean {
+  if (expr?.type !== "MemberExpression") return false;
+  if (expr.object.type !== "ThisExpression") return false;
+  if (expr.property.type === "PrivateIdentifier") return true;
+  return (
+    expr.property.type === "Identifier" &&
+    expr.property.name.startsWith("#")
+  );
 }
 
 export default createRule({
@@ -29,54 +22,12 @@ export default createRule({
     },
     messages: {
       leaksPrivateField:
-        "Getter \"{{getterName}}\" returns a #private field directly, leaking mutable internal state. Return a copy or an immutable view instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC10-encapsulation.md",
+        'Getter "{{getterName}}" returns a #private field directly, leaking mutable internal state. Return a copy or an immutable view instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC10-encapsulation.md',
     },
     schema: [],
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"leaksPrivateField", []>) {
-    function checkChild(child: unknown): boolean {
-      if (Array.isArray(child)) {
-        for (const item of child) {
-          if (findReturnWithPrivateField(item)) return true;
-        }
-      } else if (child && typeof child === "object" && !Array.isArray(child)) {
-        if (findReturnWithPrivateField(child)) return true;
-      }
-      return false;
-    }
-
-    const functionBoundaryTypes = new Set([
-      "FunctionDeclaration",
-      "FunctionExpression",
-      "ArrowFunctionExpression",
-    ]);
-
-    function findReturnWithPrivateField(node: unknown): boolean {
-      if (!node || typeof node !== "object") return false;
-      const n = node as Record<string, unknown>;
-
-      if (
-        n.type === "ReturnStatement" &&
-        n.argument &&
-        isPrivateFieldReturn(n.argument)
-      ) {
-        return true;
-      }
-
-      // Stop at function boundaries — nested functions are visited separately by ESLint
-      if (functionBoundaryTypes.has(n.type as string)) {
-        return false;
-      }
-
-      const skipKeys = new Set(["parent", "loc", "range"]);
-      for (const [key, child] of Object.entries(n)) {
-        if (!skipKeys.has(key) && checkChild(child)) return true;
-      }
-
-      return false;
-    }
-
     return {
       MethodDefinition(node) {
         if (node.kind !== "get") return;
@@ -86,7 +37,14 @@ export default createRule({
 
         if (!node.value?.body) return;
 
-        const found = findReturnWithPrivateField(node.value.body);
+        const found = walkNodes(
+          node.value.body,
+          (n) =>
+            n.type === "ReturnStatement" &&
+            n.argument != null &&
+            isPrivateFieldReturn(n.argument),
+        );
+
         if (found) {
           context.report({
             node,
