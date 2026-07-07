@@ -18,8 +18,8 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"badParamType", []>) {
-    const assertNeverPattern = /^assertNever$/i;
-    const assertExhaustivePattern = /^assertExhaustive$/i;
+    const assertNeverPattern = /^assertNever$/;
+    const assertExhaustivePattern = /^assertExhaustive$/;
 
     function checkFunction(
       node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression,
