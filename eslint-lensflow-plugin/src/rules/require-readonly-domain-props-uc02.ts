@@ -29,6 +29,7 @@ export default createRule({
           minProperties: {
             type: "number",
             minimum: 1,
+            default: 2,
           },
         },
         additionalProperties: false,
