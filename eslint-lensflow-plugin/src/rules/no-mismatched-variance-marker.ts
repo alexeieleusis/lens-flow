@@ -1,7 +1,5 @@
-import { AST_NODE_TYPES } from "@typescript-eslint/types";
-import type { TSESTree } from "@typescript-eslint/types";
+import { AST_NODE_TYPES, type TSESTree, type TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
 import { isTypeRefTo } from "../utils/variance-checker.js";
 
 function reportIfMatch(
