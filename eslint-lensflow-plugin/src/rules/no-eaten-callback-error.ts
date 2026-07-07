@@ -1,16 +1,5 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
-import { walk } from "../utils/ast-helpers.js";
-
-function collectIdentifiers(node: TSESTree.Node): string[] {
-  const ids: string[] = [];
-  walk(node, (n) => {
-    if (n.type === "Identifier") {
-      ids.push(n.name);
-    }
-  });
-  return ids;
-}
 
 function collectParamIdentifiers(node: TSESTree.Node): string[] {
   if (node.type === "Identifier") return [node.name];
@@ -50,6 +39,14 @@ function getParamDisplayName(node: TSESTree.Node): string {
   return "destructured params";
 }
 
+function isEffectivelyEmpty(stmt: TSESTree.Statement): boolean {
+  if (stmt.type === "EmptyStatement") return true;
+  if (stmt.type === "BlockStatement") {
+    return stmt.body.every((s) => isEffectivelyEmpty(s));
+  }
+  return false;
+}
+
 function reportEatenErrorIfApplicable(
   callback: TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression,
   errorParamIds: string[],
@@ -58,7 +55,7 @@ function reportEatenErrorIfApplicable(
 ) {
   if (callback.body.type === "BlockStatement") {
     const { body } = callback.body;
-    const isEmptyOrOnlyEmpty = body.every((stmt) => stmt.type === "EmptyStatement");
+    const isEmptyOrOnlyEmpty = body.every((stmt) => isEffectivelyEmpty(stmt));
 
     if (isEmptyOrOnlyEmpty) {
       context.report({
@@ -67,24 +64,20 @@ function reportEatenErrorIfApplicable(
       });
       return;
     }
+  }
 
-    const bodyIdentifiers = body.flatMap((stmt) => collectIdentifiers(stmt));
-    if (errorParamIds.length > 0 && !errorParamIds.some((id) => bodyIdentifiers.includes(id))) {
-      context.report({
-        node: callback,
-        messageId: "ignoredParam",
-        data: { param: paramName },
-      });
-    }
-  } else {
-    const bodyIdentifiers = collectIdentifiers(callback.body);
-    if (errorParamIds.length > 0 && !errorParamIds.some((id) => bodyIdentifiers.includes(id))) {
-      context.report({
-        node: callback,
-        messageId: "ignoredParam",
-        data: { param: paramName },
-      });
-    }
+  if (errorParamIds.length === 0) return;
+
+  const paramBindings = context
+    .getDeclaredVariables(callback)
+    .filter((v) => errorParamIds.includes(v.name));
+
+  if (paramBindings.length > 0 && paramBindings.every((b) => b.references.length === 0)) {
+    context.report({
+      node: callback,
+      messageId: "ignoredParam",
+      data: { param: paramName },
+    });
   }
 }
 
