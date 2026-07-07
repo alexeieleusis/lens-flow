@@ -12,7 +12,7 @@ import {
   ComparisonInfo,
 } from "../utils/ast-helpers.js";
 
-const URL = knowledgeUrl("usecases/UC03-exhaustiveness.md");
+const docsUrl = knowledgeUrl("usecases/UC03-exhaustiveness.md");
 
 function reportIfMissing(
   varName: string,
@@ -29,7 +29,7 @@ function reportIfMissing(
     tsVarNode,
     varName,
     comparedValues,
-    URL,
+    docsUrl,
   );
 }
 
