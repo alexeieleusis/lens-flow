@@ -21,26 +21,65 @@ function isFunctionNode(node: TSESTree.Node): node is FunctionNode {
   );
 }
 
-function unwrapTSTypeAnnotation(
-  node: TSESTree.TSTypeAnnotation | TSESTree.TypeNode | undefined,
-): TSESTree.TypeNode | undefined {
-  if (!node) return undefined;
+function containsUnionType(node: TSESTree.Node | undefined): boolean {
+  if (!node) return false;
 
-  let current: TSESTree.TypeNode | undefined =
-    node.type === "TSTypeAnnotation" ? node.typeAnnotation : node;
+  if (node.type === "TSUnionType") return true;
 
-  while (current?.type === "TSOptionalType") {
-    current = current.typeAnnotation;
+  // Recursively unwrap annotation-level wrappers
+  if (node.type === "TSTypeAnnotation" || node.type === "TSOptionalType") {
+    return containsUnionType((node as TSESTree.TSTypeAnnotation | TSESTree.TSOptionalType).typeAnnotation);
+  }
+  if (node.type === "TSParenthesizedType") {
+    return containsUnionType((node as TSESTree.TSParenthesizedType).typeAnnotation);
   }
 
-  return current;
+  // Recurse into compound types that may nest unions
+  if (node.type === "TSArrayType") {
+    return containsUnionType((node as TSESTree.TSArrayType).elementType);
+  }
+  if (node.type === "TSTupleType") {
+    return (node as TSESTree.TSTupleType).elementTypes.some(
+      (e) => e && containsUnionType(e),
+    );
+  }
+  if (node.type === "TSFunctionType") {
+    const fn = node as TSESTree.TSFunctionType;
+    if (fn.params.some((p) => containsUnionType(p.typeAnnotation))) return true;
+    return containsUnionType(fn.returnType?.typeAnnotation);
+  }
+  if (node.type === "TSConditionalType") {
+    const cond = node as TSESTree.TSConditionalType;
+    return (
+      containsUnionType(cond.checkType) ||
+      containsUnionType(cond.extendsType) ||
+      containsUnionType(cond.trueType) ||
+      containsUnionType(cond.falseType)
+    );
+  }
+  if (node.type === "TSMappedType") {
+    const mapped = node as TSESTree.TSMappedType;
+    return containsUnionType(mapped.typeAnnotation);
+  }
+  if (node.type === "TSTypeOperator") {
+    return containsUnionType((node as TSESTree.TSTypeOperator).typeAnnotation);
+  }
+
+  // For type references, recurse into type arguments if present
+  if (node.type === "TSTypeReference") {
+    const ref = node as TSESTree.TSTypeReference;
+    return (
+      ref.typeParameters?.params.some((p) => containsUnionType(p)) ?? false
+    );
+  }
+
+  return false;
 }
 
 function isUnionType(
   typeAnnotation: TSESTree.TSTypeAnnotation | undefined,
 ): boolean {
-  const unwrapped = unwrapTSTypeAnnotation(typeAnnotation);
-  return unwrapped?.type === "TSUnionType";
+  return containsUnionType(typeAnnotation);
 }
 
 function extractIdentifiersFromParam(
@@ -177,18 +216,25 @@ function isDerivedFromParam(
 
   if (!rootIdent) return false;
 
-  let currentScope: TSESLint.Scope.Scope | null = sourceCode.getScope(rootIdent);
-  while (currentScope) {
-    const variable = currentScope.set.get(rootIdent.name);
+  const scopeManager = sourceCode.scopeManager as TSESLint.Scope.ScopeManager | undefined;
+  if (!scopeManager) return false;
+
+  let scope: TSESLint.Scope.Scope | null = sourceCode.getScope(rootIdent);
+  let variable: TSESLint.Scope.Variable | null;
+
+  while (scope) {
+    variable = scope.getVariable(rootIdent.name);
     if (variable) {
-      return variable.defs.some(
-        d => d.type === "Parameter" && d.parent === fnNode,
-      );
+      break;
     }
-    currentScope = currentScope.upper;
+    scope = scope.upper;
   }
 
-  return false;
+  if (!variable) return false;
+
+  return variable.defs.some(
+    (def) => def.type === "Parameter" && def.node && fnNode.params.includes(def.node as TSESTree.Parameter),
+  );
 }
 
 export default createRule({
