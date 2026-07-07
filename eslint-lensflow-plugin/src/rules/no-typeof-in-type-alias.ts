@@ -1,40 +1,6 @@
-import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
-
-function isTSNode(value: unknown): value is TSESTree.Node {
-  return (
-    value != null &&
-    typeof value === "object" &&
-    "type" in value &&
-    typeof (value as TSESTree.Node).type === "string" &&
-    (value as TSESTree.Node).type.startsWith("TS")
-  );
-}
-
-function processChild(child: unknown): boolean {
-  if (Array.isArray(child)) {
-    for (const item of child) {
-      if (isTSNode(item) && hasTypeQuery(item)) return true;
-    }
-  } else if (isTSNode(child)) {
-    if (hasTypeQuery(child)) return true;
-  }
-  return false;
-}
-
-function hasTypeQuery(node: TSESTree.Node): boolean {
-  if (node.type === "TSTypeQuery") return true;
-
-  for (const key of Object.keys(node)) {
-    if (key === "loc" || key === "range" || key === "parent") continue;
-    const child = (node as unknown as Record<string, unknown>)[key];
-    if (!child || typeof child !== "object") continue;
-
-    if (processChild(child)) return true;
-  }
-
-  return false;
-}
+import { walkNodes } from "../utils/ast-helpers.js";
 
 export default createRule({
   name: "no-typeof-in-type-alias",
@@ -55,7 +21,7 @@ export default createRule({
   create(context: TSESLint.RuleContext<"typeofInAlias", []>) {
     return {
       TSTypeAliasDeclaration(node) {
-        if (hasTypeQuery(node.typeAnnotation)) {
+        if (walkNodes(node.typeAnnotation, (n) => n.type === "TSTypeQuery")) {
           context.report({
             node,
             messageId: "typeofInAlias",
