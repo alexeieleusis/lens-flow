@@ -84,7 +84,10 @@ function walkParamAnnotation(
   cb: (ref: TSESTree.TSTypeReference) => void,
 ): void {
   let typeNode: TSESTree.Node | undefined;
-  if (
+  if (param.type === AST_NODE_TYPES.TSParameterProperty) {
+    const inner = param.parameter;
+    typeNode = inner.typeAnnotation?.typeAnnotation;
+  } else if (
     param.type === AST_NODE_TYPES.Identifier ||
     param.type === AST_NODE_TYPES.RestElement ||
     param.type === AST_NODE_TYPES.ObjectPattern ||
