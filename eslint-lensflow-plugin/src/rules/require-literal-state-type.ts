@@ -39,7 +39,7 @@ export default createRule({
 
         if (typeAnn.type === "TSStringKeyword") {
           context.report({
-            node: member,
+            node: typeAnn,
             messageId: "bareStringState",
             data: { name: propName },
           });
