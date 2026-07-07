@@ -69,7 +69,7 @@ export default createRule({
         name = "anonymous";
       }
 
-      if (optionalCount >= thresholdOptional) {
+      if (optionalCount > thresholdOptional) {
         context.report({
           node: reportNode,
           messageId: "tooManyOptional",
