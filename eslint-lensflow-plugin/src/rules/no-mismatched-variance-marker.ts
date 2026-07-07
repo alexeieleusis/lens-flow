@@ -415,6 +415,7 @@ export default createRule({
         "Type parameter '{{paramName}}' is marked 'in' but is used as a return type. Consider using 'in out' or removing 'in'. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T08-variance-subtyping.md",
     },
     schema: [],
+    fixable: undefined,
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"outUsedAsInput" | "inUsedAsOutput", []>) {
