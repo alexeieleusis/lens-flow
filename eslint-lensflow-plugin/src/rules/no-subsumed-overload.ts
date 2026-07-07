@@ -4,7 +4,7 @@ import type { FnLikeNode } from "../utils/overload-grouping.js";
 import { createOverloadGroupVisitor } from "../utils/overload-grouping.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T22-callable-typing.md");
+const KNOWLEDGE_URL = knowledgeUrl("catalog/T22-callable-typing.md");
 
 function getTypeParamNames(node: FnLikeNode): string[] {
   return (node.typeParameters?.params ?? []).map((tp) => tp.name.name);
@@ -377,7 +377,7 @@ export default createRule({
       context.report({
         node,
         messageId: "subsumed",
-        data: { fnName, url: URL },
+        data: { fnName, url: KNOWLEDGE_URL },
       });
     };
 
