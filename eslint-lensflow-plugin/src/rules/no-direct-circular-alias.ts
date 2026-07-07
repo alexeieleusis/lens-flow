@@ -24,8 +24,12 @@ function collectSelfRefs(
   node: TSESTree.Node,
   aliasName: string,
   ancestors: TSESTree.TypeNode[],
+  visited: Set<TSESTree.Node> = new Set(),
 ): SelfRef[] {
   const results: SelfRef[] = [];
+
+  if (visited.has(node)) return results;
+  visited.add(node);
 
   if (node.type === "TSTypeReference") {
     const name = getTypeName(node.typeName);
@@ -36,7 +40,7 @@ function collectSelfRefs(
 
   const extendedAncestors = [...ancestors, node as TSESTree.TypeNode];
   for (const child of getTSChildren(node)) {
-    results.push(...collectSelfRefs(child, aliasName, extendedAncestors));
+    results.push(...collectSelfRefs(child, aliasName, extendedAncestors, visited));
   }
 
   return results;
