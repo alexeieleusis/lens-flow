@@ -31,6 +31,10 @@ function reportIfMissing(
     }
     if ((t.flags & ts.TypeFlags.StringLiteral) !== 0) {
       literalValues.add((t as ts.StringLiteralType).value);
+    } else if ((t.flags & ts.TypeFlags.NumberLiteral) !== 0) {
+      literalValues.add(String((t as ts.NumberLiteralType).value));
+    } else if ((t.flags & ts.TypeFlags.BooleanLiteral) !== 0) {
+      literalValues.add(String((t as ts.BooleanLiteralType).value));
     }
   }
 
