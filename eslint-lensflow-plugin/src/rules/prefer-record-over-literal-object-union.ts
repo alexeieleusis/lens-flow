@@ -1,11 +1,15 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
+type PropKey =
+  | { type: "Identifier"; name: string }
+  | { type: "Literal"; value: string | number };
+
 type LiteralMember = {
   type: "TSTypeLiteral";
   members: Array<{
     type: "TSPropertySignature";
-    key: { type: "Identifier"; name: string };
+    key: PropKey;
     typeAnnotation?: {
       typeAnnotation: { type: string };
     };
@@ -14,7 +18,7 @@ type LiteralMember = {
 
 type PropertySig = {
   type: "TSPropertySignature";
-  key: { type: "Identifier"; name: string };
+  key: PropKey;
   typeAnnotation?: {
     typeAnnotation: { type: string };
   };
@@ -27,7 +31,9 @@ function getPropertySigs(members: LiteralMember["members"]) {
 }
 
 function getPropertyKey(sig: PropertySig) {
-  return sig.key.type === "Identifier" ? sig.key.name : null;
+  if (sig.key.type === "Identifier") return sig.key.name;
+  if (sig.key.type === "Literal" && typeof sig.key.value === "string") return sig.key.value;
+  return null;
 }
 
 function buildPropsMap(literalMembers: LiteralMember[]) {
