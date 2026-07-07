@@ -54,28 +54,12 @@ export default createRule({
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"mixedDecoratorApis", []>) {
     const stage3DecoratorNames = new Set<string>();
-    const experimentalDecoratorNames = new Set<string>();
 
     function visitDecoratorFunc(node: TSESTree.FunctionDeclaration) {
       if (!node.id) return;
       const hasStage3Context = node.params.some(isStage3ContextType);
       if (hasStage3Context) {
         stage3DecoratorNames.add(node.id.name);
-      } else {
-        experimentalDecoratorNames.add(node.id.name);
-      }
-    }
-
-    function classifyDecorator(
-      decoName: string,
-      stage3Used: Set<string>,
-      experimentalUsed: Set<string>,
-    ) {
-      if (stage3DecoratorNames.has(decoName)) {
-        stage3Used.add(decoName);
-      }
-      if (experimentalDecoratorNames.has(decoName)) {
-        experimentalUsed.add(decoName);
       }
     }
 
@@ -91,7 +75,11 @@ export default createRule({
         for (const deco of node.decorators) {
           const decoName = extractDecoratorName(deco.expression);
           if (decoName !== null) {
-            classifyDecorator(decoName, stage3Used, experimentalUsed);
+            if (stage3DecoratorNames.has(decoName)) {
+              stage3Used.add(decoName);
+            } else {
+              experimentalUsed.add(decoName);
+            }
           }
         }
 
