@@ -1,5 +1,6 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { getChildren } from "../utils/ast-helpers.js";
 
 function getTypeName(typeName: TSESTree.Identifier | TSESTree.ThisExpression | TSESTree.TSQualifiedName): string | null {
   if (typeName.type === "Identifier") {
@@ -13,40 +14,10 @@ function getTypeName(typeName: TSESTree.Identifier | TSESTree.ThisExpression | T
 
 type SelfRef = { ancestors: TSESTree.TypeNode[] };
 
-function isTSNode(value: unknown): value is TSESTree.Node {
-  return (
-    value != null &&
-    typeof value === "object" &&
-    "type" in value &&
-    typeof (value as TSESTree.Node).type === "string" &&
-    (value as TSESTree.Node).type.startsWith("TS")
-  );
-}
-
-function isSkippableKey(key: string): boolean {
-  return key === "loc" || key === "range" || key === "parent";
-}
-
 function getTSChildren(node: TSESTree.Node): TSESTree.Node[] {
-  const children: TSESTree.Node[] = [];
-
-  for (const key of Object.keys(node)) {
-    if (isSkippableKey(key)) continue;
-    const child = (node as unknown as Record<string, unknown>)[key];
-    if (child == null || typeof child !== "object") continue;
-
-    if (Array.isArray(child)) {
-      for (const item of child) {
-        if (isTSNode(item)) {
-          children.push(item);
-        }
-      }
-    } else if (isTSNode(child)) {
-      children.push(child);
-    }
-  }
-
-  return children;
+  return getChildren(node).filter(
+    (child) => child.type.startsWith("TS"),
+  );
 }
 
 function collectSelfRefs(
