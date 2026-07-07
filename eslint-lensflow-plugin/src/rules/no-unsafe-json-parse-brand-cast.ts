@@ -98,6 +98,18 @@ export default createRule({
         return originatesFromJsonParse(node.object, visitedIds);
       }
 
+      if (
+        node.type === "TSAsExpression" ||
+        node.type === "TSNonNullExpression" ||
+        node.type === "TSSatisfiesExpression"
+      ) {
+        return originatesFromJsonParse(node.expression, visitedVars);
+      }
+
+      if (node.type === "ChainExpression") {
+        return originatesFromJsonParse(node.expression, visitedVars);
+      }
+
       if (node.type === "Identifier") {
         if (visitedIds.has(node.name)) return false;
         visitedIds.add(node.name);
