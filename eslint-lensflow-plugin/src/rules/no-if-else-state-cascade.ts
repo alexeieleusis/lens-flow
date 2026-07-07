@@ -7,23 +7,21 @@ type MemberKey = {
 };
 
 function getMemberKey(node: TSESTree.MemberExpression): MemberKey | null {
-  let base: string | null = null;
+  const parts: string[] = [];
+  let current: TSESTree.Node = node.object;
 
-  if (node.object.type === "Identifier") {
-    base = node.object.name;
-  } else if (
-    node.object.type === "MemberExpression" &&
-    node.object.property.type === "Identifier" &&
-    node.object.object.type === "Identifier"
-  ) {
-    base = `${node.object.object.name}.${node.object.property.name}`;
+  while (current.type === "MemberExpression" && current.property.type === "Identifier") {
+    parts.unshift(current.property.name);
+    current = current.object;
   }
 
-  if (base === null) return null;
-
+  if (current.type !== "Identifier") return null;
   if (node.property.type !== "Identifier") return null;
 
-  return { base, property: node.property.name };
+  return {
+    base: current.name + (parts.length ? "." + parts.join(".") : ""),
+    property: node.property.name,
+  };
 }
 
 function extractBranchInfo(
