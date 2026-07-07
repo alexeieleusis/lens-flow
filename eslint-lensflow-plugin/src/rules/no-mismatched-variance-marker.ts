@@ -73,6 +73,14 @@ function walkInputPositions(
       );
       break;
     }
+    case AST_NODE_TYPES.TSConditionalType: {
+      walkInputPositions(
+        node.checkType,
+        paramName,
+        cb,
+      );
+      break;
+    }
   }
 }
 
@@ -216,6 +224,9 @@ function walkOutputPositions(
       delegateOutputChild(node, node.typeAnnotation, paramName, cb);
       break;
     case AST_NODE_TYPES.TSOptionalType:
+      delegateOutputChild(node, node.typeAnnotation, paramName, cb);
+      break;
+    case AST_NODE_TYPES.TSParenthesizedType:
       delegateOutputChild(node, node.typeAnnotation, paramName, cb);
       break;
     case AST_NODE_TYPES.TSConditionalType:
