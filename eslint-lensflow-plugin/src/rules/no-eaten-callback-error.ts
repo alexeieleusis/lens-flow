@@ -1,40 +1,14 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { walk } from "../utils/ast-helpers.js";
 
-function isASTNode(val: unknown): val is TSESTree.Node {
-  return typeof val === "object" && val !== null && "type" in val;
-}
-
-function collectChildIdentifiers(
-  node: TSESTree.Node,
-  visited: WeakSet<object>,
-): string[] {
+function collectIdentifiers(node: TSESTree.Node): string[] {
   const ids: string[] = [];
-  for (const key of Object.keys(node)) {
-    if (key === "parent") continue;
-    const val = (node as unknown as Record<string, unknown>)[key];
-    if (Array.isArray(val)) {
-      for (const item of val) {
-        if (isASTNode(item)) {
-          ids.push(...collectIdentifiers(item, visited));
-        }
-      }
-    } else if (isASTNode(val)) {
-      ids.push(...collectIdentifiers(val, visited));
+  walk(node, (n) => {
+    if (n.type === "Identifier") {
+      ids.push(n.name);
     }
-  }
-  return ids;
-}
-
-function collectIdentifiers(node: TSESTree.Node, visited = new WeakSet<object>()): string[] {
-  if (visited.has(node)) return [];
-  visited.add(node);
-
-  const ids: string[] = [];
-  if (node.type === "Identifier") {
-    ids.push(node.name);
-  }
-  ids.push(...collectChildIdentifiers(node, visited));
+  });
   return ids;
 }
 
