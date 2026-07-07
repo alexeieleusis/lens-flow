@@ -3,7 +3,7 @@ import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T59-existential-types.md");
+const RULE_DOCS_URL = knowledgeUrl("catalog/T59-existential-types.md");
 
 function isInterfaceType(tsType: ts.Type): boolean {
   const symbol = tsType.getSymbol() || tsType.aliasSymbol;
@@ -34,7 +34,7 @@ export default createRule({
     messages: {
       instanceofOnInterface:
         "Using instanceof to check the concrete class of a variable typed as an interface breaks existential encapsulation. Only call methods declared on the interface. See: " +
-        URL,
+        RULE_DOCS_URL,
     },
     schema: [],
     fixable: undefined,
