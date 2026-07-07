@@ -71,6 +71,21 @@ export default createRule({
           if (tsLeft) checkNode(tsLeft);
         }
       },
+
+      WhileStatement(node) {
+        const tsTest = parserServices.esTreeNodeToTSNodeMap.get(node.test);
+        if (tsTest) checkNode(tsTest);
+      },
+
+      DoWhileStatement(node) {
+        const tsTest = parserServices.esTreeNodeToTSNodeMap.get(node.test);
+        if (tsTest) checkNode(tsTest);
+      },
+
+      ConditionalExpression(node) {
+        const tsTest = parserServices.esTreeNodeToTSNodeMap.get(node.test);
+        if (tsTest) checkNode(tsTest);
+      },
     };
   },
 });
