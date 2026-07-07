@@ -65,7 +65,7 @@ export default createRule({
         }
       },
       "Program:exit"() {
-        if (markers.length >= maxMarkers) {
+        if (markers.length > maxMarkers) {
           context.report({
             node: markers[0].node,
             messageId: "excessiveMarkers",
