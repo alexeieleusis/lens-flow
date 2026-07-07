@@ -15,7 +15,7 @@ ruleTester.run("require-validation-after-json-parse", rule, {
     const result = validator.validate(raw);`,
     // JSON.parse result stored but only used in validation calls
     `const raw = JSON.parse(input);
-    const decoded = decoder.decode(raw);`,
+    const validated = schema.validate(raw);`,
   ],
   invalid: [
     // JSON.parse result used directly in non-validation call
@@ -39,11 +39,10 @@ ruleTester.run("require-validation-after-json-parse", rule, {
         { messageId: "unvalidatedVariableUsage" },
       ],
     },
-    // JSON.parse with variable used after a validation call (still reports on non-validation usage)
+    // JSON.parse result used directly without any validation
     {
       code: `const raw = JSON.parse(input);
-      const decoded = validator.decode(raw);
-      database.save(raw);`,
+      console.log(raw);`,
       errors: [{ messageId: "unvalidatedVariableUsage" }],
     },
   ],

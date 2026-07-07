@@ -58,7 +58,7 @@ export default createRule({
       ) {
         const prop = callee.property;
         if (prop && typeof prop === "object" && "name" in prop) {
-          return /^(safe)?parse$|decode$|validate$/i.test(prop.name as string);
+          return /^(safeParse|parse|validate)$/.test(prop.name as string);
         }
       }
       return false;
