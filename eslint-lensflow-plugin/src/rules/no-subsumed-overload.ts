@@ -176,8 +176,8 @@ function checkFunctionTypeAssignable(
   if (a.params.length !== b.params.length) return false;
 
   for (let i = 0; i < a.params.length; i++) {
-    const aP = getParamTypeAnnotation(b.params[i]);
-    const bP = getParamTypeAnnotation(a.params[i]);
+    const aP = getParamTypeAnnotation(a.params[i]);
+    const bP = getParamTypeAnnotation(b.params[i]);
     if (!isAssignableTo(aP, bP, aTPNames, bTPNames)) return false;
   }
   return true;
