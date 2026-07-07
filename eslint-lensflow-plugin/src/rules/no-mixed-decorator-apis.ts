@@ -9,7 +9,11 @@ const STAGE3_CONTEXT_TYPES = new Set([
 ]);
 
 function isStage3ContextType(param: TSESTree.Parameter): boolean {
-  const inner = param.type === "TSParameterProperty" ? param.parameter : param;
+  const inner = param.type === "TSParameterProperty"
+    ? param.parameter
+    : param.type === "AssignmentPattern"
+    ? param.left
+    : param;
   if (!inner.typeAnnotation) return false;
   const typeAnn = inner.typeAnnotation.typeAnnotation;
   if (typeAnn.type === "TSTypeReference") {
