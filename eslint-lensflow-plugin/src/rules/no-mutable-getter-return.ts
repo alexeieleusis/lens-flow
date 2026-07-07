@@ -1,36 +1,6 @@
 import { AST_NODE_TYPES, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
-function isMutableReturnType(returnType: unknown): boolean {
-  if (!returnType || typeof returnType !== "object") return false;
-  const node = returnType as Record<string, unknown>;
-
-  if (node.type === AST_NODE_TYPES.TSArrayType) {
-    const elemType = (node as any).elementType;
-    if (elemType?.type === AST_NODE_TYPES.TSTypeOperator && elemType?.operator === "readonly") {
-      return false;
-    }
-    return true;
-  }
-
-  if (node.type === AST_NODE_TYPES.TSTypeReference) {
-    const typeName = (node as any).typeName;
-    if (typeName && typeof typeName.name === "string") {
-      const name = typeName.name;
-      if (name === "Map" || name === "Set") {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  if (node.type === AST_NODE_TYPES.TSTypeLiteral) {
-    return true;
-  }
-
-  return false;
-}
-
 export default createRule({
   name: "no-mutable-getter-return",
   meta: {
