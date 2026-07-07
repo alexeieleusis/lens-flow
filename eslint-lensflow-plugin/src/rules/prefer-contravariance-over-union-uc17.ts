@@ -29,9 +29,7 @@ export default createRule({
   },
   defaultOptions: [{ minUnionMembers: 3 }],
   create(context: TSESLint.RuleContext<"preferContravariance", [{ minUnionMembers: number }]>) {
-    const [{ minUnionMembers } = { minUnionMembers: 3 }] = context.options ?? [
-      { minUnionMembers: 3 },
-    ];
+    const { minUnionMembers = 3 } = context.options[0] ?? {};
 
     function unwrapType(node: TSESTree.TypeNode): TSESTree.TypeNode {
       return node;
