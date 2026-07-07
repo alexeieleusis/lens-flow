@@ -3,6 +3,7 @@ import { createRule } from "../utils/rule-creator.js";
 
 function containsTSThisType(node: TSESTree.TypeNode): boolean {
   if (node.type === "TSThisType") return true;
+  if (node.type === "TSParenthesizedType") return containsTSThisType(node.typeAnnotation);
   if (node.type === "TSUnionType" || node.type === "TSIntersectionType") {
     return node.types.some(containsTSThisType);
   }
