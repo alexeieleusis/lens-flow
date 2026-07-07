@@ -31,7 +31,7 @@ function extractBranchInfo(
 ): { memberKey: MemberKey; literal: string } | null {
   if (
     test.type !== "BinaryExpression" ||
-    (test.operator !== "===" && test.operator !== "!==")
+    !["===", "!==", "==", "!="].includes(test.operator)
   ) {
     return null;
   }
@@ -110,8 +110,8 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ minBranches: 3 }],
-  create(context: TSESLint.RuleContext<"stateCascade", [{ minBranches: number }]>) {
-    const [{ minBranches } = { minBranches: 3 }] = context.options ?? [];
+  create(context: TSESLint.RuleContext<"stateCascade", [{ minBranches?: number }]>) {
+    const { minBranches = 3 } = context.options[0] ?? {};
     const reported = new Set<TSESTree.IfStatement>();
 
     function checkChain(node: TSESTree.IfStatement) {
