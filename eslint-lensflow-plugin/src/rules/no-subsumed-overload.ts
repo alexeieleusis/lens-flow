@@ -197,6 +197,20 @@ function checkUnionTypeAssignable(
   );
 }
 
+function checkIntersectionTypeAssignable(
+  a: TSESTree.TSIntersectionType,
+  b: TSESTree.TSIntersectionType,
+  aTPNames: string[],
+  bTPNames: string[],
+): boolean {
+  const aTypes = a.types;
+  const bTypes = b.types;
+  if (aTypes.length !== bTypes.length) return false;
+  return aTypes.every((at, i) =>
+    isAssignableTo(at, bTypes[i], aTPNames, bTPNames),
+  );
+}
+
 // Check if type A is assignable to type B considering type parameters.
 // A concrete type is assignable to a type parameter (since any value satisfies it).
 // Two type params match if they have the same name.
@@ -247,6 +261,15 @@ function isAssignableTo(
     return checkUnionTypeAssignable(
       a,
       b as TSESTree.TSUnionType,
+      aTPNames,
+      bTPNames,
+    );
+  }
+
+  if (a.type === "TSIntersectionType") {
+    return checkIntersectionTypeAssignable(
+      a,
+      b as TSESTree.TSIntersectionType,
       aTPNames,
       bTPNames,
     );
