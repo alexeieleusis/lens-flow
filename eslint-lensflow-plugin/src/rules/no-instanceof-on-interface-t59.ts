@@ -41,16 +41,17 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"instanceofOnInterface", []>) {
-    const parserServices = ESLintUtils.getParserServices(context);
+    const parserServices = ESLintUtils.getParserServices(context, { allowNoProject: true });
+    if (!parserServices.program) return {};
     const checker = parserServices.program.getTypeChecker();
 
     return {
       BinaryExpression(node) {
         if (node.operator !== "instanceof") return;
 
-        const leftType = checker.getTypeAtLocation(
-          parserServices.esTreeNodeToTSNodeMap.get(node.left),
-        );
+        const tsNode = parserServices.esTreeNodeToTSNodeMap.get(node.left);
+        if (!tsNode) return;
+        const leftType = checker.getTypeAtLocation(tsNode);
 
         if (typeContainsInterface(leftType)) {
           context.report({
