@@ -15,6 +15,7 @@ function isPrivateFieldReturn(expr: TSESTree.Node | null | undefined): boolean {
 export default createRule({
   name: "no-getter-returns-private-field",
   meta: {
+    fixable: undefined,
     type: "problem",
     docs: {
       description:
