@@ -62,6 +62,11 @@ ruleTester.run("no-any-array-parameter", rule, {
 };`,
       errors: [{ messageId: "anyParam" }],
     },
+    // any[] in named function expression
+    {
+      code: `const obj = { fn: function foo(items: any[]) { return items; } };`,
+      errors: [{ messageId: "anyParam" }],
+    },
     // any[] in function type
     {
       code: `type Handler = (data: any[]) => void;`,
