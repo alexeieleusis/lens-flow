@@ -42,7 +42,7 @@ export default createRule({
       ) {
         const sourceCode = context.sourceCode;
         const returnText = sourceCode.getText(
-          member.value.returnType || member.value,
+          member.value.returnType.typeAnnotation || member.value.returnType || member.value,
         );
         context.report({
           node: member,
@@ -63,7 +63,7 @@ export default createRule({
       if (name === "Array") {
         const sourceCode = context.sourceCode;
         const returnText = sourceCode.getText(
-          member.value.returnType || member.value,
+          member.value.returnType.typeAnnotation || member.value.returnType || member.value,
         );
         context.report({
           node: member,
