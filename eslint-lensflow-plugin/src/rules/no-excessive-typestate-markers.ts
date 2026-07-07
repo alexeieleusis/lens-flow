@@ -2,6 +2,21 @@ import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 import type { TSESTree } from "@typescript-eslint/types";
 
+const PRIMITIVES = new Set([
+  "string",
+  "number",
+  "boolean",
+  "any",
+  "unknown",
+  "void",
+  "never",
+  "null",
+  "undefined",
+  "object",
+  "bigint",
+  "symbol",
+]);
+
 export default createRule({
   name: "no-excessive-typestate-markers",
   meta: {
@@ -40,11 +55,15 @@ export default createRule({
         const ann = node.typeAnnotation;
 
         // Check for TSTypeReference where the alias name matches
-        // phantom state naming: /^With[A-Z]/ or /^No[A-Z]/
+        // phantom state naming: /^With[A-Z]/ or /^No[A-Z]/, but only
+        // when the referenced type is meaningful (not a primitive).
         if (ann?.type === "TSTypeReference") {
           if (/^(With|No)[A-Z]/.test(aliasName)) {
-            markers.push({ node, name: aliasName });
-            return;
+            const refName = ann.typeName.type === "Identifier" ? ann.typeName.name : "";
+            if (!PRIMITIVES.has(refName)) {
+              markers.push({ node, name: aliasName });
+              return;
+            }
           }
         }
 
