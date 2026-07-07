@@ -220,7 +220,7 @@ export function getComparisonInfo(
   return { varName: memberName, tsVarNode, value, operator };
 }
 
-function getMemberName(
+export function getMemberName(
   node: TSESTree.MemberExpression,
   depth = 0,
 ): string | null {

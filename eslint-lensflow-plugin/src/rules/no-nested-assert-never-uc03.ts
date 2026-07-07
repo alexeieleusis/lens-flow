@@ -1,5 +1,6 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { getMemberName } from "../utils/ast-helpers.js";
 
 function isAssertNeverCall(node: TSESTree.Node): boolean {
   if (node.type !== "CallExpression") return false;
@@ -36,27 +37,11 @@ function checkValueForAssertNever(val: unknown): boolean {
   return false;
 }
 
-function memberExpressionKey(node: TSESTree.MemberExpression): string {
-  let objName = "";
-  if (node.object.type === "Identifier") {
-    objName = node.object.name;
-  } else if (node.object.type === "ThisExpression") {
-    objName = "this";
-  }
-  let prop = "";
-  if (node.property.type === "Identifier") {
-    prop = node.property.name;
-  } else if (node.property.type === "Literal") {
-    prop = String(node.property.value);
-  }
-  return `${objName}.${prop}`;
-}
-
 function extractMemberFromBinary(node: TSESTree.BinaryExpression): string | null {
   const leftKey =
-    node.left.type === "MemberExpression" ? memberExpressionKey(node.left) : null;
+    node.left.type === "MemberExpression" ? getMemberName(node.left) : null;
   const rightKey =
-    node.right.type === "MemberExpression" ? memberExpressionKey(node.right) : null;
+    node.right.type === "MemberExpression" ? getMemberName(node.right) : null;
   return leftKey || rightKey || null;
 }
 
@@ -103,7 +88,8 @@ export default createRule({
         const discriminant = node.discriminant;
         if (discriminant.type !== "MemberExpression") return;
 
-        const switchKey = memberExpressionKey(discriminant);
+        const switchKey = getMemberName(discriminant);
+        if (!switchKey) return;
 
         const ancestorIf = findAncestorIf(node);
         if (!ancestorIf) return;
