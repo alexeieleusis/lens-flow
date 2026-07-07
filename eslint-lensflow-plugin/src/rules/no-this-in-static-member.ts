@@ -78,6 +78,16 @@ export default createRule({
       PropertyDefinition(node) {
         visitProperty(node);
       },
+      TSAbstractMethodDefinition(node) {
+        if (!node.static) return;
+        const retType = node.returnType?.typeAnnotation;
+        if (retType && containsTSThisType(retType)) {
+          context.report({
+            node: node.returnType!,
+            messageId: "staticThisReturn",
+          });
+        }
+      },
       PropertyDefinition(node) {
         if (!node.static) return;
         const value = node.value;
