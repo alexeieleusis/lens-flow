@@ -37,6 +37,11 @@ function extractDecoratorName(
   if (expr.type === "CallExpression") {
     const callee = expr.callee;
     if (callee.type === "Identifier") return callee.name;
+    if (
+      callee.type === "MemberExpression" &&
+      callee.property.type === "Identifier"
+    )
+      return callee.property.name;
   }
   return null;
 }
