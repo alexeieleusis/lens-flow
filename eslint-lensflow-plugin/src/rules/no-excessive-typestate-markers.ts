@@ -30,7 +30,7 @@ export default createRule({
   },
   defaultOptions: [{ maxMarkers: 4 }],
   create(context: TSESLint.RuleContext<"excessiveMarkers", [{ maxMarkers: number }]>) {
-    const [{ maxMarkers } = { maxMarkers: 4 }] = context.options ?? [];
+    const { maxMarkers } = context.options[0];
 
     const markers: Array<{ node: TSESTree.TSTypeAliasDeclaration; name: string }> = [];
 
