@@ -28,6 +28,12 @@ function collectChildNodes(node: TSESTree.Node): TSESTree.Node[] {
   return children;
 }
 
+const FUNCTION_BOUNDARY_TYPES = new Set([
+  "FunctionDeclaration",
+  "FunctionExpression",
+  "ArrowFunctionExpression",
+]);
+
 function hasThrowsOrAssertCall(
   body: TSESTree.Statement | TSESTree.BlockStatement | null,
 ): boolean {
@@ -48,7 +54,11 @@ function hasThrowsOrAssertCall(
       return true;
     }
 
-    nodes.push(...collectChildNodes(node));
+    for (const child of collectChildNodes(node)) {
+      if (!FUNCTION_BOUNDARY_TYPES.has(child.type)) {
+        nodes.push(child);
+      }
+    }
   }
 
   return false;
