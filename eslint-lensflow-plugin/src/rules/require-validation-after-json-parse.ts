@@ -49,42 +49,28 @@ export default createRule({
       }
     };
 
-    const isValidationMethod = (callee: unknown): boolean => {
+    const isValidationMethod = (callee: TSESTree.Expression): boolean => {
       if (
-        callee &&
-        typeof callee === "object" &&
-        "type" in callee &&
         callee.type === "MemberExpression" &&
-        "property" in callee
+        callee.property.type === "Identifier"
       ) {
-        const prop = callee.property;
-        if (prop && typeof prop === "object" && "name" in prop) {
-          return /^(safeParse|parse|validate)$/.test(prop.name as string);
-        }
+        return /^(safeParse|parse|validate)$/.test(callee.property.name);
       }
       return false;
     };
 
-    const getCalleeName = (callee: unknown): string => {
+    const getCalleeName = (callee: TSESTree.Expression): string => {
       if (
-        callee &&
-        typeof callee === "object" &&
-        "type" in callee &&
         callee.type === "MemberExpression" &&
-        "property" in callee
+        callee.property.type === "Identifier"
       ) {
-        const prop = callee.property;
-        if (prop && typeof prop === "object" && "name" in prop) {
-          return prop.name as string;
-        }
+        return callee.property.name;
       }
       return "unknown";
     };
 
-    const isJsonParseCall = (node: unknown): node is TSESTree.CallExpression => {
-      if (!node || typeof node !== "object" || !("callee" in node)) return false;
-      const call = node as TSESTree.CallExpression;
-      const { callee } = call;
+    const isJsonParseCall = (node: TSESTree.CallExpression): boolean => {
+      const { callee } = node;
       return (
         callee.type === "MemberExpression" &&
         callee.object.type === "Identifier" &&
@@ -98,8 +84,7 @@ export default createRule({
       node: TSESTree.CallExpression
     ): TSESTree.CallExpression | null => {
       const p = node.parent;
-      if (!p || typeof p !== "object" || !("type" in p)) return null;
-      if (p.type !== "CallExpression" || !("arguments" in p)) return null;
+      if (p?.type !== "CallExpression") return null;
       return p;
     };
 
@@ -107,8 +92,7 @@ export default createRule({
       node: TSESTree.CallExpression
     ): string | null => {
       const p = node.parent;
-      if (!p || typeof p !== "object" || !("type" in p)) return null;
-      if (p.type !== "VariableDeclarator" || !("id" in p)) return null;
+      if (p?.type !== "VariableDeclarator") return null;
       if (p.id.type !== "Identifier") return null;
       return p.id.name;
     };
