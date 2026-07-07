@@ -378,9 +378,9 @@ function checkVariance(
 
     if (onlyOut) {
       const refs = findInputPositionRefs(body, name);
-      if (refs.length > 0) {
+      for (const ref of refs) {
         context.report({
-          node: refs[0],
+          node: ref,
           messageId: "outUsedAsInput",
           data: { paramName: name },
         });
@@ -389,9 +389,9 @@ function checkVariance(
 
     if (onlyIn) {
       const refs = findOutputPositionRefs(body, name);
-      if (refs.length > 0) {
+      for (const ref of refs) {
         context.report({
-          node: refs[0],
+          node: ref,
           messageId: "inUsedAsOutput",
           data: { paramName: name },
         });
