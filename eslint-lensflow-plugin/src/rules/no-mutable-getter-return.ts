@@ -58,14 +58,28 @@ export default createRule({
       if (!typeName || typeof typeName.name !== "string") return;
 
       const name = typeName.name;
-      if (name !== "Map" && name !== "Set") return;
 
-      const suggestion = name === "Map" ? "ReadonlyMap" : "ReadonlySet";
-      context.report({
-        node: member,
-        messageId: "mutableCollection",
-        data: { returnType: name, suggestion },
-      });
+      if (name === "Array") {
+        const sourceCode = context.sourceCode;
+        const returnText = sourceCode.getText(
+          member.value.returnType || member.value,
+        );
+        context.report({
+          node: member,
+          messageId: "mutableArray",
+          data: { returnType: returnText },
+        });
+        return;
+      }
+
+      if (name === "Map" || name === "Set") {
+        const suggestion = name === "Map" ? "ReadonlyMap" : "ReadonlySet";
+        context.report({
+          node: member,
+          messageId: "mutableCollection",
+          data: { returnType: name, suggestion },
+        });
+      }
     };
 
     const checkLiteralType = (rt: Record<string, unknown>, member: any) => {
