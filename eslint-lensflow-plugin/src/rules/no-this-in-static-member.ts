@@ -78,6 +78,23 @@ export default createRule({
       PropertyDefinition(node) {
         visitProperty(node);
       },
+      PropertyDefinition(node) {
+        if (!node.static) return;
+        const value = node.value;
+        if (
+          value &&
+          (value.type === "ArrowFunctionExpression" ||
+            value.type === "FunctionExpression")
+        ) {
+          const retType = value.returnType?.typeAnnotation;
+          if (retType && containsTSThisType(retType)) {
+            context.report({
+              node: value.returnType!,
+              messageId: "staticThisReturn",
+            });
+          }
+        }
+      },
     };
   },
 });
