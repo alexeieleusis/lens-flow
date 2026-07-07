@@ -12,7 +12,7 @@ function getTypeName(typeName: TSESTree.Identifier | TSESTree.ThisExpression | T
   return null;
 }
 
-type SelfRef = { ancestors: TSESTree.TypeNode[] };
+type SelfRef = { node: TSESTree.TSTypeReference; ancestors: TSESTree.TypeNode[] };
 
 function getTSChildren(node: TSESTree.Node): TSESTree.Node[] {
   return getChildren(node).filter(
@@ -34,7 +34,7 @@ function collectSelfRefs(
   if (node.type === "TSTypeReference") {
     const name = getTypeName(node.typeName);
     if (name === aliasName) {
-      results.push({ ancestors: [...ancestors] });
+      results.push({ node, ancestors: [...ancestors] });
     }
   }
 
@@ -77,11 +77,10 @@ export default createRule({
           );
           if (!hasObjectIndirection) {
             context.report({
-              node,
+              node: ref.node,
               messageId: "directCircularReference",
               data: { name: aliasName },
             });
-            return;
           }
         }
       },
