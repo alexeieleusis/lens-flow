@@ -22,10 +22,7 @@ export default createRule({
       Program(node) {
         const comments = context.sourceCode.getAllComments();
         for (const comment of comments) {
-          if (
-            comment.type === "Line" &&
-            /^\s*@ts-ignore\b/.test(comment.value)
-          ) {
+          if (/^\s*@ts-ignore\b/.test(comment.value)) {
             context.report({
               node: comment as never,
               messageId: "preferExpectError",
