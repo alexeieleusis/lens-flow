@@ -38,10 +38,9 @@ export default createRule({
         const exprType = checker.getTypeAtLocation(exprTs as ts.Expression);
         const constituents = (exprType as ts.UnionType).types || [exprType];
 
-        const isNullable = constituents.some((t) => {
-          const typeName = checker.typeToString(t);
-          return typeName === "null" || typeName === "undefined";
-        });
+        const isNullable = constituents.some((t) =>
+          (t.flags & (ts.TypeFlags.Null | ts.TypeFlags.Undefined)) !== 0,
+        );
         if (!isNullable) return;
 
         context.report({
