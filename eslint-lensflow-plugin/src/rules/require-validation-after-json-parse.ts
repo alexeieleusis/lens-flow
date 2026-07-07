@@ -19,7 +19,34 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"unvalidatedVariableUsage" | "directUnvalidated", []>) {
-    const parsedData: Record<string, unknown> = {};
+    const scopeStack: Record<string, TSESTree.Node | "validated">[] = [{}];
+
+    const enterScope = () => {
+      scopeStack.push({});
+    };
+
+    const exitScope = () => {
+      scopeStack.pop();
+    };
+
+    const currentScope = (): Record<string, TSESTree.Node | "validated"> =>
+      scopeStack[scopeStack.length - 1];
+
+    const lookupParsedData = (name: string): TSESTree.Node | "validated" | undefined => {
+      for (let i = scopeStack.length - 1; i >= 0; i--) {
+        if (name in scopeStack[i]) return scopeStack[i][name];
+      }
+      return undefined;
+    };
+
+    const markValidated = (name: string) => {
+      for (let i = scopeStack.length - 1; i >= 0; i--) {
+        if (name in scopeStack[i]) {
+          scopeStack[i][name] = "validated";
+          return;
+        }
+      }
+    };
 
     const isValidationMethod = (callee: unknown): boolean => {
       if (
@@ -89,18 +116,26 @@ export default createRule({
       callee: TSESTree.Expression,
       args: TSESTree.CallExpressionArgument[]
     ) => {
-      if (isValidationMethod(callee)) return;
-      for (const arg of args) {
-        if (arg.type === "Identifier" && arg.name in parsedData) {
-          context.report({
-            node: arg,
-            messageId: "unvalidatedVariableUsage",
-            data: {
-              varName: arg.name,
-              calleeName: getCalleeName(callee),
-            },
-          });
+      if (isValidationMethod(callee)) {
+        for (const arg of args) {
+          if (arg.type === "Identifier") {
+            markValidated(arg.name);
+          }
         }
+        return;
+      }
+      for (const arg of args) {
+        if (arg.type !== "Identifier") continue;
+        const entry = lookupParsedData(arg.name);
+        if (entry === undefined || entry === "validated") continue;
+        context.report({
+          node: arg,
+          messageId: "unvalidatedVariableUsage",
+          data: {
+            varName: arg.name,
+            calleeName: getCalleeName(callee),
+          },
+        });
       }
     };
 
@@ -128,11 +163,17 @@ export default createRule({
 
       const varName = isVariableDeclaratorWithId(node);
       if (varName) {
-        parsedData[varName] = node;
+        currentScope()[varName] = node;
       }
     };
 
     return {
+      FunctionDeclaration: enterScope,
+      FunctionExpression: enterScope,
+      ArrowFunctionExpression: enterScope,
+      "FunctionDeclaration:exit": exitScope,
+      "FunctionExpression:exit": exitScope,
+      "ArrowFunctionExpression:exit": exitScope,
       CallExpression(node) {
         const { callee, arguments: args } = node;
 
