@@ -34,7 +34,7 @@ const FUNCTION_BOUNDARY_TYPES = new Set([
   "ArrowFunctionExpression",
 ]);
 
-function hasThrowsOrAssertCall(
+function hasThrowStatement(
   body: TSESTree.Statement | TSESTree.BlockStatement | null,
 ): boolean {
   if (!body) return false;
@@ -45,14 +45,6 @@ function hasThrowsOrAssertCall(
     const node = nodes[i++];
 
     if (node.type === "ThrowStatement") return true;
-
-    if (
-      node.type === "CallExpression" &&
-      node.callee.type === "Identifier" &&
-      node.callee.name.startsWith("assert")
-    ) {
-      return true;
-    }
 
     for (const child of collectChildNodes(node)) {
       if (!FUNCTION_BOUNDARY_TYPES.has(child.type)) {
@@ -102,7 +94,7 @@ export default createRule({
         "type" in node.body &&
         node.body.type === "BlockStatement";
 
-      if (!hasBody || !hasThrowsOrAssertCall(node.body as TSESTree.BlockStatement)) {
+      if (!hasBody || !hasThrowStatement(node.body as TSESTree.BlockStatement)) {
         context.report({
           node,
           messageId: "missingThrow",
