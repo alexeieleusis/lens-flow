@@ -1,6 +1,5 @@
-import type { TSESTree } from "@typescript-eslint/types";
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 function isInsideRange(
   rangeStart: number,
@@ -13,6 +12,7 @@ function isInsideRange(
 export default createRule({
   name: "require-await-try-catch-in-generator",
   meta: {
+    fixable: undefined,
     type: "problem",
     docs: {
       description:
