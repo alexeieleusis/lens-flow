@@ -1,81 +1,73 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 
-type PropKey =
-  | { type: "Identifier"; name: string }
-  | { type: "Literal"; value: string | number };
-
-type LiteralMember = {
-  type: "TSTypeLiteral";
-  members: Array<{
-    type: "TSPropertySignature";
-    key: PropKey;
-    typeAnnotation?: {
-      typeAnnotation: { type: string };
-    };
-  }>;
-};
-
-type PropertySig = {
-  type: "TSPropertySignature";
-  key: PropKey;
-  typeAnnotation?: {
-    typeAnnotation: { type: string };
-  };
-};
-
-function getPropertySigs(members: LiteralMember["members"]) {
-  return members.filter(
-    (m): m is PropertySig => m.type === "TSPropertySignature",
-  );
-}
-
-function getPropertyKey(sig: PropertySig) {
-  if (sig.key.type === "Identifier") return sig.key.name;
-  if (sig.key.type === "Literal" && typeof sig.key.value === "string") return sig.key.value;
+function extractPropName(key: TSESTree.TSPropertySignature["key"]): string | null {
+  if (key.type === "Identifier") return key.name;
+  if (key.type === "Literal" && typeof key.value === "string") return key.value;
+  if (key.type === "Literal" && typeof key.value === "number") return String(key.value);
   return null;
 }
 
-function buildPropsMap(literalMembers: LiteralMember[]) {
+function extractLiteralValueType(sig: TSESTree.TSPropertySignature): string | null {
+  const typeAnn = sig.typeAnnotation?.typeAnnotation;
+  if (typeAnn?.type !== "TSLiteralType") return null;
+  const lit = typeAnn.literal;
+  if (lit.type === "Literal" && lit.value !== null && typeof lit.value !== "object") {
+    return String(lit.value);
+  }
+  if (lit.type === "TemplateLiteral" && lit.quasis.length === 1) {
+    return lit.quasis[0].value.cooked ?? null;
+  }
+  return null;
+}
+
+function extractTypeKind(typeAnn: TSESTree.TypeNode): string {
+  return typeAnn.type;
+}
+
+function getPropertySigs(members: TSESTree.TypeElement[]): TSESTree.TSPropertySignature[] {
+  return members.filter(
+    (m): m is TSESTree.TSPropertySignature => m.type === "TSPropertySignature",
+  );
+}
+
+function buildPropsMap(literals: TSESTree.TSTypeLiteral[]): Record<string, string[]> {
   const propsMap: Record<string, string[]> = {};
-  for (const member of literalMembers) {
-    for (const sig of getPropertySigs(member.members)) {
-      const propName = getPropertyKey(sig);
+  for (const literal of literals) {
+    for (const sig of getPropertySigs(literal.members)) {
+      const propName = extractPropName(sig.key);
       if (!propName) continue;
       const ann = sig.typeAnnotation?.typeAnnotation;
       if (ann) {
         if (!propsMap[propName]) propsMap[propName] = [];
-        propsMap[propName].push(ann.type);
+        propsMap[propName].push(extractTypeKind(ann));
       }
     }
   }
   return propsMap;
 }
 
-function collectLiteralValue(sig: PropertySig, literalValues: Record<string, Set<string>>) {
-  const propName = getPropertyKey(sig);
-  if (!propName) return;
-  const ann = sig.typeAnnotation?.typeAnnotation;
-  if (ann?.type !== "TSLiteralType") return;
-  if (!literalValues[propName]) literalValues[propName] = new Set();
-  const lit = (ann as unknown as { literal: { value?: unknown } }).literal;
-  if (lit?.value !== undefined && typeof lit.value !== "object") {
-    literalValues[propName].add(String(lit.value as string | number | boolean));
-  }
-}
-
-function collectLiteralValues(literalMembers: LiteralMember[]) {
+function collectLiteralValues(literals: TSESTree.TSTypeLiteral[]): Record<string, Set<string>> {
   const literalValues: Record<string, Set<string>> = {};
-  for (const member of literalMembers) {
-    for (const sig of getPropertySigs(member.members)) {
-      collectLiteralValue(sig, literalValues);
+  for (const literal of literals) {
+    for (const sig of getPropertySigs(literal.members)) {
+      const propName = extractPropName(sig.key);
+      if (!propName) continue;
+      const value = extractLiteralValueType(sig);
+      if (value === null) continue;
+      if (!literalValues[propName]) literalValues[propName] = new Set();
+      literalValues[propName].add(value);
     }
   }
   return literalValues;
 }
 
-function keysMatch(firstKeys: Set<string | null>, sigs: ReturnType<typeof getPropertySigs>) {
-  const keys = new Set(sigs.map((m) => getPropertyKey(m)));
+function keysMatch(
+  firstKeys: Set<string | null>,
+  members: TSESTree.TypeElement[],
+): boolean {
+  const sigs = getPropertySigs(members);
+  const keys = new Set(sigs.map((s) => extractPropName(s.key)));
   if (keys.size !== firstKeys.size) return false;
   for (const k of keys) {
     if (k !== null && !firstKeys.has(k)) return false;
@@ -115,20 +107,22 @@ export default createRule({
       TSUnionType(node) {
         if (node.types.length < 2) return;
 
-        const allLiterals = node.types.every((m) => m.type === "TSTypeLiteral");
-        if (!allLiterals) return;
+        const literals = node.types.filter(
+          (t): t is TSESTree.TSTypeLiteral => t.type === "TSTypeLiteral",
+        );
+        if (literals.length !== node.types.length) return;
 
-        const literalMembers = node.types as unknown as LiteralMember[];
-        const firstKeys = new Set(getPropertySigs(literalMembers[0].members).map((m) => getPropertyKey(m)));
+        const firstSigs = getPropertySigs(literals[0].members);
+        const firstKeys = new Set(firstSigs.map((s) => extractPropName(s.key)));
 
-        for (const member of literalMembers) {
-          if (!keysMatch(firstKeys, getPropertySigs(member.members))) return;
+        for (const literal of literals) {
+          if (!keysMatch(firstKeys, literal.members)) return;
         }
 
-        const propsMap = buildPropsMap(literalMembers);
+        const propsMap = buildPropsMap(literals);
         if (!allPropsSameType(propsMap)) return;
 
-        const literalValues = collectLiteralValues(literalMembers);
+        const literalValues = collectLiteralValues(literals);
         if (hasDistinctLiteralProp(literalValues)) {
           context.report({
             node,
