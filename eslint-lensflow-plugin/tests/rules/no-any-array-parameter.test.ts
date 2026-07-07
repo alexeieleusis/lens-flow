@@ -43,6 +43,8 @@ ruleTester.run("no-any-array-parameter", rule, {
     `function sum(arr: ReadonlyArray<number>): number {
   return arr.reduce((a, b) => a + b, 0);
 }`,
+    // AssignmentPattern (default parameter) with typed array is fine
+    `function handle(items: string[] = ["a"]) { return items; }`,
   ],
   invalid: [
     // Antipattern from spec: any[] param and any return
@@ -179,6 +181,11 @@ ruleTester.run("no-any-array-parameter", rule, {
     // readonly Array<any> — typeOperator wrapping Array<any>
     {
       code: `function wrap(x: readonly Array<any>): void {}`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    // AssignmentPattern (default parameter) with any[] — exercises the unwrap branch
+    {
+      code: `function handle(items: any[] = []) { return items; }`,
       errors: [{ messageId: "anyParam" }],
     },
   ],
