@@ -176,8 +176,8 @@ function checkUnionTypeAssignable(
   const aTypes = a.types;
   const bTypes = b.types;
   if (aTypes.length !== bTypes.length) return false;
-  return aTypes.every((at, i) =>
-    isAssignableTo(at, bTypes[i], aTPNames, bTPNames),
+  return aTypes.every((at) =>
+    bTypes.some((bt) => isAssignableTo(at, bt, aTPNames, bTPNames)),
   );
 }
 
