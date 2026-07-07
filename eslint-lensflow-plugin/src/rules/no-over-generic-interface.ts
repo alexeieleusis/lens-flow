@@ -34,7 +34,7 @@ export default createRule({
     return {
       TSInterfaceDeclaration(node) {
         const typeParams = node.typeParameters?.params ?? [];
-        if (typeParams.length >= maxTypeParams) {
+        if (typeParams.length > maxTypeParams) {
           const name = node.id ? node.id.name : "(anonymous)";
           context.report({
             node,
@@ -42,7 +42,7 @@ export default createRule({
             data: {
               name,
               count: String(typeParams.length),
-              max: String(maxTypeParams - 1),
+              max: String(maxTypeParams),
             },
           });
         }
