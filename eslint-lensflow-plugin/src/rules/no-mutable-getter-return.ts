@@ -18,6 +18,7 @@ export default createRule({
         "Getter returns mutable object type. Return a copy or use a readonly type to preserve encapsulation. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T21-encapsulation.md",
     },
     schema: [],
+    fixable: undefined,
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"mutableArray" | "mutableCollection" | "mutableObject", []>) {
