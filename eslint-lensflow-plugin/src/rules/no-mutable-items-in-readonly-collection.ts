@@ -3,6 +3,13 @@ import { ESLintUtils, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
 function hasMutableMembers(type: ts.Type): boolean {
+  if (type.isUnion()) {
+    return type.types.some(hasMutableMembers);
+  }
+  if (type.isIntersection()) {
+    return type.types.some(hasMutableMembers);
+  }
+
   const members = type.getProperties();
   for (const member of members) {
     const decls = member.getDeclarations();
