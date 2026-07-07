@@ -79,7 +79,7 @@ export default createRule({
             maxOptional: String(thresholdOptional),
           },
         });
-      } else if (totalCount >= thresholdTotal) {
+      } else if (totalCount > thresholdTotal) {
         context.report({
           node: reportNode,
           messageId: "tooManyTotal",
