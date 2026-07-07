@@ -12,6 +12,7 @@ ruleTester.run("no-any-array-return", rule, {
     `function getItems(): string[] {
   return [];
 }`,
+    `const f = (): string[] => []`,
     `type Mapper = <A, B>(arr: A[], fn: (item: A) => B) => B[];`,
     `declare function transform<T>(arr: T[]): T[];`,
     `interface Processor {
@@ -47,6 +48,10 @@ ruleTester.run("no-any-array-return", rule, {
     },
     {
       code: `const f = function (): any[] { return []; };`,
+      errors: [{ messageId: "anyArrayReturn" }],
+    },
+    {
+      code: `const f = (): any[] => [];`,
       errors: [{ messageId: "anyArrayReturn" }],
     },
     {
