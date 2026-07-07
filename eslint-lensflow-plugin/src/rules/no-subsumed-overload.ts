@@ -71,6 +71,9 @@ function isTypeParameterRef(
     if (typeName.type === "Identifier") {
       return typeParamNames.includes(typeName.name);
     }
+    if (typeName.type === "TSQualifiedName") {
+      return typeParamNames.includes(typeName.right.name);
+    }
   }
   if (typeNode.type === "TSArrayType") {
     return isTypeParameterRef(
