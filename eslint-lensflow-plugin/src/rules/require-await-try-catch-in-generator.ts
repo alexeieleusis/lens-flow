@@ -28,24 +28,27 @@ export default createRule({
   create(context: TSESLint.RuleContext<"missingTryCatch", []>) {
     return {
       AwaitExpression(node) {
-        let current: TSESTree.Node | undefined = node.parent;
-        while (current) {
+        const ancestors = context.sourceCode.getAncestors(node);
+        for (let i = ancestors.length - 1; i >= 0; i--) {
+          const current = ancestors[i];
+
           if (current.type === "TryStatement") {
+            const tryNode = current as TSESTree.TryStatement;
             const inTry =
-              current.block.range &&
-              isInsideRange(current.block.range[0], current.block.range[1], node);
+              tryNode.block.range &&
+              isInsideRange(tryNode.block.range[0], tryNode.block.range[1], node);
             const inCatch =
-              current.handler?.body.range &&
+              tryNode.handler?.body.range &&
               isInsideRange(
-                current.handler.body.range[0],
-                current.handler.body.range[1],
+                tryNode.handler.body.range[0],
+                tryNode.handler.body.range[1],
                 node,
               );
             const inFinally =
-              current.finalizer?.range &&
+              tryNode.finalizer?.range &&
               isInsideRange(
-                current.finalizer.range[0],
-                current.finalizer.range[1],
+                tryNode.finalizer.range[0],
+                tryNode.finalizer.range[1],
                 node,
               );
             if (inTry || inCatch || inFinally) return;
@@ -56,7 +59,8 @@ export default createRule({
             current.type === "FunctionExpression" ||
             current.type === "ArrowFunctionExpression"
           ) {
-            if (current.generator === true && current.async === true) {
+            const fn = current as TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression;
+            if (fn.generator === true && fn.async === true) {
               context.report({
                 node,
                 messageId: "missingTryCatch",
@@ -64,8 +68,6 @@ export default createRule({
             }
             return;
           }
-
-          current = current.parent;
         }
       },
     };
