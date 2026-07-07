@@ -34,17 +34,15 @@ export default createRule({
       let hasFalsy = false;
 
       for (const member of allTypes) {
-        const typeName = checker.typeToString(member);
-        if (typeName === "null" || typeName === "undefined") {
-          hasNullable = true;
-        }
+        const flags = member.flags;
+        if (flags & ts.TypeFlags.Null || flags & ts.TypeFlags.Undefined) hasNullable = true;
         if (
-          typeName === "0" ||
-          typeName === '""' ||
-          typeName === "false" ||
-          typeName === "number" ||
-          typeName === "string" ||
-          typeName === "boolean"
+          flags & ts.TypeFlags.Number
+          || flags & ts.TypeFlags.String
+          || flags & ts.TypeFlags.Boolean
+          || (flags & ts.TypeFlags.NumberLiteral && checker.typeToString(member) === "0")
+          || (flags & ts.TypeFlags.StringLiteral && checker.typeToString(member) === "\"\"")
+          || (flags & ts.TypeFlags.BooleanLiteral && checker.typeToString(member) === "false")
         ) {
           hasFalsy = true;
         }
