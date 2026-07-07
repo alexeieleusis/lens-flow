@@ -22,7 +22,7 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"unsafeNonNull", []>) {
-    const parserServices = ESLintUtils.getParserServices(context);
+    const parserServices = ESLintUtils.getParserServices(context, { allowEmptyOrMissing: true });
     const program = parserServices.program;
     if (!program) return {};
 
