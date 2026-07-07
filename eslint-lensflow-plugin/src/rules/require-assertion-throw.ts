@@ -80,18 +80,29 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"missingThrow", []>) {
-    function checkFunction(
-      node:
-        | TSESTree.FunctionDeclaration
-        | TSESTree.FunctionExpression
-        | TSESTree.ArrowFunctionExpression,
-    ) {
+    type AssertionFnNode =
+      | TSESTree.FunctionDeclaration
+      | TSESTree.FunctionExpression
+      | TSESTree.ArrowFunctionExpression
+      | TSESTree.TSDeclareFunction
+      | TSESTree.TSMethodSignature
+      | TSESTree.TSCallSignatureDeclaration
+      | TSESTree.TSConstructSignatureDeclaration;
+
+    function checkFunction(node: AssertionFnNode) {
       if (!node.returnType) return;
 
       const ann = node.returnType.typeAnnotation;
       if (ann.type !== "TSTypePredicate" || !ann.asserts) return;
 
-      if (!hasThrowsOrAssertCall(node.body.type === "BlockStatement" ? node.body : null)) {
+      const hasBody =
+        "body" in node &&
+        node.body != null &&
+        typeof node.body === "object" &&
+        "type" in node.body &&
+        node.body.type === "BlockStatement";
+
+      if (!hasBody || !hasThrowsOrAssertCall(node.body as TSESTree.BlockStatement)) {
         context.report({
           node,
           messageId: "missingThrow",
@@ -99,10 +110,22 @@ export default createRule({
       }
     }
 
+    function checkMethodDefinition(node: TSESTree.MethodDefinition) {
+      const value = node.value as TSESTree.Node;
+      if (value.type === "FunctionExpression" || value.type === "ArrowFunctionExpression") {
+        checkFunction(value as TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression);
+      }
+    }
+
     return {
       FunctionDeclaration: checkFunction,
       FunctionExpression: checkFunction,
       ArrowFunctionExpression: checkFunction,
+      MethodDefinition: checkMethodDefinition,
+      TSDeclareFunction: checkFunction,
+      TSMethodSignature: checkFunction,
+      TSCallSignatureDeclaration: checkFunction,
+      TSConstructSignatureDeclaration: checkFunction,
     };
   },
 });
