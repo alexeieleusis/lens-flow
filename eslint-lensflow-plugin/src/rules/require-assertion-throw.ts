@@ -88,8 +88,8 @@ export default createRule({
     ) {
       if (!node.returnType) return;
 
-      const returnTypeText = context.sourceCode.getText(node.returnType);
-      if (!returnTypeText.includes("asserts")) return;
+      const ann = node.returnType.typeAnnotation;
+      if (ann.type !== "TSTypePredicate" || !ann.asserts) return;
 
       if (!hasThrowsOrAssertCall(node.body.type === "BlockStatement" ? node.body : null)) {
         context.report({
