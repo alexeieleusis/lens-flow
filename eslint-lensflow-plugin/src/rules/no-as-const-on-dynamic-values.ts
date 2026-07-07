@@ -63,7 +63,7 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow `as const` on objects or arrays containing runtime-computed expressions",
+        "Disallow `as const` on objects or arrays that contain runtime-computed expressions — including identifiers, member access, function calls, binary/logical expressions, template literals with interpolations, await/yield, tagged templates, and other dynamically-evaluated sub-expressions",
     },
     messages: {
       dynamicAsConst:
