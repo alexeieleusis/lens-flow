@@ -10,6 +10,25 @@ function getTypeParamNames(node: FnLikeNode): string[] {
   return (node.typeParameters?.params ?? []).map((tp) => tp.name.name);
 }
 
+function getParamTypeAnnotation(
+  param: TSESTree.Parameter,
+): TSESTree.TypeNode | undefined {
+  if (param.type === "AssignmentPattern") {
+    return (param.left as TSESTree.Identifier).typeAnnotation
+      ?.typeAnnotation;
+  }
+  if (param.type === "RestElement") {
+    return param.typeAnnotation?.typeAnnotation;
+  }
+  if (param.type === "TSParameterProperty") {
+    return getParamTypeAnnotation(param.parameter);
+  }
+  if (param.type === "Identifier") {
+    return param.typeAnnotation?.typeAnnotation;
+  }
+  return undefined;
+}
+
 function checkFunctionTypeForTypeParamRef(
   fn: TSESTree.TSFunctionType,
   typeParamNames: string[],
@@ -19,8 +38,7 @@ function checkFunctionTypeForTypeParamRef(
     return true;
   }
   for (const p of fn.params) {
-    const pAnnotation = (p as TSESTree.Identifier).typeAnnotation
-      ?.typeAnnotation;
+    const pAnnotation = getParamTypeAnnotation(p);
     if (pAnnotation && isTypeParameterRef(pAnnotation, typeParamNames)) {
       return true;
     }
@@ -82,10 +100,7 @@ function isTypeParameterRef(
 function getParamTypeAnnotations(
   node: FnLikeNode,
 ): (TSESTree.TypeNode | undefined)[] {
-  return node.params.map((p) => {
-    const ident = p as TSESTree.Identifier;
-    return ident.typeAnnotation?.typeAnnotation;
-  });
+  return node.params.map((p) => getParamTypeAnnotation(p));
 }
 
 function getReturnTypeAnnotation(
@@ -158,10 +173,8 @@ function checkFunctionTypeAssignable(
   if (a.params.length !== b.params.length) return false;
 
   for (let i = 0; i < a.params.length; i++) {
-    const aP = (b.params[i] as TSESTree.Identifier).typeAnnotation
-      ?.typeAnnotation;
-    const bP = (a.params[i] as TSESTree.Identifier).typeAnnotation
-      ?.typeAnnotation;
+    const aP = getParamTypeAnnotation(b.params[i]);
+    const bP = getParamTypeAnnotation(a.params[i]);
     if (!isAssignableTo(aP, bP, aTPNames, bTPNames)) return false;
   }
   return true;
