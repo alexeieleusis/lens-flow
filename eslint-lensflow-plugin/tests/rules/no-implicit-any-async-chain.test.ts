@@ -10,6 +10,9 @@ const data: Response = await fetch(url).then(r => r.json());`,
     `const data = await fetch(url);`,
     `const data = fetch(url).then(r => { return r.json() });`,
     `const data = fetch(url).then(function(r) { return r.json() });`,
+    `const data = someOtherCall().then(r => r.json());`,
+    `const data = api.getData().then(r => r.json());`,
+    `const data = cache.get().json();`,
   ],
   invalid: [
     {
