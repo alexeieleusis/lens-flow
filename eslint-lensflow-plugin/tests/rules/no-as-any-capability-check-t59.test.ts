@@ -42,6 +42,8 @@ typeAwareTester.run("no-as-any-capability-check-t59", rule, {
     `function foo(x: { a: string; b: number }) {
       if ((x as any).c) console.log(x.c);
     }`,
+    // Literal expression not in esTreeNodeToTSNodeMap — should not crash
+    `("hello" as any).length;`,
     `function f(x: { foo: string }) {
       if ((x as any).foo) {}
     }`,
