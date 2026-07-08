@@ -43,6 +43,22 @@ const a: Milliseconds = 100 as Milliseconds;
 const b: Milliseconds = 200 as Milliseconds;
 const c = (a + b) as Milliseconds;`,
     },
+    // Result re-wrapped — single underscore _brand variant
+    {
+      filename: TEST_FILENAME,
+      code: `type Milliseconds = number & { readonly _brand: "Milliseconds" };
+const a: Milliseconds = 100 as Milliseconds;
+const b: Milliseconds = 200 as Milliseconds;
+const c = (a + b) as Milliseconds;`,
+    },
+    // Result re-wrapped — PascalCase Brand suffix variant
+    {
+      filename: TEST_FILENAME,
+      code: `type Milliseconds = number & { readonly MillisecondsBrand: unique symbol };
+const a: Milliseconds = 100 as Milliseconds;
+const b: Milliseconds = 200 as Milliseconds;
+const c = (a + b) as Milliseconds;`,
+    },
     // Non-arithmetic operator on branded numbers
     {
       filename: TEST_FILENAME,
@@ -104,6 +120,24 @@ const remainder = a % b;`,
       code: `type Seconds = number & { readonly __brand: "Seconds" };
 const a: Seconds = 10 as Seconds;
 const doubled = a * 2;`,
+      errors: [{ messageId: "leak" }],
+    },
+    // Single underscore _brand variant
+    {
+      filename: TEST_FILENAME,
+      code: `type Timeout = number & { readonly _brand: "Timeout" };
+const a: Timeout = 500 as Timeout;
+const b: Timeout = 100 as Timeout;
+const result = a + b;`,
+      errors: [{ messageId: "leak" }],
+    },
+    // PascalCase Brand suffix variant
+    {
+      filename: TEST_FILENAME,
+      code: `type UserId = number & { readonly UserIdBrand: unique symbol };
+const a: UserId = 1 as UserId;
+const b: UserId = 2 as UserId;
+const sum = a + b;`,
       errors: [{ messageId: "leak" }],
     },
   ],
