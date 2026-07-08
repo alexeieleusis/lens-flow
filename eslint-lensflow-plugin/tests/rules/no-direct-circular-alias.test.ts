@@ -33,5 +33,13 @@ ruleTester.run("no-direct-circular-alias", rule, {
       code: `type P = (P);`,
       errors: [{ messageId: "directCircularReference" }],
     },
+    {
+      code: `type Fn = () => Fn;`,
+      errors: [{ messageId: "directCircularReference" }],
+    },
+    {
+      code: `type Ctr = new () => Ctr;`,
+      errors: [{ messageId: "directCircularReference" }],
+    },
   ],
 });
