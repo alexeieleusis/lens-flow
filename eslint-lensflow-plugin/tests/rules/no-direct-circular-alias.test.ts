@@ -29,5 +29,9 @@ ruleTester.run("no-direct-circular-alias", rule, {
       code: `type Self = Self[] | null;`,
       errors: [{ messageId: "directCircularReference" }],
     },
+    {
+      code: `type P = (P);`,
+      errors: [{ messageId: "directCircularReference" }],
+    },
   ],
 });
