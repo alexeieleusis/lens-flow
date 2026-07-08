@@ -9,6 +9,7 @@ if (isUser(raw)) {
 }`,
     `const value = x as string;`,
     `const parsed = JSON.parse(data) as Record<string, unknown>;`,
+    `const x = value as string as number;`,
   ],
   invalid: [
     {
