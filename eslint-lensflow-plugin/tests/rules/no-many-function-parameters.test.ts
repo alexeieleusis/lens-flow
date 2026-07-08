@@ -7,6 +7,7 @@ ruleTester.run("no-many-function-parameters", rule, {
     `function createServer(config: { host: string; port: number; timeout: number; keepAlive: boolean; maxConnections: number }) { /* ... */ }`,
     `const fn = (...args: string[]) => args.join("");`,
     `function fn(a: string, b: number, c: boolean, d: string, ...rest: string[]) { }`,
+    `const fn = function handler(a: string, b: number, c: boolean, d: string) { }`,
   ],
   invalid: [
     {
@@ -25,6 +26,10 @@ ruleTester.run("no-many-function-parameters", rule, {
     },
     {
       code: `function fn(a: string, b: number, c: boolean, d: string, e: symbol, ...rest: string[]) { }`,
+      errors: [{ messageId: "tooManyParams" }],
+    },
+    {
+      code: `const fn = function handler(a: string, b: number, c: boolean, d: string, e: symbol) { }`,
       errors: [{ messageId: "tooManyParams" }],
     },
   ],
