@@ -11,9 +11,18 @@ ruleTester.run("no-manual-type-guards", rule, {
     `function isUser(obj: unknown): obj is User {
       return obj !== null && typeof obj === "object";
     }`,
+    `function isUser(obj: unknown): obj is User {
+      return typeof obj === "object" && "id" in obj;
+    }`,
     `function check(obj: unknown) {
       return typeof obj === "string";
     }`,
+    {
+      code: `function isUser(obj: unknown): obj is User {
+        return obj !== null && typeof obj === "object" && "id" in obj && typeof obj.id === "string";
+      }`,
+      options: [{ minChecks: 5 }],
+    },
     `function isUser(obj: unknown): obj is User {
       return UserSchema.safeParse(obj).success;
     }`,
