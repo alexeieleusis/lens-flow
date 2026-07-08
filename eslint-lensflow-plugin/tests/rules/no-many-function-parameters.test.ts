@@ -9,6 +9,8 @@ ruleTester.run("no-many-function-parameters", rule, {
     `function fn(a: string, b: number, c: boolean, d: string, ...rest: string[]) { }`,
     `const fn = function handler(a: string, b: number, c: boolean, d: string) { }`,
     `class Foo { constructor(public a: string, public b: number, public c: boolean, public d: string, public e: symbol) { } }`,
+    `function fn(a: string = "x", b = 1, c = true, d = "y") { }`,
+    `function fn({ a, b }, [c, d], e, f) { }`,
   ],
   invalid: [
     {
@@ -31,6 +33,14 @@ ruleTester.run("no-many-function-parameters", rule, {
     },
     {
       code: `const fn = function handler(a: string, b: number, c: boolean, d: string, e: symbol) { }`,
+      errors: [{ messageId: "tooManyParams" }],
+    },
+    {
+      code: `function fn(a: string = "x", b = 1, c = true, d = "y", e = Symbol("")) { }`,
+      errors: [{ messageId: "tooManyParams" }],
+    },
+    {
+      code: `function fn({ a, b }, [c, d], e, f, g) { }`,
       errors: [{ messageId: "tooManyParams" }],
     },
   ],
