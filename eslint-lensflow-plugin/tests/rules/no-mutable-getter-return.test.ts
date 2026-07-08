@@ -27,6 +27,10 @@ ruleTester.run("no-mutable-getter-return", rule, {
       #items: string[] = [];
       get items(): ReadonlyArray<string> { return this.#items; }
     }`,
+    `class Container {
+      #items: Array<string> = [];
+      get items(): ReadonlyArray<string> { return this.#items; }
+    }`,
   ],
   invalid: [
     {
@@ -68,6 +72,13 @@ ruleTester.run("no-mutable-getter-return", rule, {
         { messageId: "mutableArray" },
         { messageId: "mutableArray" },
       ],
+    },
+    {
+      code: `class Container {
+        #items: Array<string> = [];
+        get items(): Array<string> { return this.#items; }
+      }`,
+      errors: [{ messageId: "mutableArray" }],
     },
   ],
 });
