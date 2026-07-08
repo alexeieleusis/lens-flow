@@ -16,6 +16,16 @@ ruleTester.run("no-runtime-filter-as-t", rule, {
     `function getFirst<T>(arr: T[]): T {
   return arr[0];
 }`,
+    // Wrapped return — ternary: the ">" combinator only matches direct children,
+    // so an intermediate ConditionalExpression prevents the rule from firing.
+    // This is intentional; the rule targets the common direct-return pattern.
+    `function conditionalFilter<T extends unknown[]>(arr: T, cond: boolean): T {
+  return cond ? arr.filter(x => typeof x === "string") as T : arr;
+}`,
+    // Wrapped return — logical expression: same reasoning as above.
+    `function logicalFilter<T extends unknown[]>(arr: T, fallback: T): T {
+  return arr.filter(x => typeof x === "number") as T || fallback;
+}`,
   ],
   invalid: [
     {
