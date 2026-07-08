@@ -69,5 +69,13 @@ const p = "secret" as Password;`,
 const a = 25 as Types.Branded<number, "Age">;`,
       errors: [{ messageId: "scatteredBrandCast" }],
     },
+    // Cast as a function argument — not in VariableDeclarator init position
+    {
+      code: `type Age = Branded<number, "Age">;
+
+function process(a: Age) { return a; }
+process(25 as Age);`,
+      errors: [{ messageId: "scatteredBrandCast" }],
+    },
   ],
 });
