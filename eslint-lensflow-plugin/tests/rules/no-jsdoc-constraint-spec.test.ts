@@ -49,5 +49,12 @@ ruleTester.run("no-jsdoc-constraint-spec", rule, {
 }`,
       errors: [{ messageId: "jsdocConstraint" }],
     },
+    {
+      code: `interface Config {
+  // port must be one of 80 | 443 | 8080
+  port: number;
+}`,
+      errors: [{ messageId: "jsdocConstraint" }],
+    },
   ],
 });
