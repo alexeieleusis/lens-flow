@@ -58,6 +58,13 @@ ruleTester.run("no-mutate-nullable-without-check", rule, {
   draft.title = draft.title.toUpperCase();
 }`,
     },
+    {
+      filename: TEST_FILENAME,
+      code: `function safeWithAssert(draft: { title: string | null }) {
+  if (draft.title === null) return;
+  draft.title = draft.title!.toUpperCase();
+}`,
+    },
   ],
   invalid: [
     {

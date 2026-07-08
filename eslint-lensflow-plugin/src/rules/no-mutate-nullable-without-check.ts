@@ -113,7 +113,7 @@ function hasNullGuardBefore(ancestors: unknown[], node: unknown, objName: string
     if (isBoundaryType(cur.type)) break;
     if (cur.type === "BlockStatement" || cur.type === "IfStatement") {
       const body = cur.type === "IfStatement" ? cur.consequent : current;
-      if (!checkBlockForGuard(body, node, objName, propName)) break;
+      if (!checkBlockForGuard(body, node, objName, propName)) return true;
     }
   }
   return false;
