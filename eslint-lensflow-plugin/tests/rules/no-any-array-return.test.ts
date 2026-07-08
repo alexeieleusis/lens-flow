@@ -18,6 +18,8 @@ ruleTester.run("no-any-array-return", rule, {
     `interface Processor {
   process<T>(items: T[]): T[];
 }`,
+    `interface Callable { (): string[]; }`,
+    `type Callable = { (): string[]; }`,
   ],
   invalid: [
     {
@@ -65,7 +67,15 @@ ruleTester.run("no-any-array-return", rule, {
       errors: [{ messageId: "anyArrayReturn" }],
     },
     {
-      code: `type ReadonlyMapper = () => readonly any[];`,
+      code:    `type ReadonlyMapper = () => readonly any[];`,
+      errors: [{ messageId: "anyArrayReturn" }],
+    },
+    {
+      code: `interface BadCallable { (): any[]; }`,
+      errors: [{ messageId: "anyArrayReturn" }],
+    },
+    {
+      code: `type BadCallable = { (): any[]; }`,
       errors: [{ messageId: "anyArrayReturn" }],
     },
   ],

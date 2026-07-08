@@ -56,6 +56,7 @@ export default createRule({
     return {
       FunctionDeclaration: checkReturn,
       TSMethodSignature: checkReturn,
+      TSCallSignatureDeclaration: checkReturn,
       TSFunctionType: checkReturn,
       TSDeclareFunction: checkReturn,
       FunctionExpression: checkReturn,
