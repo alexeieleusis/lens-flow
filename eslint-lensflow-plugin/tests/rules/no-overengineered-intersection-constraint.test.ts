@@ -13,6 +13,10 @@ ruleTester.run("no-overengineered-intersection-constraint", rule, {
     `function mixed<T extends A & { foo: number }>(item: T): void {}`,
     `type Handler<T extends { id: string }> = (item: T) => void;`,
     `interface Repository<T extends { id: string }> { find(id: string): T; }`,
+    {
+      code: `function foo<T extends A & B>(x: T): void {}`,
+      options: [{ minIntersectionMembers: 4 }],
+    },
   ],
   invalid: [
     {
@@ -42,6 +46,11 @@ interface Service<T extends A & B> {}`,
 interface Y {}
 interface Z {}
 type Container<T extends X & Y & Z> = { value: T };`,
+      errors: [{ messageId: "overengineeredIntersection" }],
+    },
+    {
+      code: `function foo<T extends A & B & C>(x: T): void {}`,
+      options: [{ minIntersectionMembers: 2 }],
       errors: [{ messageId: "overengineeredIntersection" }],
     },
   ],
