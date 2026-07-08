@@ -101,5 +101,11 @@ ruleTester.run("no-or-or-for-default-values", rule, {
   return \`Hello, \${n}\`;
 }`,
     },
+    // Optional chaining with string default — ChainExpression support
+    {
+      code: `const label = props?.label || "Default";`,
+      errors: [{ messageId: "preferNullishCoalescing" }],
+      output: `const label = props?.label ?? "Default";`,
+    },
   ],
 });

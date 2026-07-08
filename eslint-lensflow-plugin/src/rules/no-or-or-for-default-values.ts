@@ -2,9 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 
 function isLikelyTarget(node: TSESTree.Node): boolean {
-  return (
-    node.type === "MemberExpression" || node.type === "Identifier"
-  );
+  if (node.type === "ChainExpression") {
+    node = node.expression;
+  }
+  return node.type === "MemberExpression" || node.type === "Identifier";
 }
 
 function isDefaultValueType(node: TSESTree.Node): boolean {
