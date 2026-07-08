@@ -18,8 +18,29 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"runtimeStateGuard", []>) {
+    let functionDepth = 0;
+
     return {
+      FunctionExpression() {
+        functionDepth++;
+      },
+      "FunctionExpression:exit"() {
+        functionDepth--;
+      },
+      ArrowFunctionExpression() {
+        functionDepth++;
+      },
+      "ArrowFunctionExpression:exit"() {
+        functionDepth--;
+      },
+      FunctionDeclaration() {
+        functionDepth++;
+      },
+      "FunctionDeclaration:exit"() {
+        functionDepth--;
+      },
       IfStatement(node) {
+        if (functionDepth !== 1) return;
         if (node.test.type !== "BinaryExpression") return;
         const { left, right, operator } = node.test;
         if (operator !== "!=" && operator !== "!==") return;

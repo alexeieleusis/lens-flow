@@ -34,6 +34,25 @@ interface StateMachine<S extends Idle> {
     }
   }
 }`,
+    `class Machine {
+  private state = "idle";
+  start() {
+    items.forEach(() => {
+      if (this.state !== "idle") throw new Error();
+    });
+    this.state = "running";
+  }
+}`,
+    `class Processor {
+  private mode = "off";
+  run() {
+    const handler = function () {
+      if (this.mode !== "off") throw new Error();
+    };
+    handler();
+    this.mode = "on";
+  }
+}`,
   ],
   invalid: [
     {
