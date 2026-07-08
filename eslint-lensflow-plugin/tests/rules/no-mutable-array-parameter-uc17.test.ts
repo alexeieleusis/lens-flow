@@ -19,6 +19,10 @@ ruleTester.run("no-mutable-array-parameter-uc17", rule, {
     `const fn = function(arr: ReadonlyArray<string>): void {}`,
     // TSParameterProperty with ReadonlyArray — safe
     `class C { constructor(readonly arr: ReadonlyArray<string>) {} }`,
+    // TSDeclareFunction with readonly
+    `declare function fn(arr: readonly string[]): void;`,
+    // TSFunctionType with ReadonlyArray
+    `type Fn = (arr: ReadonlyArray<string>) => void;`,
   ],
   invalid: [
     // T[] syntax triggers the rule
@@ -65,6 +69,16 @@ ruleTester.run("no-mutable-array-parameter-uc17", rule, {
         { messageId: "mutableArrayParam" },
         { messageId: "mutableArrayParam" },
       ],
+    },
+    // TSDeclareFunction with mutable T[]
+    {
+      code: `declare function fn(arr: string[]): void;`,
+      errors: [{ messageId: "mutableArrayParam" }],
+    },
+    // TSFunctionType with mutable Array<T>
+    {
+      code: `type Fn = (arr: Array<string>) => void;`,
+      errors: [{ messageId: "mutableArrayParam" }],
     },
   ],
 });
