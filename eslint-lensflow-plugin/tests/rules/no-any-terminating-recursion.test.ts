@@ -58,6 +58,14 @@ ruleTester.run("no-any-terminating-recursion", rule, {
 }`,
       errors: [{ messageId: "anyInRecursive" }],
     },
+    // unknown in a self-referential recursive interface
+    {
+      code: `interface WeakTree {
+  children: WeakTree[];
+  value: unknown;
+}`,
+      errors: [{ messageId: "anyInRecursive" }],
+    },
     // any nested deeper inside recursive type
     {
       code: `type DeepNode = {
