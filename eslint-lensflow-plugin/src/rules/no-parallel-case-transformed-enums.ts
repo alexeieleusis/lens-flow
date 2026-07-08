@@ -18,6 +18,54 @@ function hasCaseSuffix(name: string): boolean {
   return CASE_SUFFIXES.some((s) => lower.endsWith(s));
 }
 
+/**
+ * Returns the suffix that matches, or null if none.
+ */
+function getMatchingSuffix(name: string): string | null {
+  const lower = name.toLowerCase();
+  for (const s of CASE_SUFFIXES) {
+    if (lower.endsWith(s)) return s;
+  }
+  return null;
+}
+
+/**
+ * Checks whether two enum names share a common base after stripping the case suffix.
+ * E.g., "Direction" and "DirectionUpper" share base "Direction".
+ * "Forecast" and "Legacy" do NOT share a base even though "Forecast" ends with "case".
+ */
+function shareCommonBase(aName: string, bName: string): boolean {
+  const aSuffix = getMatchingSuffix(aName);
+  const bSuffix = getMatchingSuffix(bName);
+
+  if (!aSuffix && !bSuffix) return false;
+
+  // Determine which name has the suffix and which is the potential base
+  let baseName: string;
+  let suffixedName: string;
+  let suffix: string;
+
+  if (aSuffix && bSuffix) {
+    // Both have suffixes — check if they share a base by stripping both
+    const aBase = aName.slice(0, -aSuffix.length);
+    const bBase = bName.slice(0, -bSuffix.length);
+    return aBase.toLowerCase() === bBase.toLowerCase();
+  }
+
+  if (aSuffix) {
+    suffixedName = aName;
+    suffix = aSuffix;
+    baseName = bName;
+  } else {
+    suffixedName = bName;
+    suffix = bSuffix!;
+    baseName = aName;
+  }
+
+  const strippedBase = suffixedName.slice(0, -suffix.length);
+  return strippedBase.toLowerCase() === baseName.toLowerCase();
+}
+
 function getMemberNames(decl: TSESTree.TSEnumDeclaration): string[] {
   return decl.body.members.map((m: TSESTree.TSEnumMember) =>
     m.id.type === "Identifier" ? m.id.name : String(m.id.value),
@@ -60,6 +108,8 @@ function handleParallelEnumPair(
   const bHasSuffix = hasCaseSuffix(bName);
 
   if (!aHasSuffix && !bHasSuffix) return;
+
+  if (!shareCommonBase(aName, bName)) return;
 
   if (aHasSuffix && bHasSuffix) {
     context.report({

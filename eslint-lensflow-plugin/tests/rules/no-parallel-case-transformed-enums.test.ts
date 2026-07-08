@@ -29,6 +29,38 @@ type DirectionUpper = Uppercase<Direction>;`,
       HIGH,
       LOW
     }`,
+    // "Database" is not a case transform of "Record"
+    `enum Record {
+      Foo,
+      Bar
+    }
+    enum Database {
+      Baz,
+      Qux
+    }`,
+    // "Forecast" coincidentally ends with "case" suffix but is unrelated to "Legacy"
+    `enum Legacy {
+      Old,
+      New
+    }
+    enum Forecast {
+      OLD,
+      NEW
+    }`,
+    // "Response" coincidentally ends with "str" suffix but is unrelated to "Data"
+    `enum Data {
+      Alpha,
+      Beta
+    }
+    enum Response {
+      ALPHA,
+      BETA
+    }`,
+    // "Address" coincidentally ends with "dress" (not a suffix) — should not flag
+    `enum Address {
+      Home,
+      Work
+    }`,
   ],
   invalid: [
     {
