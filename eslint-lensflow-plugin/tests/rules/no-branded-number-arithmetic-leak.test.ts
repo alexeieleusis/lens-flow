@@ -43,6 +43,14 @@ const a: Milliseconds = 100 as Milliseconds;
 const b: Milliseconds = 200 as Milliseconds;
 const c = (a + b) as Milliseconds;`,
     },
+    // Result re-wrapped with angle-bracket TSTypeAssertion
+    {
+      filename: TEST_FILENAME,
+      code: `type Milliseconds = number & { readonly __brand: "Milliseconds" };
+const a: Milliseconds = 100 as Milliseconds;
+const b: Milliseconds = 200 as Milliseconds;
+const c = <Milliseconds>(a + b);`,
+    },
     // Result re-wrapped — single underscore _brand variant
     {
       filename: TEST_FILENAME,
