@@ -56,6 +56,10 @@ ruleTester.run("no-mismatched-variance-marker-uc17", rule, {
     `interface Bimap<out R, in S> {
       map(fn: (s: S) => void): R;
     }`,
+    // out T in callable interface return — correct
+    `interface Callable<out T> {
+      (): T;
+    }`,
   ],
   invalid: [
     // out T used as method parameter — mismatch
@@ -114,6 +118,13 @@ ruleTester.run("no-mismatched-variance-marker-uc17", rule, {
         result: T;
       }`,
       errors: [{ messageId: "inInOutputPosition" }],
+    },
+    // out T in callable interface params — mismatch
+    {
+      code: `interface Callable<out T> {
+        (t: T): void;
+      }`,
+      errors: [{ messageId: "outInInputPosition" }],
     },
   ],
 });
