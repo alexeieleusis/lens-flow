@@ -24,5 +24,9 @@ const user = raw as unknown as User;`,
       code: `const result = value as unknown as string as number;`,
       errors: [{ messageId: "doubleAssertion" }],
     },
+    {
+      code: `const x = value as unknown as string;`,
+      errors: [{ messageId: "doubleAssertion" }],
+    },
   ],
 });
