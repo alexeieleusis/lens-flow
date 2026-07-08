@@ -126,5 +126,12 @@ ruleTester.run("no-mismatched-variance-marker-uc17", rule, {
       }`,
       errors: [{ messageId: "outInInputPosition" }],
     },
+    // out T in index signature parameter — mismatch
+    {
+      code: `interface Mapped<out T> {
+        [key: T]: string;
+      }`,
+      errors: [{ messageId: "outInInputPosition" }],
+    },
   ],
 });
