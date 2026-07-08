@@ -111,9 +111,15 @@ function hasNullGuardBefore(ancestors: unknown[], node: unknown, objName: string
     if (!current || typeof current !== "object" || !("type" in current)) continue;
     const cur = current as { type: string; consequent?: unknown };
     if (isBoundaryType(cur.type)) break;
-    if (cur.type === "BlockStatement" || cur.type === "IfStatement") {
-      const body = cur.type === "IfStatement" ? cur.consequent : current;
+    if (cur.type === "IfStatement") {
+      const s = cur as { test?: unknown; consequent?: unknown; alternate?: unknown };
+      if (matchesNullCheck(s.test, objName, propName) && s.consequent && bodyOfBlockContains(s.consequent, node)) {
+        return true;
+      }
+      const body = s.consequent;
       if (!checkBlockForGuard(body, node, objName, propName)) return true;
+    } else if (cur.type === "BlockStatement") {
+      if (!checkBlockForGuard(current, node, objName, propName)) return true;
     }
   }
   return false;

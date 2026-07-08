@@ -111,5 +111,15 @@ ruleTester.run("no-mutate-nullable-without-check", rule, {
 }`,
       errors: [{ messageId: "mutateNullableWithoutCheck" }],
     },
+    {
+      filename: TEST_FILENAME,
+      code: `function outer(draft: { title: string | null }) {
+  if (draft.title === null) return;
+  const fn = function() {
+    draft.title = draft.title!.toUpperCase();
+  };
+}`,
+      errors: [{ messageId: "mutateNullableWithoutCheck" }],
+    },
   ],
 });
