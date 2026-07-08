@@ -56,11 +56,16 @@ function c(c: { host: string }) {}`,
 }
 `,
     },
-    {
+   {
       code: `function createConfig(c: { host: string; port: number }) { /* ... */ }
-function applyConfig(c: { host: string; port: number }) { /* ... */ }
-function validateConfig(c: { host: string; port: number }) { /* ... */ }`,
+ function applyConfig(c: { host: string; port: number }) { /* ... */ }
+ function validateConfig(c: { host: string; port: number }) { /* ... */ }`,
       options: [{ minDuplicates: 4 }],
+    },
+    {
+      code: `const defaultCfg = { host: "localhost", port: 3000 };
+function createConfig(c: { host: string; port: number } = defaultCfg) {}
+function applyConfig(c: { host: string; port: number } = defaultCfg) {}`,
     },
   ],
   invalid: [
@@ -124,11 +129,44 @@ function w(c: { host: string; port: number }) {}`,
          { messageId: "duplicateInlineType" },
        ],
     },
-    {
+   {
       code: `function createConfig(c: { host: string; port: number }) { /* ... */ }
-function applyConfig(c: { host: string; port: number }) { /* ... */ }`,
+ function applyConfig(c: { host: string; port: number }) { /* ... */ }`,
       options: [{ minDuplicates: 2 }],
       errors: [
+        { messageId: "duplicateInlineType" },
+        { messageId: "duplicateInlineType" },
+      ],
+    },
+    {
+      code: `const defaultCfg = { host: "localhost", port: 3000 };
+function createConfig(c: { host: string; port: number } = defaultCfg) {}
+function applyConfig(c: { host: string; port: number } = defaultCfg) {}
+function validateConfig(c: { host: string; port: number } = defaultCfg) {}`,
+      errors: [
+        { messageId: "duplicateInlineType" },
+        { messageId: "duplicateInlineType" },
+        { messageId: "duplicateInlineType" },
+      ],
+    },
+    {
+      code: `const a = (c: { host: string; port: number } = { host: "", port: 0 }) => c;
+const b = (c: { host: string; port: number } = { host: "", port: 0 }) => c;
+const c = (c: { host: string; port: number } = { host: "", port: 0 }) => c;`,
+      errors: [
+        { messageId: "duplicateInlineType" },
+        { messageId: "duplicateInlineType" },
+        { messageId: "duplicateInlineType" },
+      ],
+    },
+    {
+      code: `class Service {
+  create(c: { host: string; port: number } = defaultCfg) {}
+  apply(c: { host: string; port: number } = defaultCfg) {}
+  validate(c: { host: string; port: number } = defaultCfg) {}
+}`,
+      errors: [
+        { messageId: "duplicateInlineType" },
         { messageId: "duplicateInlineType" },
         { messageId: "duplicateInlineType" },
       ],
