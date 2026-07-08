@@ -73,6 +73,22 @@ ruleTester.run("no-mismatched-variance-marker", rule, {
     `interface ParenIn<in T> {
       setValue(t: (T)): void;
     }`,
+    // out T in conditional type true/false branches (output position) — correct
+    `interface ConditionalOut<out T> {
+      getValue(): T extends string ? T : never;
+    }`,
+    // out T in mapped type annotation (output position) — correct
+    `interface MappedOut<out T> {
+      prop: { [K in string]: T };
+    }`,
+    // in T in conditional type checkType (input position) — correct
+    `interface ConditionalIn<in T> {
+      fn(x: T extends string ? number : boolean): void;
+    }`,
+    // in T in mapped type annotation (input position) — correct
+    `interface MappedIn<in T> {
+      fn(x: { [K in string]: T }): void;
+    }`,
   ],
   invalid: [
     // out T used as method parameter — mismatch
@@ -165,6 +181,34 @@ ruleTester.run("no-mismatched-variance-marker", rule, {
     {
       code: `interface Bad<in T> {
         getValue(): (T);
+      }`,
+      errors: [{ messageId: "inUsedAsOutput" }],
+    },
+    // out T in conditional type true/false branches in param position — mismatch
+    {
+      code: `interface Bad<out T> {
+        fn(x: string extends number ? T : never): void;
+      }`,
+      errors: [{ messageId: "outUsedAsInput" }],
+    },
+    // in T in conditional type true branch in return position — mismatch
+    {
+      code: `interface Bad<in T> {
+        getValue(): string extends number ? T : never;
+      }`,
+      errors: [{ messageId: "inUsedAsOutput" }],
+    },
+    // out T in mapped type annotation in param position — mismatch
+    {
+      code: `interface Bad<out T> {
+        fn(x: { [K in string]: T }): void;
+      }`,
+      errors: [{ messageId: "outUsedAsInput" }],
+    },
+    // in T in mapped type annotation in return position — mismatch
+    {
+      code: `interface Bad<in T> {
+        getValue(): { [K in string]: T };
       }`,
       errors: [{ messageId: "inUsedAsOutput" }],
     },

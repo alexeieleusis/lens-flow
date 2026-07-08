@@ -80,6 +80,30 @@ function walkInputPositions(
         paramName,
         cb,
       );
+      if (node.trueType) {
+        walkInputPositions(
+          node.trueType,
+          paramName,
+          cb,
+        );
+      }
+      if (node.falseType) {
+        walkInputPositions(
+          node.falseType,
+          paramName,
+          cb,
+        );
+      }
+      break;
+    }
+    case AST_NODE_TYPES.TSMappedType: {
+      if (node.typeAnnotation) {
+        walkInputPositions(
+          node.typeAnnotation,
+          paramName,
+          cb,
+        );
+      }
       break;
     }
   }
