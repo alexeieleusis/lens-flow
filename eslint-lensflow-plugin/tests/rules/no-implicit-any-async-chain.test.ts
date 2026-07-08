@@ -9,6 +9,7 @@ const data: Response = await fetch(url).then(r => r.json());`,
     `const data = await fetch(url).then(r => r.text());`,
     `const data = await fetch(url);`,
     `const data = fetch(url).then(r => { return r.json() });`,
+    `const data = fetch(url).then(function(r) { return r.json() });`,
   ],
   invalid: [
     {
