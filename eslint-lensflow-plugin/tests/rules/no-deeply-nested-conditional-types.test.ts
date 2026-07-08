@@ -89,21 +89,51 @@ type UnwrapLevel4<T> = UnwrapLevel2<UnwrapLevel2<T>>;`,
       options: [{ maxDepth: 2 }],
       errors: [{ messageId: "deepNesting", data: { depth: "3" } }],
     },
-    // 5 levels with maxDepth 4 reports depth 5
+   // 5 levels with maxDepth 4 reports depth 5
     {
       code: `type F<T> = T extends (infer A)[]
-   ? A extends (infer B)[]
-     ? B extends (infer C)[]
-       ? C extends (infer D)[]
-         ? D extends (infer E)[]
-           ? E
-           : never
-         : never
-       : never
-     : never
-   : never;`,
+    ? A extends (infer B)[]
+      ? B extends (infer C)[]
+        ? C extends (infer D)[]
+          ? D extends (infer E)[]
+            ? E
+            : never
+          : never
+        : never
+      : never
+    : never;`,
       options: [{ maxDepth: 4 }],
       errors: [{ messageId: "deepNesting", data: { depth: "5" } }],
+    },
+    // 5 levels in a function return type
+    {
+      code: `function resolve<T>(v: T): T extends (infer A)[]
+    ? A extends (infer B)[]
+      ? B extends (infer C)[]
+        ? C extends (infer D)[]
+          ? D extends (infer E)[]
+            ? E
+            : never
+          : never
+        : never
+      : never
+    : never { return null as any; }`,
+      errors: [{ messageId: "deepNesting" }],
+    },
+    // 5 levels in a generic constraint
+    {
+      code: `function unwrap<T extends (unknown extends object
+    ? unknown extends {}
+      ? unknown extends unknown
+        ? unknown extends any
+          ? unknown extends unknown
+            ? string
+            : never
+          : never
+        : never
+      : never
+    : never)>(v: T) { return v; }`,
+      errors: [{ messageId: "deepNesting" }],
     },
   ],
 });
