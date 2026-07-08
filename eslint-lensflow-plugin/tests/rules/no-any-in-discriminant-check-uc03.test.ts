@@ -175,6 +175,58 @@ function area(s: ShapeData): number {
 }`,
       errors: [{ messageId: "switchDiscriminant" }],
     },
+    // Discriminant property `tag`
+    {
+      code: `function foo(msg: { tag: string; [k: string]: unknown }) {
+  if (msg.tag === "error") return (msg as any).details;
+  return null;
+}`,
+      errors: [{ messageId: "ifDiscriminant" }],
+    },
+    // Discriminant property `variant`
+    {
+      code: `function foo(node: { variant: string; [k: string]: unknown }) {
+  switch (node.variant) {
+    case "leaf": return (node as any).value;
+    default: return null;
+  }
+}`,
+      errors: [{ messageId: "switchDiscriminant" }],
+    },
+    // Discriminant property `state`
+    {
+      code: `function handle(machine: { state: string; [k: string]: unknown }) {
+  if (machine.state === "running") return (machine as any).pid;
+  return null;
+}`,
+      errors: [{ messageId: "ifDiscriminant" }],
+    },
+    // Discriminant property `role`
+    {
+      code: `function getPerm(user: { role: string; [k: string]: unknown }) {
+  if (user.role === "admin") return (user as any).permissions;
+  return [];
+}`,
+      errors: [{ messageId: "ifDiscriminant" }],
+    },
+    // Discriminant property `name`
+    {
+      code: `function resolve(tool: { name: string; [k: string]: unknown }) {
+  if (tool.name === "compiler") return (tool as any).version;
+  return null;
+}`,
+      errors: [{ messageId: "ifDiscriminant" }],
+    },
+    // Discriminant property `discriminant`
+    {
+      code: `function dispatch(event: { discriminant: string; [k: string]: unknown }) {
+  switch (event.discriminant) {
+    case "click": return (event as any).target;
+    default: return null;
+  }
+}`,
+      errors: [{ messageId: "switchDiscriminant" }],
+    },
     // Logical OR with different bases — both casts should be caught
     {
       code: `function foo(left: { kind: string; [k: string]: unknown }, right: { kind: string; [k: string]: unknown }) {
