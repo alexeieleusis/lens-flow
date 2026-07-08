@@ -14,6 +14,13 @@ ruleTester.run("no-mutate-nullable-without-check", rule, {
     },
     {
       filename: TEST_FILENAME,
+      code: `function withThrowGuard(draft: { title: string | null }) {
+  if (draft.title === null) throw new Error("title is null");
+  draft.title = draft.title.toUpperCase();
+}`,
+    },
+    {
+      filename: TEST_FILENAME,
       code: `function safe(draft: { title: string | null }) {
   if (draft.title !== null) {
     draft.title = draft.title.toUpperCase();
