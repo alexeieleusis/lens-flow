@@ -21,25 +21,28 @@ ruleTester.run("no-kitchen-sink-variant", rule, {
       role: string;
       avatar: string;
     };`,
+    `type ApiResponse =
+      | { kind: "user"; name: string; email: string; age: number; role: string; avatar: string }
+      | { kind: "post"; title: string; content: string; authorId: number; tags: string[]; views: number };`,
+    `type ApiResponse =
+      | { kind: "user"; name: string; email: string; age: number; role: string; avatar: string }
+      | { kind: "post"; title: string; content: string };`,
+    `type ApiResponse =
+      | { kind: "post"; title: string; content: string; authorId: number; tags: string[]; views: number }
+      | { kind: "comment"; id: string; text: string; parentId: number; createdAt: Date; updatedAt: Date };`,
   ],
   invalid: [
     {
       code: `type ApiResponse =
-      | { kind: "user"; name: string; email: string; age: number; role: string; avatar: string }
-      | { kind: "post"; title: string; content: string; authorId: number; tags: string[]; views: number };`,
-      errors: [{ messageId: "tooManyFields" }, { messageId: "tooManyFields" }],
-    },
-    {
-      code: `type ApiResponse =
-      | { kind: "user"; name: string; email: string; age: number; role: string; avatar: string }
+      | { kind: "user"; name: string; email: string; age: number; role: string; avatar: string; phone: string }
       | { kind: "post"; title: string; content: string };`,
       errors: [{ messageId: "tooManyFields" }],
     },
     {
       code: `type ApiResponse =
-      | { kind: "post"; title: string; content: string; authorId: number; tags: string[]; views: number }
-      | { kind: "comment"; id: string; text: string; parentId: number; createdAt: Date; updatedAt: Date };`,
-      errors: [{ messageId: "tooManyFields" }, { messageId: "tooManyFields" }],
+      | { kind: "post"; title: string; content: string; authorId: number; tags: string[]; views: number; likes: number; shares: number }
+      | { kind: "comment"; id: string; text: string };`,
+      errors: [{ messageId: "tooManyFields" }],
     },
     {
       code: `type Config =
