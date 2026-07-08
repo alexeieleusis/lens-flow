@@ -4,7 +4,7 @@ import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T14-type-narrowing.md");
+const DOCS_URL = knowledgeUrl("catalog/T14-type-narrowing.md");
 
 function hasNeverCast(stmt: TSESTree.Statement): boolean {
   return walkNodes(
@@ -149,7 +149,7 @@ export default createRule({
           context.report({
             node: defaultCase,
             messageId: "openUnion",
-            data: { url: URL },
+            data: { url: DOCS_URL },
           });
         }
       },
