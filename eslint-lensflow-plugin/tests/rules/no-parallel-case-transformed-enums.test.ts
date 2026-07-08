@@ -61,6 +61,21 @@ type DirectionUpper = Uppercase<Direction>;`,
       Home,
       Work
     }`,
+    // Empty enums — length-0 arrays should not trigger
+    `enum Empty {
+    }
+    enum EmptyUpper {
+    }`,
+    // Member count mismatch — different lengths should not trigger
+    `enum Status {
+      Active,
+      Inactive,
+      Pending
+    }
+    enum StatusUpper {
+      ACTIVE,
+      INACTIVE
+    }`,
   ],
   invalid: [
     {
@@ -97,6 +112,48 @@ type DirectionUpper = Uppercase<Direction>;`,
         Inactive
       }
       enum StatusConst {
+        ACTIVE,
+        INACTIVE
+      }`,
+      errors: [{ messageId: "parallelCaseEnum" }],
+    },
+    // Single-member enum — simplest valid violation
+    {
+      code: `enum Role {
+        Admin
+      }
+      enum RoleUpper {
+        ADMIN
+      }`,
+      errors: [{ messageId: "parallelCaseEnum" }],
+    },
+    // Three parallel enums — should produce errors for each pair
+    {
+      code: `enum Direction {
+        North,
+        South
+      }
+      enum DirectionUpper {
+        NORTH,
+        SOUTH
+      }
+      enum DirectionLower {
+        north,
+        south
+      }`,
+      errors: [
+        { messageId: "parallelCaseEnum" },
+        { messageId: "parallelCaseEnum" },
+        { messageId: "parallelCaseEnum" },
+      ],
+    },
+    // Both enums having case suffixes — exercises the aSuffix && bSuffix branch
+    {
+      code: `enum StatusConst {
+        active,
+        inactive
+      }
+      enum StatusUpper {
         ACTIVE,
         INACTIVE
       }`,
