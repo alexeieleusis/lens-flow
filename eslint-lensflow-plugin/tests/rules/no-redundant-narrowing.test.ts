@@ -52,5 +52,25 @@ ruleTester.run("no-redundant-narrowing", rule, {
 }`,
       errors: [{ messageId: "redundantNarrowing" }],
     },
+    {
+      code: `function handle(x: string | number) {
+  if (x == "string") {
+    if (x == "string") {
+      console.log(x.toUpperCase());
+    }
+  }
+}`,
+      errors: [{ messageId: "redundantNarrowing" }],
+    },
+    {
+      code: `function handle(x: string | number | null) {
+  if (x != null) {
+    if (x != null) {
+      console.log(x.toString());
+    }
+  }
+}`,
+      errors: [{ messageId: "redundantNarrowing" }],
+    },
   ],
 });
