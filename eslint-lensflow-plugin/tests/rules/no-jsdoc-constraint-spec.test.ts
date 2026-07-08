@@ -19,6 +19,10 @@ ruleTester.run("no-jsdoc-constraint-spec", rule, {
     `type State = {
       status: "pending" | "complete" | "failed";
     }`,
+    `type Response = {
+      /** The HTTP status code of the response */
+      code: number;
+    }`,
   ],
   invalid: [
     {
