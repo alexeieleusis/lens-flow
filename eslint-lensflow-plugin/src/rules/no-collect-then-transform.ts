@@ -52,12 +52,9 @@ function hasBeenReassigned(
   return false;
 }
 
-function isArrayType(type: ts.Type): boolean {
-  const props = type.getProperties();
-  const hasLength = props.some((p) => p.name === "length");
-  const hasMap = props.some((p) => p.name === "map");
-  const hasFilter = props.some((p) => p.name === "filter");
-  return hasLength && (hasMap || hasFilter);
+function isArrayType(checker: ts.TypeChecker, type: ts.Type): boolean {
+  if (checker.isArrayType(type)) return true;
+  return checker.typeToString(type).startsWith("ReadonlyArray<");
 }
 
 export default createRule({
@@ -151,7 +148,7 @@ export default createRule({
           const varType = checker.getTypeAtLocation(
             tsVarIdent as ts.Expression,
           );
-          if (!isArrayType(varType)) return;
+          if (!isArrayType(checker, varType)) return;
 
           context.report({
             node: init,
@@ -176,7 +173,7 @@ export default createRule({
           const awaitedType = checker.getTypeAtLocation(
             tsAwaited as ts.Expression,
           );
-          if (!isArrayType(awaitedType)) return;
+          if (!isArrayType(checker, awaitedType)) return;
 
           context.report({
             node: awaited,

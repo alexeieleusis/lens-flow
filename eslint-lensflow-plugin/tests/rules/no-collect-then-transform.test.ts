@@ -66,6 +66,17 @@ async function transformReassigned(source: AsyncIterable<number>): Promise<numbe
   return arr.map(n => n * 2);
 }`,
     },
+    {
+      filename: TEST_FILENAME,
+      code: `function getString(): string {
+  return "hello world";
+}
+
+function processString() {
+  const s = getString();
+  return s.split("").map(c => c.toUpperCase()).join("");
+}`,
+    },
   ],
   invalid: [
     {
