@@ -78,5 +78,12 @@ items.map(fn);`,
       code: `items.map(item => item.price = 1)`,
       errors: [{ messageId: "mutateCallbackArg" }],
     },
+    {
+      code: `items.some(item => {
+  item.checked = true;
+  return item.active;
+});`,
+      errors: [{ messageId: "mutateCallbackArg" }],
+    },
   ],
 });
