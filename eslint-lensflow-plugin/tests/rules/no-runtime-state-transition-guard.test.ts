@@ -92,5 +92,15 @@ interface StateMachine<S extends Idle> {
 }`,
       errors: [{ messageId: "runtimeStateGuard" }],
     },
+    {
+      code: `class StateMachineReversed {
+  private state = "idle";
+  start() {
+    if ("idle" !== this.state) throw new Error();
+    this.state = "running";
+  }
+}`,
+      errors: [{ messageId: "runtimeStateGuard" }],
+    },
   ],
 });
