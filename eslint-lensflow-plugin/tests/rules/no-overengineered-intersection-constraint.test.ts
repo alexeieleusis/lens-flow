@@ -10,7 +10,8 @@ ruleTester.run("no-overengineered-intersection-constraint", rule, {
       return item;
     }`,
     `function handle<T extends A | B>(item: T): void {}`,
-    `function mixed<T extends A & { foo: number }>(item: T): void {}`,
+    // Valid: 2 intersection members but only 1 type reference — inline literal doesn't count
+    `function foo<T extends A & { foo: number }>(item: T): void {}`,
     `type Handler<T extends { id: string }> = (item: T) => void;`,
     `interface Repository<T extends { id: string }> { find(id: string): T; }`,
     {
