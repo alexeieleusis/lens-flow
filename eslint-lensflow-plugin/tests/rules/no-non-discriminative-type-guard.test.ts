@@ -1,4 +1,5 @@
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { RuleTester } from "@typescript-eslint/rule-tester";
 import { afterAll, describe, it } from "vitest";
 import * as tsParser from "@typescript-eslint/parser";
@@ -7,6 +8,9 @@ import rule from "../../src/rules/no-non-discriminative-type-guard.js";
 RuleTester.afterAll = afterAll;
 RuleTester.describe = describe;
 RuleTester.it = it;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const TEST_FILENAME = "tests/rules/test.ts";
 const TS_CONFIG_DIR = path.resolve(__dirname, "../..");
