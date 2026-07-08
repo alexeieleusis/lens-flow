@@ -24,5 +24,21 @@ ruleTester.run("no-primitive-type-alias", rule, {
       code: `type VoidR = void;`,
       errors: [{ messageId: "primitiveAlias" }],
     },
+    {
+      code: `type MyUndef = undefined;`,
+      errors: [{ messageId: "primitiveAlias" }],
+    },
+    {
+      code: `type MyNull = null;`,
+      errors: [{ messageId: "primitiveAlias" }],
+    },
+    {
+      code: `type MySym = symbol;`,
+      errors: [{ messageId: "primitiveAlias" }],
+    },
+    {
+      code: `type MyBig = bigint;`,
+      errors: [{ messageId: "primitiveAlias" }],
+    },
   ],
 });
