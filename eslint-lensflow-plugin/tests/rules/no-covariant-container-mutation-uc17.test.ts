@@ -73,6 +73,20 @@ ruleTester.run("no-covariant-container-mutation-uc17", rule, {
       }`,
       errors: [{ messageId: "mutationOnCovariant" }],
     },
+    // Union-wrapped covariant type parameter
+    {
+      code: `interface Box<out T> {
+        setValue(v: T | string): void;
+      }`,
+      errors: [{ messageId: "mutationOnCovariant" }],
+    },
+    // Parenthesized covariant type parameter
+    {
+      code: `interface Box<out T> {
+        setValue(v: (T)): void;
+      }`,
+      errors: [{ messageId: "mutationOnCovariant" }],
+    },
     // Multiple type params where only one is covariant
     {
       code: `interface Box<out T, U> {
