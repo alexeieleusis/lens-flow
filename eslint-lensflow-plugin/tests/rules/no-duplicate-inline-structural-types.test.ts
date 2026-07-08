@@ -44,10 +44,16 @@ function c(c: { host?: string }) {}`,
 function b(c: { host: string }) {}
 function c(c: { host: string }) {}`,
     },
-    {
+   {
       code: `function a(c: { host: string }) {}
-function b(c: { host?: string }) {}
-function c(c: { readonly host: string }) {}`,
+ function b(c: { host?: string }) {}
+ function c(c: { readonly host: string }) {}`,
+    },
+    {
+      code: `class Service {
+  create(c: { host: string; port: number }) {}
+  apply(c: { host: string; port: number }) {}
+}`,
     },
   ],
   invalid: [
@@ -83,13 +89,13 @@ function w(c: { host: string; port: number }) {}`,
         { messageId: "duplicateInlineType" },
       ],
     },
-    {
+   {
       code: `function a(c: { host: string; port: number }) {}
-function b(c: { host: string; port: number }) {}
-function c(c: { host: string; port: number }) {}
-function d(c: { name: string; age: number }) {}
-function e(c: { name: string; age: number }) {}
-function f(c: { name: string; age: number }) {}`,
+  function b(c: { host: string; port: number }) {}
+  function c(c: { host: string; port: number }) {}
+  function d(c: { name: string; age: number }) {}
+  function e(c: { name: string; age: number }) {}
+  function f(c: { name: string; age: number }) {}`,
       errors: [
         { messageId: "duplicateInlineType" },
         { messageId: "duplicateInlineType" },
@@ -98,6 +104,18 @@ function f(c: { name: string; age: number }) {}`,
         { messageId: "duplicateInlineType" },
         { messageId: "duplicateInlineType" },
       ],
+    },
+    {
+      code: `class Service {
+  create(c: { host: string; port: number }) {}
+  apply(c: { host: string; port: number }) {}
+  validate(c: { host: string; port: number }) {}
+}`,
+    errors: [
+         { messageId: "duplicateInlineType" },
+         { messageId: "duplicateInlineType" },
+         { messageId: "duplicateInlineType" },
+       ],
     },
   ],
 });

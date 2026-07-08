@@ -157,10 +157,14 @@ export default createRule({
   create(context: TSESLint.RuleContext<"duplicateInlineType", [{ minDuplicates: number }]>) {
     const [{ minDuplicates } = { minDuplicates: 3 }] = context.options ?? [];
     const entries: Entry[] = [];
+    const visited = new Set<number>();
 
     function checkParams(
       params: ReadonlyArray<TSESTree.Parameter>,
+      nodeStart?: number,
     ) {
+      if (nodeStart !== undefined && visited.has(nodeStart)) return;
+      if (nodeStart !== undefined) visited.add(nodeStart);
       for (const param of params) {
         if (
           param.type === "Identifier" &&
@@ -187,13 +191,18 @@ export default createRule({
 
     return {
       FunctionDeclaration(node) {
-        checkParams(node.params);
+        checkParams(node.params, node.range[0]);
       },
       FunctionExpression(node) {
-        checkParams(node.params);
+        checkParams(node.params, node.range[0]);
       },
       ArrowFunctionExpression(node) {
-        checkParams(node.params);
+        checkParams(node.params, node.range[0]);
+      },
+      MethodDefinition(node) {
+        if (node.value.type === "FunctionExpression") {
+          checkParams(node.value.params, node.value.range[0]);
+        }
       },
       "Program:exit"() {
         const groups = new Map<string, Entry[]>();
