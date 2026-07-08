@@ -23,6 +23,11 @@ ruleTester.run("no-jsdoc-constraint-spec", rule, {
       /** The HTTP status code of the response */
       code: number;
     }`,
+    // Regression: constraint comment on literal type union should NOT fire — the constraint is already encoded in the type
+    `interface Request {
+      // method must be "GET" | "POST"
+      method: "GET" | "POST";
+    }`,
   ],
   invalid: [
     {
