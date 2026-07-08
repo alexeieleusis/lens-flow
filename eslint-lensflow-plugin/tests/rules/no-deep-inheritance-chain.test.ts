@@ -52,5 +52,11 @@ class Level3 extends Level2 {}`,
       options: [{ maxDepth: 2 }],
       errors: [{ messageId: "deepChain" }, { messageId: "deepChain" }],
     },
+    {
+      code: `class Base {}
+class Child extends Base {}`,
+      options: [{ maxDepth: 1 }],
+      errors: [{ messageId: "deepChain" }],
+    },
   ],
 });

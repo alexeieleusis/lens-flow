@@ -12,7 +12,7 @@ export default createRule({
     },
     messages: {
       deepChain:
-        "Class \"{{name}}\" has an inheritance chain of depth {{depth}} (max: {{maxDepth}}). Consider using composition via interfaces instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T36-trait-objects.md",
+        "Class \"{{name}}\" has an inheritance chain of depth {{depth}} (threshold: {{maxDepth}}). Consider using composition via interfaces instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T36-trait-objects.md",
     },
     schema: [
       {
