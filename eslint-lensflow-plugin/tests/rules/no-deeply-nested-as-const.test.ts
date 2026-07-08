@@ -12,6 +12,9 @@ ruleTester.run("no-deeply-nested-as-const", rule, {
       }
     } as const;`,
     `const flat = { a: 1, b: 2 } as const;`,
+    // Empty collections (depth 1, should pass)
+    `const emptyObj = {} as const;`,
+    `const emptyArr = [] as const;`,
     `const arr = [1, 2, { a: 3 }] as const;`,
     `const labelled = { a: 1 } as const;`,
     `const shallow = [...[1, 2]] as const;`,
