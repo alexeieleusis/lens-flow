@@ -22,6 +22,14 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"mutableArray" | "mutableCollection" | "mutableObject", []>) {
+    const getTypeRefName = (typeName: any): string | null => {
+      if (typeName.type === AST_NODE_TYPES.TSQualifiedName) {
+        const leftName = getTypeRefName(typeName.left);
+        const rightName = typeName.right?.name;
+        return leftName && rightName ? `${leftName}.${rightName}` : null;
+      }
+      return typeof typeName.name === "string" ? typeName.name : null;
+    };
     const checkGetterReturn = (member: any) => {
       const returnType = member.value.returnType?.typeAnnotation;
       if (!returnType) return;
@@ -56,11 +64,14 @@ export default createRule({
       if (rt.type !== AST_NODE_TYPES.TSTypeReference) return;
 
       const typeName = (rt as any).typeName;
-      if (!typeName || typeof typeName.name !== "string") return;
+      if (!typeName) return;
 
-      const name = typeName.name;
+      const name = getTypeRefName(typeName);
+      if (!name) return;
 
-      if (name === "Array") {
+      const lastSegment = name.includes(".") ? name.split(".").pop()! : name;
+
+      if (lastSegment === "Array") {
         const sourceCode = context.sourceCode;
         const returnText = sourceCode.getText(
           member.value.returnType.typeAnnotation || member.value.returnType || member.value,
@@ -73,8 +84,8 @@ export default createRule({
         return;
       }
 
-      if (name === "Map" || name === "Set") {
-        const suggestion = name === "Map" ? "ReadonlyMap" : "ReadonlySet";
+      if (lastSegment === "Map" || lastSegment === "Set") {
+        const suggestion = lastSegment === "Map" ? "ReadonlyMap" : "ReadonlySet";
         context.report({
           node: member,
           messageId: "mutableCollection",

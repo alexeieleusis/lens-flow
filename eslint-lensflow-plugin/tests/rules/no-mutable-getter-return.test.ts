@@ -31,6 +31,14 @@ ruleTester.run("no-mutable-getter-return", rule, {
       #items: Array<string> = [];
       get items(): ReadonlyArray<string> { return this.#items; }
     }`,
+    `class Container {
+      #data: Collections.Map<string, number> = new Map();
+      get data(): Collections.ReadonlyMap<string, number> { return this.#data; }
+    }`,
+    `class Container {
+      #data: TE.ReadonlySet<string> = new Set();
+      get data(): TE.ReadonlySet<string> { return this.#data; }
+    }`,
   ],
   invalid: [
     {
@@ -79,6 +87,20 @@ ruleTester.run("no-mutable-getter-return", rule, {
         get items(): Array<string> { return this.#items; }
       }`,
       errors: [{ messageId: "mutableArray" }],
+    },
+    {
+      code: `class Container {
+        #data: Collections.Map<string, number> = new Map();
+        get data(): Collections.Map<string, number> { return this.#data; }
+      }`,
+      errors: [{ messageId: "mutableCollection" }],
+    },
+    {
+      code: `class Container {
+        #data: TE.Set<string> = new Set();
+        get data(): TE.Set<string> { return this.#data; }
+      }`,
+      errors: [{ messageId: "mutableCollection" }],
     },
   ],
 });
