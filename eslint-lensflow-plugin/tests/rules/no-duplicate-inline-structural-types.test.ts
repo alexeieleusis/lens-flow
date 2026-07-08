@@ -49,11 +49,18 @@ function c(c: { host: string }) {}`,
  function b(c: { host?: string }) {}
  function c(c: { readonly host: string }) {}`,
     },
-    {
+   {
       code: `class Service {
   create(c: { host: string; port: number }) {}
   apply(c: { host: string; port: number }) {}
-}`,
+}
+`,
+    },
+    {
+      code: `function createConfig(c: { host: string; port: number }) { /* ... */ }
+function applyConfig(c: { host: string; port: number }) { /* ... */ }
+function validateConfig(c: { host: string; port: number }) { /* ... */ }`,
+      options: [{ minDuplicates: 4 }],
     },
   ],
   invalid: [
@@ -116,6 +123,15 @@ function w(c: { host: string; port: number }) {}`,
          { messageId: "duplicateInlineType" },
          { messageId: "duplicateInlineType" },
        ],
+    },
+    {
+      code: `function createConfig(c: { host: string; port: number }) { /* ... */ }
+function applyConfig(c: { host: string; port: number }) { /* ... */ }`,
+      options: [{ minDuplicates: 2 }],
+      errors: [
+        { messageId: "duplicateInlineType" },
+        { messageId: "duplicateInlineType" },
+      ],
     },
   ],
 });
