@@ -74,5 +74,9 @@ items.map(fn);`,
 });`,
       errors: [{ messageId: "mutateCallbackArg" }],
     },
+    {
+      code: `items.map(item => item.price = 1)`,
+      errors: [{ messageId: "mutateCallbackArg" }],
+    },
   ],
 });
