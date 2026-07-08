@@ -30,10 +30,15 @@ export default createRule({
       TSAsExpression(node) {
         if (node.typeAnnotation.type !== "TSAnyKeyword") return;
 
-        const parent = node.parent;
+        let effectiveChild = node;
+        let parent = node.parent;
+        if (parent.type === "TSNonNullExpression") {
+          effectiveChild = parent;
+          parent = parent.parent;
+        }
         if (
           parent.type !== "MemberExpression" ||
-          parent.object !== node
+          parent.object !== effectiveChild
         ) {
           return;
         }
