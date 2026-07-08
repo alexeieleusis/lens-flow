@@ -12,6 +12,8 @@ ruleTester.run("no-record-string-any", rule, {
     `type Config = Record<string, string | number>`,
     `const data: Record<string, boolean> = {}`,
     `type MapType = Map<string, any>`,
+    `type SafeArray = Record<string, any[]>`,
+    `type SafeUnion = Record<string, any | null>`,
   ],
   invalid: [
     {
