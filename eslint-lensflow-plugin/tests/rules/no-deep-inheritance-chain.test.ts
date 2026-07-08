@@ -15,6 +15,10 @@ class BufferedReaderImpl implements Reader {
   constructor(private inner: Reader) {}
   read() { return this.inner.read(); }
 }`,
+    // Nested class inside a function should not be tracked
+    `function foo() { class Inner extends Outer {} }`,
+    // Class inside another class (class property) should not be tracked
+    `class Outer { inner = class Inner extends Base {} }`,
   ],
   invalid: [
     {
