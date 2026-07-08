@@ -20,6 +20,16 @@ ruleTester.run("no-redundant-narrowing", rule, {
     }
   }
 }`,
+    // Shadowed variable — inner `x` is a different binding, not redundant
+    `function outer(x: string | number) {
+  if (typeof x === "string") {
+    function inner(x: string | number) {
+      if (typeof x === "string") {
+        console.log(x.toUpperCase());
+      }
+    }
+  }
+}`,
   ],
   invalid: [
     {
