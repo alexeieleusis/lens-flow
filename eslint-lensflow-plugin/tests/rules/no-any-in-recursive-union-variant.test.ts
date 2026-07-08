@@ -14,7 +14,7 @@ type Done = { type: "done"; result: string };`,
       isComplete: boolean;
     }`,
     `type Simple = { value: any } | { label: string };`,
-    `type NonRecursive = { type: "leaf"; data: string } | { type: "branch"; children: NonRecursive[] };`,
+    `type RecursiveNoAny = { type: "leaf"; data: string } | { type: "branch"; children: RecursiveNoAny[] };`,
   ],
   invalid: [
     {
