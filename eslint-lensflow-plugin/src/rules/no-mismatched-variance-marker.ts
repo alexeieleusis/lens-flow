@@ -149,6 +149,10 @@ function walkPropertyTypeForInput(
         cb,
       );
     }
+  } else if (node.type === AST_NODE_TYPES.TSConstructorType) {
+    for (const p of node.params) {
+      walkParamAnnotation(p, paramName, cb);
+    }
   } else if (node.type === AST_NODE_TYPES.TSCallSignatureDeclaration) {
     for (const p of node.params) {
       walkParamAnnotation(p, paramName, cb);

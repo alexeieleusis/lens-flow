@@ -89,6 +89,10 @@ ruleTester.run("no-mismatched-variance-marker", rule, {
     `interface MappedIn<in T> {
       fn(x: { [K in string]: T }): void;
     }`,
+    // in T in constructor type params (input position) — correct
+    `interface ConstructorIn<in T> {
+      create: new (t: T) => void;
+    }`,
   ],
   invalid: [
     // out T used as method parameter — mismatch
@@ -209,6 +213,20 @@ ruleTester.run("no-mismatched-variance-marker", rule, {
     {
       code: `interface Bad<in T> {
         getValue(): { [K in string]: T };
+      }`,
+      errors: [{ messageId: "inUsedAsOutput" }],
+    },
+    // out T in constructor type params (input position) — mismatch
+    {
+      code: `interface Bad<out T> {
+        create: new (t: T) => void;
+      }`,
+      errors: [{ messageId: "outUsedAsInput" }],
+    },
+    // in T in constructor type return type (output position) — mismatch
+    {
+      code: `interface Bad<in T> {
+        create: new () => T;
       }`,
       errors: [{ messageId: "inUsedAsOutput" }],
     },
