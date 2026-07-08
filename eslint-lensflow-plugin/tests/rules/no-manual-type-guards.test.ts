@@ -14,6 +14,11 @@ ruleTester.run("no-manual-type-guards", rule, {
     `function isUser(obj: unknown): obj is User {
       return typeof obj === "object" && "id" in obj;
     }`,
+    // Boundary: exactly 2 checks — just below default minChecks (3).
+    // If >= were changed to >, this case would break silently.
+    `function isStringOrNumber(obj: unknown): obj is string | number {
+      return typeof obj === "string" && typeof obj !== "undefined";
+    }`,
     `function check(obj: unknown) {
       return typeof obj === "string";
     }`,
