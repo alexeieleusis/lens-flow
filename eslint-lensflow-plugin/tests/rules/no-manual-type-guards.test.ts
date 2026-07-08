@@ -26,6 +26,14 @@ ruleTester.run("no-manual-type-guards", rule, {
     `function isUser(obj: unknown): obj is User {
       return UserSchema.safeParse(obj).success;
     }`,
+    // Regression: nested function checks must NOT count toward outer guard.
+    // Without function-boundary enforcement, the 4 typeof/in checks inside the
+    // nested callback would combine with the outer 2 to reach the minChecks
+    // threshold and produce a false positive.
+    `function isUser(obj: unknown): obj is User {
+      const validate = (x: unknown) => typeof x === "string" && "id" in x;
+      return typeof obj === "object" && validate(obj);
+    }`,
   ],
   invalid: [
     {
