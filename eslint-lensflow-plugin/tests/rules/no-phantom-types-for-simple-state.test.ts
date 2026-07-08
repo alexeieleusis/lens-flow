@@ -19,6 +19,7 @@ ruleTester.run("no-phantom-types-for-simple-state", rule, {
       label: string;
     };`,
     `type Door<S extends "open" | "closed"> = { state: S; count: number };`,
+    `type Box<T, S extends "open" | "closed"> = { _state: S; value: T };`,
   ],
   invalid: [
     {
