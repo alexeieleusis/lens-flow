@@ -8,6 +8,7 @@ ruleTester.run("no-many-function-parameters", rule, {
     `const fn = (...args: string[]) => args.join("");`,
     `function fn(a: string, b: number, c: boolean, d: string, ...rest: string[]) { }`,
     `const fn = function handler(a: string, b: number, c: boolean, d: string) { }`,
+    `class Foo { constructor(public a: string, public b: number, public c: boolean, public d: string, public e: symbol) { } }`,
   ],
   invalid: [
     {
