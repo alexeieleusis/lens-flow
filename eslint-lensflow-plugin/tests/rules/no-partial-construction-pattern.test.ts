@@ -78,5 +78,18 @@ ruleTester.run("no-partial-construction-pattern", rule, {
       }`,
       errors: [{ messageId: "partialConstructionPattern" }],
     },
+    {
+      code: `class Widget {
+        label: string = "";
+        description: string = "";
+        update(data: { label: string; description: string } | undefined) {
+          if (data) {
+            this.label = data.label;
+            this.description = data.description;
+          }
+        }
+      }`,
+      errors: [{ messageId: "partialConstructionPattern" }],
+    },
   ],
 });
