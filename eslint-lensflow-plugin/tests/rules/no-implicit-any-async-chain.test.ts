@@ -27,5 +27,13 @@ const data: Response = await fetch(url).then(r => r.json());`,
       code: `const config = fetch(url).then(r => r.json());`,
       errors: [{ messageId: "implicitAnyAsyncChain" }],
     },
+    {
+      code: `const data = fetch(url).then(r => r.json()).then(j => j);`,
+      errors: [{ messageId: "implicitAnyAsyncChain" }],
+    },
+    {
+      code: `const { items } = await fetch(url).then(r => r.json());`,
+      errors: [{ messageId: "implicitAnyAsyncChain" }],
+    },
   ],
 });
