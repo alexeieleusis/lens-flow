@@ -41,5 +41,13 @@ ruleTester.run("no-direct-circular-alias", rule, {
       code: `type Ctr = new () => Ctr;`,
       errors: [{ messageId: "directCircularReference" }],
     },
+    {
+      code: `type Keyof = keyof Keyof;`,
+      errors: [{ messageId: "directCircularReference" }],
+    },
+    {
+      code: `type X = X extends infer U ? U : never;`,
+      errors: [{ messageId: "directCircularReference" }],
+    },
   ],
 });
