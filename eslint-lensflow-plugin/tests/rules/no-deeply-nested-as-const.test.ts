@@ -16,6 +16,14 @@ ruleTester.run("no-deeply-nested-as-const", rule, {
     `const labelled = { a: 1 } as const;`,
     `const shallow = [...[1, 2]] as const;`,
     `const shallowSpread = [...[1, 2], ...[3, 4]] as const;`,
+    // Function argument
+    `foo({ a: 1 } as const);`,
+    // Return statement
+    `function getConfig() { return { a: 1 } as const; }`,
+    // Property assignment
+    `obj.config = { a: 1 } as const;`,
+    // Class field initializer
+    `class C { config = { a: 1 } as const; }`,
   ],
   invalid: [
     {
@@ -58,6 +66,26 @@ ruleTester.run("no-deeply-nested-as-const", rule, {
     },
     {
       code: `const shallowNested = [...[{ a: 1 }]] as const;`,
+      errors: [{ messageId: "deeplyNested" }],
+    },
+    // Function argument
+    {
+      code: `fetchData({ api: { endpoints: { users: { id: 1 } } } } as const);`,
+      errors: [{ messageId: "deeplyNested" }],
+    },
+    // Return statement
+    {
+      code: `function getConfig() { return { a: { b: { c: 1 } } } as const; }`,
+      errors: [{ messageId: "deeplyNested" }],
+    },
+    // Property assignment
+    {
+      code: `obj.mapping = { x: { y: { z: true } } } as const;`,
+      errors: [{ messageId: "deeplyNested" }],
+    },
+    // Class field initializer
+    {
+      code: `class Config { defaults = { a: { b: { c: 1 } } } as const; }`,
       errors: [{ messageId: "deeplyNested" }],
     },
   ],
