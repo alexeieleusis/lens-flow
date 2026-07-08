@@ -42,7 +42,7 @@ export default createRule({
       isConditional: boolean;
     } | null {
       const commentLines = context.sourceCode.getCommentsBefore(node);
-      const commentText = commentLines.map((c) => c.value).join(" ");
+      const commentText = commentLines.map((c) => c.value).join(" ").replace(/\s+/g, " ");
 
       const isConditional = /\brequired\s+when\b/i.test(commentText);
 

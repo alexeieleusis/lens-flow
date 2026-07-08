@@ -28,6 +28,21 @@ ruleTester.run("no-jsdoc-constraint-spec", rule, {
       // method must be "GET" | "POST"
       method: "GET" | "POST";
     }`,
+    // Edge case: multiple separate comment lines should not produce false matches
+    `interface User {
+      // User profile identifier
+      // Used for API routing
+      userId: string;
+    }`,
+    // Edge case: empty comment should not crash or produce a false positive
+    `interface Config {
+      //
+      host: string;
+    }`,
+    `interface Config {
+      /**/
+      host: string;
+    }`,
   ],
   invalid: [
     {
@@ -62,6 +77,17 @@ ruleTester.run("no-jsdoc-constraint-spec", rule, {
       code: `interface Config {
   // port must be one of 80 | 443 | 8080
   port: number;
+}`,
+      errors: [{ messageId: "jsdocConstraint" }],
+    },
+    // Edge case: multi-line block JSDoc with constraint across lines should still be detected
+    {
+      code: `interface Account {
+  /**
+   * status must
+   * be one of "active" | "inactive"
+   */
+  status: string;
 }`,
       errors: [{ messageId: "jsdocConstraint" }],
     },
