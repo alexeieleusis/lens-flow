@@ -49,7 +49,8 @@ function walkInputPositions(
       break;
     }
     case AST_NODE_TYPES.TSRestType:
-    case AST_NODE_TYPES.TSOptionalType: {
+    case AST_NODE_TYPES.TSOptionalType:
+    case AST_NODE_TYPES.TSParenthesizedType: {
       walkInputPositions(
         node.typeAnnotation,
         paramName,

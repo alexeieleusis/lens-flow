@@ -65,6 +65,14 @@ ruleTester.run("no-mismatched-variance-marker", rule, {
     `type MapAlias<out T> = {
       [key: string]: T;
     };`,
+    // out T in parenthesized return type — correct
+    `interface ParenOut<out T> {
+      getValue(): (T);
+    }`,
+    // in T in parenthesized parameter type — correct
+    `interface ParenIn<in T> {
+      setValue(t: (T)): void;
+    }`,
   ],
   invalid: [
     // out T used as method parameter — mismatch
@@ -143,6 +151,20 @@ ruleTester.run("no-mismatched-variance-marker", rule, {
     {
       code: `interface Bad<in T> {
         [index: number]: T;
+      }`,
+      errors: [{ messageId: "inUsedAsOutput" }],
+    },
+    // out T in parenthesized parameter type — mismatch
+    {
+      code: `interface Bad<out T> {
+        setValue(t: (T)): void;
+      }`,
+      errors: [{ messageId: "outUsedAsInput" }],
+    },
+    // in T in parenthesized return type — mismatch
+    {
+      code: `interface Bad<in T> {
+        getValue(): (T);
       }`,
       errors: [{ messageId: "inUsedAsOutput" }],
     },
