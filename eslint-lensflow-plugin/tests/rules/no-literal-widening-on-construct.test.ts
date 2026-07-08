@@ -48,6 +48,16 @@ const good = { kind: "pending", amount: 100 } satisfies PaymentStatus;`,
       filename: TEST_FILENAME,
       code: `const fine = { isPending: true, isDone: true };`,
     },
+    {
+      name: "destructured declarator — non-Identifier id should not report",
+      filename: TEST_FILENAME,
+      code: `const { kind, amount } = { kind: "pending", amount: 100 };`,
+    },
+    {
+      name: "nested object expression — should not false-positive on inner literal",
+      filename: TEST_FILENAME,
+      code: `const fine = { wrapper: { status: "active" } };`,
+    },
   ],
   invalid: [
     {
@@ -60,6 +70,32 @@ const bad = { kind: "pending", amount: 100 };`,
       filename: TEST_FILENAME,
       code: `import { PaymentStatus } from "./tests/fixtures/types.js";
 const bad = { kind: "complete", amount: 200 };`,
+      errors: [{ messageId: "widen" }],
+    },
+    {
+      name: "multiple discriminant properties — only one error reported (rule returns after first)",
+      filename: TEST_FILENAME,
+      code: `const bad = { kind: "pending", status: "active" };`,
+      errors: [{ messageId: "widen" }],
+    },
+    {
+      name: "let declaration — widening should be reported",
+      filename: TEST_FILENAME,
+      code: `import { PaymentStatus } from "./tests/fixtures/types.js";
+let bad = { kind: "pending", amount: 100 };`,
+      errors: [{ messageId: "widen" }],
+    },
+    {
+      name: "var declaration — widening should be reported",
+      filename: TEST_FILENAME,
+      code: `import { PaymentStatus } from "./tests/fixtures/types.js";
+var bad = { kind: "pending", amount: 100 };`,
+      errors: [{ messageId: "widen" }],
+    },
+    {
+      name: "computed property key — does not crash, reports widening correctly",
+      filename: TEST_FILENAME,
+      code: `const bad = { ["kind"]: "pending", amount: 100 };`,
       errors: [{ messageId: "widen" }],
     },
   ],
