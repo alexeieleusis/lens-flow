@@ -66,6 +66,28 @@ ruleTester.run("no-mutate-nullable-without-check", rule, {
   draft.title = draft.title!.toUpperCase();
 }`,
     },
+    {
+      filename: TEST_FILENAME,
+      code: `function withUndefGuard(draft: { value: number | undefined }) {
+  if (draft.value === undefined) return;
+  draft.value = draft.value + 1;
+}`,
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `function withUndefThrow(draft: { value: number | undefined }) {
+  if (draft.value === undefined) throw new Error("value is undefined");
+  draft.value = draft.value + 1;
+}`,
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `function withUndefBlock(draft: { value: number | undefined }) {
+  if (draft.value !== undefined) {
+    draft.value = draft.value + 1;
+  }
+}`,
+    },
   ],
   invalid: [
     {
