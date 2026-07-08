@@ -62,5 +62,12 @@ function makeScore(n: number): Score {
 const p = "secret" as Password;`,
       errors: [{ messageId: "scatteredBrandCast" }],
     },
+    // Qualified type reference (TSQualifiedName) — Types.Branded<number, "Age">
+    {
+      code: `type Age = Types.Branded<number, "Age">;
+
+const a = 25 as Types.Branded<number, "Age">;`,
+      errors: [{ messageId: "scatteredBrandCast" }],
+    },
   ],
 });
