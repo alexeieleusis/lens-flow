@@ -53,6 +53,18 @@ ruleTester.run("no-mismatched-variance-marker", rule, {
     `interface Bimap<out R, in S> {
       map(fn: (s: S) => void): R;
     }`,
+    // out T in index signature return type — correct
+    `interface Map<out T> {
+      [key: string]: T;
+    }`,
+    // out T in numeric index signature return type — correct
+    `interface NumericMap<out T> {
+      [index: number]: T;
+    }`,
+    // Type alias: out T in index signature — correct
+    `type MapAlias<out T> = {
+      [key: string]: T;
+    };`,
   ],
   invalid: [
     // out T used as method parameter — mismatch
@@ -117,6 +129,20 @@ ruleTester.run("no-mismatched-variance-marker", rule, {
     {
       code: `interface Bad<in T> {
         result: T;
+      }`,
+      errors: [{ messageId: "inUsedAsOutput" }],
+    },
+    // in T in index signature return type — mismatch
+    {
+      code: `interface Bad<in T> {
+        [key: string]: T;
+      }`,
+      errors: [{ messageId: "inUsedAsOutput" }],
+    },
+    // in T in index signature with number key — mismatch
+    {
+      code: `interface Bad<in T> {
+        [index: number]: T;
       }`,
       errors: [{ messageId: "inUsedAsOutput" }],
     },
