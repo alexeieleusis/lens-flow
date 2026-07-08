@@ -99,5 +99,14 @@ ruleTester.run("no-parallel-optional-fields-uc01", rule, {
       options: [{ minOptionalFields: 2, minTotalFields: 3 }],
       errors: [{ messageId: "tooManyOptionalFields" }],
     },
+    {
+      code: `interface Foo {
+        "id": string;
+        "name"?: string;
+        "email"?: string;
+        "age"?: number;
+      }`,
+      errors: [{ messageId: "tooManyOptionalFields" }],
+    },
   ],
 });
