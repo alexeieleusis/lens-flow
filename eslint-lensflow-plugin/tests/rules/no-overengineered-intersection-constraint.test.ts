@@ -54,5 +54,14 @@ type Container<T extends X & Y & Z> = { value: T };`,
       options: [{ minIntersectionMembers: 2 }],
       errors: [{ messageId: "overengineeredIntersection" }],
     },
+    {
+      code: `function foo<T extends NS.A & NS.B>(x: T): void {}`,
+      errors: [
+        {
+          messageId: "overengineeredIntersection",
+          data: { count: "2", types: "?, ?" },
+        },
+      ],
+    },
   ],
 });
