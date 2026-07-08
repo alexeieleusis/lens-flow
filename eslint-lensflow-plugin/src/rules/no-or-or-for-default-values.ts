@@ -50,7 +50,15 @@ export default createRule({
   defaultOptions: [{ ignorePatterns: [] }],
   create(context: TSESLint.RuleContext<"preferNullishCoalescing", [{ ignorePatterns: string[] }]>) {
     const [{ ignorePatterns = [] } = {}] = context.options ?? [];
-    const patterns = ignorePatterns.map((p) => new RegExp(p));
+    const patterns = ignorePatterns.map((p) => {
+      try {
+        return new RegExp(p);
+      } catch (e: any) {
+        throw new Error(
+          `Invalid regex pattern in ignorePatterns option: "${p}". ${e.message}`,
+        );
+      }
+    });
 
     function shouldIgnore(node: TSESTree.Node): boolean {
       if (node.type !== "Identifier") return false;

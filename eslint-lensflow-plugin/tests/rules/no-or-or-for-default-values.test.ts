@@ -1,3 +1,4 @@
+import { describe, expect, it } from "vitest";
 import { ruleTester } from "../helpers/rule-tester.js";
 import rule from "../../src/rules/no-or-or-for-default-values.js";
 
@@ -108,4 +109,16 @@ ruleTester.run("no-or-or-for-default-values", rule, {
       output: `const label = props?.label ?? "Default";`,
     },
   ],
+});
+
+describe("ignorePatterns validation", () => {
+  it("throws descriptive error for invalid regex pattern", () => {
+    const context = {
+      options: [{ ignorePatterns: ["[invalid"] }],
+      sourceCode: { getText: () => "" },
+    } as any;
+    expect(() => (rule as any).create(context)).toThrow(
+      /Invalid regex pattern in ignorePatterns option.*\[invalid/,
+    );
+  });
 });
