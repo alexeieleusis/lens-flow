@@ -71,5 +71,13 @@ typeAwareTester.run("no-as-any-capability-check-t59", rule, {
       }`,
       errors: [{ messageId: "capabilityProbe" }],
     },
+    {
+      code: `type X = { foo: string } | { bar: number };
+
+      function test(x: X) {
+        if ((x as any)?.foo) console.log(x.foo);
+      }`,
+      errors: [{ messageId: "capabilityProbe" }],
+    },
   ],
 });
