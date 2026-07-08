@@ -35,5 +35,11 @@ ruleTester.run("no-runtime-filter-as-t", rule, {
 }`,
       errors: [{ messageId: "runtimeFilterCastGeneric" }],
     },
+    {
+      code: `const filterNumbers = function<T extends unknown[]>(arr: T): T {
+  return arr.filter(x => typeof x === "number") as T;
+};`,
+      errors: [{ messageId: "runtimeFilterCastGeneric" }],
+    },
   ],
 });
