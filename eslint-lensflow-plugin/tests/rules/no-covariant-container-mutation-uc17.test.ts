@@ -33,6 +33,11 @@ ruleTester.run("no-covariant-container-mutation-uc17", rule, {
     `interface Box<out T> {
       value: T;
     }`,
+    // Multiple covariant — no method accepts a covariant type param
+    `interface Box<out T, out U> {
+      value: T;
+      getU(): U;
+    }`,
   ],
   invalid: [
     // Setter method on covariant container
@@ -74,6 +79,13 @@ ruleTester.run("no-covariant-container-mutation-uc17", rule, {
         value: T;
         process(item: U): void;
         set(v: T): void;
+      }`,
+      errors: [{ messageId: "mutationOnCovariant" }],
+    },
+    // Both covariant — method accepts T
+    {
+      code: `interface Box<out T, out U> {
+        setT(v: T): void;
       }`,
       errors: [{ messageId: "mutationOnCovariant" }],
     },
