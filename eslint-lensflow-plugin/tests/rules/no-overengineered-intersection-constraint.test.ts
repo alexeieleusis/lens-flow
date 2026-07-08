@@ -11,6 +11,8 @@ ruleTester.run("no-overengineered-intersection-constraint", rule, {
     }`,
     `function handle<T extends A | B>(item: T): void {}`,
     `function mixed<T extends A & { foo: number }>(item: T): void {}`,
+    `type Handler<T extends { id: string }> = (item: T) => void;`,
+    `interface Repository<T extends { id: string }> { find(id: string): T; }`,
   ],
   invalid: [
     {
@@ -27,6 +29,19 @@ function findUser<T extends CanId & CanName>(items: T[], id: string): T | undefi
     },
     {
       code: `class Service<T extends Repo & Cache & Logger> {}`,
+      errors: [{ messageId: "overengineeredIntersection" }],
+    },
+    {
+      code: `interface A {}
+interface B {}
+interface Service<T extends A & B> {}`,
+      errors: [{ messageId: "overengineeredIntersection" }],
+    },
+    {
+      code: `interface X {}
+interface Y {}
+interface Z {}
+type Container<T extends X & Y & Z> = { value: T };`,
       errors: [{ messageId: "overengineeredIntersection" }],
     },
   ],
