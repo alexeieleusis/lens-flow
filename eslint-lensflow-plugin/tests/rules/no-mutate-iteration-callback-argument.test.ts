@@ -63,5 +63,12 @@ items.map(fn);`,
 });`,
       errors: [{ messageId: "mutateCallbackArg" }],
     },
+    {
+      code: `items.map(function(item) {
+  item.price = 1;
+  return item;
+});`,
+      errors: [{ messageId: "mutateCallbackArg" }],
+    },
   ],
 });
