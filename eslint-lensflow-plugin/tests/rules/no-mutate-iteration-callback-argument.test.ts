@@ -17,6 +17,10 @@ ruleTester.run("no-mutate-iteration-callback-argument", rule, {
     `items.filter(item => item.active).map(item => item.name);`,
     `const fn = (x: { a: number }) => x.a + 1;
 items.map(fn);`,
+    `items.map(item => {
+  const fn = () => { item.price = 1; };
+  return item;
+});`,
   ],
   invalid: [
     {
