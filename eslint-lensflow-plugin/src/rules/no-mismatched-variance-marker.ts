@@ -26,6 +26,16 @@ function walkInputPositions(
     return;
   }
 
+  // TSParenthesizedType exists at runtime but isn't in @typescript-eslint's types.
+  if ((node as { type: string }).type === "TSParenthesizedType") {
+    walkInputPositions(
+      (node as unknown as { typeAnnotation: TSESTree.Node }).typeAnnotation,
+      paramName,
+      cb,
+    );
+    return;
+  }
+
   switch (node.type) {
     case AST_NODE_TYPES.TSArrayType: {
       walkInputPositions(
@@ -49,8 +59,7 @@ function walkInputPositions(
       break;
     }
     case AST_NODE_TYPES.TSRestType:
-    case AST_NODE_TYPES.TSOptionalType:
-    case AST_NODE_TYPES.TSParenthesizedType: {
+    case AST_NODE_TYPES.TSOptionalType: {
       walkInputPositions(
         node.typeAnnotation,
         paramName,
@@ -257,6 +266,17 @@ function walkOutputPositions(
 ): void {
   reportIfMatch(node, paramName, cb);
 
+  // TSParenthesizedType exists at runtime but isn't in @typescript-eslint's types.
+  if ((node as { type: string }).type === "TSParenthesizedType") {
+    delegateOutputChild(
+      node,
+      (node as unknown as { typeAnnotation: TSESTree.Node }).typeAnnotation,
+      paramName,
+      cb,
+    );
+    return;
+  }
+
   switch (node.type) {
     case AST_NODE_TYPES.TSTypeReference:
       walkOutputTypeReferenceArgs(node, paramName, cb);
@@ -275,9 +295,6 @@ function walkOutputPositions(
       delegateOutputChild(node, node.typeAnnotation, paramName, cb);
       break;
     case AST_NODE_TYPES.TSOptionalType:
-      delegateOutputChild(node, node.typeAnnotation, paramName, cb);
-      break;
-    case AST_NODE_TYPES.TSParenthesizedType:
       delegateOutputChild(node, node.typeAnnotation, paramName, cb);
       break;
     case AST_NODE_TYPES.TSConditionalType:

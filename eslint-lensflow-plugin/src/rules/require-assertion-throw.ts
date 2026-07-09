@@ -46,6 +46,14 @@ function hasThrowStatement(
 
     if (node.type === "ThrowStatement") return true;
 
+    if (
+      node.type === "CallExpression" &&
+      node.callee.type === "Identifier" &&
+      node.callee.name.startsWith("assert")
+    ) {
+      return true;
+    }
+
     for (const child of collectChildNodes(node)) {
       if (!FUNCTION_BOUNDARY_TYPES.has(child.type)) {
         nodes.push(child);

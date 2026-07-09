@@ -1,6 +1,5 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
-import { containsAny } from "../utils/ts-helpers.js";
 
 function isRecordAny(node: TSESTree.TSTypeReference): boolean {
   const typeName = node.typeName;
@@ -13,7 +12,7 @@ function isRecordAny(node: TSESTree.TSTypeReference): boolean {
   if (name !== "Record") return false;
 
   const params = node.typeArguments?.params;
-  return !!(params && params.length === 2 && containsAny(params[1]));
+  return !!(params && params.length === 2 && params[1].type === "TSAnyKeyword");
 }
 
 function reportRecordAny(

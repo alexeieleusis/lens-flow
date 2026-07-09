@@ -3,7 +3,6 @@ import { createRule } from "../utils/rule-creator.js";
 
 function containsTSThisType(node: TSESTree.TypeNode): boolean {
   if (node.type === "TSThisType") return true;
-  if (node.type === "TSParenthesizedType") return containsTSThisType(node.typeAnnotation);
   if (node.type === "TSUnionType" || node.type === "TSIntersectionType") {
     return node.types.some(containsTSThisType);
   }
@@ -78,33 +77,6 @@ export default createRule({
       },
       PropertyDefinition(node) {
         visitProperty(node);
-      },
-      TSAbstractMethodDefinition(node) {
-        if (!node.static) return;
-        const retType = node.returnType?.typeAnnotation;
-        if (retType && containsTSThisType(retType)) {
-          context.report({
-            node: node.returnType!,
-            messageId: "staticThisReturn",
-          });
-        }
-      },
-      PropertyDefinition(node) {
-        if (!node.static) return;
-        const value = node.value;
-        if (
-          value &&
-          (value.type === "ArrowFunctionExpression" ||
-            value.type === "FunctionExpression")
-        ) {
-          const retType = value.returnType?.typeAnnotation;
-          if (retType && containsTSThisType(retType)) {
-            context.report({
-              node: value.returnType!,
-              messageId: "staticThisReturn",
-            });
-          }
-        }
       },
     };
   },

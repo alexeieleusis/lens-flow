@@ -33,6 +33,11 @@ export default createRule({
 
     function checkParams(node: TSESTree.FunctionLike) {
       const params = node.params;
+      const hasTSParameterProperty = params.some(
+        (p) => p.type === "TSParameterProperty",
+      );
+      if (hasTSParameterProperty) return;
+
       const lastParam = params[params.length - 1];
       let count = params.length - (lastParam?.type === "RestElement" ? 1 : 0);
 
@@ -52,9 +57,6 @@ export default createRule({
       FunctionDeclaration: checkParams,
       FunctionExpression: checkParams,
       ArrowFunctionExpression: checkParams,
-      MethodDefinition(node) {
-        if (node.value) checkParams(node.value);
-      },
     };
   },
 });

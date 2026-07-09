@@ -83,7 +83,7 @@ export default createRule({
 
       TSTypeOperator(node: TSESTree.TSTypeOperator) {
         if (node.operator !== "readonly") return;
-        if (node.typeAnnotation.type !== TSESTree.AST_NODE_TYPES.TSArrayType) return;
+        if (node.typeAnnotation?.type !== TSESTree.AST_NODE_TYPES.TSArrayType) return;
 
         const innerTypeNode = node.typeAnnotation.elementType;
         const innerTsType = parserServices.getTypeAtLocation(innerTypeNode);

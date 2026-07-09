@@ -14,42 +14,17 @@ function getCastTypeName(typeNode: TSESTree.TypeNode): string {
   return "<unknown>";
 }
 
-function hasBrandProperty(typeNode: TSESTree.TypeNode): boolean {
-  if (typeNode.type !== "TSTypeLiteral") return false;
-
-  return typeNode.members.some((member) => {
-    if (member.type !== "TSPropertySignature") return false;
-    const key = member.key;
-
-    if (key.type === "Identifier") {
-      const name = key.name;
-      return (
-        name.startsWith("_brand") ||
-        name.startsWith("__brand") ||
-        name.endsWith("Brand")
-      );
-    }
-
-    if (key.type === "Literal" && typeof key.value === "string") {
-      const name = key.value;
-      return (
-        name.startsWith("_brand") ||
-        name.startsWith("__brand") ||
-        name.endsWith("Brand")
-      );
-    }
-
-    return false;
-  });
-}
-
 function isBrandedTypePattern(typeNode: TSESTree.TypeNode): boolean {
   if (typeNode.type === "TSIntersectionType") {
-    return typeNode.types.some((member) => hasBrandProperty(member));
+    return typeNode.types.length >= 2;
   }
 
-  if (typeNode.type === "TSTypeLiteral") {
-    return hasBrandProperty(typeNode);
+  if (typeNode.type === "TSTypeReference") {
+    const typeName = typeNode.typeName;
+    if (typeName.type === "Identifier") return true;
+    if (typeName.type === "TSQualifiedName") {
+      return true;
+    }
   }
 
   return false;
@@ -103,11 +78,11 @@ export default createRule({
         node.type === "TSNonNullExpression" ||
         node.type === "TSSatisfiesExpression"
       ) {
-        return originatesFromJsonParse(node.expression, visitedVars);
+        return originatesFromJsonParse(node.expression, visitedIds);
       }
 
       if (node.type === "ChainExpression") {
-        return originatesFromJsonParse(node.expression, visitedVars);
+        return originatesFromJsonParse(node.expression, visitedIds);
       }
 
       if (node.type === "Identifier") {

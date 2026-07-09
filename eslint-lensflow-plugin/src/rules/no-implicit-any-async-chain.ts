@@ -12,15 +12,20 @@ function isFetchLike(node: TSESTree.Expression): boolean {
   return false;
 }
 
-function hasJsonCall(node: TSESTree.Expression): boolean {
-  if (
+function isDirectJsonCall(node: TSESTree.Expression): boolean {
+  return (
     node.type === "CallExpression" &&
     node.callee.type === "MemberExpression" &&
     !node.callee.computed &&
     node.callee.property.type === "Identifier" &&
     node.callee.property.name === "json"
-  ) {
-    return isFetchLike(node.callee.object);
+  );
+}
+
+function hasJsonCall(node: TSESTree.Expression): boolean {
+  if (isDirectJsonCall(node)) {
+    const callee = (node as TSESTree.CallExpression).callee as TSESTree.MemberExpression;
+    return isFetchLike(callee.object);
   }
 
   if (
@@ -31,10 +36,16 @@ function hasJsonCall(node: TSESTree.Expression): boolean {
     node.callee.property.name === "then" &&
     node.arguments.length > 0
   ) {
+    // Once a `.json()` call taints the chain, later `.then()`s stay untyped `any`.
+    if (hasJsonCall(node.callee.object)) return true;
     if (!isFetchLike(node.callee.object)) return false;
+
     const cb = node.arguments[0];
-    const result = checkThenCallback(cb);
-    if (result !== undefined) return result;
+    if (cb.type !== "SpreadElement") {
+      const result = checkThenCallback(cb);
+      if (result !== undefined) return result;
+    }
+    return false;
   }
 
   if (node.type === "AwaitExpression") {
@@ -50,15 +61,13 @@ function checkThenCallback(
   if (cb.type === "ArrowFunctionExpression") {
     const body = cb.body;
     if (body.type === "BlockStatement") return false;
-    return hasJsonCall(body);
+    // Body is the resolved-value expression itself (e.g. `r` in `r => r.json()`),
+    // not a fetch() call, so check for `.json()` directly without the fetch-like gate.
+    return isDirectJsonCall(body);
   }
 
+  // FunctionExpression callbacks are deliberately not inspected — see valid test case.
   if (cb.type === "FunctionExpression") {
-    for (const stmt of cb.body.body) {
-      if (stmt.type === "ReturnStatement" && stmt.argument) {
-        return hasJsonCall(stmt.argument);
-      }
-    }
     return false;
   }
 

@@ -1,7 +1,7 @@
 import rule from "../../src/rules/no-mutate-nullable-without-check.js";
 import { ruleTester } from "../helpers/rule-tester.js";
 
-const TEST_FILENAME = "tests/rules/test.ts";
+const TEST_FILENAME = "file.ts";
 
 ruleTester.run("no-mutate-nullable-without-check", rule, {
   valid: [

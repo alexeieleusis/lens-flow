@@ -97,6 +97,10 @@ function has_partial_param(
       }
     }
 
+    if (ta.type === "TSUnionType") {
+      return ta.types.some((t) => t.type === "TSUndefinedKeyword");
+    }
+
     return false;
   });
 }

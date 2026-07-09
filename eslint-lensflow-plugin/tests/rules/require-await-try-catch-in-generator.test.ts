@@ -47,7 +47,8 @@ ruleTester.run("require-await-try-catch-in-generator", rule, {
     if (result) yield result;
   } catch (err) {
     return;
-  }`,
+  }
+}`,
     // Nested async function expression inside async generator - inner await not flagged by outer scope
     `async function* genWithNestedExpr() {
   try {
@@ -59,7 +60,8 @@ ruleTester.run("require-await-try-catch-in-generator", rule, {
     yield val;
   } catch (err) {
     return;
-  }`,
+  }
+}`,
     // Class method async generator with try/catch
     `class C {
   async* method() {

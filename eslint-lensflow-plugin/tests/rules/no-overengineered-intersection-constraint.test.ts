@@ -59,7 +59,7 @@ type Container<T extends X & Y & Z> = { value: T };`,
       errors: [
         {
           messageId: "overengineeredIntersection",
-          data: { count: "2", types: "?, ?" },
+          data: { count: "2", types: "A, B" },
         },
       ],
     },

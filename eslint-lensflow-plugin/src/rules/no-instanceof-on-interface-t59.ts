@@ -41,7 +41,7 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"instanceofOnInterface", []>) {
-    const parserServices = ESLintUtils.getParserServices(context, { allowNoProject: true });
+    const parserServices = ESLintUtils.getParserServices(context, true);
     if (!parserServices.program) return {};
     const checker = parserServices.program.getTypeChecker();
 

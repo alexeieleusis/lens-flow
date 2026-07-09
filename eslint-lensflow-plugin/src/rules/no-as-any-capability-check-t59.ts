@@ -1,5 +1,5 @@
 import { ESLintUtils } from "@typescript-eslint/utils";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
 export default createRule({
@@ -30,7 +30,8 @@ export default createRule({
       TSAsExpression(node) {
         if (node.typeAnnotation.type !== "TSAnyKeyword") return;
 
-        let effectiveChild = node;
+        let effectiveChild: TSESTree.TSAsExpression | TSESTree.TSNonNullExpression =
+          node;
         let parent = node.parent;
         if (parent.type === "TSNonNullExpression") {
           effectiveChild = parent;

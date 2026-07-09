@@ -89,9 +89,47 @@ function nullGuardIfContainsNode(stmt: unknown, node: unknown, objName: string, 
   const s = stmt as { type: string; test?: unknown; consequent?: unknown; alternate?: unknown };
   if (s.type !== "IfStatement" || !s.test) return false;
   if (!matchesNullCheck(s.test, objName, propName)) return false;
-  if (s.consequent && bodyOfBlockContains(s.consequent, node)) return true;
-  if (s.alternate && bodyOfBlockContains(s.alternate, node)) return true;
+  if (s.consequent && bodyOfBlockContains(s.consequent, node)) return false;
+  if (s.alternate && bodyOfBlockContains(s.alternate, node)) return false;
+  return true;
+}
+
+function isTerminatingStatement(stmt: unknown): boolean {
+  if (!stmt || typeof stmt !== "object" || !("type" in stmt)) return false;
+  const s = stmt as { type: string; body?: unknown[] };
+  if (s.type === "ReturnStatement" || s.type === "ThrowStatement") return true;
+  if (s.type === "BlockStatement") {
+    const stmts = s.body || [];
+    return stmts.length > 0 && isTerminatingStatement(stmts[stmts.length - 1]);
+  }
   return false;
+}
+
+function isTerminatingNullGuard(stmt: unknown, objName: string, propName: string): boolean {
+  if (!stmt || typeof stmt !== "object" || !("type" in stmt)) return false;
+  const s = stmt as { type: string; test?: unknown; consequent?: unknown };
+  if (s.type !== "IfStatement" || !s.test) return false;
+  if (!matchesNullCheck(s.test, objName, propName)) return false;
+  return isTerminatingStatement(s.consequent);
+}
+
+const LOOP_TYPES = new Set([
+  "ForStatement",
+  "WhileStatement",
+  "DoWhileStatement",
+  "ForInStatement",
+  "ForOfStatement",
+]);
+
+function loopHasTerminatingGuard(stmt: unknown, objName: string, propName: string): boolean {
+  if (!stmt || typeof stmt !== "object" || !("type" in stmt)) return false;
+  const s = stmt as { type: string; body?: unknown };
+  if (!LOOP_TYPES.has(s.type)) return false;
+  const body = s.body;
+  if (!body || typeof body !== "object" || !("type" in body)) return false;
+  if ((body as { type: string }).type !== "BlockStatement") return false;
+  const stmts = (body as unknown as { body: unknown[] }).body;
+  return stmts.some((inner) => isTerminatingNullGuard(inner, objName, propName));
 }
 
 function checkBlockForGuard(body: unknown, node: unknown, objName: string, propName: string): boolean {
@@ -101,12 +139,13 @@ function checkBlockForGuard(body: unknown, node: unknown, objName: string, propN
   for (const stmt of stmts) {
     if (stmtBlockContainsNode(stmt, node)) return false;
     if (nullGuardIfContainsNode(stmt, node, objName, propName)) return false;
+    if (loopHasTerminatingGuard(stmt, objName, propName)) return false;
   }
   return true;
 }
 
 function hasNullGuardBefore(ancestors: unknown[], node: unknown, objName: string, propName: string): boolean {
-  for (let i = 0; i < ancestors.length; i++) {
+  for (let i = ancestors.length - 1; i >= 0; i--) {
     const current = ancestors[i];
     if (!current || typeof current !== "object" || !("type" in current)) continue;
     const cur = current as { type: string; consequent?: unknown };
@@ -152,7 +191,7 @@ function objMatchesName(info: { obj: unknown; prop: string }, objName: string, p
 }
 
 function isNullComparisonOperator(op?: string): boolean {
-  return ["===", "==", "!=", "!="].includes(op as string);
+  return ["===", "==", "!==", "!="].includes(op as string);
 }
 
 function matchesBinaryNullCheck(
