@@ -7,7 +7,7 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow using chain/flatMap for independent computations that don't depend on the previous result",
+        "Disallow using chain/flatMap for independent computations that don't depend on the previous result. Note: destructured parameters (ObjectPattern, ArrayPattern) are not analyzed—add a valid test case if your callback intentionally destructures its parameter.",
     },
     messages: {
       unusedParamInChain:
@@ -53,6 +53,19 @@ export default createRule({
       return parent;
     }
 
+    function extractIdentifier(
+      param: TSESTree.Parameter,
+    ): TSESTree.Identifier | null {
+      if (param.type === AST_NODE_TYPES.Identifier) return param;
+      if (param.type === AST_NODE_TYPES.AssignmentPattern) {
+        return extractIdentifier(param.left);
+      }
+      if (param.type === AST_NODE_TYPES.RestElement) {
+        return extractIdentifier(param.argument);
+      }
+      return null;
+    }
+
     function checkCallbackParams(
       ctx: TSESLint.RuleContext<"noParamInChain" | "unusedParamInChain", []>,
       callback: TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression,
@@ -67,18 +80,34 @@ export default createRule({
         return;
       }
 
-      if (firstParam.type !== AST_NODE_TYPES.Identifier) return;
+      // Skip destructured parameters (ObjectPattern, ArrayPattern) —
+      // usage analysis for destructured bindings is not implemented.
+      const ident = extractIdentifier(firstParam);
+      if (!ident) return;
 
       const scopeManager = ctx.sourceCode.scopeManager;
       const paramVar = scopeManager?.getDeclaredVariables(callback).find(
-        (v) => v.name === firstParam.name,
+        (v) => v.name === ident.name,
       );
 
-      if (paramVar && paramVar.references.length === 0) {
+      // For AssignmentPattern like (x = 1), the scope manager counts the
+      // identifier inside the pattern as a reference. Filter those out so
+      // we only count actual usages in the function body.
+      const realReferences = paramVar?.references.filter((ref) => {
+        const refId = ref.identifier;
+        let currentNode: TSESTree.Node | undefined = refId;
+        while (currentNode && currentNode !== callback) {
+          if (currentNode === firstParam) return false;
+          currentNode = (currentNode as any).parent;
+        }
+        return true;
+      });
+
+      if (paramVar && (realReferences?.length || 0) === 0) {
         ctx.report({
           node: callback,
           messageId: "unusedParamInChain",
-          data: { param: firstParam.name },
+          data: { param: ident.name },
         });
       }
     }
