@@ -88,6 +88,46 @@ function checkPropertySignature(
   });
 }
 
+function checkCallSignature(
+  member: TSESTree.TSCallSignatureDeclaration,
+  covariantNames: Set<string>,
+  context: Parameters<NonNullable<Parameters<typeof createRule>[0]["create"]>>[0],
+) {
+  if (!paramsContainAnyTypeRef(member.params, [...covariantNames])) return;
+
+  const match = findMatchedCovariantParam(member.params, covariantNames);
+  if (!match) return;
+
+  context.report({
+    node: member,
+    messageId: "callSignatureOnCovariant",
+    data: {
+      paramName: paramText(match, context),
+      url: KNOWLEDGE_URL,
+    },
+  });
+}
+
+function checkConstructSignature(
+  member: TSESTree.TSConstructSignatureDeclaration,
+  covariantNames: Set<string>,
+  context: Parameters<NonNullable<Parameters<typeof createRule>[0]["create"]>>[0],
+) {
+  if (!paramsContainAnyTypeRef(member.params, [...covariantNames])) return;
+
+  const match = findMatchedCovariantParam(member.params, covariantNames);
+  if (!match) return;
+
+  context.report({
+    node: member,
+    messageId: "constructSignatureOnCovariant",
+    data: {
+      paramName: paramText(match, context),
+      url: KNOWLEDGE_URL,
+    },
+  });
+}
+
 export default createRule({
   name: "no-covariant-container-mutation-uc17",
   meta: {
@@ -101,12 +141,16 @@ export default createRule({
         "Method '{{methodName}}' accepts covariant type parameter '{{paramName}}' as input. Mutation breaks covariance — use `in out` or split into separate read/write interfaces. See: {{url}}",
       propertyMutationOnCovariant:
         "Property '{{propName}}' is a function type that accepts covariant type parameter '{{paramName}}' as input. Mutation breaks covariance — use `in out` or split into separate read/write interfaces. See: {{url}}",
+      callSignatureOnCovariant:
+        "Call signature accepts covariant type parameter '{{paramName}}' as input. Mutation breaks covariance — use `in out` or split into separate read/write interfaces. See: {{url}}",
+      constructSignatureOnCovariant:
+        "Construct signature accepts covariant type parameter '{{paramName}}' as input. Mutation breaks covariance — use `in out` or split into separate read/write interfaces. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"mutationOnCovariant" | "propertyMutationOnCovariant", []>) {
+  create(context: TSESLint.RuleContext<"mutationOnCovariant" | "propertyMutationOnCovariant" | "callSignatureOnCovariant" | "constructSignatureOnCovariant", []>) {
     return createVarianceDeclarationVisitor((typeParams, body) => {
       const covariantParams = typeParams.filter(
         (tp) => tp.out && !tp.in,
@@ -130,6 +174,18 @@ export default createRule({
         } else if (member.type === AST_NODE_TYPES.TSPropertySignature) {
           checkPropertySignature(
             member as TSESTree.TSPropertySignature,
+            covariantNames,
+            context,
+          );
+        } else if (member.type === AST_NODE_TYPES.TSCallSignatureDeclaration) {
+          checkCallSignature(
+            member as TSESTree.TSCallSignatureDeclaration,
+            covariantNames,
+            context,
+          );
+        } else if (member.type === AST_NODE_TYPES.TSConstructSignatureDeclaration) {
+          checkConstructSignature(
+            member as TSESTree.TSConstructSignatureDeclaration,
             covariantNames,
             context,
           );

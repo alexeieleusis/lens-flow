@@ -38,6 +38,18 @@ ruleTester.run("no-covariant-container-mutation-uc17", rule, {
       value: T;
       getU(): U;
     }`,
+    // Call signature returns covariant type (output position, not input)
+    `interface Factory<out T> {
+      (): T;
+    }`,
+    // Construct signature returns covariant type (output position, not input)
+    `interface Constructor<out T> {
+      new (): T;
+    }`,
+    // Call signature with non-covariant parameter
+    `interface Factory<out T, U> {
+      (value: U): T;
+    }`,
   ],
   invalid: [
     // Setter method on covariant container
@@ -102,6 +114,38 @@ ruleTester.run("no-covariant-container-mutation-uc17", rule, {
         setT(v: T): void;
       }`,
       errors: [{ messageId: "mutationOnCovariant" }],
+    },
+    // Call signature accepts covariant type parameter
+    {
+      code: `interface Factory<out T> {
+        (value: T): void;
+      }`,
+      errors: [{ messageId: "callSignatureOnCovariant" }],
+    },
+    // Construct signature accepts covariant type parameter
+    {
+      code: `interface Constructor<out T> {
+        new (value: T): T;
+      }`,
+      errors: [{ messageId: "constructSignatureOnCovariant" }],
+    },
+    // Call and construct signatures both accept covariant type parameter
+    {
+      code: `interface Mixed<out T> {
+        (value: T): void;
+        new (value: T): T;
+      }`,
+      errors: [
+        { messageId: "callSignatureOnCovariant" },
+        { messageId: "constructSignatureOnCovariant" },
+      ],
+    },
+    // Call signature with covariant type in nested generic
+    {
+      code: `interface Factory<out T> {
+        (items: Array<T>): void;
+      }`,
+      errors: [{ messageId: "callSignatureOnCovariant" }],
     },
   ],
 });
