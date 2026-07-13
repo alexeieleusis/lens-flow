@@ -113,5 +113,26 @@ ruleTester.run("no-shallow-readonly-mutable-collection", rule, {
 }`,
       errors: [{ messageId: "mutableMapSet" }],
     },
+    {
+      code: `interface Config {
+  readonly "items": string[];
+}`,
+      errors: [{ messageId: "mutableArray" }],
+    },
+    {
+      code: `type Config = {
+  readonly "data": Map<string, number>;
+}`,
+      errors: [{ messageId: "mutableMapSet" }],
+    },
+    {
+      code: `class Config {
+  readonly "items": string[];
+  constructor() {
+    this["items"] = [];
+  }
+}`,
+      errors: [{ messageId: "mutableArray" }],
+    },
   ],
 });

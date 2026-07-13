@@ -8,6 +8,10 @@ ruleTester.run("no-chained-non-null-assertion", rule, {
     `const a = x!.foo;
 const b = y!.bar;`,
     `const zip = user?.address?.city?.postalCode;`,
+    {
+      code: `const x = arr!.length!;`,
+      options: [{ minChain: 3 }],
+    },
   ],
   invalid: [
     {
@@ -24,6 +28,11 @@ const b = y!.bar;`,
     },
     {
       code: `const x = a!.b.c!;`,
+      errors: [{ messageId: "chainedNonNull" }],
+    },
+    {
+      code: `const x = arr!.length!;`,
+      options: [{ minChain: 2 }],
       errors: [{ messageId: "chainedNonNull" }],
     },
   ],

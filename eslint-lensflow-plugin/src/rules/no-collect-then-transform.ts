@@ -103,7 +103,9 @@ export default createRule({
       let current: TSESTree.Node = n;
       while (
         current.type === "TSAsExpression" ||
-        current.type === "TSTypeAssertion"
+        current.type === "TSTypeAssertion" ||
+        current.type === "TSNonNullExpression" ||
+        current.type === "TSSatisfiesExpression"
       ) {
         current = current.expression;
       }
@@ -115,6 +117,7 @@ export default createRule({
         const callee = node.callee;
         if (callee.type !== "MemberExpression") return;
         if (callee.property.type !== "Identifier") return;
+        if (callee.optional) return;
 
         const methodName = callee.property.name;
         if (!ARRAY_TRANSFORM_METHODS.has(methodName)) return;

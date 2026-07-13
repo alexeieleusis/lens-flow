@@ -73,7 +73,10 @@ export function checkMutableArrayParam(
   param: TSESTree.Parameter,
   sourceCode: TSESLint.SourceCode,
 ): MutableArrayParam | null {
-  const inner = param.type === "TSParameterProperty" ? param.parameter : param;
+  let inner = param.type === "TSParameterProperty" ? param.parameter : param;
+  if (inner.type === "AssignmentPattern") {
+    inner = inner.left;
+  }
   const typeAnn = inner.typeAnnotation?.typeAnnotation;
   if (!typeAnn) return null;
 

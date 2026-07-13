@@ -11,8 +11,19 @@ function isAsConst(node: TSESTree.Node): boolean {
   );
 }
 
+function isFunctionNode(node: TSESTree.Node): boolean {
+  return (
+    node.type === "FunctionDeclaration" ||
+    node.type === "FunctionExpression" ||
+    node.type === "ArrowFunctionExpression"
+  );
+}
+
 function findAsConst(node: TSESTree.Node | null | undefined): TSESTree.Node | null {
   if (!node) return null;
+  // The initializer itself may be a function (not wrapped in `as const`) —
+  // its body belongs to the nested function, not this `let` binding.
+  if (isFunctionNode(node)) return null;
   let result: TSESTree.Node | null = null;
   walkNodes(node, (n) => {
     if (isAsConst(n)) {

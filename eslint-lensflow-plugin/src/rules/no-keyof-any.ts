@@ -1,5 +1,18 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+function containsAnyType(node: TSESTree.TypeNode): boolean {
+  if (node.type === "TSAnyKeyword") return true;
+  if (node.type === "TSUnionType" || node.type === "TSIntersectionType") {
+    return node.types.some(containsAnyType);
+  }
+  // TSParenthesizedType can appear at runtime but isn't in @typescript-eslint types
+  const maybe = node as unknown as { type: string; typeAnnotation?: TSESTree.TypeNode };
+  if (maybe.type === "TSParenthesizedType" && maybe.typeAnnotation) {
+    return containsAnyType(maybe.typeAnnotation);
+  }
+  return false;
+}
 
 export default createRule({
   name: "no-keyof-any",
@@ -20,7 +33,7 @@ export default createRule({
   create(context: TSESLint.RuleContext<"keyofAny", []>) {
     return {
       TSTypeOperator(node) {
-        if (node.operator === "keyof" && node.typeAnnotation && node.typeAnnotation.type === "TSAnyKeyword") {
+        if (node.operator === "keyof" && node.typeAnnotation && containsAnyType(node.typeAnnotation)) {
           context.report({ node, messageId: "keyofAny" });
         }
       },

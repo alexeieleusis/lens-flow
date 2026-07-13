@@ -7,6 +7,29 @@ type FunctionLikeNode =
   | TSESTree.ArrowFunctionExpression
   | TSESTree.TSDeclareFunction;
 
+function containsAny(type: TSESTree.TypeNode): boolean {
+  switch (type.type) {
+    case "TSAnyKeyword":
+      return true;
+    case "TSArrayType":
+      return containsAny(type.elementType);
+    case "TSUnionType":
+    case "TSIntersectionType":
+      return type.types.some(containsAny);
+    default:
+      return false;
+  }
+}
+
+function extractTypeAnnotation(
+  param: Exclude<TSESTree.Parameter, TSESTree.TSParameterProperty>,
+): TSESTree.TypeNode | null {
+  if (param.type === "AssignmentPattern") {
+    return param.left.typeAnnotation?.typeAnnotation ?? null;
+  }
+  return param.typeAnnotation?.typeAnnotation ?? null;
+}
+
 function checkTypeGuardParam(
   context: TSESLint.RuleContext<"anyTypeGuardParam", []>,
   node: FunctionLikeNode,
@@ -19,10 +42,10 @@ function checkTypeGuardParam(
     if (firstParam.type === "TSParameterProperty") {
       firstParam = firstParam.parameter;
     }
-    const anyNode = firstParam.typeAnnotation?.typeAnnotation;
-    if (anyNode?.type === "TSAnyKeyword") {
+    const typeAnnotation = extractTypeAnnotation(firstParam);
+    if (typeAnnotation && containsAny(typeAnnotation)) {
       context.report({
-        node: anyNode,
+        node: typeAnnotation,
         messageId: "anyTypeGuardParam",
       });
     }

@@ -54,6 +54,16 @@ ruleTester.run("no-mutable-items-in-readonly-collection", rule, {
         readonly data: Readonly<ImmutableData>;
       };`,
     },
+    {
+      filename: TEST_FILENAME,
+      code: `class ImmutableEntity {
+        readonly name: string;
+        constructor(name: string) { this.name = name; }
+      }
+      interface Container {
+        readonly items: ReadonlyArray<ImmutableEntity>;
+      };`,
+    },
   ],
   invalid: [
     {
@@ -87,6 +97,18 @@ ruleTester.run("no-mutable-items-in-readonly-collection", rule, {
       type App = {
         readonly config: Readonly<MutableConfig>;
       };`,
+      errors: [{ messageId: "mutableInnerType" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `class MutableEntity {
+        name: string;
+        constructor(name: string) { this.name = name; }
+        update(n: string): void { this.name = n; }
+      }
+      interface Container {
+        readonly items: ReadonlyArray<MutableEntity>;
+      }`,
       errors: [{ messageId: "mutableInnerType" }],
     },
   ],

@@ -11,6 +11,12 @@ ruleTester.run("no-large-literal-union", rule, {
       PATCH: "PATCH", HEAD: "HEAD", OPTIONS: "OPTIONS",
     } as const;
     type CommonMethod = (typeof Methods)[keyof typeof Methods];`,
+    {
+      code: `type Code =
+  | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10
+  | 11 | 12 | 13 | 14 | 15 | 16 | 17 | 18 | 19 | 20;`,
+      options: [{ maxMembers: 20 }],
+    },
   ],
   invalid: [
     {

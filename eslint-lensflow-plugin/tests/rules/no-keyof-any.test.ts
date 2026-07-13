@@ -20,5 +20,21 @@ ruleTester.run("no-keyof-any", rule, {
 }`,
       errors: [{ messageId: "keyofAny" }],
     },
+    {
+      code: `type Keys = keyof (any | string);`,
+      errors: [{ messageId: "keyofAny" }],
+    },
+    {
+      code: `type K2 = keyof (any & { x: 1 });`,
+      errors: [{ messageId: "keyofAny" }],
+    },
+    {
+      code: `type K3 = keyof (any);`,
+      errors: [{ messageId: "keyofAny" }],
+    },
+    {
+      code: `type K4 = keyof ((string | any) & { x: 1 });`,
+      errors: [{ messageId: "keyofAny" }],
+    },
   ],
 });

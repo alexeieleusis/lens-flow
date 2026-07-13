@@ -19,6 +19,31 @@ function getHandler(event: Event) {
     `function getHandler(event: string) {
   return handlers[\`on\${event}\${extra}\`];
 }`,
+    `type Event = "click" | "focus";
+function getHandler(event: string) {
+  const callback = (event: Event) => {
+    return handlers[\`on\${event}\`];
+  };
+  return callback(event as any);
+}`,
+    `function getHandler(event: string) {
+  const callback = () => {
+    return handlers[\`on\${event}\`];
+  };
+  return callback();
+}`,
+    `type Event = "click" | "focus";
+function getHandler(event: Event) {
+  return handlers[(\`on\${event}\` as const)];
+}`,
+    `type Event = "click" | "focus";
+function getHandler(event: Event) {
+  return handlers[(\`on\${event}\` as const)!];
+}`,
+    `type Event = "click" | "focus";
+function getHandler(event: Event) {
+  return handlers[(\`on\${event}\` satisfies TemplateStringsArray)];
+}`,
   ],
   invalid: [
     {
@@ -42,6 +67,24 @@ function getHandler(event: Event) {
     {
       code: `function resolve(name: string) {
   return mappings[\`map\${name}\`];
+}`,
+      errors: [{ messageId: "runtimeStringConcatKey" }],
+    },
+    {
+      code: `function getHandler(event: string) {
+  return handlers[(\`on\${event}\` as const)];
+}`,
+      errors: [{ messageId: "runtimeStringConcatKey" }],
+    },
+    {
+      code: `function getHandler(event: string) {
+  return handlers[(\`on\${event}\`!)];
+}`,
+      errors: [{ messageId: "runtimeStringConcatKey" }],
+    },
+    {
+      code: `function getHandler(event: string) {
+  return handlers[(\`on\${event}\` satisfies string)];
 }`,
       errors: [{ messageId: "runtimeStringConcatKey" }],
     },

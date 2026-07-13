@@ -18,7 +18,7 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"booleanParseReturn", []>) {
-    const NAME_PATTERN = /^(parse|validate|check|parseAndValidate)/i;
+    const NAME_PATTERN = /^(parse|validate|check|parseAndValidate)(?![a-z])/;
 
     // Stack of enclosing VariableDeclarator identifiers so we can derive the function name
     // from the variable when the function itself has no id (arrows, anonymous FE).

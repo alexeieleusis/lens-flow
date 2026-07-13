@@ -24,13 +24,19 @@ function getObjectKeys(objExpr: TSESTree.ObjectExpression): string[] {
   return keys;
 }
 
+function unwrapSatisfies(
+  expr: TSESTree.Expression,
+): TSESTree.Expression {
+  return expr.type === "TSSatisfiesExpression" ? expr.expression : expr;
+}
+
 function findReturnStatements(fnNode: FunctionNode): TSESTree.ReturnStatement[] {
   const results: TSESTree.ReturnStatement[] = [];
   walk(fnNode.body, (node) => {
     if (
       node.type === "ReturnStatement" &&
       node.argument != null &&
-      node.argument.type === "ObjectExpression"
+      unwrapSatisfies(node.argument).type === "ObjectExpression"
     ) {
       results.push(node);
     }
@@ -69,7 +75,7 @@ export default createRule({
       if (fnNode.body.type === "BlockStatement") {
         const returns = findReturnStatements(fnNode);
         for (const ret of returns) {
-          const objExpr = ret.argument;
+          const objExpr = ret.argument ? unwrapSatisfies(ret.argument) : null;
           if (!objExpr || objExpr.type !== "ObjectExpression") continue;
 
           const objKeys = getObjectKeys(objExpr);

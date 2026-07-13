@@ -92,6 +92,18 @@ function getGenericParamNames(node: unknown): string[] {
   return result;
 }
 
+function getAllParamNames(node: unknown): string[] {
+  const n = node as { params?: Array<{ type: string; name?: string }> };
+  if (!n.params) return [];
+  const result: string[] = [];
+  for (const p of n.params) {
+    if (p.type === "Identifier" && p.name) {
+      result.push(p.name);
+    }
+  }
+  return result;
+}
+
 export default createRule({
   name: "no-runtime-generic-assumption",
   meta: {
@@ -113,11 +125,12 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"runtimeMetadataAccess" | "runtimeMetadataOnCall" | "unsafeCastOnGeneric", []>) {
-    const scopeStack: { genericFns: Set<string>; params: Set<string> }[] = [];
+    const scopeStack: { genericFns: Set<string>; params: Map<string, boolean> }[] = [];
 
     function isGenericParam(name: string): boolean {
       for (let i = scopeStack.length - 1; i >= 0; i--) {
-        if (scopeStack[i].params.has(name)) return true;
+        const params = scopeStack[i].params;
+        if (params.has(name)) return params.get(name)!;
       }
       return false;
     }
@@ -184,8 +197,13 @@ export default createRule({
       if (hasTypeParams && n.id) {
         currentGenericFns.add(n.id.name);
       }
-      const paramNames = getGenericParamNames(node);
-      scopeStack.push({ genericFns: currentGenericFns, params: new Set(paramNames) });
+      const allParamNames = getAllParamNames(node);
+      const genericParamNames = new Set(getGenericParamNames(node));
+      const params = new Map<string, boolean>();
+      for (const name of allParamNames) {
+        params.set(name, genericParamNames.has(name));
+      }
+      scopeStack.push({ genericFns: currentGenericFns, params });
     }
 
     function exitFn() {

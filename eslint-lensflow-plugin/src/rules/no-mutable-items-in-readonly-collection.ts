@@ -21,7 +21,10 @@ function hasMutableMembers(type: ts.Type): boolean {
       ) {
         return true;
       }
-      if (decl.kind === ts.SyntaxKind.PropertySignature) {
+      if (
+        decl.kind === ts.SyntaxKind.PropertySignature ||
+        decl.kind === ts.SyntaxKind.PropertyDeclaration
+      ) {
         const modifiers = ts.getModifiers(decl as ts.HasModifiers);
         const isReadonly = modifiers?.some(
           (m) => m.kind === ts.SyntaxKind.ReadonlyKeyword,

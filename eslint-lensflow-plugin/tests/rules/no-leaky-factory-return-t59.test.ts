@@ -18,6 +18,19 @@ function makeConfig(): Config {
 function createBox(n: number): Box {
   return { value: n } as Box;
 }`,
+    // Returns with satisfies — unwraps TSSatisfiesExpression to check the object
+    `interface Box { value: number }
+function createBox(n: number): Box {
+  return { value: n } satisfies Box;
+}`,
+    // Nested function boundary — inner return should not be attributed to outer function
+    `interface Box { value: number }
+function createBox(n: number): Box {
+  const wrapper = () => {
+    return { value: n, extraFromInner: true };
+  };
+  return { value: n };
+}`,
     // Arrow function expression body matching interface exactly
     `interface Box { value: number }
 const createBox = (n: number): Box => ({ value: n });`,
@@ -64,6 +77,14 @@ const makePoint = (): Point => {
       code: `interface User { id: number; name: string }
 const factory = function (): User {
   return { id: 1, name: "Alice", password: "secret" };
+}`,
+      errors: [{ messageId: "leakyReturn" }],
+    },
+    // Satisfies expression with extra properties
+    {
+      code: `interface Box { value: number }
+function createBox(n: number): Box {
+  return { value: n, internal: true } satisfies Box;
 }`,
       errors: [{ messageId: "leakyReturn" }],
     },

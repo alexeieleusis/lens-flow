@@ -118,5 +118,15 @@ function toEither(n: number): Either<never, number> {
 }`,
       errors: [{ messageId: "infallibleSyncResult" }],
     },
+    // Nested arrow function with throw doesn't count as outer's failure path
+    {
+      filename: TEST_FILENAME,
+      code: RESULT_DEF + `
+function compute(n: number): Result<number, never> {
+  const validate = () => { throw new Error("bad"); };
+  return { ok: true, value: n * 2 };
+}`,
+      errors: [{ messageId: "infallibleSyncResult" }],
+    },
   ],
 });

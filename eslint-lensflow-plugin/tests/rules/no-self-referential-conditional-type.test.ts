@@ -48,5 +48,10 @@ ruleTester.run("no-self-referential-conditional-type", rule, {
         : [];`,
       errors: [{ messageId: "selfReferential" }],
     },
+    // Parenthesized conditional type with self-reference
+    {
+      code: `type Foo<T> = (T extends string ? Foo<T> : T);`,
+      errors: [{ messageId: "selfReferential" }],
+    },
   ],
 });

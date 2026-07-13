@@ -12,6 +12,10 @@ ruleTester.run("no-runtime-generic-assumption", rule, {
     `function process<T extends { id: number }>(item: T) {
       return item.id;
     }`,
+    // Nested function shadows a generic param name — inner param is not generic
+    `function outer<T>(item: T) {
+      const inner = (item: string) => item.constructor;
+    }`,
   ],
   invalid: [
     {
@@ -48,6 +52,14 @@ create({}).constructor`,
       code: `function getType<T>(item: T) {
   return item.prototype;
 }`,
+      errors: [{ messageId: "runtimeMetadataAccess" }],
+    },
+    {
+      code: `const fn = <T>(x: T) => x.constructor;`,
+      errors: [{ messageId: "runtimeMetadataAccess" }],
+    },
+    {
+      code: `const fn = function<T>(x: T) { return x.__typename; };`,
       errors: [{ messageId: "runtimeMetadataAccess" }],
     },
   ],

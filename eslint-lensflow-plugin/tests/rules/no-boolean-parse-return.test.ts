@@ -21,6 +21,14 @@ ruleTester.run("no-boolean-parse-return", rule, {
     `const parseAge = (raw: string): number => parseInt(raw);`,
     `const fn = (x: string): boolean => x.length > 0;`,
     `const checkFormat = (input: string): Result<boolean, Error> => ok(true);`,
+    `const parseAge = (raw: string): Result<number, Error> => {
+      const helper = (x: string): boolean => x.length > 0;
+      return helper(raw) ? ok(1) : err(new Error("invalid"));
+    };`,
+    // Names that share a prefix but are NOT parse/validate/check functions
+    `const checking = (box: boolean): boolean => box;`,
+    `const parser = (config: unknown): boolean => typeof config === "object";`,
+    `const validated = (count: number): boolean => count > 0;`,
   ],
   invalid: [
     {
@@ -81,6 +89,13 @@ ruleTester.run("no-boolean-parse-return", rule, {
     },
     {
       code: `const parseConfig = function(cfg: unknown): boolean { return typeof cfg === "object"; };`,
+      errors: [{ messageId: "booleanParseReturn" }],
+    },
+    {
+      code: `const parseAge = (raw: string): boolean => {
+        const helper = (x: string): boolean => x.length > 0;
+        return helper(raw);
+      };`,
       errors: [{ messageId: "booleanParseReturn" }],
     },
   ],

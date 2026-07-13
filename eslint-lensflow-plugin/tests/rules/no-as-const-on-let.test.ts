@@ -16,6 +16,12 @@ let b = 2;`,
     // leak into the `let` initializer check via parent traversal
     `process(config as const);
 let count = 0;`,
+    // `as const` inside arrow function body — not on the let binding itself
+    `let f = () => getValue() as const;`,
+    // `as const` inside IIFE initializer — belongs to the nested function
+    `let x = (() => 1 as const)();`,
+    // `as const` inside function expression body — not on the let binding
+    `let y = function() { return 2 as const; };`,
   ],
   invalid: [
     {

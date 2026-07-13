@@ -61,6 +61,15 @@ function getUserName(user: User): string | null {
   return map.get(key);
 }`,
     },
+    // Nested function returns should not be attributed to outer function
+    {
+      filename: TEST_FILENAME,
+      code: `function outer(): string | null {
+  const inner = (): string => {
+    return "hello";
+  };
+}`,
+    },
   ],
   invalid: [
     // Antipattern from spec: ?? null on a non-nullable value

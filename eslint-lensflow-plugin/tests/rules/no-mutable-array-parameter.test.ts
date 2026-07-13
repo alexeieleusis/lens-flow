@@ -12,6 +12,8 @@ ruleTester.run("no-mutable-array-parameter", rule, {
     `function addAnimal(animals: readonly Animal[]): void {}`,
     `function addAnimal(animals: ReadonlyArray<Animal>): void {}`,
     `declare function processItems(items: readonly Item[]): void;`,
+    `function processItems(items: readonly Item[] = []): void {}`,
+    `function processItems(items: ReadonlyArray<Item> = []): void {}`,
   ],
   invalid: [
     {
@@ -40,6 +42,18 @@ ruleTester.run("no-mutable-array-parameter", rule, {
     },
     {
       code: `declare function processItems(items: Item[]): void;`,
+      errors: [{ messageId: "mutableArrayParam" }],
+    },
+    {
+      code: `function processItems(items: string[] = []): void {}`,
+      errors: [{ messageId: "mutableArrayParam" }],
+    },
+    {
+      code: `function processItems(items: Array<Item> = []): void {}`,
+      errors: [{ messageId: "mutableArrayParam" }],
+    },
+    {
+      code: `const fn = (arr: string[] = ["default"]) => {}`,
       errors: [{ messageId: "mutableArrayParam" }],
     },
   ],

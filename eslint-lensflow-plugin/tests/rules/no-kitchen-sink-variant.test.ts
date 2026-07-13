@@ -30,6 +30,9 @@ ruleTester.run("no-kitchen-sink-variant", rule, {
     `type ApiResponse =
       | { kind: "post"; title: string; content: string; authorId: number; tags: string[]; views: number }
       | { kind: "comment"; id: string; text: string; parentId: number; createdAt: Date; updatedAt: Date };`,
+    `type ApiResponse =
+      | { kind: "user"; "data": { name: string; email: string; age: number; role: string; avatar: string; extra: boolean } }
+      | { kind: "post"; title: string; content: string };`,
   ],
   invalid: [
     {

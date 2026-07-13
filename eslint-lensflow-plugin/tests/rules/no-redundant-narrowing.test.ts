@@ -72,5 +72,30 @@ ruleTester.run("no-redundant-narrowing", rule, {
 }`,
       errors: [{ messageId: "redundantNarrowing" }],
     },
+    {
+      code: `function process(x: string | number) {
+  if (typeof x === "string") {
+    for (let i = 0; i < 10; i++) {
+      if (typeof x === "string") {
+        console.log(x.toUpperCase());
+      }
+    }
+  }
+}`,
+      errors: [{ messageId: "redundantNarrowing" }],
+    },
+    {
+      code: `function loop(x: string | number) {
+  if (typeof x === "number") {
+    while (x > 0) {
+      if (typeof x === "number") {
+        console.log(x.toFixed(2));
+      }
+      break;
+    }
+  }
+}`,
+      errors: [{ messageId: "redundantNarrowing" }],
+    },
   ],
 });

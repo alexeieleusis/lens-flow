@@ -1,21 +1,52 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 
-function findEnclosingFunction(
-  node: TSESTree.Node,
-  context: TSESLint.RuleContext<string, unknown[]>,
-): TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression | null {
-  const ancestors = context.sourceCode.getAncestors(node);
-  for (const ancestor of ancestors) {
-    if (
-      ancestor.type === "FunctionDeclaration" ||
-      ancestor.type === "FunctionExpression" ||
-      ancestor.type === "ArrowFunctionExpression"
-    ) {
-      return ancestor as TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression;
-    }
+function unwrapExpression(node: TSESTree.Node): TSESTree.Node {
+  while (
+    node.type === "TSAsExpression" ||
+    node.type === "TSNonNullExpression" ||
+    node.type === "TSSatisfiesExpression" ||
+    node.type === "TSTypeAssertion" ||
+    node.type === "ChainExpression"
+  ) {
+    node = (
+      node as
+        | TSESTree.TSAsExpression
+        | TSESTree.TSNonNullExpression
+        | TSESTree.TSSatisfiesExpression
+        | TSESTree.TSTypeAssertion
+        | TSESTree.ChainExpression
+    ).expression;
   }
-  return null;
+  return node;
+}
+
+function isStringParamInEnclosingFunction(
+  node: TSESTree.Node,
+  paramName: string,
+): boolean {
+  let current: TSESTree.Node | undefined = node.parent;
+  while (current) {
+    if (
+      current.type === "FunctionDeclaration" ||
+      current.type === "FunctionExpression" ||
+      current.type === "ArrowFunctionExpression"
+    ) {
+      const func = current as TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression;
+      for (const param of func.params) {
+        if (param.type === "Identifier" && param.name === paramName) {
+          const typeAnn = param.typeAnnotation?.typeAnnotation;
+          if (typeAnn?.type === "TSStringKeyword") {
+            return true;
+          }
+          return false;
+        }
+      }
+      return false;
+    }
+    current = current.parent;
+  }
+  return false;
 }
 
 export default createRule({
@@ -60,8 +91,9 @@ export default createRule({
 
     return {
       MemberExpression(node) {
-        if (node.property.type !== "TemplateLiteral") return;
-        const tmpl = node.property;
+        const unwrapped = unwrapExpression(node.property);
+        if (unwrapped.type !== "TemplateLiteral") return;
+        const tmpl = unwrapped;
         if (tmpl.expressions.length !== 1) return;
 
         if (node.object.type !== "Identifier") return;
@@ -70,23 +102,13 @@ export default createRule({
         const tmplExpr = tmpl.expressions[0];
         if (tmplExpr.type !== "Identifier") return;
 
-        const func = findEnclosingFunction(node, context);
-        if (!func) return;
+        if (!isStringParamInEnclosingFunction(node, tmplExpr.name)) return;
 
-        const params = func.params;
-        for (const param of params) {
-          if (param.type !== "Identifier") continue;
-          if (param.name !== tmplExpr.name) continue;
-          const typeAnn = param.typeAnnotation?.typeAnnotation;
-          if (typeAnn?.type !== "TSStringKeyword") continue;
-
-          context.report({
-            node: tmpl,
-            messageId: "runtimeStringConcatKey",
-            data: { param: param.name },
-          });
-          return;
-        }
+        context.report({
+          node: tmpl,
+          messageId: "runtimeStringConcatKey",
+          data: { param: tmplExpr.name },
+        });
       },
     };
   },

@@ -143,21 +143,14 @@ export default createRule({
         return;
       }
 
-      let anyParam: TSESTree.Parameter | null = null;
-
       for (const param of node.params) {
         if (isParamAny(param)) {
-          anyParam = param;
-          break;
+          context.report({
+            node: param,
+            messageId: "anyParam",
+            data: { name: getParamName(param, context.sourceCode) },
+          });
         }
-      }
-
-      if (anyParam) {
-        context.report({
-          node: anyParam,
-          messageId: "anyParam",
-          data: { name: getParamName(anyParam, context.sourceCode) },
-        });
       }
 
       if (node.returnType?.typeAnnotation.type === "TSAnyKeyword") {

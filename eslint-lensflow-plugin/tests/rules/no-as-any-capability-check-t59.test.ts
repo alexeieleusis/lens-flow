@@ -98,3 +98,23 @@ typeAwareTester.run("no-as-any-capability-check-t59", rule, {
     },
   ],
 });
+
+const nonTypeAwareTester = new RuleTester({
+  languageOptions: {
+    parser: tsParser,
+    parserOptions: {
+      ecmaVersion: 2022,
+      sourceType: "module",
+    },
+  },
+});
+
+nonTypeAwareTester.run("no-as-any-capability-check-t59 (graceful degradation)", rule, {
+  valid: [
+    // Without type info, (x as any).property can't be detected as a capability probe
+    `function foo(x) {
+      if ((x as any).onEvent) x.onEvent({});
+    }`,
+  ],
+  invalid: [],
+});

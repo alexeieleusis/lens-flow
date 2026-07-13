@@ -61,6 +61,7 @@ ruleTester.run("no-any-in-utility-function", rule, {
       }`,
       errors: [
         { messageId: "anyParam" },
+        { messageId: "anyParam" },
         { messageId: "anyReturn" },
       ],
     },

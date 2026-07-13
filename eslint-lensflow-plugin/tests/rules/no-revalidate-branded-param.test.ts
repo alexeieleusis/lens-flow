@@ -53,6 +53,20 @@ function callNumber(phone: Phone) {
   }
 }`,
     },
+    {
+      filename: TEST_FILENAME,
+      code: `declare const emailBrand: unique symbol;
+type Email = string & { readonly [emailBrand]: unique symbol };
+
+function sendEmail(to: Email) {
+  const inner = (to: string) => {
+    if (!/^[a-z]+$/.test(to)) {
+      throw new Error("inner validation");
+    }
+  };
+  inner(to);
+}`,
+    },
   ],
   invalid: [
     {

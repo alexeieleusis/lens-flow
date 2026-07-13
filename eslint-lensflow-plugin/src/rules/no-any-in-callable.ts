@@ -1,6 +1,7 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 import {
+  containsAnyType,
   createNoAnyParamChecker,
   createNoAnyParamTypeChecker,
 } from "../utils/no-any-param-checker.js";
@@ -36,7 +37,7 @@ export default createRule({
         | TSESTree.TSCallSignatureDeclaration,
     ) {
       if ("declare" in node && node.declare) return;
-      if (node.returnType?.typeAnnotation?.type === "TSAnyKeyword") {
+      if (node.returnType?.typeAnnotation && containsAnyType(node.returnType.typeAnnotation)) {
         context.report({ node: node.returnType, messageId: "anyReturn" });
       }
     }

@@ -18,7 +18,7 @@ function hasNeverCast(stmt: TSESTree.Statement): boolean {
 function hasExhaustivenessCheck(consequent: TSESTree.Statement[]): boolean {
   for (const stmt of consequent) {
     if (stmt.type === "EmptyStatement") continue;
-    if (stmt.type === "ThrowStatement") return true;
+    if (walkNodes(stmt, (node) => node.type === "ThrowStatement")) return true;
     if (hasNeverCast(stmt)) return true;
   }
   return false;

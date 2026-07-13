@@ -79,6 +79,17 @@ ruleTester.run("no-exhaustiveness-on-open-union", rule, {
   }
 }`,
     },
+    // Open union — variable declaration with proper fallback
+    {
+      filename: TEST_FILENAME,
+      code: `function handle() {
+  const c: "red" | "blue" | string = getValue();
+  switch (c) {
+    case "red": return "#f00";
+    default: return "#000";
+  }
+}`,
+    },
   ],
   invalid: [
     // Open string union with throw in default — the antipattern
@@ -125,6 +136,29 @@ ruleTester.run("no-exhaustiveness-on-open-union", rule, {
     case true: break;
     case false: break;
     default: throw new Error(\`Impossible: \${flag as never}\`);
+  }
+}`,
+      errors: [{ messageId: "openUnion" }],
+    },
+    // Open union — variable declaration with exhaustiveness check
+    {
+      filename: TEST_FILENAME,
+      code: `function handle() {
+  const c: "red" | "blue" | string = getValue();
+  switch (c) {
+    case "red": return "#f00";
+    default: throw new Error(\`Unreachable: \${c as never}\`);
+  }
+}`,
+      errors: [{ messageId: "openUnion" }],
+    },
+    // Open union — throw nested inside BlockStatement in default branch
+    {
+      filename: TEST_FILENAME,
+      code: `function handle(c: "red" | "blue" | string): string {
+  switch (c) {
+    case "red": return "#f00";
+    default: { throw new Error(\`Unreachable: \${c as never}\`); }
   }
 }`,
       errors: [{ messageId: "openUnion" }],

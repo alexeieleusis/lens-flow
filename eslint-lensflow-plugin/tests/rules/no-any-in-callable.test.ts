@@ -30,6 +30,10 @@ ruleTester.run("no-any-in-callable", rule, {
     `type CtorType = new (name: string) => { name: string };`,
     // Multiple params - all non-any
     `function f(a: string, b: number, c?: boolean) { return a; }`,
+    // Union without any
+    `function f(x: string | number): string | number { return x as any; }`,
+    // Intersection type without any
+    `function f(x: string & { toString(): void }) { return x; }`,
   ],
   invalid: [
     {
@@ -123,6 +127,34 @@ ruleTester.run("no-any-in-callable", rule, {
         { messageId: "anyParam" },
         { messageId: "anyReturn" },
       ],
+    },
+    // Union-wrapped any in parameter
+    {
+      code: `function f(x: any | string) {}`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    // Union-wrapped any in return type
+    {
+      code: `function f(x: string): any | number { return x; }`,
+      errors: [{ messageId: "anyReturn" }],
+    },
+    // Union-wrapped any in both parameter and return
+    {
+      code: `function f(x: any | string): any | number { return x; }`,
+      errors: [
+        { messageId: "anyParam" },
+        { messageId: "anyReturn" },
+      ],
+    },
+    // Intersection-wrapped any
+    {
+      code: `function f(x: any & { toString(): void }) { return x; }`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    // Array of any
+    {
+      code: `function f(x: any[]) { return x; }`,
+      errors: [{ messageId: "anyParam" }],
     },
   ],
 });

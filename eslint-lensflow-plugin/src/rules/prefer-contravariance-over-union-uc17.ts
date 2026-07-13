@@ -1,5 +1,6 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { createFunctionParamVisitor } from "../utils/visitor-helpers.js";
 
 export default createRule({
   name: "prefer-contravariance-over-union-uc17",
@@ -28,58 +29,64 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ minUnionMembers: 3 }],
-  create(context: TSESLint.RuleContext<"preferContravariance", [{ minUnionMembers: number }]>) {
-    const { minUnionMembers = 3 } = context.options[0] ?? {};
+  create(context: TSESLint.RuleContext<"preferContravariance", [{ minUnionMembers?: number }]>) {
+    const [{ minUnionMembers } = { minUnionMembers: 3 }] = context.options ?? [
+      { minUnionMembers: 3 },
+    ];
 
-    function unwrapType(node: TSESTree.TypeNode): TSESTree.TypeNode {
-      return node;
-    }
+    function checkParameter(param: TSESTree.Parameter) {
+      // Unwrap TSParameterProperty (e.g., `public foo: T`)
+      let inner: TSESTree.Parameter | TSESTree.DestructuringPattern =
+        param.type === "TSParameterProperty" ? param.parameter : param;
 
-    function checkFunctionParams(funcNode: TSESTree.TSFunctionType) {
-      for (const param of funcNode.params) {
-        if (param.type !== "Identifier") continue;
-        const typeAnn = param.typeAnnotation?.typeAnnotation;
-        if (!typeAnn) continue;
-        if (typeAnn.type === "TSUnionType" && typeAnn.types.length >= minUnionMembers) {
-          const typeNames = typeAnn.types
-            .map((t: TSESTree.TypeNode) => {
-              if (t.type === "TSTypeReference") {
-                return t.typeName.type === "Identifier" ? t.typeName.name : "(complex-type)";
-              }
-              return "(unknown-type)";
-            })
-            .join(" | ");
-          context.report({
-            node: typeAnn,
-            messageId: "preferContravariance",
-            data: { types: typeNames },
-          });
-        }
+      // Unwrap AssignmentPattern (e.g., `x: T = defaultValue`)
+      if (inner.type === "AssignmentPattern") {
+        inner = inner.left;
       }
+
+      // Unwrap RestElement (e.g., `...args: T[]`)
+      if (inner.type === "RestElement") {
+        inner = inner.argument;
+      }
+
+      if (inner.type !== "Identifier") return;
+      const typeAnn = inner.typeAnnotation?.typeAnnotation;
+      if (
+        typeAnn?.type !== "TSUnionType" ||
+        minUnionMembers === undefined ||
+        typeAnn.types.length < minUnionMembers
+      ) {
+        return;
+      }
+
+      const sourceCode = context.sourceCode;
+
+      function getTypeName(t: TSESTree.TypeNode): string {
+        if (t.type === "TSTypeReference") {
+          if (t.typeName.type === "Identifier") return t.typeName.name;
+          if (t.typeName.type === "TSQualifiedName") {
+            const parts: string[] = [];
+            let cur: TSESTree.EntityName = t.typeName;
+            while (cur.type === "TSQualifiedName") {
+              parts.unshift(cur.right.name);
+              cur = cur.left;
+            }
+            if (cur.type === "Identifier") parts.unshift(cur.name);
+            return parts.join(".");
+          }
+        }
+        return sourceCode.getText(t);
+      }
+
+      const typeNames = typeAnn.types.map(getTypeName).join(" | ");
+
+      context.report({
+        node: typeAnn,
+        messageId: "preferContravariance",
+        data: { types: typeNames },
+      });
     }
 
-    return {
-      TSInterfaceBody(node) {
-        for (const member of node.body) {
-          if (
-            member.type === "TSPropertySignature" &&
-            member.typeAnnotation?.typeAnnotation?.type === "TSFunctionType"
-          ) {
-            checkFunctionParams(member.typeAnnotation.typeAnnotation);
-          }
-        }
-      },
-
-      TSTypeLiteral(node) {
-        for (const member of node.members) {
-          if (
-            member.type === "TSPropertySignature" &&
-            member.typeAnnotation?.typeAnnotation?.type === "TSFunctionType"
-          ) {
-            checkFunctionParams(member.typeAnnotation.typeAnnotation);
-          }
-        }
-      },
-    };
+    return createFunctionParamVisitor(checkParameter);
   },
 });

@@ -25,6 +25,11 @@ ruleTester.run("no-blind-as-any-cast", rule, {
     `function ok(): Obj<B> {
   return getObj() as unknown as Obj<B>;
 }`,
+    // Overload signature — body is null, must not crash
+    `function f(x: A): B;
+function f(x: A): B { return x as unknown as B; }`,
+    // Declare function — body is null, must not crash
+    `declare function f(): void;`,
   ],
   invalid: [
     {

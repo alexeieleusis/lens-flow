@@ -79,9 +79,31 @@ export default createRule({
         }
 
         const ancestors = context.sourceCode.getAncestors(node);
-        const hasTryCatch = ancestors.some(
-          (a) => a.type === "TryStatement" || a.type === "CatchClause",
-        );
+        let hasTryCatch = false;
+        let inCatch = false;
+        for (let i = ancestors.length - 1; i >= 0; i--) {
+          const type = ancestors[i].type;
+
+          // Stop at function boundaries — a .parse() inside a nested callback
+          // throws outside any outer try/catch scope.
+          if (
+            type === "FunctionDeclaration" ||
+            type === "FunctionExpression" ||
+            type === "ArrowFunctionExpression"
+          ) {
+            break;
+          }
+
+          if (type === "CatchClause") {
+            inCatch = true;
+          } else if (type === "TryStatement") {
+            if (!inCatch) {
+              hasTryCatch = true;
+              break;
+            }
+            inCatch = false;
+          }
+        }
 
         if (!hasTryCatch) {
           context.report({

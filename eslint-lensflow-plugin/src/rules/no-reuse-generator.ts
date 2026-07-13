@@ -51,6 +51,29 @@ export default createRule({
         }
       },
 
+      AssignmentExpression(node) {
+        if (
+          node.operator === "=" &&
+          node.left.type === "Identifier" &&
+          (node.right.type === "CallExpression" ||
+            node.right.type === "NewExpression")
+        ) {
+          const left = node.left;
+          const scope = context.sourceCode.getScope(left);
+          let binding: TSESLint.Scope.Variable | null = null;
+          for (let s: TSESLint.Scope.Scope | null = scope; s; s = s.upper) {
+            const v = s.set.get(left.name);
+            if (v && v.references.some((ref) => ref.identifier === left)) {
+              binding = v;
+              break;
+            }
+          }
+          if (binding && callExprVars.has(binding)) {
+            forAwaitOfCounts.set(binding, 0);
+          }
+        }
+      },
+
       ForOfStatement(node) {
         if (!node.await) return;
 

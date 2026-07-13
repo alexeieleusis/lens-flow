@@ -1,5 +1,12 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+function extractFieldName(key: TSESTree.Node): string | null {
+  if (key.type === "Identifier") return key.name;
+  if (key.type === "PrivateIdentifier") return key.name;
+  if (key.type === "Literal" && typeof key.value === "string") return key.value;
+  return null;
+}
 
 export default createRule({
   name: "no-readonly-on-mutated-class-field",
@@ -30,10 +37,9 @@ export default createRule({
             member.type === "PropertyDefinition" &&
             member.readonly
           ) {
-            if (member.key.type === "Identifier") {
-              readonlyFields.add(member.key.name);
-            } else if (member.key.type === "Literal" && typeof member.key.value === "string") {
-              readonlyFields.add(member.key.value);
+            const fieldName = extractFieldName(member.key);
+            if (fieldName) {
+              readonlyFields.add(fieldName);
             }
           }
 
@@ -74,17 +80,18 @@ export default createRule({
 
         if (
           node.left.type === "MemberExpression" &&
-          node.left.object.type === "ThisExpression" &&
-          node.left.property.type === "Identifier" &&
-          currentReadonlyFields.has(node.left.property.name)
+          node.left.object.type === "ThisExpression"
         ) {
-          context.report({
-            node,
-            messageId: "mutationOfReadonly",
-            data: {
-              field: node.left.property.name,
-            },
-          });
+          const fieldName = extractFieldName(node.left.property);
+          if (fieldName && currentReadonlyFields.has(fieldName)) {
+            context.report({
+              node,
+              messageId: "mutationOfReadonly",
+              data: {
+                field: fieldName,
+              },
+            });
+          }
         }
       },
       UpdateExpression(node) {
@@ -93,17 +100,18 @@ export default createRule({
 
         if (
           node.argument.type === "MemberExpression" &&
-          node.argument.object.type === "ThisExpression" &&
-          node.argument.property.type === "Identifier" &&
-          currentReadonlyFields.has(node.argument.property.name)
+          node.argument.object.type === "ThisExpression"
         ) {
-          context.report({
-            node,
-            messageId: "mutationOfReadonly",
-            data: {
-              field: node.argument.property.name,
-            },
-          });
+          const fieldName = extractFieldName(node.argument.property);
+          if (fieldName && currentReadonlyFields.has(fieldName)) {
+            context.report({
+              node,
+              messageId: "mutationOfReadonly",
+              data: {
+                field: fieldName,
+              },
+            });
+          }
         }
       },
     };

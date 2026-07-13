@@ -58,5 +58,23 @@ const b = AnotherParser.parse(y);`,
       options: [{ allowedReceivers: ["OtherParser"] }],
       errors: [{ messageId: "unhandledParse" }],
     },
+    {
+      code: `try {
+  doSomething();
+} catch (e) {
+  const data = Schema.parse(e.message);
+}`,
+      errors: [{ messageId: "unhandledParse" }],
+    },
+    {
+      code: `try {
+  items.forEach(item => {
+    const data = Schema.parse(item);
+  });
+} catch (e) {
+  handleError(e);
+}`,
+      errors: [{ messageId: "unhandledParse" }],
+    },
   ],
 });
