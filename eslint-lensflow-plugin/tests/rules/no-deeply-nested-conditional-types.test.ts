@@ -45,6 +45,16 @@ type UnwrapLevel4<T> = UnwrapLevel2<UnwrapLevel2<T>>;`,
       code: `type H<T> = T extends (infer A)[] ? A extends (infer B)[] ? B : never : never;`,
       options: [{ maxDepth: 2 }],
     },
+    // 2 levels with parenthesized conditional type — TSParenthesizedType should be transparent
+    `type G<T> = T extends ((infer A)[] extends B ? C : D) ? E : F;`,
+    // 4 levels with parenthesized wrapper around innermost conditional
+    `type Deep<T> = T extends (infer A)[]
+      ? A extends (infer B)[]
+        ? B extends ((infer C)[] extends D ? E : F)
+          ? G
+          : never
+        : never
+      : never;`,
   ],
   invalid: [
     // 5 levels of nesting exceeds default maxDepth of 4
@@ -134,6 +144,11 @@ type UnwrapLevel4<T> = UnwrapLevel2<UnwrapLevel2<T>>;`,
       : never
     : never)>(v: T) { return v; }`,
       errors: [{ messageId: "deepNesting" }],
+    },
+    // 5 levels with parenthesized conditional types — TSParenthesizedType must be transparent
+    {
+      code: `type G<T> = T extends ((infer A)[] extends B ? (C extends (D extends (E extends F ? G : H) ? I : J) ? K : L) : M) ? N : O;`,
+      errors: [{ messageId: "deepNesting", data: { depth: "5" } }],
     },
   ],
 });
