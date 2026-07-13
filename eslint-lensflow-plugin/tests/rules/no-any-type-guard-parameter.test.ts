@@ -60,5 +60,37 @@ ruleTester.run("no-any-type-guard-parameter", rule, {
       }`,
       errors: [{ messageId: "anyTypeGuardParam" }],
     },
+    {
+      code: `const isString = (value: any): value is string => typeof value === "string";`,
+      errors: [{ messageId: "anyTypeGuardParam" }],
+    },
+    {
+      code: `const isNumber = (value: any): value is number => typeof value === "number";`,
+      errors: [{ messageId: "anyTypeGuardParam" }],
+    },
+    {
+      code: `const fn = function (value: any): value is string {
+        return typeof value === "string";
+      };`,
+      errors: [{ messageId: "anyTypeGuardParam" }],
+    },
+    {
+      code: `type Predicate = (value: any) => value is string;`,
+      errors: [{ messageId: "anyTypeGuardParam" }],
+    },
+    {
+      code: `interface Checker {
+        (value: any): value is string;
+      }`,
+      errors: [{ messageId: "anyTypeGuardParam" }],
+    },
+    {
+      code: `class C {
+        check(value: any): value is string {
+          return typeof value === "string";
+        }
+      }`,
+      errors: [{ messageId: "anyTypeGuardParam" }],
+    },
   ],
 });

@@ -5,7 +5,9 @@ type FunctionLikeNode =
   | TSESTree.FunctionDeclaration
   | TSESTree.FunctionExpression
   | TSESTree.ArrowFunctionExpression
-  | TSESTree.TSDeclareFunction;
+  | TSESTree.TSDeclareFunction
+  | TSESTree.TSFunctionType
+  | TSESTree.TSCallSignatureDeclaration;
 
 function containsAny(type: TSESTree.TypeNode): boolean {
   switch (type.type) {
@@ -80,6 +82,12 @@ export default createRule({
         checkTypeGuardParam(context, node);
       },
       TSDeclareFunction(node) {
+        checkTypeGuardParam(context, node);
+      },
+      TSFunctionType(node) {
+        checkTypeGuardParam(context, node);
+      },
+      TSCallSignatureDeclaration(node) {
         checkTypeGuardParam(context, node);
       },
     };
