@@ -15,6 +15,9 @@ function hasMutableMembers(type: ts.Type): boolean {
     const decls = member.getDeclarations();
     if (!decls) continue;
     for (const decl of decls) {
+      if (decl.kind === ts.SyntaxKind.SetAccessor) {
+        return true;
+      }
       if (
         decl.kind === ts.SyntaxKind.MethodSignature ||
         decl.kind === ts.SyntaxKind.MethodDeclaration
