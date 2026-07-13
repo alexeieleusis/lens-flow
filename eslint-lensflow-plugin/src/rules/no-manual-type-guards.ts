@@ -41,7 +41,13 @@ export default createRule({
   create(context: TSESLint.RuleContext<"manualTypeGuard", [{ minChecks: number }]>) {
     const [{ minChecks = 3 } = {}] = context.options;
 
-    function checkFunction(node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression) {
+    function checkFunction(
+      node:
+        | TSESTree.FunctionDeclaration
+        | TSESTree.FunctionExpression
+        | TSESTree.ArrowFunctionExpression
+        | TSESTree.TSEmptyBodyFunctionExpression,
+    ) {
       const returnType = node.returnType?.typeAnnotation;
 
       if (returnType?.type !== "TSTypePredicate") {
@@ -49,6 +55,8 @@ export default createRule({
       }
 
       const body = node.body;
+      if (!body) return;
+
       const guardCheckCount = countGuardChecks(body);
 
       if (guardCheckCount >= minChecks) {
@@ -66,6 +74,16 @@ export default createRule({
       FunctionDeclaration: checkFunction,
       FunctionExpression: checkFunction,
       ArrowFunctionExpression: checkFunction,
+      TSEmptyBodyFunctionExpression: checkFunction,
+      TSFunctionType() {
+        return;
+      },
+      TSMethodSignature() {
+        return;
+      },
+      MethodDefinition(node: TSESTree.MethodDefinition) {
+        if (node.value) checkFunction(node.value);
+      },
     };
   },
 });
