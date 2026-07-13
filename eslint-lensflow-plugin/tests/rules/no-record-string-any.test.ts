@@ -14,6 +14,7 @@ ruleTester.run("no-record-string-any", rule, {
     `type MapType = Map<string, any>`,
     `type SafeArray = Record<string, any[]>`,
     `type SafeUnion = Record<string, any | null>`,
+    `declare const x: Record<number, any>`,
   ],
   invalid: [
     {
@@ -25,10 +26,6 @@ ruleTester.run("no-record-string-any", rule, {
     },
     {
       code: `type Config = Record<string, any>`,
-      errors: [{ messageId: "recordAny" }],
-    },
-    {
-      code: `declare const x: Record<number, any>`,
       errors: [{ messageId: "recordAny" }],
     },
   ],

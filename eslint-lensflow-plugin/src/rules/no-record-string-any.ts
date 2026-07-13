@@ -12,7 +12,12 @@ function isRecordAny(node: TSESTree.TSTypeReference): boolean {
   if (name !== "Record") return false;
 
   const params = node.typeArguments?.params;
-  return !!(params && params.length === 2 && params[1].type === "TSAnyKeyword");
+  return !!(
+    params &&
+    params.length === 2 &&
+    params[0].type === "TSStringKeyword" &&
+    params[1].type === "TSAnyKeyword"
+  );
 }
 
 function reportRecordAny(
@@ -61,7 +66,7 @@ export default createRule({
     },
     messages: {
       recordAny:
-        "`Record<K, any>` loses value type safety. Use `Record<K, unknown>` and narrow with type guards. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T47-gradual-typing.md",
+        "`Record<string, any>` loses value type safety. Use `Record<string, unknown>` and narrow with type guards. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T47-gradual-typing.md",
     },
     schema: [],
     fixable: undefined,
