@@ -20,5 +20,12 @@ export type UserId = string & { readonly [__userBrand]: true };`,
       code: `export const __brand = Symbol("Brand");`,
       errors: [{ messageId: "exportedBrandSymbol" }],
     },
+    {
+      code: `export const __a = Symbol("A"), __b = Symbol("B");`,
+      errors: [
+        { messageId: "exportedBrandSymbol" },
+        { messageId: "exportedBrandSymbol" },
+      ],
+    },
   ],
 });
