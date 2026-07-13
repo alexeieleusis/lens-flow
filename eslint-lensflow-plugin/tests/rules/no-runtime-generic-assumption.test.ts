@@ -55,6 +55,12 @@ create({}).constructor`,
       errors: [{ messageId: "runtimeMetadataAccess" }],
     },
     {
+      code: `function leak<T>(item: T) {
+  return item.__proto__;
+}`,
+      errors: [{ messageId: "runtimeMetadataAccess" }],
+    },
+    {
       code: `const fn = <T>(x: T) => x.constructor;`,
       errors: [{ messageId: "runtimeMetadataAccess" }],
     },
