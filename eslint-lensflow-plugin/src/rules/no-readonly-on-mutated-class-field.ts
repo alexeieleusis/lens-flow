@@ -26,6 +26,7 @@ export default createRule({
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"mutationOfReadonly", []>) {
     const readonlyFieldsStack: (Set<string> | null)[] = [];
+    const constructorDepthStack: number[] = [];
     let constructorDepth = 0;
 
     return {
@@ -73,6 +74,20 @@ export default createRule({
         if (node.kind === "constructor") {
           constructorDepth--;
         }
+      },
+      FunctionExpression() {
+        constructorDepthStack.push(constructorDepth);
+        constructorDepth = 0;
+      },
+      "FunctionExpression:exit"() {
+        constructorDepth = constructorDepthStack.pop()!;
+      },
+      ArrowFunctionExpression() {
+        constructorDepthStack.push(constructorDepth);
+        constructorDepth = 0;
+      },
+      "ArrowFunctionExpression:exit"() {
+        constructorDepth = constructorDepthStack.pop()!;
       },
       AssignmentExpression(node) {
         const currentReadonlyFields = readonlyFieldsStack[readonlyFieldsStack.length - 1];
