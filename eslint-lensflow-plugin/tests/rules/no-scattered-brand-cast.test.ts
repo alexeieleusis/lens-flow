@@ -77,5 +77,15 @@ function process(a: Age) { return a; }
 process(25 as Age);`,
       errors: [{ messageId: "scatteredBrandCast" }],
     },
+    // Nested function inside smart constructor — inner arrow doesn't return the branded type
+    {
+      code: `type Age = Branded<number, "Age">;
+
+function makeAge(n: number): Age {
+  const validate = (x: number) => x as Age;
+  return validate(n);
+}`,
+      errors: [{ messageId: "scatteredBrandCast" }],
+    },
   ],
 });
