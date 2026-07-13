@@ -52,22 +52,13 @@ export default createRule({
       const optionalCount = properties.filter((p) => p.optional).length;
       const totalCount = properties.length;
 
-      let parent: TSESTree.Node | undefined = node.parent;
-      while (parent && parent.type !== "TSInterfaceDeclaration" && parent.type !== "TSTypeAliasDeclaration") {
-        parent = parent.parent;
-      }
+      const declarationAncestor = context.getAncestors().find(
+        (a): a is TSESTree.TSInterfaceDeclaration | TSESTree.TSTypeAliasDeclaration =>
+          a.type === "TSInterfaceDeclaration" || a.type === "TSTypeAliasDeclaration",
+      );
 
-      const reportNode = parent || node;
-
-      let name: string;
-      if (
-        parent &&
-        (parent.type === "TSInterfaceDeclaration" || parent.type === "TSTypeAliasDeclaration")
-      ) {
-        name = parent.id ? parent.id.name : "anonymous";
-      } else {
-        name = "anonymous";
-      }
+      const reportNode = declarationAncestor || node;
+      const name = declarationAncestor ? (declarationAncestor.id ? declarationAncestor.id.name : "anonymous") : "anonymous";
 
       if (optionalCount > thresholdOptional) {
         context.report({
