@@ -34,6 +34,10 @@ ruleTester.run("no-any-in-callable", rule, {
     `function f(x: string | number): string | number { return x as any; }`,
     // Intersection type without any
     `function f(x: string & { toString(): void }) { return x; }`,
+    // ObjectPattern destructured with proper type
+    `function f({ x }: { x: string }) { return x; }`,
+    // ArrayPattern destructured with proper type
+    `function f([x]: string[]) { return x; }`,
   ],
   invalid: [
     {
@@ -154,6 +158,39 @@ ruleTester.run("no-any-in-callable", rule, {
     // Array of any
     {
       code: `function f(x: any[]) { return x; }`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    // ObjectPattern destructured with any
+    {
+      code: `function f({ x }: any) { return x; }`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    // ArrayPattern destructured with any
+    {
+      code: `function f([x]: any) { return x; }`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    // Arrow function with ObjectPattern destructured any
+    {
+      code: `const fn = ({ x }: any) => x;`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    // Arrow function with ArrayPattern destructured any
+    {
+      code: `const fn = ([x]: any) => x;`,
+      errors: [{ messageId: "anyParam" }],
+    },
+    // TSCallSignatureDeclaration - callable interface with any
+    {
+      code: `interface Api { (x: any): any }`,
+      errors: [
+        { messageId: "anyParam" },
+        { messageId: "anyReturn" },
+      ],
+    },
+    // TSCallSignatureDeclaration - callable type literal with any
+    {
+      code: `type Api = { (data: any): void }`,
       errors: [{ messageId: "anyParam" }],
     },
   ],
