@@ -1,34 +1,10 @@
-import path from "node:path";
-import { RuleTester } from "@typescript-eslint/rule-tester";
-import { afterAll, describe, it } from "vitest";
-import * as tsParser from "@typescript-eslint/parser";
+import { ruleTester } from "../helpers/rule-tester.js";
 import rule from "../../src/rules/no-exhaustiveness-on-open-union.js";
-
-RuleTester.afterAll = afterAll;
-RuleTester.describe = describe;
-RuleTester.it = it;
-
-const TEST_FILENAME = "tests/rules/test.ts";
-const TS_CONFIG_DIR = path.resolve(__dirname, "../..");
-const TS_CONFIG = path.join(TS_CONFIG_DIR, "tsconfig.test.json");
-
-const ruleTester = new RuleTester({
-  languageOptions: {
-    parser: tsParser,
-    parserOptions: {
-      ecmaVersion: 2022,
-      sourceType: "module",
-      project: TS_CONFIG,
-      tsconfigRootDir: TS_CONFIG_DIR,
-    },
-  },
-});
 
 ruleTester.run("no-exhaustiveness-on-open-union", rule, {
   valid: [
     // Open union with proper fallback in default — no exhaustiveness check
     {
-      filename: TEST_FILENAME,
       code: `function colorToHex(c: "red" | "blue" | string): string {
   switch (c) {
     case "red": return "#f00";
@@ -39,7 +15,6 @@ ruleTester.run("no-exhaustiveness-on-open-union", rule, {
     },
     // Closed union (no broad type) with exhaustiveness check — this is fine
     {
-      filename: TEST_FILENAME,
       code: `function handle(s: "a" | "b") {
   switch (s) {
     case "a": break;
@@ -49,7 +24,6 @@ ruleTester.run("no-exhaustiveness-on-open-union", rule, {
     },
     // Open union but default has no exhaustiveness check
     {
-      filename: TEST_FILENAME,
       code: `function process(tag: "ok" | "err" | string): void {
   switch (tag) {
     case "ok": console.log("ok"); break;
@@ -60,7 +34,6 @@ ruleTester.run("no-exhaustiveness-on-open-union", rule, {
     },
     // Pure broad type — no literals, not an open union pattern
     {
-      filename: TEST_FILENAME,
       code: `function handle(s: string) {
   switch (s) {
     case "x": break;
@@ -70,7 +43,6 @@ ruleTester.run("no-exhaustiveness-on-open-union", rule, {
     },
     // Open union with number broad type — no exhaustiveness check
     {
-      filename: TEST_FILENAME,
       code: `function handle(n: 1 | 2 | number) {
   switch (n) {
     case 1: break;
@@ -81,7 +53,6 @@ ruleTester.run("no-exhaustiveness-on-open-union", rule, {
     },
     // Open union — variable declaration with proper fallback
     {
-      filename: TEST_FILENAME,
       code: `function handle() {
   const c: "red" | "blue" | string = getValue();
   switch (c) {
@@ -94,7 +65,6 @@ ruleTester.run("no-exhaustiveness-on-open-union", rule, {
   invalid: [
     // Open string union with throw in default — the antipattern
     {
-      filename: TEST_FILENAME,
       code: `function colorToHex(c: "red" | "blue" | string): string {
   switch (c) {
     case "red": return "#f00";
@@ -106,7 +76,6 @@ ruleTester.run("no-exhaustiveness-on-open-union", rule, {
     },
     // Open string union with as never cast in return
     {
-      filename: TEST_FILENAME,
       code: `function handle(status: "idle" | "loading" | string) {
   switch (status) {
     case "idle": break;
@@ -118,7 +87,6 @@ ruleTester.run("no-exhaustiveness-on-open-union", rule, {
     },
     // Open number union with exhaustiveness throw
     {
-      filename: TEST_FILENAME,
       code: `function process(code: 200 | 404 | number): void {
   switch (code) {
     case 200: break;
@@ -130,7 +98,6 @@ ruleTester.run("no-exhaustiveness-on-open-union", rule, {
     },
     // Open boolean union with as never
     {
-      filename: TEST_FILENAME,
       code: `function check(flag: true | false | boolean) {
   switch (flag) {
     case true: break;
@@ -142,7 +109,6 @@ ruleTester.run("no-exhaustiveness-on-open-union", rule, {
     },
     // Open union — variable declaration with exhaustiveness check
     {
-      filename: TEST_FILENAME,
       code: `function handle() {
   const c: "red" | "blue" | string = getValue();
   switch (c) {
@@ -154,7 +120,6 @@ ruleTester.run("no-exhaustiveness-on-open-union", rule, {
     },
     // Open union — throw nested inside BlockStatement in default branch
     {
-      filename: TEST_FILENAME,
       code: `function handle(c: "red" | "blue" | string): string {
   switch (c) {
     case "red": return "#f00";
