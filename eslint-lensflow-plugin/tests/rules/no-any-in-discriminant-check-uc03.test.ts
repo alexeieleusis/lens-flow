@@ -253,5 +253,13 @@ function area(s: ShapeData): number {
         { messageId: "ifDiscriminant" },
       ],
     },
+    // Negated discriminant check with `!==`
+    {
+      code: `function foo(data: { kind: string; [k: string]: unknown }) {
+  if (data.kind !== "Circle") return (data as any).value;
+  return null;
+}`,
+      errors: [{ messageId: "ifDiscriminant" }],
+    },
   ],
 });
