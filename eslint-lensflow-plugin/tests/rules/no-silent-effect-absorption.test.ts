@@ -34,6 +34,7 @@ type Effect<A, E> = {
   isOk(): boolean;
   isErr(): boolean;
   flatMap<A2>(fn: (a: A) => Effect<A2, E>): Effect<A2, E>;
+  ap<A2>(f: Effect<(a: A) => A2>): Effect<A2, E>;
   unwrapOrElse<B>(fn: (e: E) => B): B;
 };
 `;
@@ -63,6 +64,19 @@ r.mapErr((e) => new Error(e.message));`,
       code: EFFECT_TYPE_DEF + `
 declare const r: Effect<string, Error>;
 r.unwrapOrElse((e) => "default");`,
+    },
+    {
+      filename: TEST_FILENAME,
+      code: EFFECT_TYPE_DEF + `
+declare const r: Effect<string, Error>;
+r.flatMap((x) => r).match({ ok: (x) => console.log(x), err: (e) => console.error(e) });`,
+    },
+    {
+      filename: TEST_FILENAME,
+      code: EFFECT_TYPE_DEF + `
+declare const r: Effect<string, Error>;
+declare const f: Effect<(x: string) => number>;
+r.ap(f).match({ ok: (n) => n * 2, err: (e) => -1 });`,
     },
     {
       filename: TEST_FILENAME,
