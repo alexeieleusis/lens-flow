@@ -50,6 +50,19 @@ function getHandler(event: Event) {
 }`,
       options: [{ tableNames: ["handlers", "dispatchers"] }],
     },
+    // Non-Identifier parameter forms — the rule only checks Identifier params,
+    // so these are valid (no error reported). Documented here to protect scope.
+    `class Handler {
+  constructor(readonly event: string) {
+    const h = handlers[\`on\${this.event}\`];
+  }
+}`,
+    `function getHandler(event: string = "default") {
+  return handlers[\`on\${event}\`];
+}`,
+    `function getHandler({ event }: { event: string }) {
+  return handlers[\`on\${event}\`];
+}`,
   ],
   invalid: [
     {
