@@ -88,6 +88,13 @@ ruleTester.run("no-mutate-nullable-without-check", rule, {
   }
 }`,
     },
+    {
+      // Rule only fires on `!` assertions — plain mutation without `!` is not flagged
+      filename: TEST_FILENAME,
+      code: `function plainMutate(draft: { title: string | null }) {
+  draft.title = someOtherValue;
+}`,
+    },
   ],
   invalid: [
     {
