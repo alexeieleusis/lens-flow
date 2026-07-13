@@ -13,6 +13,12 @@ function reportIfMatch(
     node.typeName.name === paramName
   ) {
     cb(node);
+  } else if ((node as { type: string }).type === "TSParenthesizedType") {
+    reportIfMatch(
+      (node as unknown as { typeAnnotation: TSESTree.Node }).typeAnnotation,
+      paramName,
+      cb,
+    );
   }
 }
 
@@ -231,7 +237,7 @@ function walkOutputPositions(
 ): void {
   reportIfMatch(node, paramName, cb);
 
-  // TSParenthesizedType exists at runtime but isn't in @typescript-eslint's types.
+  // TSParenthesizedType is unwrapped by reportIfMatch; fall through to switch for other nodes.
   if ((node as { type: string }).type === "TSParenthesizedType") {
     delegateOutputChild(
       node,
