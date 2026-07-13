@@ -7,6 +7,8 @@ ruleTester.run("no-any-callback-type", rule, {
     `type Handler = (event: MouseEvent) => void;`,
     // Non-rest parameter with any array
     `type Handler = (args: any[]) => any;`,
+    // ReadonlyArray<any> as non-rest parameter (not rest, so valid)
+    `type Handler = (args: ReadonlyArray<any>) => any;`,
     // Rest parameter but typed, not any[]
     `type Handler = (...args: string[]) => void;`,
     // Rest any[] but typed return
@@ -17,6 +19,8 @@ ruleTester.run("no-any-callback-type", rule, {
     `type Handler = () => any;`,
     // Rest parameter with tuple
     `type Handler = (...args: [string, number]) => any;`,
+    // ReadonlyArray<any> rest param but typed return
+    `type Handler = (...args: ReadonlyArray<any>) => string;`,
     // Method signature with typed params
     `interface X { onEvent(event: MouseEvent): void; }`,
     // Method signature with rest but typed array
@@ -74,6 +78,26 @@ ruleTester.run("no-any-callback-type", rule, {
           onInit(...args: any[]): any;
         };
       `,
+      errors: [{ messageId: "anyCallbackType" }],
+    },
+    // ReadonlyArray<any> — callable type
+    {
+      code: `type Handler = (...args: ReadonlyArray<any>) => any;`,
+      errors: [{ messageId: "anyCallbackType" }],
+    },
+    // ReadonlyArray<any> — interface method
+    {
+      code: `interface X { onEvent(...args: ReadonlyArray<any>): any; }`,
+      errors: [{ messageId: "anyCallbackType" }],
+    },
+    // ReadonlyArray<any> — call signature
+    {
+      code: `interface X { (...args: ReadonlyArray<any>): any; }`,
+      errors: [{ messageId: "anyCallbackType" }],
+    },
+    // ReadonlyArray<any> — type literal method
+    {
+      code: `type X = { onEvent(...args: ReadonlyArray<any>): any; };`,
       errors: [{ messageId: "anyCallbackType" }],
     },
   ],

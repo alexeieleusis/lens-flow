@@ -10,9 +10,22 @@ function isAnyCallback(node: CallableNode): boolean {
   if (param.type !== "RestElement") return false;
 
   const typeAnn = param.typeAnnotation?.typeAnnotation;
-  if (typeAnn?.type !== "TSArrayType") return false;
 
-  if (typeAnn.elementType.type !== "TSAnyKeyword") return false;
+  let isAnyArrayType = false;
+
+  if (typeAnn?.type === "TSArrayType" && typeAnn.elementType.type === "TSAnyKeyword") {
+    isAnyArrayType = true;
+  } else if (
+    typeAnn?.type === "TSTypeReference" &&
+    typeAnn.typeName.type === "Identifier" &&
+    typeAnn.typeName.name === "ReadonlyArray" &&
+    typeAnn.typeArguments?.params.length === 1 &&
+    typeAnn.typeArguments.params[0].type === "TSAnyKeyword"
+  ) {
+    isAnyArrayType = true;
+  }
+
+  if (!isAnyArrayType) return false;
 
   return node.returnType?.typeAnnotation.type === "TSAnyKeyword";
 }
