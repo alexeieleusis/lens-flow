@@ -137,9 +137,13 @@ function walkParamAnnotation(
     param.type === AST_NODE_TYPES.Identifier ||
     param.type === AST_NODE_TYPES.RestElement ||
     param.type === AST_NODE_TYPES.ObjectPattern ||
-    param.type === AST_NODE_TYPES.ArrayPattern
+    param.type === AST_NODE_TYPES.ArrayPattern ||
+    param.type === AST_NODE_TYPES.AssignmentPattern
   ) {
-    typeNode = param.typeAnnotation?.typeAnnotation;
+    const base =
+      param.type === AST_NODE_TYPES.AssignmentPattern ? param.left : param;
+    typeNode = (base as TSESTree.Node & { typeAnnotation?: { typeAnnotation?: TSESTree.Node } }).typeAnnotation
+      ?.typeAnnotation;
   } else {
     typeNode = param as TSESTree.Node;
   }
