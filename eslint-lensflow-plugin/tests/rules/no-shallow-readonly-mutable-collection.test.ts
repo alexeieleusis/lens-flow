@@ -60,6 +60,12 @@ ruleTester.run("no-shallow-readonly-mutable-collection", rule, {
       errors: [{ messageId: "mutableArray" }],
     },
     {
+      code: `interface Config {
+  readonly items: Array<string>;
+}`,
+      errors: [{ messageId: "mutableArray" }],
+    },
+    {
       code: `type Config = {
   readonly items: string[];
 }`,
