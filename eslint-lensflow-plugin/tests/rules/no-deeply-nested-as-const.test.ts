@@ -86,7 +86,7 @@ ruleTester.run("no-deeply-nested-as-const", rule, {
       errors: [{ messageId: "deeplyNested" }],
     },
     {
-      code: `const shallowNested = [...[{ a: 1 }]] as const;`,
+      code: `const atThresholdNested = [...[{ a: 1 }]] as const;`,
       errors: [{ messageId: "deeplyNested" }],
     },
     // Function argument
