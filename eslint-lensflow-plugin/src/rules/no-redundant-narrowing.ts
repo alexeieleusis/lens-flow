@@ -117,10 +117,12 @@ export default createRule({
 
     return {
       IfStatement(node) {
-        if (node.consequent.type !== "BlockStatement") return;
-
-        for (const stmt of node.consequent.body) {
-          checkAndWalk(stmt, node.test);
+        if (node.consequent.type === "BlockStatement") {
+          for (const stmt of node.consequent.body) {
+            checkAndWalk(stmt, node.test);
+          }
+        } else {
+          checkAndWalk(node.consequent, node.test);
         }
 
         if (node.alternate) {
