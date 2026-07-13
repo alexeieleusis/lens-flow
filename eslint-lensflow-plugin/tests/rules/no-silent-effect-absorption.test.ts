@@ -106,5 +106,11 @@ declare const r: Effect<string, Error>;
 r.map((x) => x).map((y) => y.toUpperCase());`,
       errors: [{ messageId: "silentAbsorption" }],
     },
+    {
+      filename: TEST_FILENAME,
+      code: EFFECT_TYPE_DEF + `declare const r: Effect<string, Error> | undefined;
+r?.map((x) => x.length);`,
+      errors: [{ messageId: "silentAbsorption" }],
+    },
   ],
 });

@@ -32,6 +32,12 @@ const ERROR_HANDLING_METHODS = new Set([
 ]);
 
 function isEffectType(type: ts.Type): boolean {
+  // Handle union types (e.g. Effect<string, Error> | undefined)
+  if (ts.TypeFlags.Union & type.flags) {
+    const unionType = type as ts.UnionType;
+    return unionType.types.some((t) => isEffectType(t));
+  }
+
   const typeName = type.symbol?.name;
   if (typeName) {
     if (KNOWN_EFFECT_NAMES.some((p) => typeName.includes(p))) {
@@ -122,7 +128,13 @@ export default createRule({
 
     return {
       ExpressionStatement(node) {
-        const expr = node.expression;
+        let expr = node.expression;
+
+        // Unwrap ChainExpression from optional chaining (e.g. r?.map(...))
+        if (expr.type === "ChainExpression") {
+          expr = expr.expression;
+        }
+
         if (expr.type !== "CallExpression") return;
 
         const callee = expr.callee;
