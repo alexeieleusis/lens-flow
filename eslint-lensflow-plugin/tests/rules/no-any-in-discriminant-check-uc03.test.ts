@@ -261,5 +261,13 @@ function area(s: ShapeData): number {
 }`,
       errors: [{ messageId: "ifDiscriminant" }],
     },
+    // `else { throw }` guard pattern — `as any` in if branch should still be caught
+    {
+      code: `function foo(data: { kind: string; [k: string]: unknown }) {
+  if (data.kind === "A") return (data as any).value;
+  else throw new Error("invalid kind");
+}`,
+      errors: [{ messageId: "ifDiscriminant" }],
+    },
   ],
 });
