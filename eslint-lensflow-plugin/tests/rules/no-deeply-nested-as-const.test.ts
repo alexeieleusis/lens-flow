@@ -27,6 +27,24 @@ ruleTester.run("no-deeply-nested-as-const", rule, {
     `obj.config = { a: 1 } as const;`,
     // Class field initializer
     `class C { config = { a: 1 } as const; }`,
+    // Custom threshold — raising threshold makes deeper nesting valid
+    {
+      code: `const deep = {
+  a: {
+    b: {
+      c: { d: 1 }
+    }
+  }
+} as const;`,
+      options: [{ threshold: 5 }],
+    },
+    // Custom threshold — very large threshold (nothing reports)
+    {
+      code: `const veryDeep = {
+  a: { b: { c: { d: { e: { f: 1 } } } } }
+} as const;`,
+      options: [{ threshold: 100 }],
+    },
   ],
   invalid: [
     {
@@ -89,6 +107,22 @@ ruleTester.run("no-deeply-nested-as-const", rule, {
     // Class field initializer
     {
       code: `class Config { defaults = { a: { b: { c: 1 } } } as const; }`,
+      errors: [{ messageId: "deeplyNested" }],
+    },
+    // Custom threshold — lowering threshold catches shallower nesting
+    {
+      code: `const CONFIG = {
+  api: {
+    base: "https://example.com"
+  }
+} as const;`,
+      options: [{ threshold: 2 }],
+      errors: [{ messageId: "deeplyNested" }],
+    },
+    // Custom threshold — threshold 1 (everything reports)
+    {
+      code: `const flat = { a: 1, b: 2 } as const;`,
+      options: [{ threshold: 1 }],
       errors: [{ messageId: "deeplyNested" }],
     },
   ],
