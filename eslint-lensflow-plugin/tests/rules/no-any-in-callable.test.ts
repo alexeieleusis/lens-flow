@@ -65,6 +65,14 @@ ruleTester.run("no-any-in-callable", rule, {
         { messageId: "anyReturn" },
       ],
     },
+    // FunctionExpression with any param and return
+    {
+      code: `(function(x: any): any { return x; })`,
+      errors: [
+        { messageId: "anyParam" },
+        { messageId: "anyReturn" },
+      ],
+    },
     {
       code: `function identity(x: any) { return x; }`,
       errors: [{ messageId: "anyParam" }],
