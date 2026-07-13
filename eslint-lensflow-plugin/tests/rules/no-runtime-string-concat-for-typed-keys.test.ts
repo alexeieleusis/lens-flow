@@ -44,6 +44,12 @@ function getHandler(event: Event) {
 function getHandler(event: Event) {
   return handlers[(\`on\${event}\` satisfies TemplateStringsArray)];
 }`,
+    {
+      code: `function getHandler(event: string) {
+  return myCustomTable[\`on\${event}\`];
+}`,
+      options: [{ tableNames: ["handlers", "dispatchers"] }],
+    },
   ],
   invalid: [
     {
@@ -86,6 +92,13 @@ function getHandler(event: Event) {
       code: `function getHandler(event: string) {
   return handlers[(\`on\${event}\` satisfies string)];
 }`,
+      errors: [{ messageId: "runtimeStringConcatKey" }],
+    },
+    {
+      code: `function lookup(event: string) {
+  return myCustomTable[\`on\${event}\`];
+}`,
+      options: [{ tableNames: ["myCustomTable"] }],
       errors: [{ messageId: "runtimeStringConcatKey" }],
     },
   ],
