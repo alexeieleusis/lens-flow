@@ -29,6 +29,14 @@ ruleTester.run("no-any-in-utility-function", rule, {
     `class Foo {
       bar = (data: any) => data;
     }`,
+    // Nested function inside another function body — NOT standalone
+    `function outer() {
+      function inner(data: any): any { return data; }
+    }`,
+    // Nested arrow function inside another function body — NOT standalone
+    `function outer() {
+      const inner = (data: any): any => data;
+    }`,
   ],
   invalid: [
     {
