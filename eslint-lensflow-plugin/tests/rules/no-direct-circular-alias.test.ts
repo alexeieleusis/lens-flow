@@ -9,6 +9,7 @@ ruleTester.run("no-direct-circular-alias", rule, {
     `type Nested = { data: { inner: Nested } };`,
     `type Simple = string | number;`,
     `type Dependent = { ref: Other }; type Other = { ref: Dependent };`,
+    `type A = B[]; type B = A[];`,
     `type Foo = Namespace.Foo;`,
     `type Bar = A.B.C.Bar;`,
   ],
