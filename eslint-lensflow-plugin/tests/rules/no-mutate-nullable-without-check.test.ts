@@ -41,6 +41,14 @@ ruleTester.run("no-mutate-nullable-without-check", rule, {
 }`,
     },
     {
+      // Non-null assertion after truthiness guard — redundant but NOT a violation
+      filename: TEST_FILENAME,
+      code: `function withGuardAndAssert(draft: { title: string | null }) {
+  if (!draft.title) return;
+  draft.title = draft.title!.toUpperCase();
+}`,
+    },
+    {
       filename: TEST_FILENAME,
       code: `function safeWithAssert(draft: { title: string | null }) {
   if (draft.title === null) return;
