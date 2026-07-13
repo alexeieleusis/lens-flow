@@ -113,5 +113,13 @@ ruleTester.run("no-any-terminating-recursion", rule, {
 }`,
       errors: [{ messageId: "anyInRecursive" }],
     },
+    // any in union-wrapped self-reference
+    {
+      code: `type UnionNode = {
+  next: UnionNode | any;
+  label: string;
+}`,
+      errors: [{ messageId: "anyInRecursive" }],
+    },
   ],
 });
