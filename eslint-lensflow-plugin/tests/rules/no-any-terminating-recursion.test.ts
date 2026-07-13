@@ -97,5 +97,21 @@ ruleTester.run("no-any-terminating-recursion", rule, {
 }`,
       errors: [{ messageId: "anyInRecursive" }],
     },
+    // any in method param of recursive interface
+    {
+      code: `interface Handler {
+  next: Handler | null;
+  handle(data: any): void;
+}`,
+      errors: [{ messageId: "anyInRecursive" }],
+    },
+    // unknown in method return of recursive interface
+    {
+      code: `interface Node {
+  child: Node | null;
+  compute(): unknown;
+}`,
+      errors: [{ messageId: "anyInRecursive" }],
+    },
   ],
 });
