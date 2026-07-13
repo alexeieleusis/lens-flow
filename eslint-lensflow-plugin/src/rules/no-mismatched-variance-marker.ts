@@ -151,13 +151,6 @@ function walkPropertyTypeForInput(
     for (const p of node.params) {
       walkParamAnnotation(p, paramName, cb);
     }
-    if (node.returnType?.typeAnnotation) {
-      walkPropertyTypeForInput(
-        node.returnType.typeAnnotation,
-        paramName,
-        cb,
-      );
-    }
   } else if (node.type === AST_NODE_TYPES.TSConstructorType) {
     for (const p of node.params) {
       walkParamAnnotation(p, paramName, cb);
@@ -166,23 +159,9 @@ function walkPropertyTypeForInput(
     for (const p of node.params) {
       walkParamAnnotation(p, paramName, cb);
     }
-    if (node.returnType?.typeAnnotation) {
-      walkPropertyTypeForInput(
-        node.returnType.typeAnnotation,
-        paramName,
-        cb,
-      );
-    }
   } else if (node.type === AST_NODE_TYPES.TSConstructSignatureDeclaration) {
     for (const p of node.params) {
       walkParamAnnotation(p, paramName, cb);
-    }
-    if (node.returnType?.typeAnnotation) {
-      walkPropertyTypeForInput(
-        node.returnType.typeAnnotation,
-        paramName,
-        cb,
-      );
     }
   } else if (node.type === AST_NODE_TYPES.TSTypeLiteral) {
     for (const member of node.members) {
@@ -215,24 +194,10 @@ function walkMemberForInput(
     for (const p of cs.params) {
       walkParamAnnotation(p, paramName, cb);
     }
-    if (cs.returnType?.typeAnnotation) {
-      walkPropertyTypeForInput(
-        cs.returnType.typeAnnotation,
-        paramName,
-        cb,
-      );
-    }
   } else if (member.type === AST_NODE_TYPES.TSConstructSignatureDeclaration) {
     const cs = member as TSESTree.TSConstructSignatureDeclaration;
     for (const p of cs.params) {
       walkParamAnnotation(p, paramName, cb);
-    }
-    if (cs.returnType?.typeAnnotation) {
-      walkPropertyTypeForInput(
-        cs.returnType.typeAnnotation,
-        paramName,
-        cb,
-      );
     }
   }
 }
