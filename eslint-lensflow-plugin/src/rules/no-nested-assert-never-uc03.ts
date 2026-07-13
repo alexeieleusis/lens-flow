@@ -1,41 +1,6 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
-import { getMemberName } from "../utils/ast-helpers.js";
-
-function isAssertNeverCall(node: TSESTree.Node): boolean {
-  if (node.type !== "CallExpression") return false;
-  const callee = node.callee;
-  if (callee.type !== "Identifier") return false;
-  return /^assertNever$/.test(callee.name);
-}
-
-const SKIP_KEYS = new Set(["parent", "loc", "range", "type", "name"]);
-
-function isNodeLike(val: unknown): val is { type: string } {
-  return val != null && typeof val === "object" && "type" in val;
-}
-
-function containsAssertNever(node: TSESTree.Node): boolean {
-  if (isAssertNeverCall(node)) return true;
-
-  const obj = node as unknown as Record<string, unknown>;
-  for (const key of Object.keys(obj)) {
-    if (SKIP_KEYS.has(key)) continue;
-    if (checkValueForAssertNever(obj[key])) return true;
-  }
-  return false;
-}
-
-function checkValueForAssertNever(val: unknown): boolean {
-  if (Array.isArray(val)) {
-    for (const child of val) {
-      if (isNodeLike(child) && containsAssertNever(child as TSESTree.Node)) return true;
-    }
-  } else if (isNodeLike(val)) {
-    if (containsAssertNever(val as TSESTree.Node)) return true;
-  }
-  return false;
-}
+import { getMemberName, hasAssertNever } from "../utils/ast-helpers.js";
 
 function extractMemberFromBinary(node: TSESTree.BinaryExpression): string | null {
   const leftKey =
@@ -83,7 +48,7 @@ export default createRule({
         const defaultCase = node.cases.find((c) => c.test === null);
         if (!defaultCase) return;
 
-        if (!containsAssertNever(defaultCase)) return;
+        if (!defaultCase.consequent.some(s => hasAssertNever(s))) return;
 
         const discriminant = node.discriminant;
         if (discriminant.type !== "MemberExpression") return;
