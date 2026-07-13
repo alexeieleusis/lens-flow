@@ -77,19 +77,19 @@ ruleTester.run("no-any-in-utility-function", rule, {
       code: `function process(...rest: any): void {
         rest.forEach(console.log);
       }`,
-      errors: [{ messageId: "anyParam" }],
+      errors: [{ messageId: "anyParam", data: { name: "rest" } }],
     },
     {
       code: `function handle({ a }: any): void {
         console.log(a);
       }`,
-      errors: [{ messageId: "anyParam" }],
+      errors: [{ messageId: "anyParam", data: { name: "{ a }: any" } }],
     },
     {
       code: `function process([x]: any): void {
         console.log(x);
       }`,
-      errors: [{ messageId: "anyParam" }],
+      errors: [{ messageId: "anyParam", data: { name: "[x]: any" } }],
     },
     {
       code: `export const clone = (data: any): any => JSON.parse(JSON.stringify(data))`,
@@ -146,13 +146,13 @@ ruleTester.run("no-any-in-utility-function", rule, {
       code: `export const handle = ({ a = 1 }: any): void => {
         console.log(a);
       }`,
-      errors: [{ messageId: "anyParam" }],
+      errors: [{ messageId: "anyParam", data: { name: "{ a = 1 }: any" } }],
     },
     {
       code: `export const process = ([x = 0]: any): void => {
         console.log(x);
       }`,
-      errors: [{ messageId: "anyParam" }],
+      errors: [{ messageId: "anyParam", data: { name: "[x = 0]: any" } }],
     },
     {
       code: `function process<T>(data: any, config: T): any {
