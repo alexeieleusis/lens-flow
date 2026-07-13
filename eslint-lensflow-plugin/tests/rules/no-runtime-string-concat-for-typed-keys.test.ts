@@ -52,6 +52,11 @@ function getHandler(event: Event) {
     },
     // Non-Identifier parameter forms — the rule only checks Identifier params,
     // so these are valid (no error reported). Documented here to protect scope.
+    // MemberExpression object — the rule checks `node.object.type !== "Identifier"`
+    // and returns early for `this.handlers[...]`, `obj.handlers[...]`, etc.
+    `function getHandler(event: string) {
+  return this.handlers[\`on\${event}\`];
+}`,
     `class Handler {
   constructor(readonly event: string) {
     const h = handlers[\`on\${this.event}\`];
