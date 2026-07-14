@@ -25,6 +25,10 @@ ruleTester.run("require-assertnever-never-parameter", rule, {
     `function assertNever() {
       throw new Error("unreachable");
     }`,
+    // Untyped parameter — typeAnn is undefined, condition is falsy, no report
+    `function assertNever(x) {
+      throw new Error("unreachable");
+    }`,
   ],
   invalid: [
     {
