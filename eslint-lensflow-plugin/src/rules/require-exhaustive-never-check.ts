@@ -86,6 +86,8 @@ export default createRule({
 
         if (nodeHasAssertNeverOrThrow(node)) return;
 
+        if (ifAncestor && hasGuardElse(ifAncestor)) return;
+
         const allValues = getAllDiscriminantValues(
           node,
           info,
@@ -207,6 +209,20 @@ function collectBackwardsIfChain(
 
   handledValues.reverse();
   return { varName, propName, handledValues };
+}
+
+function hasGuardElse(ifStmt: TSESTree.IfStatement): boolean {
+  let current = ifStmt;
+  while (current) {
+    if (!current.alternate) return false;
+    const alt = current.alternate;
+    if (alt.type === "IfStatement") {
+      current = alt;
+      continue;
+    }
+    return nodeHasAssertNeverOrThrow(alt);
+  }
+  return false;
 }
 
 function isChainableIf(stmt: TSESTree.Node): stmt is TSESTree.IfStatement {

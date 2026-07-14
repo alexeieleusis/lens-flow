@@ -119,6 +119,16 @@ function handle(s: Status) {
   throw new Error("not idle");
 }`,
     },
+    // If-else chain: else { throw } fallback
+    {
+      filename: TEST_FILENAME,
+      code: `type Status = "idle" | "loading" | "done";
+function handle(s: Status) {
+  if (s === "idle") return 0;
+  if (s === "loading") return 1;
+  else throw new Error("not done");
+}`,
+    },
     // Number literal union in switch: all handled
     {
       filename: TEST_FILENAME,
