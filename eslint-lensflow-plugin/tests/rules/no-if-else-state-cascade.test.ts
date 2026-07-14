@@ -48,6 +48,13 @@ ruleTester.run("no-if-else-state-cascade", rule, {
       else if (form.status === "b") return 2;
       else return fallback();
     }`,
+    `function handle(form: Form) {
+      if (form.status === "a") return 1;
+      else if (form.status === "b") return 2;
+      else if (form.errors.length > 0) return 3;
+      else if (form.status === "c") return 4;
+      else if (form.status === "d") return 5;
+    }`,
   ],
   invalid: [
     {
