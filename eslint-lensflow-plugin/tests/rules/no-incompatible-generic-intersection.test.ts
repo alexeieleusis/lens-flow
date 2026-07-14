@@ -46,6 +46,11 @@ ruleTester.run("no-incompatible-generic-intersection", rule, {
       filename: TEST_FILENAME,
       code: `type Merged = { a: string } & { b: number };`,
     },
+    // Qualified type name — same base, same params
+    {
+      filename: TEST_FILENAME,
+      code: `type OkNS = NS.MyArray<string> & NS.MyArray<string>;`,
+    },
   ],
   invalid: [
     // Array<string> & Array<number> — no value can satisfy both
@@ -70,6 +75,12 @@ ruleTester.run("no-incompatible-generic-intersection", rule, {
     {
       filename: TEST_FILENAME,
       code: `type Complex = Array<string> & Iterable<unknown> & Array<number>;`,
+      errors: [{ messageId: "incompatible" }],
+    },
+    // Qualified type name — same base, incompatible params
+    {
+      filename: TEST_FILENAME,
+      code: `type BadNS = NS.MyArray<string> & NS.MyArray<number>;`,
       errors: [{ messageId: "incompatible" }],
     },
   ],

@@ -9,10 +9,11 @@ interface ESTreeToTSNodeMap {
 
 const URL = knowledgeUrl("catalog/T02-union-intersection.md");
 
-function getBaseName(
-  typeName: TSESTree.Identifier | TSESTree.TSTypeParameter,
+function extractRightmostIdentifier(
+  node: TSESTree.Identifier | TSESTree.TSQualifiedName | TSESTree.TSTypeParameter,
 ): string | null {
-  if (typeName.type === "Identifier") return typeName.name;
+  if (node.type === "Identifier") return node.name;
+  if (node.type === "TSQualifiedName") return extractRightmostIdentifier(node.right);
   return null;
 }
 
@@ -21,8 +22,8 @@ function groupTypeRefs(
 ): Map<string, TSESTree.TSTypeReference[]> {
   const groups = new Map<string, TSESTree.TSTypeReference[]>();
   for (const ref of typeRefs) {
-    if (ref.typeName.type === "TSQualifiedName" || ref.typeName.type === "ThisExpression") continue;
-    const baseName = getBaseName(ref.typeName);
+    if (ref.typeName.type === "ThisExpression") continue;
+    const baseName = extractRightmostIdentifier(ref.typeName);
     if (!baseName) continue;
     const group = groups.get(baseName) ?? [];
     group.push(ref);
