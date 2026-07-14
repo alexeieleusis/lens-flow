@@ -49,13 +49,13 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"plainStringId", []>) {
-    const violations: Array<{ fnNode: TSESTree.Node; paramName: string }> = [];
+    const violations: Array<{ fnNode: TSESTree.Node; paramNode: TSESTree.Node; paramName: string }> = [];
 
     function checkFunction(node: { params: TSESTree.Parameter[] }) {
       for (const param of node.params) {
         const idInfo = isIdParam(param);
         if (idInfo) {
-          violations.push({ fnNode: node as TSESTree.Node, paramName: idInfo.name });
+          violations.push({ fnNode: node as TSESTree.Node, paramNode: param as TSESTree.Node, paramName: idInfo.name });
         }
       }
     }
@@ -86,15 +86,15 @@ export default createRule({
         checkFunction(node);
       },
       "Program:exit"() {
-        const uniqueFnNodes = [...new Map(violations.map(v => [v.fnNode, v])).values()];
-        if (uniqueFnNodes.length < 2) return;
-        for (const { fnNode, paramName } of uniqueFnNodes) {
+        const uniqueByFn = [...new Map(violations.map(v => [v.fnNode, v])).values()];
+        if (uniqueByFn.length < 2) return;
+        for (const { paramNode, paramName } of uniqueByFn) {
           context.report({
-            node: fnNode,
+            node: paramNode,
             messageId: "plainStringId",
             data: {
               paramName,
-              count: String(uniqueFnNodes.length),
+              count: String(uniqueByFn.length),
             },
           });
         }
