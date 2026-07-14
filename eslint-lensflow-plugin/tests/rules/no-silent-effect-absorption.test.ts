@@ -83,6 +83,13 @@ r.ap(f).match({ ok: (n) => n * 2, err: (e) => -1 });`,
       code: `const arr = [1, 2, 3];
 arr.map((x) => x * 2);`,
     },
+    {
+      filename: TEST_FILENAME,
+      code: EFFECT_TYPE_DEF + `
+declare const r: Effect<string, Error>;
+r.customHandle();`,
+      options: [{ allowedTerminators: ["customHandle"] }],
+    },
   ],
   invalid: [
     {
@@ -110,6 +117,14 @@ r.map((x) => x).map((y) => y.toUpperCase());`,
       filename: TEST_FILENAME,
       code: EFFECT_TYPE_DEF + `declare const r: Effect<string, Error> | undefined;
 r?.map((x) => x.length);`,
+      errors: [{ messageId: "silentAbsorption" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: EFFECT_TYPE_DEF + `
+declare const r: Effect<string, Error>;
+r.map((x) => x.length);`,
+      options: [{ allowedTerminators: [] }],
       errors: [{ messageId: "silentAbsorption" }],
     },
   ],
