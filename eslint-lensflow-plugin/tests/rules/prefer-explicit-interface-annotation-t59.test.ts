@@ -8,6 +8,8 @@ ruleTester.run("prefer-explicit-interface-annotation-t59", rule, {
 const x: Printable = { print() { return "hi"; }, secret: 42 };`,
     `const x = { a: 1, b: "two" } satisfies { a: number; b: string };`,
     `const x = { print() { return "hi"; } } satisfies { print(): string };`,
+    `namespace TE { export type Printable = { print(): string } }
+const x = { print() { return "hi"; }, secret: 42 } satisfies TE.Printable;`,
   ],
   invalid: [
     {
