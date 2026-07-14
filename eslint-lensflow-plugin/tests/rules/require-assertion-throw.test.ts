@@ -40,5 +40,9 @@ ruleTester.run("require-assertion-throw", rule, {
       };`,
       errors: [{ messageId: "missingThrow" }],
     },
+    {
+      code: `const assertString = (x: unknown): asserts x is string => x`,
+      errors: [{ messageId: "missingThrow" }],
+    },
   ],
 });
