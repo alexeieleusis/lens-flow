@@ -13,7 +13,7 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow type parameters annotated with `out` that are used in input positions, or `in` used in return positions",
+        "Disallow type parameters annotated with `out` that are used in input positions, or `in` used in output positions",
     },
     messages: {
       outInInputPosition:
