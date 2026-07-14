@@ -40,6 +40,15 @@ ruleTester.run("no-as-any-in-narrowed-branch", rule, {
     return (m as any).x;
   }
 }`,
+    // Valid — cast in nested callback is outside narrowing scope
+    `function getValue(m: { type: "a"; val: number } | { type: "b"; val: string }) {
+  if (m.type === "a") {
+    setTimeout(() => {
+      // m may have been reassigned between guard and callback invocation
+      doSomething(m as any);
+    });
+  }
+}`,
   ],
   invalid: [
     // if guard: casting the narrowed variable itself
