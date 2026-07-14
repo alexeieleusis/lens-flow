@@ -86,14 +86,15 @@ export default createRule({
         checkFunction(node);
       },
       "Program:exit"() {
-        if (violations.length < 2) return;
-        for (const { fnNode, paramName } of violations) {
+        const uniqueFnNodes = [...new Map(violations.map(v => [v.fnNode, v])).values()];
+        if (uniqueFnNodes.length < 2) return;
+        for (const { fnNode, paramName } of uniqueFnNodes) {
           context.report({
             node: fnNode,
             messageId: "plainStringId",
             data: {
               paramName,
-              count: String(violations.length),
+              count: String(uniqueFnNodes.length),
             },
           });
         }
