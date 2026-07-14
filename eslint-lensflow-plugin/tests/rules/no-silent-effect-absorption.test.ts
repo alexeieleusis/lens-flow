@@ -99,27 +99,27 @@ r.customHandle();`,
       code: EFFECT_TYPE_DEF + `
 declare const r: Effect<string, Error>;
 r.map((x) => x.length);`,
-      errors: [{ messageId: "silentAbsorption" }],
+      errors: [{ messageId: "silentAbsorption", data: { method: "map" } }],
     },
     {
       filename: TEST_FILENAME,
       code: EFFECT_TYPE_DEF + `
 declare const r: Effect<{ name: string }, Error>;
 r.chain((user) => r);`,
-      errors: [{ messageId: "silentAbsorption" }],
+      errors: [{ messageId: "silentAbsorption", data: { method: "chain" } }],
     },
     {
       filename: TEST_FILENAME,
       code: EFFECT_TYPE_DEF + `
 declare const r: Effect<string, Error>;
 r.map((x) => x).map((y) => y.toUpperCase());`,
-      errors: [{ messageId: "silentAbsorption" }],
+      errors: [{ messageId: "silentAbsorption", data: { method: "map" } }],
     },
     {
       filename: TEST_FILENAME,
       code: EFFECT_TYPE_DEF + `declare const r: Effect<string, Error> | undefined;
 r?.map((x) => x.length);`,
-      errors: [{ messageId: "silentAbsorption" }],
+      errors: [{ messageId: "silentAbsorption", data: { method: "map" } }],
     },
     {
       filename: TEST_FILENAME,
@@ -127,14 +127,14 @@ r?.map((x) => x.length);`,
 declare const r: Effect<string, Error>;
 r.map((x) => x.length);`,
       options: [{ allowedTerminators: [] }],
-      errors: [{ messageId: "silentAbsorption" }],
+      errors: [{ messageId: "silentAbsorption", data: { method: "map" } }],
     },
     {
       filename: TEST_FILENAME,
       code: EFFECT_TYPE_DEF + `
 declare const r: Effect<string, Error>;
 r.flatMap((x) => r);`,
-      errors: [{ messageId: "silentAbsorption" }],
+      errors: [{ messageId: "silentAbsorption", data: { method: "flatMap" } }],
     },
     {
       filename: TEST_FILENAME,
@@ -142,7 +142,7 @@ r.flatMap((x) => r);`,
 declare const r: Effect<string, Error>;
 declare const fnEffect: Effect<(x: string) => number>;
 r.ap(fnEffect);`,
-      errors: [{ messageId: "silentAbsorption" }],
+      errors: [{ messageId: "silentAbsorption", data: { method: "ap" } }],
     },
   ],
 });
