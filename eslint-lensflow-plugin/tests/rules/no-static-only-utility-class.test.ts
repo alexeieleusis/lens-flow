@@ -35,6 +35,13 @@ ruleTester.run("no-static-only-utility-class", rule, {
     }`,
   ],
   invalid: [
+    // Empty utility class — private constructor with no members at all
+    {
+      code: `class NoOp {
+        private constructor() {}
+      }`,
+      errors: [{ messageId: "staticOnlyUtility" }],
+    },
     {
       code: `class MathUtils {
         private constructor() {}

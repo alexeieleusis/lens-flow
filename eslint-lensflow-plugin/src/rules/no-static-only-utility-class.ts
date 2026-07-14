@@ -43,7 +43,6 @@ export default createRule({
         );
 
         const allNonConstructorAreStatic =
-          nonConstructorMethods.length > 0 &&
           nonConstructorMethods.every((m) => m.type === "MethodDefinition" && m.static === true);
 
         if (
