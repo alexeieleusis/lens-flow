@@ -103,6 +103,38 @@ ruleTester.run("no-mutate-nullable-without-check", rule, {
   draft.title = someOtherValue;
 }`,
     },
+    {
+      // Guard nested inside an if block should be detected
+      filename: TEST_FILENAME,
+      code: `function nestedIfGuard(draft: { title: string | null }) {
+  if (someCondition) {
+    if (draft.title === null) return;
+  }
+  draft.title = draft.title!.toUpperCase();
+}`,
+    },
+    {
+      // Guard nested inside a for loop within an if block should be detected
+      filename: TEST_FILENAME,
+      code: `function nestedLoopInIfGuard(draft: { title: string | null }) {
+  if (someCondition) {
+    for (let i = 0; i < 1; i++) {
+      if (draft.title === null) return;
+    }
+  }
+  draft.title = draft.title!.toUpperCase();
+}`,
+    },
+    {
+      // Guard inside a while loop should be detected
+      filename: TEST_FILENAME,
+      code: `function whileLoopGuard(draft: { title: string | null }) {
+  while (condition) {
+    if (draft.title === null) return;
+  }
+  draft.title = draft.title!.toUpperCase();
+}`,
+    },
   ],
   invalid: [
     {

@@ -140,6 +140,18 @@ function checkBlockForGuard(body: unknown, node: unknown, objName: string, propN
     if (stmtBlockContainsNode(stmt, node)) return false;
     if (nullGuardIfContainsNode(stmt, node, objName, propName)) return false;
     if (loopHasTerminatingGuard(stmt, objName, propName)) return false;
+    // Recurse into nested if/switch bodies to find guards
+    if (typeof stmt === "object" && stmt != null && "type" in stmt) {
+      const s = stmt as { type: string; consequent?: unknown; alternate?: unknown; body?: unknown };
+      if (s.type === "IfStatement") {
+        if (s.consequent && !checkBlockForGuard(s.consequent, node, objName, propName)) return false;
+        if (s.alternate && !checkBlockForGuard(s.alternate, node, objName, propName)) return false;
+      } else if (LOOP_TYPES.has(s.type as string) && s.body) {
+        if (!checkBlockForGuard(s.body, node, objName, propName)) return false;
+      } else if (s.type === "SwitchStatement" && s.body) {
+        if (!checkBlockForGuard(s.body, node, objName, propName)) return false;
+      }
+    }
   }
   return true;
 }
