@@ -105,7 +105,6 @@ import noMagicStringSwitch from "./rules/no-magic-string-switch.js";
 import noManualTypeGuards from "./rules/no-manual-type-guards.js";
 import noManyFunctionParameters from "./rules/no-many-function-parameters.js";
 import noMismatchedVarianceMarker from "./rules/no-mismatched-variance-marker.js";
-import noMismatchedVarianceMarkerUc17 from "./rules/no-mismatched-variance-marker-uc17.js";
 import noMissingAsConst from "./rules/no-missing-as-const.js";
 import noMixedDecoratorApis from "./rules/no-mixed-decorator-apis.js";
 import noMixedInstanceofDiscriminant from "./rules/no-mixed-instanceof-discriminant.js";
@@ -390,7 +389,6 @@ const plugin: {
     "no-manual-type-guards": noManualTypeGuards,
     "no-many-function-parameters": noManyFunctionParameters,
     "no-mismatched-variance-marker": noMismatchedVarianceMarker,
-    "no-mismatched-variance-marker-uc17": noMismatchedVarianceMarkerUc17,
     "no-missing-as-const": noMissingAsConst,
     "no-mixed-decorator-apis": noMixedDecoratorApis,
     "no-mixed-instanceof-discriminant": noMixedInstanceofDiscriminant,

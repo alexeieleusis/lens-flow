@@ -96,6 +96,30 @@ export default createRule({
       return unwrapTsWrapper(ancestors[0]);
     };
 
+    const extractIdentifiersFromPattern = (
+      node: TSESTree.Node,
+      out: string[] = []
+    ): string[] => {
+      if (node.type === "Identifier") {
+        out.push(node.name);
+      } else if (node.type === "ObjectPattern") {
+        for (const prop of node.properties) {
+          if (prop.type === "Property") {
+            extractIdentifiersFromPattern(prop.value, out);
+          }
+        }
+      } else if (node.type === "ArrayPattern") {
+        for (const element of node.elements) {
+          if (element) {
+            extractIdentifiersFromPattern(element, out);
+          }
+        }
+      } else if (node.type === "AssignmentPattern") {
+        extractIdentifiersFromPattern(node.left, out);
+      }
+      return out;
+    };
+
     const isJsonParseCall = (node: TSESTree.CallExpression): boolean => {
       const { callee } = node;
       return (
@@ -117,12 +141,20 @@ export default createRule({
 
     const isVariableDeclaratorWithId = (
       node: TSESTree.CallExpression
-    ): string | null => {
+    ): string[] | null => {
       const p = getEffectiveParent(node);
       if (p?.type !== "VariableDeclarator") return null;
       const declarator = p as TSESTree.VariableDeclarator;
-      if (declarator.id.type !== "Identifier") return null;
-      return declarator.id.name;
+      if (declarator.id.type === "Identifier") {
+        return [declarator.id.name];
+      }
+      if (
+        declarator.id.type === "ObjectPattern" ||
+        declarator.id.type === "ArrayPattern"
+      ) {
+        return extractIdentifiersFromPattern(declarator.id);
+      }
+      return null;
     };
 
     const checkUnvalidatedArgs = (
@@ -174,9 +206,11 @@ export default createRule({
         return;
       }
 
-      const varName = isVariableDeclaratorWithId(node);
-      if (varName) {
-        currentScope()[varName] = node;
+      const varNames = isVariableDeclaratorWithId(node);
+      if (varNames) {
+        for (const name of varNames) {
+          currentScope()[name] = node;
+        }
       }
     };
 

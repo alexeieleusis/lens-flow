@@ -16,8 +16,24 @@ ruleTester.run("require-validation-after-json-parse", rule, {
     // JSON.parse result stored but only used in validation calls
     `const raw = JSON.parse(input);
     const validated = schema.validate(raw);`,
+    // Destructured variable validated before use
+    `const { data } = JSON.parse(input);
+    const validated = Schema.parse(data);
+    database.save(validated);`,
   ],
   invalid: [
+    // Destructured variable from JSON.parse used without validation
+    {
+      code: `const { data } = JSON.parse(input);
+      database.save(data);`,
+      errors: [{ messageId: "unvalidatedVariableUsage" }],
+    },
+    // Array destructured variable from JSON.parse used without validation
+    {
+      code: `const [ first ] = JSON.parse(input);
+      database.save(first);`,
+      errors: [{ messageId: "unvalidatedVariableUsage" }],
+    },
     // JSON.parse result used directly in non-validation call
     {
       code: `const data = JSON.parse(req.body);
