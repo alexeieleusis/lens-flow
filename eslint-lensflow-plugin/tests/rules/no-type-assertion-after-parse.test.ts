@@ -42,6 +42,10 @@ ruleTester.run("no-type-assertion-after-parse", rule, {
       const raw = otherSource();
       const u = raw as { id: string };
     }`,
+    // Let binding reassigned before assertion — variable is no longer from JSON.parse
+    `let raw = JSON.parse(input);
+    raw = otherSource();
+    const u = raw as { id: string };`,
   ],
   invalid: [
     // Direct type assertion on JSON.parse

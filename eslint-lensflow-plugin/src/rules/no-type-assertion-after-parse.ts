@@ -66,6 +66,8 @@ export default createRule({
             variable &&
             variable.defs.length > 0 &&
             variable.defs[0].node.type === "VariableDeclarator" &&
+            variable.defs[0].parent.type === "VariableDeclaration" &&
+            variable.defs[0].parent.kind === "const" &&
             variable.defs[0].node.init?.type === "CallExpression" &&
             isJsonParseCall(variable.defs[0].node.init)
           ) {
