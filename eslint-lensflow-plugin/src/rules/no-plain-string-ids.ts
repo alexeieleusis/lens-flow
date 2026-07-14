@@ -51,13 +51,11 @@ export default createRule({
   create(context: TSESLint.RuleContext<"plainStringId", []>) {
     const violations: Array<{ fnNode: TSESTree.Node; paramName: string }> = [];
 
-    function checkFunction(
-      node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression
-    ) {
+    function checkFunction(node: { params: TSESTree.Parameter[] }) {
       for (const param of node.params) {
         const idInfo = isIdParam(param);
         if (idInfo) {
-          violations.push({ fnNode: node, paramName: idInfo.name });
+          violations.push({ fnNode: node as TSESTree.Node, paramName: idInfo.name });
         }
       }
     }
@@ -70,6 +68,21 @@ export default createRule({
         checkFunction(node);
       },
       ArrowFunctionExpression(node) {
+        checkFunction(node);
+      },
+      MethodDefinition(node) {
+        checkFunction(node.value as { params: TSESTree.Parameter[] });
+      },
+      TSDeclareFunction(node) {
+        checkFunction(node);
+      },
+      TSFunctionType(node) {
+        checkFunction(node);
+      },
+      TSMethodSignature(node) {
+        checkFunction(node);
+      },
+      TSCallSignatureDeclaration(node) {
         checkFunction(node);
       },
       "Program:exit"() {
