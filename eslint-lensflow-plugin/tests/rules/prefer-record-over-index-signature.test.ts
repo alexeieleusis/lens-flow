@@ -16,6 +16,7 @@ ruleTester.run("prefer-record-over-index-signature", rule, {
       [key: string]: number;
       [key: number]: string;
     }`,
+    `interface ReadonlyTags { readonly [key: string]: string }`,
   ],
   invalid: [
     {

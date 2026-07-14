@@ -25,6 +25,7 @@ export default createRule({
       if (members.length !== 1) return;
       const member = members[0];
       if (member.type !== "TSIndexSignature") return;
+      if (member.readonly) return;
       const param = member.parameters[0];
       const typeAnn = (param as TSESTree.Identifier).typeAnnotation?.typeAnnotation;
       if (
