@@ -16,6 +16,11 @@ ruleTester.run("require-assertnever-never-parameter", rule, {
       return x;
     }`,
     `const someOtherFn = (x: any) => x;`,
+    // Case-sensitive: AssertNever does NOT match /^assertNever$/
+    `function AssertNever(x: any) {
+      return x;
+    }`,
+    `const ASSERTNEVER = (x: any) => x;`,
   ],
   invalid: [
     {
