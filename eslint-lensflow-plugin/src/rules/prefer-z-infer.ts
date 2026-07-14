@@ -74,8 +74,8 @@ export default createRule({
   ) {
     return {
       TSTypeAliasDeclaration(node) {
-        const typeName = node.id.name;
-        const schemaVarName = deriveSchemaName(typeName);
+        const aliasName = node.id.name;
+        const schemaVarName = deriveSchemaName(aliasName);
 
         const typeAnnotation = node.typeAnnotation;
         if (!typeAnnotation) return;
@@ -92,7 +92,7 @@ export default createRule({
           node,
           messageId: "preferInfer",
           data: {
-            typeName,
+            typeName: aliasName,
             schemaName: schemaVarName,
           },
         });
