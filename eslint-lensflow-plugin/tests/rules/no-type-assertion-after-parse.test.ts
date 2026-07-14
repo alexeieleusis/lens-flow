@@ -46,6 +46,8 @@ ruleTester.run("no-type-assertion-after-parse", rule, {
     `let raw = JSON.parse(input);
     raw = otherSource();
     const u = raw as { id: string };`,
+    // satisfies on something other than JSON.parse is fine
+    `const x = getValue() satisfies { id: string };`,
   ],
   invalid: [
     // Direct type assertion on JSON.parse
@@ -86,6 +88,17 @@ ruleTester.run("no-type-assertion-after-parse", rule, {
         const u = raw! as { id: string };
         return u.id;
       }`,
+      errors: [{ messageId: "indirectAssertion" }],
+    },
+    // Direct satisfies on JSON.parse
+    {
+      code: `const u = JSON.parse(input) satisfies { id: string };`,
+      errors: [{ messageId: "directAssertion" }],
+    },
+    // Indirect: variable from JSON.parse then satisfies
+    {
+      code: `const raw = JSON.parse(input);
+      const u = raw satisfies { id: string };`,
       errors: [{ messageId: "indirectAssertion" }],
     },
   ],

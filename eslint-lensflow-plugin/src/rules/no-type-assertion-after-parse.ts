@@ -47,36 +47,45 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"directAssertion" | "indirectAssertion", []>) {
-    return {
-      TSAsExpression(node) {
-        const expr = unwrapExpression(node.expression);
+    function checkTypeNarrowing(
+      node: TSESTree.TSAsExpression | TSESTree.TSSatisfiesExpression
+    ) {
+      const expr = unwrapExpression(node.expression);
 
-        if (expr.type === "CallExpression" && isJsonParseCall(expr)) {
+      if (expr.type === "CallExpression" && isJsonParseCall(expr)) {
+        context.report({
+          node,
+          messageId: "directAssertion",
+        });
+        return;
+      }
+
+      if (expr.type === "Identifier") {
+        const scope = context.sourceCode.getScope(node);
+        const variable = scope.variables.find(v => v.name === expr.name);
+        if (
+          variable &&
+          variable.defs.length > 0 &&
+          variable.defs[0].node.type === "VariableDeclarator" &&
+          variable.defs[0].parent.type === "VariableDeclaration" &&
+          variable.defs[0].parent.kind === "const" &&
+          variable.defs[0].node.init?.type === "CallExpression" &&
+          isJsonParseCall(variable.defs[0].node.init)
+        ) {
           context.report({
             node,
-            messageId: "directAssertion",
+            messageId: "indirectAssertion",
           });
-          return;
         }
+      }
+    }
 
-        if (expr.type === "Identifier") {
-          const scope = context.sourceCode.getScope(node);
-          const variable = scope.variables.find(v => v.name === expr.name);
-          if (
-            variable &&
-            variable.defs.length > 0 &&
-            variable.defs[0].node.type === "VariableDeclarator" &&
-            variable.defs[0].parent.type === "VariableDeclaration" &&
-            variable.defs[0].parent.kind === "const" &&
-            variable.defs[0].node.init?.type === "CallExpression" &&
-            isJsonParseCall(variable.defs[0].node.init)
-          ) {
-            context.report({
-              node,
-              messageId: "indirectAssertion",
-            });
-          }
-        }
+    return {
+      TSAsExpression(node) {
+        checkTypeNarrowing(node);
+      },
+      TSSatisfiesExpression(node) {
+        checkTypeNarrowing(node);
       },
     };
   },
