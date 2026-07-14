@@ -136,11 +136,11 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow intersecting generic types with mutually incompatible type parameters, which produce `never`.",
+        "Disallow intersecting generic types with mutually incompatible type parameters.",
      },
     messages: {
       incompatible:
-        "Intersection of '{{left}}' and '{{right}}' produces `never` because no value can satisfy both. Consider using a union (`|`) instead of an intersection (`&`). See: {{url}}",
+        "Intersection of '{{left}}' and '{{right}}' has incompatible type parameters. Consider using a union (`|`) instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
