@@ -218,40 +218,48 @@ export default createRule({
           param.typeAnnotation?.typeAnnotation.type === "TSTypeLiteral"
         ) {
           const lit = param.typeAnnotation.typeAnnotation;
-          entries.push({
-            canonical: canonicalize(lit),
-            node: lit,
-          });
+          if (lit.members.length > 0) {
+            entries.push({
+              canonical: canonicalize(lit),
+              node: lit,
+            });
+          }
         } else if (
           param.type === "AssignmentPattern" &&
           param.left.type === "Identifier" &&
           param.left.typeAnnotation?.typeAnnotation.type === "TSTypeLiteral"
         ) {
           const lit = param.left.typeAnnotation.typeAnnotation;
-          entries.push({
-            canonical: canonicalize(lit),
-            node: lit,
-          });
+          if (lit.members.length > 0) {
+            entries.push({
+              canonical: canonicalize(lit),
+              node: lit,
+            });
+          }
         } else if (
           param.type === "RestElement" &&
           param.argument.type === "Identifier" &&
           param.argument.typeAnnotation?.typeAnnotation.type === "TSTypeLiteral"
         ) {
           const lit = param.argument.typeAnnotation.typeAnnotation;
-          entries.push({
-            canonical: canonicalize(lit),
-            node: lit,
-          });
+          if (lit.members.length > 0) {
+            entries.push({
+              canonical: canonicalize(lit),
+              node: lit,
+            });
+          }
         } else if (
           param.type === "TSParameterProperty" &&
           param.parameter.type === "Identifier" &&
           param.parameter.typeAnnotation?.typeAnnotation.type === "TSTypeLiteral"
         ) {
           const lit = param.parameter.typeAnnotation.typeAnnotation;
-          entries.push({
-            canonical: canonicalize(lit),
-            node: lit,
-          });
+          if (lit.members.length > 0) {
+            entries.push({
+              canonical: canonicalize(lit),
+              node: lit,
+            });
+          }
         }
       }
     }
