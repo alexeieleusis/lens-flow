@@ -6,60 +6,42 @@ import {
   looksLikeZodSchema,
 } from "../utils/schema-inference-helper.js";
 
-function isZInferType(node: unknown): boolean {
-  if (
-    node &&
-    typeof node === "object" &&
-    "type" in node &&
-    (node as { type: string }).type === "TSTypeReference"
-  ) {
-    const tsRef = node as TSESTree.TSTypeReference;
-    const typeName = tsRef.typeName;
+function isZInferType(node: TSESTree.TypeNode): boolean {
+  if (node.type !== "TSTypeReference") return false;
 
-    const isMemberInfer =
-      typeName.type === "TSQualifiedName" &&
-      typeName.left.type === "Identifier" &&
-      typeName.left.name === "z" &&
-      typeName.right.type === "Identifier" &&
-      typeName.right.name === "infer";
-    const isDirectInfer =
-      typeName.type === "Identifier" && typeName.name === "infer";
+  const tsRef = node;
+  const typeName = tsRef.typeName;
 
-    if (!isMemberInfer && !isDirectInfer) return false;
+  const isMemberInfer =
+    typeName.type === "TSQualifiedName" &&
+    typeName.left.type === "Identifier" &&
+    typeName.left.name === "z" &&
+    typeName.right.type === "Identifier" &&
+    typeName.right.name === "infer";
+  const isDirectInfer =
+    typeName.type === "Identifier" && typeName.name === "infer";
 
-    if (!tsRef.typeArguments?.params.length) return false;
+  if (!isMemberInfer && !isDirectInfer) return false;
 
-    const typeParam = tsRef.typeArguments.params[0];
-    if (
-      typeParam &&
-      typeof typeParam === "object" &&
-      "type" in typeParam &&
-      typeParam.type === "TSTypeQuery"
-    ) {
-      return true;
-    }
+  if (!tsRef.typeArguments?.params.length) return false;
+
+  const typeParam = tsRef.typeArguments.params[0];
+  if (typeParam.type === "TSTypeQuery") {
+    return true;
   }
+
   return false;
 }
 
-function containsTypeLiteral(node: unknown): boolean {
-  if (!node || typeof node !== "object" || !("type" in node)) return false;
-  const t = (node as { type: string }).type;
+function containsTypeLiteral(node: TSESTree.TypeNode): boolean {
+  if (node.type === "TSTypeLiteral") return true;
 
-  if (t === "TSTypeLiteral") return true;
-
-  if (t === "TSUnionType") {
-    const unionNode = node as TSESTree.TSUnionType;
-    return unionNode.types.some(containsTypeLiteral);
+  if (node.type === "TSUnionType") {
+    return node.types.some(containsTypeLiteral);
   }
 
-  if (t === "TSIntersectionType") {
-    const interNode = node as TSESTree.TSIntersectionType;
-    return interNode.types.some(containsTypeLiteral);
-  }
-
-  if (t === "TSParenthesizedType") {
-    return containsTypeLiteral((node as unknown as { typeAnnotation: unknown }).typeAnnotation);
+  if (node.type === "TSIntersectionType") {
+    return node.types.some(containsTypeLiteral);
   }
 
   return false;
@@ -92,6 +74,7 @@ export default createRule({
         const schemaVarName = deriveSchemaName(typeName);
 
         const typeAnnotation = node.typeAnnotation;
+        if (!typeAnnotation) return;
 
         if (isZInferType(typeAnnotation)) return;
 
