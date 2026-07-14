@@ -51,6 +51,11 @@ ruleTester.run("no-incompatible-generic-intersection", rule, {
       filename: TEST_FILENAME,
       code: `type OkNS = NS.MyArray<string> & NS.MyArray<string>;`,
     },
+    // Overlapping union type args — satisfiable as Array<2>
+    {
+      filename: TEST_FILENAME,
+      code: `type Overlap = Array<1 | 2> & Array<2 | 3>;`,
+    },
   ],
   invalid: [
     // Array<string> & Array<number> — no value can satisfy both
