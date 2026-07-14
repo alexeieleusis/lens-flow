@@ -21,6 +21,10 @@ ruleTester.run("require-assertnever-never-parameter", rule, {
       return x;
     }`,
     `const ASSERTNEVER = (x: any) => x;`,
+    // Parameterless assertNever is safe — rule returns early when params is empty
+    `function assertNever() {
+      throw new Error("unreachable");
+    }`,
   ],
   invalid: [
     {
