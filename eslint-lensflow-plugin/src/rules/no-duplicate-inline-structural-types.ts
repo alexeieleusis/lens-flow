@@ -54,8 +54,46 @@ function serializeTypeNode(node: TSESTree.TypeNode): string {
       return `[${node.elementTypes.map(serializeTypeNode).join(",")}]`;
     case "TSNamedTupleMember":
       return `${node.label.name}: ${serializeTypeNode(node.elementType)}`;
+    case "TSAnyKeyword":
+      return "any";
+    case "TSUnknownKeyword":
+      return "unknown";
+    case "TSStringKeyword":
+      return "string";
+    case "TSNumberKeyword":
+      return "number";
+    case "TSBigIntKeyword":
+      return "bigint";
+    case "TSBooleanKeyword":
+      return "boolean";
+    case "TSNullKeyword":
+      return "null";
+    case "TSUndefinedKeyword":
+      return "undefined";
+    case "TSVoidKeyword":
+      return "void";
+    case "TSSymbolKeyword":
+      return "symbol";
+    case "TSNeverKeyword":
+      return "never";
+    case "TSObjectKeyword":
+      return "object";
+    case "TSTypeOperator":
+      return `type ${serializeTypeNode((node as TSESTree.TSTypeOperator).typeAnnotation as TSESTree.TypeNode)}`;
+    case "TSConstructorType": {
+      const ct = node as TSESTree.TSConstructorType;
+      const params = ct.params.map(paramToString).join(",");
+      const ret = ct.returnType ? serializeTypeAnnotation(ct.returnType) : "unknown";
+      return `new(${params}):${ret}`;
+    }
+    case "TSFunctionType": {
+      const ft = node as TSESTree.TSFunctionType;
+      const params = ft.params.map(paramToString).join(",");
+      const ret = ft.returnType ? serializeTypeAnnotation(ft.returnType) : "void";
+      return `(${params}):${ret}`;
+    }
     default:
-      return node.type;
+      return `__${node.type}__`;
   }
 }
 
