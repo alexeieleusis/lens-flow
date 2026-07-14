@@ -28,11 +28,10 @@ ruleTester.run("require-type-predicate-subtype", rule, {
   valid: [
     {
       filename: TEST_FILENAME,
-      code: `class Animal {}
-class Dog extends Animal {}
-class Animal {
+      code: `class Animal {
   isDog(): this is Dog { return this instanceof Dog; }
-}`,
+}
+class Dog extends Animal {}`,
     },
     {
       filename: TEST_FILENAME,
