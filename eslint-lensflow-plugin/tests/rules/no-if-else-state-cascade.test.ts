@@ -30,6 +30,11 @@ ruleTester.run("no-if-else-state-cascade", rule, {
       else if (val === "b") return 2;
       else if (val === "c") return 3;
     }`,
+    `function mixedPreventsDetection(x: X) {
+      if (x.status !== "a") return 1;
+      else if (x.status === "b") return 2;
+      else if (x.status > 0) return 3;
+    }`,
   ],
   invalid: [
     {
@@ -71,6 +76,14 @@ ruleTester.run("no-if-else-state-cascade", rule, {
         if ("pending" === form.status) return "p";
         else if ("done" === form.status) return "d";
         else if ("fail" === form.status) return "f";
+      }`,
+      errors: [{ messageId: "stateCascade" }],
+    },
+    {
+      code: `function check(x: X) {
+        if (x.status !== "a") return 1;
+        else if (x.status !== "b") return 2;
+        else if (x.status !== "c") return 3;
       }`,
       errors: [{ messageId: "stateCascade" }],
     },
