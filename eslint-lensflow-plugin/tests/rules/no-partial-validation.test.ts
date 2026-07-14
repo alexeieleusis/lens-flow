@@ -189,5 +189,18 @@ if (true) {
 }`,
       errors: [{ messageId: "partialValidation" }],
     },
+    {
+      filename: TEST_FILENAME,
+      code: `interface A { x: number; y: number }
+interface B { p: string; q: string }
+declare const a: A, b: B;
+if (typeof a.x === "number" && typeof b.p === "string") {
+  /* process */
+}`,
+      errors: [
+        { messageId: "partialValidation" },
+        { messageId: "partialValidation" },
+      ],
+    },
   ],
 });
