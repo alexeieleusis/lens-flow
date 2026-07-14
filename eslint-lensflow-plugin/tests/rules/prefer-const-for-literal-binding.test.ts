@@ -46,5 +46,10 @@ ruleTester.run("prefer-const-for-literal-binding", rule, {
       `,
       errors: [{ messageId: "preferConst" }, { messageId: "preferConst" }],
     },
+    {
+      code: `let a = 1, b = "two";`,
+      output: `const a = 1, b = "two";`,
+      errors: [{ messageId: "preferConst" }, { messageId: "preferConst" }],
+    },
   ],
 });
