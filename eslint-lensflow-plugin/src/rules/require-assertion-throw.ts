@@ -1,51 +1,14 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
-
-function isNodeLike(val: unknown): val is TSESTree.Node {
-  return val != null && typeof val === "object" && "type" in val;
-}
-
-function collectChildNodes(node: TSESTree.Node): TSESTree.Node[] {
-  const children: TSESTree.Node[] = [];
-  const nodeMap = node as unknown as Record<string, unknown>;
-
-  for (const key of Object.keys(nodeMap)) {
-    if (key === "loc" || key === "range" || key === "parent") continue;
-    const child = nodeMap[key];
-    if (child == null || typeof child !== "object") continue;
-
-    if (Array.isArray(child)) {
-      for (const item of child) {
-        if (isNodeLike(item)) {
-          children.push(item);
-        }
-      }
-    } else if (isNodeLike(child)) {
-      children.push(child);
-    }
-  }
-
-  return children;
-}
-
-const FUNCTION_BOUNDARY_TYPES = new Set([
-  "FunctionDeclaration",
-  "FunctionExpression",
-  "ArrowFunctionExpression",
-]);
+import { walkNodes } from "../utils/ast-helpers.js";
 
 function hasThrowStatement(
   body: TSESTree.Statement | TSESTree.BlockStatement | null,
 ): boolean {
   if (!body) return false;
 
-  const nodes: TSESTree.Node[] = [body];
-  let i = 0;
-  while (i < nodes.length) {
-    const node = nodes[i++];
-
+  return walkNodes(body, (node) => {
     if (node.type === "ThrowStatement") return true;
-
     if (
       node.type === "CallExpression" &&
       node.callee.type === "Identifier" &&
@@ -53,15 +16,8 @@ function hasThrowStatement(
     ) {
       return true;
     }
-
-    for (const child of collectChildNodes(node)) {
-      if (!FUNCTION_BOUNDARY_TYPES.has(child.type)) {
-        nodes.push(child);
-      }
-    }
-  }
-
-  return false;
+    return false;
+  });
 }
 
 export default createRule({
