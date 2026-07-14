@@ -16,6 +16,10 @@ type Num = typeof X;`,
 type Str = typeof S;`,
     `const B = true;
 type Bool = typeof B;`,
+    // Qualified names (TSQualifiedName) — the rightmost segment isn't a scope variable,
+    // so the rule skips it without crashing or false-positives.
+    `const NS = { C: { value: 1 } as const };
+type T = typeof NS.C;`,
   ],
   invalid: [
     {
