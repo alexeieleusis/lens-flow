@@ -113,5 +113,12 @@ ruleTester.run("prefer-function-property-over-method", rule, {
       }`,
       errors: [{ messageId: "preferFunctionProperty" }],
     },
+    // Parenthesized type (TSParenthesizedType)
+    {
+      code: `interface Foo<T> {
+        method(arg: (T)): void;
+      }`,
+      errors: [{ messageId: "preferFunctionProperty" }],
+    },
   ],
 });
