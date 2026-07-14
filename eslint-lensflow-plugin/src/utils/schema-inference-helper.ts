@@ -47,30 +47,49 @@ export function deriveSchemaName(typeName: string): string {
 }
 
 /**
+ * Walks a member expression chain (possibly with intermediate calls) down to
+ * the root identifier, e.g. `z.object({}).optional()` -> `"z"`.
+ */
+function getRootCalleeIdentifier(node: TSESTree.Expression): string | null {
+  let current: TSESTree.Expression = node;
+
+  while (current) {
+    if (current.type === "MemberExpression") {
+      current = current.object;
+    } else if (current.type === "CallExpression") {
+      current = current.callee;
+    } else if (current.type === "TSAsExpression") {
+      current = current.expression;
+    } else if (current.type === "TSTypeAssertion") {
+      current = current.expression;
+    } else if (current.type === "Identifier") {
+      return current.name;
+    } else if (current.type === "TSNonNullExpression") {
+      current = current.expression;
+    } else {
+      return null;
+    }
+  }
+
+  return null;
+}
+
+/**
  * Checks if a call expression's callee matches common Zod schema-building
- * patterns like `.object()`, `.array()`, `.string()`, `.number()`, etc.
+ * patterns by verifying the call chain originates from a `z` identifier
+ * (e.g. `z.object(...)`, `z.string()`, `z.object({}).optional()`, etc.).
  */
 function isZodLikeCall(node: TSESTree.CallExpression): boolean {
-  const callee = node.callee;
-
-  if (callee.type === "MemberExpression") {
-    return true;
-  }
-
-  if (callee.type === "Identifier" && ["z", "Zod", "schema"].includes(callee.name)) {
-    return true;
-  }
-
-  if (callee.type === "CallExpression") {
-    return isZodLikeCall(callee);
-  }
-
-  return false;
+  const root = getRootCalleeIdentifier(node.callee);
+  return root === "z";
 }
 
 /**
  * Heuristic: determines if a variable appears to be a Zod schema definition
- * rather than an arbitrarily named variable.
+ * rather than an arbitrarily named variable.  Only accepts call expressions
+ * whose call chain originates from a `z` callee (e.g. `z.object(...)`,
+ * `z.string()`, `z.object({}).optional()`).  Bare identifier assignments are
+ * *not* accepted because we cannot verify they reference a Zod schema.
  */
 export function looksLikeZodSchema(
   variable: TSESLint.Scope.Variable,
@@ -79,12 +98,16 @@ export function looksLikeZodSchema(
     if (def.node.type === "VariableDeclarator" && def.node.init) {
       const init = def.node.init;
 
-      if (init.type === "CallExpression") {
-        return isZodLikeCall(init);
-      }
+      // Unwrap parentheses so `const x = (z.object({}))` still works.
+      const unwrapped =
+        init.type === "TSAsExpression"
+          ? init.expression
+          : init.type === "TSTypeAssertion"
+            ? init.expression
+            : init;
 
-      if (init.type === "Identifier") {
-        return true;
+      if (unwrapped.type === "CallExpression") {
+        return isZodLikeCall(unwrapped);
       }
     }
   }
