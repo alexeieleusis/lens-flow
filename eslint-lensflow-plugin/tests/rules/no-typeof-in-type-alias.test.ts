@@ -30,5 +30,41 @@ type NestedShape = { key: typeof x };`,
 type Wrapper = { value: typeof val };`,
       errors: [{ messageId: "typeofInAlias" }],
     },
+    {
+      code: `const x = 1;
+type U = typeof x | string;`,
+      errors: [{ messageId: "typeofInAlias" }],
+    },
+    {
+      code: `const x = 1;
+type I = typeof x & { extra: boolean };`,
+      errors: [{ messageId: "typeofInAlias" }],
+    },
+    {
+      code: `const x = 1;
+type A = typeof x[];`,
+      errors: [{ messageId: "typeofInAlias" }],
+    },
+    {
+      code: `const x = 1;
+type Arr = Array<typeof x>;`,
+      errors: [{ messageId: "typeofInAlias" }],
+    },
+    {
+      code: `const x = 1;
+type M = Map<string, typeof x>;`,
+      errors: [{ messageId: "typeofInAlias" }],
+    },
+    {
+      code: `const x = 1;
+type F = () => typeof x;`,
+      errors: [{ messageId: "typeofInAlias" }],
+    },
+    {
+      code: `const x = 1;
+const y = "hi";
+type T = { a: typeof x; b: typeof y };`,
+      errors: [{ messageId: "typeofInAlias" }],
+    },
   ],
 });
