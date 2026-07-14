@@ -34,5 +34,13 @@ ruleTester.run("prefer-record-over-index-signature", rule, {
       code: `const x: { [key: number]: boolean } = {}`,
       errors: [{ messageId: "preferRecord" }],
     },
+    {
+      code: `function foo(): { [key: string]: number } { return {}; }`,
+      errors: [{ messageId: "preferRecord" }],
+    },
+    {
+      code: `function foo(x: { [key: string]: number }) {}`,
+      errors: [{ messageId: "preferRecord" }],
+    },
   ],
 });
