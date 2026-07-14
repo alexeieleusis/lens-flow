@@ -46,6 +46,41 @@ function bind(host: string, port: number) {
 function bind(host: string, port: number) {
   if (port > 100) throw new Error();
 }`,
+    // FunctionExpression (not arrow, not declaration)
+    `const connect = function(host: string, port: number) {
+  if (port < 1 || port > 65535) throw new Error();
+};
+const bind = function(host: string, port: number) {
+  // no duplicate guard
+}`,
+    // Expression-bodied arrow — no BlockStatement, silently skipped
+    `const fn = (x: number) => x < 0 ? -x : x;`,
+    // Overload signature — body is null, should not crash
+    `function connect(host: string, port: number): void;
+function connect(host: string, port: number) {
+  if (port < 1) throw new Error();
+}`,
+    // else { throw } guard pattern — different guard shape, not duplicated
+    `function connect(host: string, port: number) {
+  if (port >= 1 && port <= 65535) return;
+  throw new Error();
+}
+function bind(host: string, port: number) {
+  if (port < 1 || port > 65535) throw new Error();
+}`,
+    // Destructured parameters — extractParamName returns source text, function skipped
+    `const fn = ({ host, port }: { host: string; port: number }) => {
+  if (port < 1) throw new Error();
+};`,
+    // Nested block guards — guard inside a for loop
+    `function connect(host: string, port: number) {
+  for (let i = 0; i < 3; i++) {
+    if (port < 1) throw new Error();
+  }
+}
+function bind(host: string, port: number) {
+  // no nested guard
+}`,
   ],
   invalid: [
     {
@@ -100,6 +135,38 @@ const bind = (host: string, port: number) => {
       errors: [
         { messageId: "repeatedGuard" },
         { messageId: "repeatedGuard" },
+        { messageId: "repeatedGuard" },
+        { messageId: "repeatedGuard" },
+      ],
+    },
+    // FunctionExpression with duplicate guards
+    {
+      code: `const connect = function(host: string, port: number) {
+  if (port < 1 || port > 65535) throw new Error();
+};
+const bind = function(host: string, port: number) {
+  if (port < 1 || port > 65535) throw new Error();
+};`,
+      errors: [
+        { messageId: "repeatedGuard" },
+        { messageId: "repeatedGuard" },
+        { messageId: "repeatedGuard" },
+        { messageId: "repeatedGuard" },
+      ],
+    },
+    // Nested block guards — inside for loop, still detected
+    {
+      code: `function connect(host: string, port: number) {
+  for (let i = 0; i < 3; i++) {
+    if (port < 1) throw new Error();
+  }
+}
+function bind(host: string, port: number) {
+  for (let i = 0; i < 3; i++) {
+    if (port < 1) throw new Error();
+  }
+}`,
+      errors: [
         { messageId: "repeatedGuard" },
         { messageId: "repeatedGuard" },
       ],
