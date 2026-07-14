@@ -94,6 +94,15 @@ if ("theme" in raw) {
     },
     {
       filename: TEST_FILENAME,
+      code: `interface Settings { theme: string; lang: string; fontSize: number }
+declare const raw: Settings;
+if (` + '`"theme"`' + ` in raw) {
+  /* process */
+}`,
+      errors: [{ messageId: "partialValidation" }],
+    },
+    {
+      filename: TEST_FILENAME,
       code: `interface Config { host: string; port: number; timeout: number; retries: number }
 declare const raw: Config;
 if (typeof raw.host === "string" && typeof raw.port === "number") {
