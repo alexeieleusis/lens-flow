@@ -108,6 +108,12 @@ ruleTester.run("no-or-or-for-default-values", rule, {
       errors: [{ messageId: "preferNullishCoalescing" }],
       output: `const label = props?.label ?? "Default";`,
     },
+    // Optional chaining method call — ChainExpression wrapping CallExpression
+    {
+      code: `const label = props.label?.toString() || "Default";`,
+      errors: [{ messageId: "preferNullishCoalescing" }],
+      output: `const label = props.label?.toString() ?? "Default";`,
+    },
   ],
 });
 

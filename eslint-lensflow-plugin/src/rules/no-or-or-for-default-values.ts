@@ -5,7 +5,11 @@ function isLikelyTarget(node: TSESTree.Node): boolean {
   if (node.type === "ChainExpression") {
     node = node.expression;
   }
-  return node.type === "MemberExpression" || node.type === "Identifier";
+  return (
+    node.type === "MemberExpression" ||
+    node.type === "Identifier" ||
+    node.type === "CallExpression"
+  );
 }
 
 function isDefaultValueType(node: TSESTree.Node): boolean {
