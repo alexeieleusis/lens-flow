@@ -38,5 +38,12 @@ ruleTester.run("no-call-signature-leaked-internals", rule, {
       }`,
       errors: [{ messageId: "leakedInternals" }],
     },
+    {
+      code: `type Repository = {
+        (id: number): Promise<void>;
+        _cache: Map<string, unknown>;
+      }`,
+      errors: [{ messageId: "leakedInternals" }],
+    },
   ],
 });
