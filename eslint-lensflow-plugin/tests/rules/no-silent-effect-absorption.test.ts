@@ -129,5 +129,20 @@ r.map((x) => x.length);`,
       options: [{ allowedTerminators: [] }],
       errors: [{ messageId: "silentAbsorption" }],
     },
+    {
+      filename: TEST_FILENAME,
+      code: EFFECT_TYPE_DEF + `
+declare const r: Effect<string, Error>;
+r.flatMap((x) => r);`,
+      errors: [{ messageId: "silentAbsorption" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: EFFECT_TYPE_DEF + `
+declare const r: Effect<string, Error>;
+declare const fnEffect: Effect<(x: string) => number>;
+r.ap(fnEffect);`,
+      errors: [{ messageId: "silentAbsorption" }],
+    },
   ],
 });
