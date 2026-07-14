@@ -22,6 +22,7 @@ export default createRule({
         "Type parameter '{{paramName}}' is marked 'in' (contravariant) but is used in a return/output position. Add 'out' or split into separate read/write interfaces. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC17-variance.md",
     },
     schema: [],
+    fixable: undefined,
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"outInInputPosition" | "inInOutputPosition", []>) {
