@@ -37,6 +37,15 @@ function connect(host: string, port: number) {
 function bind(host: string, port: number) {
   if (!validatePort(port)) throw new Error();
 }`,
+    `function connect(host: string, port: number) {
+  if (port < 1) throw new Error();
+  const validate = (port: number) => {
+    if (port > 100) throw new Error();
+  };
+}
+function bind(host: string, port: number) {
+  if (port > 100) throw new Error();
+}`,
   ],
   invalid: [
     {
