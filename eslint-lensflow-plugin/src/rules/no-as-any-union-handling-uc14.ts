@@ -97,18 +97,13 @@ function isDerivedFromParam(
 
   if (!targetId) return false;
 
-  let currentScope: TSESLint.Scope.Scope | null = sourceCode.getScope(targetId);
-  while (currentScope) {
-    const variable = currentScope.set.get(targetId.name);
-    if (variable) {
-      return variable.defs.some(
-        (def) => def.name.type === "Identifier" && paramIdentifiers.has(def.name),
-      );
-    }
-    currentScope = currentScope.upper;
-  }
+  const scope = sourceCode.getScope(targetId);
+  const variable = scope.set.get(targetId.name);
+  if (!variable) return false;
 
-  return false;
+  return variable.defs.some(
+    (def) => def.name.type === "Identifier" && paramIdentifiers.has(def.name),
+  );
 }
 
 export default createRule({
