@@ -23,22 +23,25 @@ function hasTypeRefToName(
   member: TSESTree.TypeNode,
   name: string,
   typeAliases: Map<string, TSESTree.TypeNode>,
+  visited: Set<string> = new Set(),
 ): boolean {
   const refs = new Set<string>();
   collectTypeRefNames(member, refs);
   if (refs.has(name)) return true;
 
-  if (member.type === "TSTypeReference") {
-    const ref = member;
+  const target = member.type === "TSParenthesizedType" ? member.typeAnnotation : member;
+  if (target.type === "TSTypeReference") {
+    const ref = target;
     const refName =
       ref.typeName.type === "Identifier"
         ? ref.typeName.name
         : ref.typeName.type === "TSQualifiedName"
           ? ref.typeName.right.name
           : null;
-    if (refName && typeAliases.has(refName)) {
+    if (refName && typeAliases.has(refName) && !visited.has(refName)) {
+      visited.add(refName);
       const resolved = typeAliases.get(refName)!;
-      return hasTypeRefToName(resolved, name, typeAliases);
+      return hasTypeRefToName(resolved, name, typeAliases, visited);
     }
   }
   return false;
@@ -47,6 +50,7 @@ function hasTypeRefToName(
 function findKeyword(node: TSESTree.TypeNode): "any" | "unknown" | null {
   if (node.type === "TSAnyKeyword") return "any";
   if (node.type === "TSUnknownKeyword") return "unknown";
+  if (node.type === "TSParenthesizedType") return findKeyword(node.typeAnnotation);
   if (node.type === "TSUnionType") {
     for (const t of node.types) {
       const found = findKeyword(t);
@@ -86,6 +90,9 @@ function collectAnyProps(
   unknownProps: TSESTree.TSPropertySignature[],
   typeAliases: Map<string, TSESTree.TypeNode>,
 ): void {
+  if (member.type === "TSParenthesizedType") {
+    return collectAnyProps(member.typeAnnotation, anyProps, unknownProps, typeAliases);
+  }
   if (member.type === "TSTypeLiteral") {
     collectAnyPropsFromLiteral(member, anyProps, unknownProps);
   } else if (member.type === "TSTypeReference") {

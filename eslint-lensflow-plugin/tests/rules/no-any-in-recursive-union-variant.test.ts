@@ -15,6 +15,11 @@ type Done = { type: "done"; result: string };`,
     }`,
     `type Simple = { value: any } | { label: string };`,
     `type RecursiveNoAny = { type: "leaf"; data: string } | { type: "branch"; children: RecursiveNoAny[] };`,
+    `type CircularA = CircularB;
+type CircularB = CircularA;
+type Safe = { type: "ok"; data: string };`,
+    `type Wrapper = (string);
+type NonRec = { type: "ok"; data: Wrapper };`,
   ],
   invalid: [
     {
@@ -33,6 +38,24 @@ type BinOp = { type: "bin"; left: Expr; right: Expr };`,
       code: `type Tree = Leaf | Branch;
 type Leaf = { type: "leaf"; payload: any | null };
 type Branch = { type: "branch"; left: Tree; right: Tree };`,
+      errors: [{ messageId: "anyOrUnknownInRecursiveVariant" }],
+    },
+    {
+      code: `type Node = Val | Br;
+type Val = { type: "val"; data: any | string };
+type Br = { type: "br"; children: Node[] };`,
+      errors: [{ messageId: "anyOrUnknownInRecursiveVariant" }],
+    },
+    {
+      code: `type TaskEither<E, A> = Resolved | Unresolved;
+type Resolved = { type: "res"; value: any };
+type Unresolved = { type: "unres"; next: TaskEither<E, A> };`,
+      errors: [{ messageId: "anyOrUnknownInRecursiveVariant" }],
+    },
+    {
+      code: `type Node = Leaf | Branch;
+type Leaf = { type: "leaf"; data: (any) };
+type Branch = { type: "branch"; children: Node[] };`,
       errors: [{ messageId: "anyOrUnknownInRecursiveVariant" }],
     },
   ],
