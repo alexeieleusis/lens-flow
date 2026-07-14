@@ -44,9 +44,13 @@ function serializeTypeNode(node: TSESTree.TypeNode): string {
     case "TSIndexedAccessType":
       return `${serializeTypeNode(node.objectType)}[${serializeTypeNode(node.indexType)}]`;
     case "TSTemplateLiteralType": {
+      const tl = node as TSESTree.TSTemplateLiteralType;
       const parts: string[] = [];
-      for (const elem of node.quasis) {
-        parts.push(elem.value.cooked ?? "");
+      for (let i = 0; i < tl.quasis.length; i++) {
+        parts.push(tl.quasis[i].value.cooked ?? "");
+        if (i < tl.types.length) {
+          parts.push(`${serializeTypeNode(tl.types[i])}`);
+        }
       }
       return `\`${parts.join("")}\``;
     }
