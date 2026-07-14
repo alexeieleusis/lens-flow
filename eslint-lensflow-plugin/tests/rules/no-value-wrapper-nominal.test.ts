@@ -27,5 +27,9 @@ type Phone = { value: string };`,
         { messageId: "valueWrapperNominal" },
       ],
     },
+    {
+      code: `interface UserId { value: string }`,
+      errors: [{ messageId: "valueWrapperNominal" }],
+    },
   ],
 });

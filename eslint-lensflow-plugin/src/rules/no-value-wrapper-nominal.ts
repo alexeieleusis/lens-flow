@@ -26,27 +26,36 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"valueWrapperNominal", []>) {
+    function checkSingleValueProperty(
+      node: TSESTree.TSTypeAliasDeclaration | TSESTree.TSInterfaceDeclaration,
+      members: readonly TSESTree.TypeElement[],
+    ) {
+      if (members.length !== 1) return;
+
+      const [member] = members;
+      if (member.type !== "TSPropertySignature") return;
+      if (getPropertyKey(member.key) !== "value") return;
+
+      const typeAnn = member.typeAnnotation?.typeAnnotation;
+      if (typeAnn?.type !== "TSStringKeyword") return;
+
+      const name = node.id.name;
+
+      context.report({
+        node,
+        messageId: "valueWrapperNominal",
+        data: { name },
+      });
+    }
+
     return {
       TSTypeAliasDeclaration(node) {
-        const { typeAnnotation, id } = node;
+        const { typeAnnotation } = node;
         if (typeAnnotation.type !== "TSTypeLiteral") return;
-        if (typeAnnotation.members.length !== 1) return;
-
-        const [member] = typeAnnotation.members;
-        if (member.type !== "TSPropertySignature") return;
-        if (getPropertyKey(member.key) !== "value")
-          return;
-
-        const typeAnn = member.typeAnnotation?.typeAnnotation;
-        if (typeAnn?.type !== "TSStringKeyword") return;
-
-        context.report({
-          node,
-          messageId: "valueWrapperNominal",
-          data: {
-            name: id.name,
-          },
-        });
+        checkSingleValueProperty(node, typeAnnotation.members);
+      },
+      TSInterfaceDeclaration(node) {
+        checkSingleValueProperty(node, node.body.body);
       },
     };
   },
