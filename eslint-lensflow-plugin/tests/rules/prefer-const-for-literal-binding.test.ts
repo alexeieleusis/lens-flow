@@ -51,5 +51,11 @@ ruleTester.run("prefer-const-for-literal-binding", rule, {
       output: `const a = 1, b = "two";`,
       errors: [{ messageId: "preferConst" }, { messageId: "preferConst" }],
     },
+    {
+      // nested scope shadowing — outer count is never reassigned, inner count is a separate binding
+      code: `let count = 0; function f() { let count = 5; count++; }`,
+      output: `const count = 0; function f() { let count = 5; count++; }`,
+      errors: [{ messageId: "preferConst" }],
+    },
   ],
 });
