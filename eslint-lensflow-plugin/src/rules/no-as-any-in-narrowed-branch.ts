@@ -162,11 +162,27 @@ function resolveVariable(
   return null;
 }
 
+function hasReassignmentBetween(
+  variable: TSESLint.Scope.Variable,
+  guardEnd: number,
+  castStart: number,
+): boolean {
+  for (const reference of variable.references) {
+    if (reference.isWrite()) {
+      const refRange = reference.identifier.range;
+      if (refRange && refRange[0] > guardEnd && refRange[0] < castStart) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
 function findNarrowedVariable(
   ancestors: TSESTree.Node[],
   castedId: TSESTree.Identifier,
   scopes: unknown[],
-): TSESTree.Identifier | null {
+): { id: TSESTree.Identifier; guard: TSESTree.Node } | null {
   const castedVar = resolveVariable(scopes, castedId);
   if (!castedVar) return null;
 
@@ -182,17 +198,24 @@ function findNarrowedVariable(
     }
 
     let candidate: TSESTree.Identifier | null = null;
+    let guardNode: TSESTree.Node | null = null;
 
     if (parent.type === "IfStatement") {
       candidate = handleIfStatement(ancestors, parent as TSESTree.IfStatement);
+      if (candidate) {
+        guardNode = (parent as TSESTree.IfStatement).test;
+      }
     }
 
     if (parent.type === "SwitchCase") {
       candidate = handleSwitchCase(ancestors, parent as TSESTree.SwitchCase);
+      if (candidate) {
+        guardNode = parent;
+      }
     }
 
     if (candidate && resolveVariable(scopes, candidate) === castedVar) {
-      return candidate;
+      return { id: candidate, guard: guardNode };
     }
   }
 
@@ -232,8 +255,15 @@ export default createRule({
         if (!scopes) return;
 
         const ancestors = sourceCode.getAncestors(node);
-        const narrowedId = findNarrowedVariable(ancestors, castedId, scopes);
-        if (!narrowedId) return;
+        const castedVar = resolveVariable(scopes, castedId);
+        const narrowedResult = findNarrowedVariable(ancestors, castedId, scopes);
+        if (!narrowedResult) return;
+
+        if (castedVar && narrowedResult.guard.range) {
+          if (hasReassignmentBetween(castedVar, narrowedResult.guard.range[1], castedId.range![0])) {
+            return;
+          }
+        }
 
         context.report({
           node,

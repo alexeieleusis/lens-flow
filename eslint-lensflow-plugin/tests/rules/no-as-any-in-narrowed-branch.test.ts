@@ -49,6 +49,13 @@ ruleTester.run("no-as-any-in-narrowed-branch", rule, {
     });
   }
 }`,
+    // Valid — let variable reassigned after narrowing, so cast isn't redundant
+    `function process(m: { type: "a"; val: number } | { type: "b"; val: string }) {
+  if (m.type === "a") {
+    m = getOther();
+    return (m as any).unknownProp;
+  }
+}`,
   ],
   invalid: [
     // if guard: casting the narrowed variable itself
