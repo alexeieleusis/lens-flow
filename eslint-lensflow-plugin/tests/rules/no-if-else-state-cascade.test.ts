@@ -35,6 +35,14 @@ ruleTester.run("no-if-else-state-cascade", rule, {
       else if (x.status === "b") return 2;
       else if (x.status > 0) return 3;
     }`,
+    {
+      code: `function handle(form: Form) {
+        if (form.status === "empty") return "empty";
+        else if (form.status === "validating") return "validating";
+        else if (form.status === "invalid") return "invalid";
+      }`,
+      options: [{ minBranches: 4 }],
+    },
   ],
   invalid: [
     {
@@ -85,6 +93,14 @@ ruleTester.run("no-if-else-state-cascade", rule, {
         else if (x.status !== "b") return 2;
         else if (x.status !== "c") return 3;
       }`,
+      errors: [{ messageId: "stateCascade" }],
+    },
+    {
+      code: `function handle(form: Form) {
+        if (form.status === "pending") return "p";
+        else if (form.status === "done") return "d";
+      }`,
+      options: [{ minBranches: 2 }],
       errors: [{ messageId: "stateCascade" }],
     },
   ],
