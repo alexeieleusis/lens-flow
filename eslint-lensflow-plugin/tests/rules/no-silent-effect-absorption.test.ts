@@ -99,6 +99,29 @@ declare const r: Effect<string, Error>;
 r.map((x) => x.length).customHandle();`,
       options: [{ allowedTerminators: ["customHandle"] }],
     },
+    {
+      // Known limitation: the rule only visits ExpressionStatement nodes,
+      // so .map() results assigned to variables are never reported.
+      filename: TEST_FILENAME,
+      code: EFFECT_TYPE_DEF + `
+declare const r: Effect<string, Error>;
+const x = r.map((v) => v.length);`,
+    },
+    {
+      // Same limitation applies to return statements and function arguments.
+      filename: TEST_FILENAME,
+      code: EFFECT_TYPE_DEF + `
+declare const r: Effect<string, Error>;
+function foo() { return r.map((v) => v.length); }`,
+    },
+    {
+      // Same limitation: passed as function argument.
+      filename: TEST_FILENAME,
+      code: EFFECT_TYPE_DEF + `
+declare const r: Effect<string, Error>;
+declare function process<A>(e: A): void;
+process(r.map((v) => v.length));`,
+    },
   ],
   invalid: [
     {
