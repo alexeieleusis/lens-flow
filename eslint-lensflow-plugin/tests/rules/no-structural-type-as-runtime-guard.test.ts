@@ -55,5 +55,33 @@ ruleTester.run("no-structural-type-as-runtime-guard", rule, {
       }`,
       errors: [{ messageId: "structuralAsAnyGuard" }],
     },
+    // Destructured parameter (ObjectPattern)
+    {
+      code: `function parseUser({ id }: unknown): { id: string; name: string } {
+        return id as any;
+      }`,
+      errors: [{ messageId: "structuralAsAnyGuard" }],
+    },
+    // Destructured parameter (ArrayPattern)
+    {
+      code: `function parsePair([a, b]: unknown[]): { a: string; b: string } {
+        return [a, b] as any;
+      }`,
+      errors: [{ messageId: "structuralAsAnyGuard" }],
+    },
+    // Rest parameter
+    {
+      code: `function parseArgs(...args: unknown[]): { items: string[] } {
+        return args as any;
+      }`,
+      errors: [{ messageId: "structuralAsAnyGuard" }],
+    },
+    // Default value parameter (AssignmentPattern)
+    {
+      code: `function parseWithDefault(v: unknown = {}): { key: string } {
+        return v as any;
+      }`,
+      errors: [{ messageId: "structuralAsAnyGuard" }],
+    },
   ],
 });

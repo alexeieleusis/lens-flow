@@ -43,14 +43,40 @@ function findAsAnyInReturn(node: TSESTree.Node): TSESTree.TSAsExpression | null 
   return null;
 }
 
+function containsUnknown(typeAnnotation: TSESTree.TypeNode): boolean {
+  if (typeAnnotation.type === "TSUnknownKeyword") return true;
+  if (typeAnnotation.type === "TSArrayType" && containsUnknown(typeAnnotation.elementType)) return true;
+  return false;
+}
+
 function hasUnknownParam(
   node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression,
 ): boolean {
-  return node.params.some(
-    (param) =>
-      param.type === "Identifier" &&
-      param.typeAnnotation?.typeAnnotation?.type === "TSUnknownKeyword",
-  );
+  return node.params.some((param) => {
+    // Identifier: `(v: unknown)`
+    if (param.type === "Identifier" && param.typeAnnotation?.typeAnnotation) {
+      return containsUnknown(param.typeAnnotation.typeAnnotation);
+    }
+    // ObjectPattern / ArrayPattern (destructuring): `({ x }: unknown)` or `([x]: unknown[])`
+    if ((param.type === "ObjectPattern" || param.type === "ArrayPattern") && param.typeAnnotation?.typeAnnotation) {
+      return containsUnknown(param.typeAnnotation.typeAnnotation);
+    }
+    // RestElement: `(...args: unknown[])`
+    if (param.type === "RestElement" && param.typeAnnotation?.typeAnnotation) {
+      return containsUnknown(param.typeAnnotation.typeAnnotation);
+    }
+    // AssignmentPattern (default value): `(v: unknown = {})`
+    if (param.type === "AssignmentPattern") {
+      const left = param.left;
+      if (left.type === "Identifier" && left.typeAnnotation?.typeAnnotation) {
+        return containsUnknown(left.typeAnnotation.typeAnnotation);
+      }
+      if ((left.type === "ObjectPattern" || left.type === "ArrayPattern") && left.typeAnnotation?.typeAnnotation) {
+        return containsUnknown(left.typeAnnotation.typeAnnotation);
+      }
+    }
+    return false;
+  });
 }
 
 export default createRule({
