@@ -44,5 +44,11 @@ ruleTester.run("prefer-function-property-over-method", rule, {
       }`,
       errors: [{ messageId: "preferFunctionProperty" }],
     },
+    {
+      code: `interface Foo<T> {
+        "process"(item: T): void;
+      }`,
+      errors: [{ messageId: "preferFunctionProperty" }],
+    },
   ],
 });
