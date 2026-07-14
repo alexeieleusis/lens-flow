@@ -1,7 +1,7 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
-const ID_NAME_RE = /^(id|[A-Za-z]+Id)$/;
+const ID_NAME_RE = /^(id|.*[Ii][Dd])$/;
 
 function isBareStringType(typeAnn: TSESTree.TypeNode): boolean {
   return typeAnn.type === "TSStringKeyword";
