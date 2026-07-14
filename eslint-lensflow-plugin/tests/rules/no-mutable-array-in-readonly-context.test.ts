@@ -66,5 +66,11 @@ const mutable: number[] = items;`,
 const mutable: string[] = data;`,
       errors: [{ messageId: "mutableAssignmentFromReadonly" }],
     },
+    {
+      filename: TEST_FILENAME,
+      code: `const data: ReadonlyArray<string> = ["x", "y"];
+const mutable: Array<string> = data;`,
+      errors: [{ messageId: "mutableAssignmentFromReadonly" }],
+    },
   ],
 });
