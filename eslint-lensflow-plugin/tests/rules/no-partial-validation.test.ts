@@ -63,6 +63,22 @@ if ("email" in raw && "name" in raw) {
   /* process */
 }`,
     },
+    {
+      filename: TEST_FILENAME,
+      code: `interface User { email: string; name: string }
+declare const raw: User;
+if ((function(raw: { email: string }) { return true; })() && typeof raw.email === "string" && typeof raw.name === "string") {
+  /* all outer props checked; shadowed raw in IIFE is a separate binding */
+}`,
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `interface Config { host: string; port: number }
+declare const config: Config;
+if ((function(config: { host: string }) { return true; })() && typeof config.host === "string" && typeof config.port === "number") {
+  /* all outer config props checked; nested function parameter shadows the outer name but is a separate binding */
+}`,
+    },
   ],
   invalid: [
     {
