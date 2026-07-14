@@ -23,6 +23,10 @@ type Arr = typeof A;`,
     // so the rule skips it without crashing or false-positives.
     `const NS = { C: { value: 1 } as const };
 type T = typeof NS.C;`,
+    // Uninitialized `const` — `declarator.init` is `null`, `isObjectOrArrayLiteral(null)`
+    // returns `false`, so the rule correctly skips it (no false positive).
+    `const X;
+type T = typeof X;`,
   ],
   invalid: [
     {
