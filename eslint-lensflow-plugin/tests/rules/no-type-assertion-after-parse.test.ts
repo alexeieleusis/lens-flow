@@ -22,6 +22,17 @@ ruleTester.run("no-type-assertion-after-parse", rule, {
     // Assertion on a variable not from JSON.parse
     `const obj = createObj();
     const typed = obj as { id: string };`,
+    // Scope shadowing: inner parameter with same name should NOT trigger
+    `const raw = JSON.parse(input);
+    function inner(raw: { id: string }) {
+      const u = raw as { id: string };
+    }`,
+    // Nested block shadowing
+    `const raw = JSON.parse(input);
+    {
+      const raw = { id: "local" };
+      const u = raw as { id: string };
+    }`,
   ],
   invalid: [
     // Direct type assertion on JSON.parse
