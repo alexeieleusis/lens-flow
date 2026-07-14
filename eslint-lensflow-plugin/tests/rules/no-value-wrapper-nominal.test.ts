@@ -7,10 +7,15 @@ ruleTester.run("no-value-wrapper-nominal", rule, {
     `type State = { status: string; count: number };`,
     `type Wrapper = { value: number };`,
     `interface Config { value: string; other: boolean }`,
+    `type Foo = { "value": number };`,
   ],
   invalid: [
     {
       code: `type UserId = { value: string };`,
+      errors: [{ messageId: "valueWrapperNominal" }],
+    },
+    {
+      code: `type Foo = { "value": string };`,
       errors: [{ messageId: "valueWrapperNominal" }],
     },
     {
