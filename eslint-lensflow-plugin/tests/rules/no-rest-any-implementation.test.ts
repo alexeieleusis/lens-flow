@@ -21,6 +21,11 @@ function create(arg1: string, arg2: number): B;
 function create(...args: ReadonlyArray<string | number>) {
   return null as any;
 }`,
+    `declare function parse(x: string): number;
+declare function parse(x: number): string;
+function parse(x: string | number) {
+  return typeof x === "string" ? parseInt(x) : String(x);
+}`,
   ],
   invalid: [
     {
@@ -59,6 +64,14 @@ function create(...args: ReadonlyArray<any>) {
       code: `function process(x: string): void;
 function process(x: number): void;
 function process(...args: Array<any>) {
+  console.log(args);
+}`,
+      errors: [{ messageId: "restAnyImplementation" }],
+    },
+    {
+      code: `declare function handle(x: string): void;
+declare function handle(x: number): void;
+function handle(...args: any[]) {
   console.log(args);
 }`,
       errors: [{ messageId: "restAnyImplementation" }],
