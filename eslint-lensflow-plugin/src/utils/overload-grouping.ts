@@ -50,11 +50,18 @@ export function createOverloadGroupVisitor(
       }
 
       for (const declarations of byName.values()) {
-        const impl = declarations.find(isImpl);
-        if (!impl) continue;
+        let impl = declarations.find(isImpl);
+        let overloads: FnLikeNode[];
 
-        const overloads = declarations.filter((n) => !isImpl(n));
-        if (overloads.length === 0) continue;
+        if (impl) {
+          overloads = declarations.filter((n) => !isImpl(n));
+          if (overloads.length === 0) continue;
+        } else if (declarations.length >= 2) {
+          impl = declarations[0];
+          overloads = declarations;
+        } else {
+          continue;
+        }
 
         onGroup({ all: declarations, impl, overloads });
       }

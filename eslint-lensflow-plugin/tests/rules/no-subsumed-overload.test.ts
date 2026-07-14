@@ -54,6 +54,12 @@ function g(x: number): string;
 function g(x: string): number;
 function g(x: string | number): string | number { return x; }`,
     },
+    {
+      filename: TEST_FILENAME,
+      code: `// Valid — ambient overloads with correct ordering (TSDeclareFunction)
+declare function parse(v: number): number;
+declare function parse(v: string): string;`,
+    },
   ],
   invalid: [
     {
@@ -78,6 +84,13 @@ function convert<T extends string>(x: T): T { return x; }`,
 function getId(): number;
 function getId<T = number>(): T;
 function getId<T = number>(): T { return 1 as T; }`,
+      errors: [{ messageId: "subsumed" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `// Invalid — ambient overload subsumed by broader overload (TSDeclareFunction)
+declare function map<T>(arr: T[], fn: (x: T) => number): number[];
+declare function map<T, U>(arr: T[], fn: (x: T) => U): U[];`,
       errors: [{ messageId: "subsumed" }],
     },
   ],

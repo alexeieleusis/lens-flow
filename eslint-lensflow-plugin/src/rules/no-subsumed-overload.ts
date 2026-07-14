@@ -409,7 +409,7 @@ export default createRule({
       overloads: FnLikeNode[],
     ): void {
       if (
-        impl.type !== "FunctionDeclaration" ||
+        (impl.type !== "FunctionDeclaration" && impl.type !== "TSDeclareFunction") ||
         impl.id?.type !== "Identifier"
       ) {
         return;
