@@ -17,6 +17,15 @@ const broken = doSomething();`,
       errors: [{ messageId: "preferExpectError" }],
     },
     {
+      code: `/* @ts-ignore */
+const x = doSomething();`,
+      errors: [{ messageId: "preferExpectError" }],
+    },
+    {
+      code: `/* @ts-ignore */ const x = doSomething();`,
+      errors: [{ messageId: "preferExpectError" }],
+    },
+    {
       code: `function foo() {
   // @ts-ignore
   return unsafeCall();
