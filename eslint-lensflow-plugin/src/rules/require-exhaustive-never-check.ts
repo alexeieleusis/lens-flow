@@ -212,7 +212,7 @@ function collectBackwardsIfChain(
 function isChainableIf(stmt: TSESTree.Node): stmt is TSESTree.IfStatement {
   if (stmt.type !== "IfStatement") return false;
   if (stmt.test.type !== "BinaryExpression") return false;
-  return stmt.test.operator === "===";
+  return stmt.test.operator === "===" || stmt.test.operator === "!==";
 }
 
 function extractMemberPath(

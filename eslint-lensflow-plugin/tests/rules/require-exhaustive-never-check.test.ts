@@ -142,6 +142,24 @@ function handle(c: Code) {
   }
 }`,
     },
+    // If-else chain with !==: fallback calls assertNever
+    {
+      filename: TEST_FILENAME,
+      code: `type Status = "idle" | "loading" | "done";
+function handle(s: Status) {
+  if (s !== "idle") return 0;
+  return assertNever(s);
+}`,
+    },
+    // If-else chain with !==: all variants narrowed, fallback has throw
+    {
+      filename: TEST_FILENAME,
+      code: `type Status = "idle" | "loading";
+function handle(s: Status) {
+  if (s !== "idle") return 1;
+  throw new Error("idle");
+}`,
+    },
   ],
   invalid: [
     // If-else chain: missing "c", fallback returns literal
@@ -233,6 +251,27 @@ function handle(msg: Message) {
   }
 }`,
       errors: [{ messageId: "switchMissingNeverCheck" }],
+    },
+    // If-else chain with !==: missing never check, fallback returns literal
+    {
+      filename: TEST_FILENAME,
+      code: `type Status = "idle" | "loading" | "done";
+function handle(s: Status) {
+  if (s !== "idle") return 0;
+  return -1;
+}`,
+      errors: [{ messageId: "ifChainMissingNeverCheck" }],
+    },
+    // If-else chain with !==: multiple !== checks, fallback returns literal
+    {
+      filename: TEST_FILENAME,
+      code: `type Status = "idle" | "loading" | "done";
+function handle(s: Status) {
+  if (s !== "idle") return 0;
+  if (s !== "loading") return 1;
+  return "fallback";
+}`,
+      errors: [{ messageId: "ifChainMissingNeverCheck" }],
     },
   ],
 });
