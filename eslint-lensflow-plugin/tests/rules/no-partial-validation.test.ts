@@ -79,6 +79,36 @@ if ((function(config: { host: string }) { return true; })() && typeof config.hos
   /* all outer config props checked; nested function parameter shadows the outer name but is a separate binding */
 }`,
     },
+    {
+      filename: TEST_FILENAME,
+      code: `interface Item { id: string; value: number }
+declare const raw: Item;
+for (const i = 0; i < 10; i++) {
+  if (typeof raw.id === "string" && typeof raw.value === "number") {
+    /* all props checked inside for loop */
+  }
+}`,
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `interface Item { id: string; value: number }
+declare const raw: Item;
+try {
+  if (typeof raw.id === "string" && typeof raw.value === "number") {
+    /* all props checked inside try block */
+  }
+} catch (e) {}`,
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `interface Item { id: string; value: number }
+declare const raw: Item;
+if (true) {
+  if (typeof raw.id === "string" && typeof raw.value === "number") {
+    /* all props checked inside nested if */
+  }
+}`,
+    },
   ],
   invalid: [
     {
@@ -123,6 +153,39 @@ if (` + '`"theme"`' + ` in raw) {
 declare const raw: Config;
 if (typeof raw.host === "string" && typeof raw.port === "number") {
   /* process */
+}`,
+      errors: [{ messageId: "partialValidation" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `interface Config { host: string; port: number; timeout: number }
+declare const raw: Config;
+for (const i = 0; i < 10; i++) {
+  if (typeof raw.host === "string") {
+    /* only one prop checked inside for loop */
+  }
+}`,
+      errors: [{ messageId: "partialValidation" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `interface Config { host: string; port: number; timeout: number }
+declare const raw: Config;
+try {
+  if (typeof raw.port === "number") {
+    /* only one prop checked inside try block */
+  }
+} catch (e) {}`,
+      errors: [{ messageId: "partialValidation" }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `interface Config { host: string; port: number; timeout: number }
+declare const raw: Config;
+if (true) {
+  if (typeof raw.timeout === "number") {
+    /* only one prop checked inside nested if */
+  }
 }`,
       errors: [{ messageId: "partialValidation" }],
     },
