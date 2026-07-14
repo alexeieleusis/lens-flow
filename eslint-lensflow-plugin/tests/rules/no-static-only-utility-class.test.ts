@@ -56,5 +56,13 @@ ruleTester.run("no-static-only-utility-class", rule, {
       }`,
       errors: [{ messageId: "staticOnlyUtility" }],
     },
+    {
+      code: `class Config {
+        private constructor() {}
+        static base: string = "/api";
+        static url(path: string): string { return this.base + path; }
+      }`,
+      errors: [{ messageId: "staticOnlyUtility" }],
+    },
   ],
 });
