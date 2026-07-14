@@ -31,5 +31,12 @@ ruleTester.run("no-call-signature-leaked-internals", rule, {
       }`,
       errors: [{ messageId: "leakedInternals" }],
     },
+    {
+      code: `interface Store {
+        (key: string): unknown;
+        "_cache": Map<string, unknown>;
+      }`,
+      errors: [{ messageId: "leakedInternals" }],
+    },
   ],
 });
