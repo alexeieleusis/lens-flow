@@ -6,6 +6,7 @@ ruleTester.run("no-value-wrapper-nominal", rule, {
     `type UserId = string & { readonly brand: unique symbol };`,
     `type State = { status: string; count: number };`,
     `type Wrapper = { value: number };`,
+    `type Flag = { value: boolean };`,
     `interface Config { value: string; other: boolean }`,
     `type Foo = { "value": number };`,
   ],
