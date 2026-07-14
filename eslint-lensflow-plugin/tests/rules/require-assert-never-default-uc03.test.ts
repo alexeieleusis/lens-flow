@@ -47,6 +47,13 @@ function handle(s: Status): string {
     default: return 0;
   }
 }`,
+    `function f(x: number) {
+  switch (x) {
+    case 1: return "one";
+    case 2: return "two";
+    default: return "other";
+  }
+}`,
   ],
   invalid: [
     {
