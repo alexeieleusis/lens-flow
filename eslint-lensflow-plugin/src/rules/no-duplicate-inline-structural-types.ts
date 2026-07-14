@@ -184,7 +184,7 @@ export default createRule({
     },
     messages: {
       duplicateInlineType:
-        "Duplicate inline structural type used {{count}} times. Extract this shape into a named interface or type alias. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC05-structural-contracts.md",
+        "Duplicate inline structural type used {{count}} times. Extract this shape into a named interface or type alias.",
     },
     schema: [
       {
