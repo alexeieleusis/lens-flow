@@ -112,6 +112,19 @@ export default createRule({
         );
         if (literals.length !== node.types.length) return;
 
+        // Reject members with methods, call signatures, or index signatures —
+        // the rule only applies to plain data shapes (property-only objects).
+        for (const literal of literals) {
+          for (const member of literal.members) {
+            if (
+              member.type !== "TSPropertySignature" &&
+              member.type !== "TSOptionalType"
+            ) {
+              return;
+            }
+          }
+        }
+
         const firstSigs = getPropertySigs(literals[0].members);
         const firstKeys = new Set(firstSigs.map((s) => extractPropName(s.key)));
 

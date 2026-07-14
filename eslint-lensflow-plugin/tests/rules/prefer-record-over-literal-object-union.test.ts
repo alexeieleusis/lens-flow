@@ -9,6 +9,9 @@ ruleTester.run("prefer-record-over-literal-object-union", rule, {
     `type NonLiteralUnion = string | number`,
     `type SameLiterals = { env: "dev"; port: 3000 } | { env: "dev"; port: 3000 }`,
     `type PartialNonLiteral = { env: "dev"; port: 3000 } | { env: string; port: 8080 }`,
+    `type MethodOnly = { env: "dev"; foo(): void } | { bar(): void; env: "prod" }`,
+    `type CallSignature = { env: "dev"; (): void } | { env: "prod"; (): number }`,
+    `type IndexSignature = { env: "dev"; [k: string]: number } | { env: "prod"; [k: string]: string }`,
   ],
   invalid: [
     {
