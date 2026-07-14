@@ -83,5 +83,10 @@ ruleTester.run("no-structural-type-as-runtime-guard", rule, {
       }`,
       errors: [{ messageId: "structuralAsAnyGuard" }],
     },
+    // Expression-bodied arrow function
+    {
+      code: `const parseUser = (v: unknown): { id: string } => v as any;`,
+      errors: [{ messageId: "structuralAsAnyGuard" }],
+    },
   ],
 });

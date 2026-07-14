@@ -113,6 +113,14 @@ export default createRule({
             }
           }
         }
+      } else {
+        const asAny = findAsAnyInReturn(node.body);
+        if (asAny) {
+          context.report({
+            node: asAny,
+            messageId: "structuralAsAnyGuard",
+          });
+        }
       }
     }
 
