@@ -31,6 +31,23 @@ advanced.query("SELECT 1");`,
     `let a = createA();
 let b = a.transform();
 b.use();`,
+
+    // let variable used inside nested arrow function callback — should NOT be flagged
+    `let conn = Db.open();
+const advanced = conn.connect();
+setTimeout(() => { conn.query("SELECT 1"); });`,
+
+    // let variable used inside nested function expression — should NOT be flagged
+    `let conn = Db.open();
+const advanced = conn.connect();
+const fn = function() { conn.query("SELECT 1"); };`,
+
+    // let variable used inside nested FunctionDeclaration in block — should NOT be flagged
+    `let conn = Db.open();
+const advanced = conn.connect();
+{
+  function inner() { conn.query("SELECT 1"); }
+}`,
   ],
   invalid: [
     // Basic antipattern: const assignment of method call on let, then let used
