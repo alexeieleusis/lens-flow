@@ -1,4 +1,5 @@
-import path from "node:path";   
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { RuleTester } from "@typescript-eslint/rule-tester";
 import { afterAll, describe, it } from "vitest";
 import * as tsParser from "@typescript-eslint/parser";
@@ -7,6 +8,8 @@ import rule from "../../src/rules/require-exhaustive-never-check.js";
 RuleTester.afterAll = afterAll;
 RuleTester.describe = describe;
 RuleTester.it = it;
+
+const __dirname = path.resolve(fileURLToPath(import.meta.url), "..");
 
 const TEST_FILENAME = "tests/rules/test.ts";
 const TS_CONFIG_DIR = path.resolve(__dirname, "../..");
