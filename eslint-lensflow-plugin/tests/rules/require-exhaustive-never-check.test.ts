@@ -170,6 +170,33 @@ function handle(s: Status) {
   throw new Error("idle");
 }`,
     },
+    // Parenthesized union types — exercises TSParenthesizedType unwrapping
+    {
+      filename: TEST_FILENAME,
+      code: `type M = ({ type: "a" }) | ({ type: "b" });
+function handle(m: M) {
+  if (m.type === "a") return "alpha";
+  if (m.type === "b") return "beta";
+}`,
+    },
+    // Nested union type — exercises nested discriminant detection
+    {
+      filename: TEST_FILENAME,
+      code: `type Wrapper = { data: { type: "a" } | { type: "b" } };
+function handle(w: Wrapper) {
+  if (w.data.type === "a") return "alpha";
+  if (w.data.type === "b") return "beta";
+}`,
+    },
+    // Near-miss non-union: single type property — should NOT trigger (allValues.length < 2 guard)
+    {
+      filename: TEST_FILENAME,
+      code: `type M = { type: string };
+function handle(m: M) {
+  if (m.type === "a") return "alpha";
+  return "fallback";
+}`,
+    },
   ],
   invalid: [
     // If-else chain: missing "c", fallback returns literal
