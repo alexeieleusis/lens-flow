@@ -7,6 +7,10 @@ ruleTester.run("no-excessive-union-members", rule, {
     `type DataAction = { kind: "load"; url: string } | { kind: "save"; payload: unknown };
 type Action = NavigationAction | DataAction;`,
     `type Status = "idle" | "loading" | "success" | "error" | "retrying";`,
+    {
+      code: `type Status = "a" | "b" | "c" | "d";`,
+      options: [{ maxMembers: 5 }],
+    },
   ],
   invalid: [
     {
