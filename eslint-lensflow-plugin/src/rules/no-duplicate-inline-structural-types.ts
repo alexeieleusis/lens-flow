@@ -204,6 +204,15 @@ export default createRule({
           checkParams(node.value.params, node.value.range[0]);
         }
       },
+      TSDeclareFunction(node) {
+        checkParams(node.params, node.range[0]);
+      },
+      TSFunctionType(node) {
+        checkParams(node.params, node.range[0]);
+      },
+      TSConstructorType(node) {
+        checkParams(node.params, node.range[0]);
+      },
       "Program:exit"() {
         const groups = new Map<string, Entry[]>();
         for (const entry of entries) {
