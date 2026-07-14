@@ -242,6 +242,16 @@ export default createRule({
             canonical: canonicalize(lit),
             node: lit,
           });
+        } else if (
+          param.type === "TSParameterProperty" &&
+          param.parameter.type === "Identifier" &&
+          param.parameter.typeAnnotation?.typeAnnotation.type === "TSTypeLiteral"
+        ) {
+          const lit = param.parameter.typeAnnotation.typeAnnotation;
+          entries.push({
+            canonical: canonicalize(lit),
+            node: lit,
+          });
         }
       }
     }
