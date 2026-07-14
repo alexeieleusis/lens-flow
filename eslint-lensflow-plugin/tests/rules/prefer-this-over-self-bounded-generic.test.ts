@@ -35,7 +35,7 @@ ruleTester.run("prefer-this-over-self-bounded-generic", rule, {
           return this as any as T;
         }
       }`,
-      errors: [{ messageId: "selfBoundedGeneric" }],
+      errors: [{ messageId: "selfBoundedGeneric", data: { className: "Builder" } }],
     },
     {
       code: `class Chain<T extends Chain<T>> {
@@ -43,13 +43,13 @@ ruleTester.run("prefer-this-over-self-bounded-generic", rule, {
           return this as T;
         }
       }`,
-      errors: [{ messageId: "selfBoundedGeneric" }],
+      errors: [{ messageId: "selfBoundedGeneric", data: { className: "Chain" } }],
     },
     {
       code: `const C = class Chain<T extends Chain<T>> {
         then(fn: () => void): T { return this as T; }
       };`,
-      errors: [{ messageId: "selfBoundedGeneric" }],
+      errors: [{ messageId: "selfBoundedGeneric", data: { className: "Chain" } }],
     },
   ],
 });
