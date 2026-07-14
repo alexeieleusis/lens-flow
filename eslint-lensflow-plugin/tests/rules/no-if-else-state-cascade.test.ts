@@ -43,6 +43,11 @@ ruleTester.run("no-if-else-state-cascade", rule, {
       }`,
       options: [{ minBranches: 4 }],
     },
+    `function handle(form: Form) {
+      if (form.status === "a") return 1;
+      else if (form.status === "b") return 2;
+      else return fallback();
+    }`,
   ],
   invalid: [
     {
