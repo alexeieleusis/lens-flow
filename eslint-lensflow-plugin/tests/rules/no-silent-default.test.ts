@@ -50,6 +50,16 @@ function handle(e: Event) {
     default: { assertNever(e); }
   }
 }`,
+    // multiple consequent statements with assertNever — exercises nonEmpty.some(isSilentReturn)
+    `type Event = { kind: "click"; x: number } | { kind: "scroll"; top: number };
+function handle(e: Event) {
+  switch (e.kind) {
+    case "click": console.log(e.x); break;
+    default:
+      console.log("debug");
+      assertNever(e);
+  }
+}`,
   ],
   invalid: [
     // empty default — the canonical antipattern
