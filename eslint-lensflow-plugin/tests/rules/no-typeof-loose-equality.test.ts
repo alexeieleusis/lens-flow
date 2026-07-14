@@ -48,5 +48,10 @@ ruleTester.run("no-typeof-loose-equality", rule, {
       errors: [{ messageId: "looseTypeofEq" }],
       output: `if ("string" === typeof x) { }`,
     },
+    {
+      code: `if (10 != typeof x) { }`,
+      errors: [{ messageId: "looseTypeofNeq" }],
+      output: `if (10 !== typeof x) { }`,
+    },
   ],
 });
