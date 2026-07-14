@@ -16,6 +16,9 @@ type Num = typeof X;`,
 type Str = typeof S;`,
     `const B = true;
 type Bool = typeof B;`,
+    // Arrays also need `as const` to prevent widening.
+    `const A = [1, 2] as const;
+type Arr = typeof A;`,
     // Qualified names (TSQualifiedName) — the rightmost segment isn't a scope variable,
     // so the rule skips it without crashing or false-positives.
     `const NS = { C: { value: 1 } as const };
@@ -42,6 +45,11 @@ type FlagConfig = typeof FLAGS;`,
 type T = typeof CONFIG;
 CONFIG = { a: 2 };`,
       errors: [{ messageId: "mutableLetVar" }],
+    },
+    {
+      code: `const A = [1, 2];
+type Arr = typeof A;`,
+      errors: [{ messageId: "missingAsConst" }],
     },
   ],
 });
