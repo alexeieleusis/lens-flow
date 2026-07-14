@@ -50,6 +50,17 @@ function handle(e: Event) {
     default: { assertNever(e); }
   }
 }`,
+    // default with guard + throw in else branch — common exhaustiveness guard pattern
+    `type Event = { kind: "click"; x: number } | { kind: "scroll"; top: number };
+function handle(e: Event) {
+  switch (e.kind) {
+    case "click": console.log(e.x); break;
+    default: {
+      if (!e) return;
+      else throw new Error('Unhandled: ' + e.kind);
+    }
+  }
+}`,
     // multiple consequent statements with assertNever — exercises nonEmpty.some(isSilentReturn)
     `type Event = { kind: "click"; x: number } | { kind: "scroll"; top: number };
 function handle(e: Event) {
