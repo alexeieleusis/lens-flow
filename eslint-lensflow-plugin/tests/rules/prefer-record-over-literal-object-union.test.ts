@@ -30,5 +30,13 @@ ruleTester.run("prefer-record-over-literal-object-union", rule, {
       code: `type Options = { kind: "x"; count: 10 } | { kind: "y"; count: 20 };`,
       errors: [{ messageId: "preferRecord" }],
     },
+    {
+      code: `type QuotedKeys = { "env": "dev"; port: 3000 } | { "env": "prod"; port: 8080 };`,
+      errors: [{ messageId: "preferRecord" }],
+    },
+    {
+      code: `type BooleanValues = { flag: true; label: "a" } | { flag: false; label: "b" };`,
+      errors: [{ messageId: "preferRecord" }],
+    },
   ],
 });
