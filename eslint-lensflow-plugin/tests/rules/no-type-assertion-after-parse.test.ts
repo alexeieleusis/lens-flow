@@ -33,6 +33,15 @@ ruleTester.run("no-type-assertion-after-parse", rule, {
       const raw = { id: "local" };
       const u = raw as { id: string };
     }`,
+    // Cross-function: variable from JSON.parse in one function should not affect assertions in another
+    `function A() {
+      const raw = JSON.parse(input);
+      console.log(raw);
+    }
+    function B() {
+      const raw = otherSource();
+      const u = raw as { id: string };
+    }`,
   ],
   invalid: [
     // Direct type assertion on JSON.parse
