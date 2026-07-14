@@ -102,5 +102,18 @@ function render(state: State): string {
 }`,
       errors: [{ messageId: "emptyDefault" }],
     },
+    {
+      code: `type S = { kind: "A" } | { kind: "B" };
+function f(s: S) {
+  switch (s.kind) {
+    case "A": return 1;
+    case "B": return 2;
+    default:
+      const fn = () => assertNever(s);
+      return 0;
+  }
+}`,
+      errors: [{ messageId: "missingAssertNever" }],
+    },
   ],
 });
