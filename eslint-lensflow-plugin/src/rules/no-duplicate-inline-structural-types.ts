@@ -73,12 +73,14 @@ function memberKey(m: TSESTree.TSPropertySignature | TSESTree.TSMethodSignature)
 }
 
 function paramToString(p: TSESTree.Parameter): string {
-  const name = p.type === "Identifier" ? p.name : p.type;
   if (p.type === "TSParameterProperty") {
-    const ann = p.parameter.typeAnnotation;
+    const inner = p.parameter;
+    const name = inner.type === "Identifier" ? inner.name : inner.type;
+    const ann = inner.typeAnnotation;
     const typeStr = ann ? serializeTypeAnnotation(ann) : "unknown";
     return `${name}:${typeStr}`;
   }
+  const name = p.type === "Identifier" ? p.name : p.type;
   const typeAnn = p.typeAnnotation
     ? serializeTypeAnnotation(p.typeAnnotation)
     : "unknown";
