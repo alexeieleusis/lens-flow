@@ -334,6 +334,33 @@ function propertyTypeHasInputRef(
     case AST_NODE_TYPES.TSUnionType:
     case AST_NODE_TYPES.TSIntersectionType:
       return node.types.some((t) => propertyTypeHasInputRef(t, paramName));
+    case AST_NODE_TYPES.TSTypeLiteral:
+      return node.members.some((m) => {
+        if (m.type === AST_NODE_TYPES.TSMethodSignature) {
+          return paramsContainTypeRef(
+            (m as TSESTree.TSMethodSignature).params,
+            paramName,
+          );
+        }
+        if (m.type === AST_NODE_TYPES.TSCallSignatureDeclaration) {
+          return paramsContainTypeRef(
+            (m as TSESTree.TSCallSignatureDeclaration).params,
+            paramName,
+          );
+        }
+        if (m.type === AST_NODE_TYPES.TSConstructSignatureDeclaration) {
+          return paramsContainTypeRef(
+            (m as TSESTree.TSConstructSignatureDeclaration).params,
+            paramName,
+          );
+        }
+        if (m.type === AST_NODE_TYPES.TSPropertySignature) {
+          const inner = (m as TSESTree.TSPropertySignature).typeAnnotation
+            ?.typeAnnotation;
+          return inner ? propertyTypeHasInputRef(inner, paramName) : false;
+        }
+        return false;
+      });
     default:
       // TSParenthesizedType exists at runtime but isn't in @typescript-eslint's types.
       if ((node as any).type === "TSParenthesizedType") {
