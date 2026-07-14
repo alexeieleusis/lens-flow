@@ -7,7 +7,7 @@ export default createRule({
     type: "suggestion",
     docs: {
       description:
-        "Prefer explicit type annotation over `satisfies` when satisfying a named interface or type alias.",
+        "Prefer explicit type annotation over `satisfies` when satisfying a named type reference.",
     },
     messages: {
       preferAnnotation:
