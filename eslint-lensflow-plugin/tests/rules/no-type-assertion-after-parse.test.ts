@@ -75,5 +75,14 @@ ruleTester.run("no-type-assertion-after-parse", rule, {
       code: `const data = JSON.parse(input) as any;`,
       errors: [{ messageId: "directAssertion" }],
     },
+    // TSNonNullExpression wrapper: raw! as T
+    {
+      code: `function parseUser(json: unknown): string {
+        const raw = JSON.parse(json);
+        const u = raw! as { id: string };
+        return u.id;
+      }`,
+      errors: [{ messageId: "indirectAssertion" }],
+    },
   ],
 });

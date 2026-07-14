@@ -14,6 +14,18 @@ function isJsonParseCall(node: TSESTree.CallExpression): boolean {
   );
 }
 
+function unwrapExpression(node: TSESTree.Expression): TSESTree.Expression {
+  let current: TSESTree.Expression = node;
+  while (
+    current.type === "TSNonNullExpression" ||
+    current.type === "TSSatisfiesExpression" ||
+    current.type === "TSAsExpression"
+  ) {
+    current = current.expression;
+  }
+  return current;
+}
+
 export default createRule({
   name: "no-type-assertion-after-parse",
   meta: {
@@ -37,7 +49,7 @@ export default createRule({
   create(context: TSESLint.RuleContext<"directAssertion" | "indirectAssertion", []>) {
     return {
       TSAsExpression(node) {
-        const expr = node.expression;
+        const expr = unwrapExpression(node.expression);
 
         if (expr.type === "CallExpression" && isJsonParseCall(expr)) {
           context.report({
