@@ -46,6 +46,26 @@ const same: readonly string[] = data;`,
       code: `const list: string[] = ["a", "b"];
 const other: string[] = list;`,
     },
+    // Union-wrapped: TSParenthesizedType + union — not a bare readonly array
+    {
+      filename: TEST_FILENAME,
+      code: `const maybe: (readonly string[] | null) = ["a", "b"];
+const assigned: readonly string[] | null = maybe;`,
+    },
+    // Intersection-wrapped: readonly array & extra shape — not a bare array
+    {
+      filename: TEST_FILENAME,
+      code: `const tagged: readonly string[] & { readonly marker: true } =
+  ["a"] as any;
+const other = tagged;`,
+    },
+    // Union constituents: both members are readonly arrays
+    {
+      filename: TEST_FILENAME,
+      code: `type ReadonlyStringOrNumber = readonly string[] | readonly number[];
+const mixed: ReadonlyStringOrNumber = ["a", "b"];
+const same: ReadonlyStringOrNumber = mixed;`,
+    },
   ],
   invalid: [
     {
@@ -70,6 +90,37 @@ const mutable: string[] = data;`,
       filename: TEST_FILENAME,
       code: `const data: ReadonlyArray<string> = ["x", "y"];
 const mutable: Array<string> = data;`,
+      errors: [{ messageId: "mutableAssignmentFromReadonly" }],
+    },
+    // Type alias for readonly array — should still be detected
+    {
+      filename: TEST_FILENAME,
+      code: `type ReadonlyStr = readonly string[];
+const src: ReadonlyStr = ["a"];
+const dst: string[] = src;`,
+      errors: [{ messageId: "mutableAssignmentFromReadonly" }],
+    },
+    // TSParenthesizedType wrapping a readonly array
+    {
+      filename: TEST_FILENAME,
+      code: `const src: (readonly string[]) = ["a"];
+const dst: string[] = src;`,
+      errors: [{ messageId: "mutableAssignmentFromReadonly" }],
+    },
+    // Readonly array in intersection assigned to mutable
+    {
+      filename: TEST_FILENAME,
+      code: `const src: readonly string[] & { readonly marker: true } =
+  ["a"] as any;
+const dst: string[] = src;`,
+      errors: [{ messageId: "mutableAssignmentFromReadonly" }],
+    },
+    // Union of readonly arrays assigned to mutable
+    {
+      filename: TEST_FILENAME,
+      code: `type Union = readonly string[] | readonly number[];
+const src: Union = ["a"];
+const dst: string[] = src;`,
       errors: [{ messageId: "mutableAssignmentFromReadonly" }],
     },
   ],

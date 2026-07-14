@@ -15,7 +15,16 @@ function createTypeCheckers(checker: ts.TypeChecker) {
   }
 
   function isReadonlyArray(type: ts.Type) {
-    return isArrayType(type) && !isMutableArray(type);
+    if (isArrayType(type) && !isMutableArray(type)) return true;
+
+    if (type.flags & ts.TypeFlags.Intersection) {
+      const candidates = (type as ts.IntersectionType).types;
+      for (const t of candidates) {
+        if (isArrayType(t) && !isMutableArray(t)) return true;
+      }
+    }
+
+    return false;
   }
 
   return { isArrayType, isMutableArray, isReadonlyArray };
