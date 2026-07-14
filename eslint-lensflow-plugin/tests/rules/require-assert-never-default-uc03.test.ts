@@ -54,6 +54,19 @@ function handle(s: Status): string {
     default: return "other";
   }
 }`,
+    `type S = { kind: "A" } | { kind: "B" };
+function assertNever(x: never): never {
+  throw new Error(\`Unexpected: \${x}\`);
+}
+function f(s: S) {
+  switch (s.kind) {
+    case "A": return 1;
+    case "B": return 2;
+    default:
+      console.log("unexpected:", s);
+      assertNever(s);
+  }
+}`,
   ],
   invalid: [
     {
