@@ -92,6 +92,13 @@ declare const r: Effect<string, Error>;
 r.customHandle();`,
       options: [{ allowedTerminators: ["customHandle"] }],
     },
+    {
+      filename: TEST_FILENAME,
+      code: EFFECT_TYPE_DEF + `
+declare const r: Effect<string, Error>;
+r.map((x) => x.length).customHandle();`,
+      options: [{ allowedTerminators: ["customHandle"] }],
+    },
   ],
   invalid: [
     {
@@ -127,6 +134,14 @@ r?.map((x) => x.length);`,
 declare const r: Effect<string, Error>;
 r.map((x) => x.length);`,
       options: [{ allowedTerminators: [] }],
+      errors: [{ messageId: "silentAbsorption", data: { method: "map" } }],
+    },
+    {
+      filename: TEST_FILENAME,
+      code: EFFECT_TYPE_DEF + `
+declare const r: Effect<string, Error>;
+r.map((x) => x.length);`,
+      options: [{ allowedTerminators: ["customHandle"] }],
       errors: [{ messageId: "silentAbsorption", data: { method: "map" } }],
     },
     {
