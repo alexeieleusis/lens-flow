@@ -64,5 +64,20 @@ ruleTester.run("no-static-only-utility-class", rule, {
       }`,
       errors: [{ messageId: "staticOnlyUtility" }],
     },
+    {
+      code: `class Config {
+        private constructor() {}
+        static get env(): string { return process.env.NODE_ENV; }
+      }`,
+      errors: [{ messageId: "staticOnlyUtility" }],
+    },
+    {
+      code: `class Config {
+        private constructor() {}
+        static get env(): string { return process.env.NODE_ENV; }
+        static set env(value: string) { process.env.NODE_ENV = value; }
+      }`,
+      errors: [{ messageId: "staticOnlyUtility" }],
+    },
   ],
 });
