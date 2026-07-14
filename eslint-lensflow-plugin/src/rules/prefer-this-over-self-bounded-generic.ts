@@ -19,10 +19,7 @@ export default createRule({
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"selfBoundedGeneric", []>) {
     function checkSelfBound(node: TSESTree.ClassDeclaration | TSESTree.ClassExpression) {
-      const className =
-        node.type === "ClassDeclaration" && node.id
-          ? node.id.name
-          : null;
+      const className = node.id ? node.id.name : null;
 
       if (!className) return;
 
