@@ -63,6 +63,30 @@ if (city != null) {
 }
 `,
     },
+    // Guarded by throw in if branch (negation guard pattern)
+    {
+      filename: TEST_FILENAME,
+      code: `
+interface Address { city: string }
+interface Order { shippingAddress?: Address }
+declare const order: Order;
+const city = order?.shippingAddress?.city;
+if (city === undefined) throw new Error("missing city");
+document.title = city.toUpperCase();
+`,
+    },
+    // Guarded by negation throw: if (!city) throw ...; use after
+    {
+      filename: TEST_FILENAME,
+      code: `
+interface Address { city: string }
+interface Order { shippingAddress?: Address }
+declare const order: Order;
+const city = order?.shippingAddress?.city;
+if (!city) throw new Error("missing city");
+document.title = city.toUpperCase();
+`,
+    },
     // Optional chain directly on use (no intermediate variable)
     {
       filename: TEST_FILENAME,
@@ -117,6 +141,28 @@ if (city != null && city.length > 0) {
 }
 `,
     },
+    // CallExpression on optional chain result — guarded with if
+    {
+      filename: TEST_FILENAME,
+      code: `
+interface Obj { callback?: () => void }
+declare const obj: Obj;
+const cb = obj?.callback;
+if (cb !== undefined) {
+  cb();
+}
+`,
+    },
+    // CallExpression on optional chain result — guarded with ??
+    {
+      filename: TEST_FILENAME,
+      code: `
+interface Obj { callback?: () => void }
+declare const obj: Obj;
+const cb = obj?.callback ?? () => {};
+cb();
+`,
+    },
   ],
   invalid: [
     // Basic antipattern: dereference without handling
@@ -168,6 +214,33 @@ const z = addr.zip;
         { messageId: "unguardedAccess" },
         { messageId: "unguardedAccess" },
       ],
+    },
+    // CallExpression on optional chain result — unguarded
+    {
+      filename: TEST_FILENAME,
+      code: `
+interface Obj { callback?: () => void }
+declare const obj: Obj;
+const cb = obj?.callback;
+cb();
+`,
+      errors: [{ messageId: "unguardedAccess" }],
+    },
+    // Outer guard does NOT protect access inside a nested callback (scope boundary)
+    {
+      filename: TEST_FILENAME,
+      code: `
+interface Address { city: string }
+interface Order { shippingAddress?: Address }
+declare const order: Order;
+const city = order?.shippingAddress?.city;
+if (city !== undefined) {
+  process.nextTick(() => {
+    document.title = city.toUpperCase();
+  });
+}
+`,
+      errors: [{ messageId: "unguardedAccess" }],
     },
   ],
 });
