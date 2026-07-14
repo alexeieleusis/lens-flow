@@ -22,11 +22,15 @@ export default createRule({
       TSSatisfiesExpression(node) {
         const typeAnnotation = node.typeAnnotation;
 
-        if (
-          typeAnnotation.type === "TSTypeReference" &&
-          typeAnnotation.typeName.type === "Identifier"
-        ) {
-          const typeName = typeAnnotation.typeName.name;
+        if (typeAnnotation.type === "TSTypeReference") {
+          const typeNameNode = typeAnnotation.typeName;
+          const typeName =
+            typeNameNode.type === "Identifier"
+              ? typeNameNode.name
+              : typeNameNode.type === "TSQualifiedName"
+                ? typeNameNode.right.name
+                : null;
+          if (typeName === null) return;
           context.report({
             node,
             messageId: "preferAnnotation",
