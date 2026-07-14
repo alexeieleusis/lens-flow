@@ -29,6 +29,10 @@ ruleTester.run("no-chain-for-independent-computations", rule, {
     `E.chain((x) => ({ x, computed: x + 1 }));`,
     // Optional chaining: parameter IS used — dependent computation
     `result?.flatMap((x) => process(x.value));`,
+    // Destructured param (ObjectPattern) — intentionally skipped by the rule
+    `E.chain(({ name }) => fetchIndependent());`,
+    // Destructured param (ArrayPattern) — intentionally skipped by the rule
+    `E.chain(([a]) => fetchIndependent());`,
   ],
   invalid: [
     // Classic antipattern: independent validations chained (no params)
@@ -77,6 +81,16 @@ ruleTester.run("no-chain-for-independent-computations", rule, {
     // Non-computed member name with same name is NOT a reference
     {
       code: `E.chain((x) => obj.x);`,
+      errors: [{ messageId: "unusedParamInChain" }],
+    },
+    // Default parameter (AssignmentPattern) — unwrapped and detected
+    {
+      code: `E.chain((x = 1) => fetchIndependent());`,
+      errors: [{ messageId: "unusedParamInChain" }],
+    },
+    // Rest parameter — unwrapped and detected
+    {
+      code: `E.chain((...args) => fetchIndependent());`,
       errors: [{ messageId: "unusedParamInChain" }],
     },
   ],
