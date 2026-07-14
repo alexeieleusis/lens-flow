@@ -61,6 +61,16 @@ function handle(e: Event) {
     }
   }
 }`,
+    // default with throw inside nested IfStatement — validation in nested control structure
+    `type Event = { kind: "click"; x: number } | { kind: "scroll"; top: number };
+function handle(e: Event) {
+  switch (e.kind) {
+    case "click": console.log(e.x); break;
+    default: {
+      if (true) { throw new Error('exhaustive'); }
+    }
+  }
+}`,
     // multiple consequent statements with assertNever — exercises nonEmpty.some(isSilentReturn)
     `type Event = { kind: "click"; x: number } | { kind: "scroll"; top: number };
 function handle(e: Event) {
@@ -91,6 +101,28 @@ function handle(e: Event) {
   switch (e.kind) {
     case "click": console.log(e.x); break;
     default: break;
+  }
+}`,
+      errors: [{ messageId: "silentDefault" }],
+    },
+    // default with only a continue — analogous to break, exits switch silently
+    {
+      code: `type Event = { kind: "click"; x: number } | { kind: "scroll"; top: number };
+for (const e of events) {
+  switch (e.kind) {
+    case "click": console.log(e.x); break;
+    default: continue;
+  }
+}`,
+      errors: [{ messageId: "silentDefault" }],
+    },
+    // default with continue inside block — analogous to break inside block
+    {
+      code: `type Event = { kind: "click"; x: number } | { kind: "scroll"; top: number };
+for (const e of events) {
+  switch (e.kind) {
+    case "click": console.log(e.x); break;
+    default: { continue; }
   }
 }`,
       errors: [{ messageId: "silentDefault" }],

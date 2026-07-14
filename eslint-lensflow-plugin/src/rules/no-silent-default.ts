@@ -26,6 +26,9 @@ function isEmptyOrBreak(conseq: TSESTree.Statement[]): boolean {
   if (nonEmpty.length === 1 && nonEmpty[0].type === "BreakStatement")
     return true;
 
+  if (nonEmpty.length === 1 && nonEmpty[0].type === "ContinueStatement")
+    return true;
+
   if (
     nonEmpty.length === 1 &&
     nonEmpty[0].type === "BlockStatement" &&
@@ -34,6 +37,28 @@ function isEmptyOrBreak(conseq: TSESTree.Statement[]): boolean {
   )
     return true;
 
+  if (
+    nonEmpty.length === 1 &&
+    nonEmpty[0].type === "BlockStatement" &&
+    nonEmpty[0].body.length === 1 &&
+    nonEmpty[0].body[0].type === "ContinueStatement"
+  )
+    return true;
+
+  return false;
+}
+
+function hasNestedThrow(stmt: TSESTree.Statement): boolean {
+  for (const child of (stmt as any).body || []) {
+    if (hasThrow(child)) return true;
+  }
+  if (stmt.type === "IfStatement") {
+    return (stmt.consequent ? hasThrow(stmt.consequent) : false) ||
+      (stmt.alternate ? hasThrow(stmt.alternate) : false);
+  }
+  if (stmt.type === "ForStatement" || stmt.type === "ForInStatement" || stmt.type === "ForOfStatement" || stmt.type === "WhileStatement" || stmt.type === "DoWhileStatement") {
+    return hasThrow((stmt as any).body);
+  }
   return false;
 }
 
@@ -42,6 +67,8 @@ function isSilentReturn(stmt: TSESTree.Statement): boolean {
     return !hasAssertNever(stmt) && !hasThrow(stmt);
   }
   if (stmt.type === "BlockStatement") {
+    const hasNested = stmt.body.some(hasNestedThrow);
+    if (hasNested) return false;
     return stmt.body.some(
       (inner) =>
         inner.type === "ReturnStatement" &&
