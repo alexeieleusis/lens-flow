@@ -88,5 +88,15 @@ ruleTester.run("no-structural-type-as-runtime-guard", rule, {
       code: `const parseUser = (v: unknown): { id: string } => v as any;`,
       errors: [{ messageId: "structuralAsAnyGuard" }],
     },
+    // Nested return inside an if block
+    {
+      code: `function parse(v: unknown): { id: string } {
+        if (typeof v === "object") {
+          return v as any;
+        }
+        throw new Error();
+      }`,
+      errors: [{ messageId: "structuralAsAnyGuard" }],
+    },
   ],
 });

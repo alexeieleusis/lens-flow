@@ -43,6 +43,15 @@ function findAsAnyInReturn(node: TSESTree.Node): TSESTree.TSAsExpression | null 
   return null;
 }
 
+function* findAllReturnStatements(node: TSESTree.Node): IterableIterator<TSESTree.ReturnStatement> {
+  if (node.type === "ReturnStatement") {
+    yield node;
+  }
+  for (const child of iterateChildNodes(node)) {
+    yield* findAllReturnStatements(child);
+  }
+}
+
 function containsUnknown(typeAnnotation: TSESTree.TypeNode): boolean {
   if (typeAnnotation.type === "TSUnknownKeyword") return true;
   if (typeAnnotation.type === "TSArrayType" && containsUnknown(typeAnnotation.elementType)) return true;
@@ -102,9 +111,9 @@ export default createRule({
       if (!hasUnknownParam(node)) return;
 
       if (node.body.type === "BlockStatement") {
-        for (const stmt of node.body.body) {
-          if (stmt.type === "ReturnStatement" && stmt.argument) {
-            const asAny = findAsAnyInReturn(stmt.argument);
+        for (const returnStmt of findAllReturnStatements(node.body)) {
+          if (returnStmt.argument) {
+            const asAny = findAsAnyInReturn(returnStmt.argument);
             if (asAny) {
               context.report({
                 node: asAny,
