@@ -18,6 +18,10 @@ ruleTester.run("prefer-function-property-over-method", rule, {
     `interface GenericWithNonRefMethod<T> {
       method(arg: number): void;
     }`,
+    // Type alias with non-referencing method
+    `type NonGenericFoo<T> = {
+      method(arg: string): void;
+    };`,
   ],
   invalid: [
     {
@@ -118,6 +122,20 @@ ruleTester.run("prefer-function-property-over-method", rule, {
       code: `interface Foo<T> {
         method(arg: (T)): void;
       }`,
+      errors: [{ messageId: "preferFunctionProperty" }],
+    },
+    // Type alias with method referencing type param (TSTypeAliasDeclaration)
+    {
+      code: `type Foo<T> = {
+        method(arg: T): void;
+      };`,
+      errors: [{ messageId: "preferFunctionProperty" }],
+    },
+    // Type alias with multiple type params
+    {
+      code: `type Handler<T, U> = {
+        handle(input: T, output: U): void;
+      };`,
       errors: [{ messageId: "preferFunctionProperty" }],
     },
   ],

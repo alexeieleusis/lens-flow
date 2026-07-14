@@ -8,7 +8,8 @@ function findInterfaceTypeParams(
   let current: TSESTree.Node | null | undefined = node.parent;
   while (current) {
     if (
-      current.type === "TSInterfaceDeclaration" &&
+      (current.type === "TSInterfaceDeclaration" ||
+        current.type === "TSTypeAliasDeclaration") &&
       current.typeParameters &&
       current.typeParameters.params.length > 0
     ) {
