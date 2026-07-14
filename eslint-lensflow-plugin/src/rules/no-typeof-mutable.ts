@@ -39,6 +39,13 @@ function hasAsConst(init: TSESTree.Expression | null): boolean {
   return false;
 }
 
+function isObjectOrArrayLiteral(init: TSESTree.Expression | null): boolean {
+  return (
+    init !== null &&
+    (init.type === "ObjectExpression" || init.type === "ArrayExpression")
+  );
+}
+
 export default createRule({
   name: "no-typeof-mutable",
   meta: {
@@ -84,7 +91,7 @@ export default createRule({
               kind: parent.kind,
             },
           });
-        } else if (!hasAsConst(init)) {
+        } else if (isObjectOrArrayLiteral(init) && !hasAsConst(init)) {
           context.report({
             node,
             messageId: "missingAsConst",

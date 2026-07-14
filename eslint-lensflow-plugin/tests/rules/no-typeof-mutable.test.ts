@@ -9,6 +9,13 @@ type FlagConfig = typeof FLAGS;`,
 type T = typeof CONFIG;`,
     `const X = 42 as const;
 type Num = typeof X;`,
+    // Primitives don't need `as const` — typeof already gives the correct type.
+    `const X = 42;
+type Num = typeof X;`,
+    `const S = "hello";
+type Str = typeof S;`,
+    `const B = true;
+type Bool = typeof B;`,
   ],
   invalid: [
     {
