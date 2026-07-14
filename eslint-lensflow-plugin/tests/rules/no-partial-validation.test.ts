@@ -109,6 +109,14 @@ if (true) {
   }
 }`,
     },
+    {
+      filename: TEST_FILENAME,
+      code: `interface Item { id: string; value: number }
+declare const items: Item[];
+if (items.every((item) => typeof item.id === "string")) {
+  /* typeof check inside callback is not collected because walk() stops at function boundaries by default */
+}`,
+    },
   ],
   invalid: [
     {
