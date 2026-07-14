@@ -22,5 +22,20 @@ export function increment() { COUNTER++; }`,
       code: `export var config = { value: 0 };`,
       errors: [{ messageId: "mutableExport" }],
     },
+    {
+      code: `export let a = 1, b = 2;`,
+      errors: [
+        { messageId: "mutableExport" },
+        { messageId: "mutableExport" },
+      ],
+    },
+    {
+      code: `export let { x } = obj;`,
+      errors: [{ messageId: "mutableExport" }],
+    },
+    {
+      code: `export let [first] = arr;`,
+      errors: [{ messageId: "mutableExport" }],
+    },
   ],
 });
