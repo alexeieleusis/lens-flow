@@ -48,6 +48,38 @@ const advanced = conn.connect();
 {
   function inner() { conn.query("SELECT 1"); }
 }`,
+
+    // Nested block: const in inner block, let not used after block — valid
+    `let conn = Db.open();
+{
+  const advanced = conn.connect();
+  advanced.query("SELECT 1");
+}`,
+
+    // Parameter shadowing: function parameter shadows outer let — should NOT be flagged
+    `let conn = Db.open();
+    const advanced = conn.connect();
+    function handler(conn) { conn.query("SELECT 1"); }`,
+
+    // Destructured const assignment — rule only checks Identifier declarator ids
+    `let conn = Db.open();
+    const { advanced } = conn.connect();
+    advanced.query("SELECT 1");`,
+
+    // Arrow function parameter shadowing
+    `let conn = Db.open();
+    const advanced = conn.connect();
+    const handler = (conn) => { conn.query("SELECT 1"); };`,
+
+    // Multiple declarators: let variable not used after — should NOT be flagged
+    `let conn = Db.open();
+const a = conn.connect(), b = conn.close();
+a.use();`,
+
+    // Multiple declarators: only second declarator uses the let variable, but let not used after
+    `let conn = Db.open();
+const x = 1, y = conn.connect();
+y.use();`,
   ],
   invalid: [
     // Basic antipattern: const assignment of method call on let, then let used
@@ -84,6 +116,56 @@ if (state.isReady) {
     {
       code: `let conn = Db.open();
 const advanced = conn?.connect();
+conn.query("SELECT 1");`,
+      errors: [{ messageId: "staleStateRef" }],
+    },
+    // Nested block: const in inner block, let used after block closes
+    {
+      code: `let conn = Db.open();
+{
+  const advanced = conn.connect();
+}
+conn.query("SELECT 1");`,
+      errors: [{ messageId: "staleStateRef" }],
+    },
+    // Nested block: const in inner block, let used in conditional after block
+    {
+      code: `let client = Api.create();
+{
+  const authenticated = client.authenticate();
+  authenticated.ready();
+}
+if (client.isReady) {
+  client.request("/data");
+}`,
+      errors: [{ messageId: "staleStateRef" }],
+    },
+    // Deeply nested block: const in innermost block, let used at top level
+    {
+      code: `let state = Machine.init();
+{
+  {
+    const running = state.start();
+    running.process();
+  }
+}
+state.stop();`,
+      errors: [{ messageId: "staleStateRef" }],
+    },
+    // Nested block: multiple const assignments in inner block, let used after
+    {
+      code: `let db = Database.connect();
+{
+  const transaction = db.beginTransaction();
+  transaction.exec("UPDATE");
+}
+db.close();`,
+      errors: [{ messageId: "staleStateRef" }],
+    },
+    // Multiple declarators: let used after — reports on the specific declarator, not unrelated ones
+    {
+      code: `let conn = Db.open();
+const a = conn.connect(), b = 42;
 conn.query("SELECT 1");`,
       errors: [{ messageId: "staleStateRef" }],
     },
