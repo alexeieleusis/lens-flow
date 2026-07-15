@@ -1,17 +1,19 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
-function findParentFunction(ancestors: TSESTree.Node[]): TSESTree.FunctionLike | null {
+function* iterateAncestorFunctions(
+  ancestors: TSESTree.Node[],
+): Generator<TSESTree.FunctionLike> {
   for (let i = ancestors.length - 1; i >= 0; i--) {
     const node = ancestors[i];
     if (
       node.type === "FunctionDeclaration" ||
       node.type === "FunctionExpression" ||
       node.type === "ArrowFunctionExpression"
-    )
-      return node as TSESTree.FunctionLike;
+    ) {
+      yield node as TSESTree.FunctionLike;
+    }
   }
-  return null;
 }
 
 export default createRule({
@@ -37,14 +39,20 @@ export default createRule({
       const typeRef = asNode.typeAnnotation;
       if (typeRef.typeName.type !== "Identifier") return;
 
-      const func = findParentFunction(context.sourceCode.getAncestors(asNode));
-      if (!func?.typeParameters) return;
-
-      const typeParamNames = new Set(
-        func.typeParameters.params.map((p) => p.name.name),
-      );
       const castTarget = typeRef.typeName.name;
-      if (!typeParamNames.has(castTarget)) return;
+      const ancestors = context.sourceCode.getAncestors(asNode);
+      let matched = false;
+      for (const func of iterateAncestorFunctions(ancestors)) {
+        if (!func.typeParameters) continue;
+        const typeParamNames = new Set(
+          func.typeParameters.params.map((p) => p.name.name),
+        );
+        if (typeParamNames.has(castTarget)) {
+          matched = true;
+          break;
+        }
+      }
+      if (!matched) return;
 
       const innerExpr = asNode.expression;
       if (innerExpr.type !== "CallExpression") return;

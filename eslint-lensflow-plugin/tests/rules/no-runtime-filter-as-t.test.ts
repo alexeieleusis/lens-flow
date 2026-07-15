@@ -26,6 +26,22 @@ ruleTester.run("no-runtime-filter-as-t", rule, {
     `function logicalFilter<T extends unknown[]>(arr: T, fallback: T): T {
   return arr.filter(x => typeof x === "number") as T || fallback;
 }`,
+    // Nested function: inner arrow has no type params, outer function's generic
+    // type is NOT referenced by the cast — no false positive.
+    `function processItems<T>(arr: T[]): number[] {
+  const helper = () => {
+    return arr.filter(x => x != null) as number[];
+  };
+  return helper();
+}`,
+    // Nested function: inner arrow shadows outer type param — cast resolves to
+    // inner scope, not outer, so no violation.
+    `function outer<T>(arr: T[]): T[] {
+  const inner = <U>(items: U[]): U[] => {
+    return items.filter(x => x != null) as U[];
+  };
+  return inner(arr);
+}`,
   ],
   invalid: [
     {
@@ -49,6 +65,17 @@ ruleTester.run("no-runtime-filter-as-t", rule, {
       code: `const filterNumbers = function<T extends unknown[]>(arr: T): T {
   return arr.filter(x => typeof x === "number") as T;
 };`,
+      errors: [{ messageId: "runtimeFilterCastGeneric" }],
+    },
+    // Nested function: inner arrow has no type params, outer function's type
+    // param is referenced by the cast — should report.
+    {
+      code: `function processItems<T extends unknown[]>(arr: T): T {
+  const helper = () => {
+    return arr.filter(x => typeof x === "number") as T;
+  };
+  return helper();
+}`,
       errors: [{ messageId: "runtimeFilterCastGeneric" }],
     },
   ],
