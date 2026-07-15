@@ -25,19 +25,7 @@ export default createRule({
     const scopeStack: string[][] = [];
     const activeNames = new Set<string>();
 
-    function enterWithParams(
-      node:
-        | TSESTree.FunctionDeclaration
-        | TSESTree.FunctionExpression
-        | TSESTree.ArrowFunctionExpression
-        | TSESTree.ClassDeclaration
-        | TSESTree.ClassExpression
-        | TSESTree.TSDeclareFunction
-        | TSESTree.TSInterfaceDeclaration
-        | TSESTree.TSTypeAliasDeclaration
-        | TSESTree.TSEmptyBodyFunctionExpression,
-    ) {
-      const typeParams = node.typeParameters;
+    function enterTypeParams(typeParams: TSESTree.TSTypeParameterDeclaration | undefined) {
       if (!typeParams || typeParams.params.length === 0) return;
 
       const names = typeParams.params.map((p) => p.name.name);
@@ -56,6 +44,30 @@ export default createRule({
       scopeStack.push(names);
     }
 
+    function exitTypeParams(typeParams: TSESTree.TSTypeParameterDeclaration | undefined) {
+      if (typeParams && typeParams.params.length > 0) {
+        const names = scopeStack.pop();
+        if (names) {
+          for (const name of names) activeNames.delete(name);
+        }
+      }
+    }
+
+    function enterWithParams(
+      node:
+        | TSESTree.FunctionDeclaration
+        | TSESTree.FunctionExpression
+        | TSESTree.ArrowFunctionExpression
+        | TSESTree.ClassDeclaration
+        | TSESTree.ClassExpression
+        | TSESTree.TSDeclareFunction
+        | TSESTree.TSInterfaceDeclaration
+        | TSESTree.TSTypeAliasDeclaration
+        | TSESTree.TSEmptyBodyFunctionExpression,
+    ) {
+      enterTypeParams(node.typeParameters);
+    }
+
     function exitWithParams(
       node:
         | TSESTree.FunctionDeclaration
@@ -68,42 +80,15 @@ export default createRule({
         | TSESTree.TSTypeAliasDeclaration
         | TSESTree.TSEmptyBodyFunctionExpression,
     ) {
-      if (node.typeParameters && node.typeParameters.params.length > 0) {
-        const names = scopeStack.pop();
-        if (names) {
-          for (const name of names) activeNames.delete(name);
-        }
-      }
+      exitTypeParams(node.typeParameters);
     }
 
     function enterConditionalType(node: TSESTree.TSConditionalType) {
-      const typeParams = (node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters;
-      if (!typeParams || typeParams.params.length === 0) return;
-
-      const names = typeParams.params.map((p: TSESTree.TSTypeParameter) => p.name.name);
-
-      for (let i = 0; i < names.length; i++) {
-        if (activeNames.has(names[i])) {
-          context.report({
-            node: typeParams.params[i],
-            messageId: "shadowedTypeParam",
-            data: { name: names[i] },
-          });
-        }
-      }
-
-      for (const name of names) activeNames.add(name);
-      scopeStack.push(names);
+      enterTypeParams((node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters);
     }
 
     function exitConditionalType(node: TSESTree.TSConditionalType) {
-      const typeParams = (node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters;
-      if (typeParams && typeParams.params.length > 0) {
-        const names = scopeStack.pop();
-        if (names) {
-          for (const name of names) activeNames.delete(name);
-        }
-      }
+      exitTypeParams((node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters);
     }
 
     function enterMappedType(node: TSESTree.TSMappedType) {
@@ -135,92 +120,27 @@ export default createRule({
     }
 
     function enterMethodSignature(node: TSESTree.TSMethodSignature) {
-      const typeParams = (node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters;
-      if (!typeParams || typeParams.params.length === 0) return;
-
-      const names = typeParams.params.map((p: TSESTree.TSTypeParameter) => p.name.name);
-
-      for (let i = 0; i < names.length; i++) {
-        if (activeNames.has(names[i])) {
-          context.report({
-            node: typeParams.params[i],
-            messageId: "shadowedTypeParam",
-            data: { name: names[i] },
-          });
-        }
-      }
-
-      for (const name of names) activeNames.add(name);
-      scopeStack.push(names);
+      enterTypeParams((node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters);
     }
 
     function exitMethodSignature(node: TSESTree.TSMethodSignature) {
-      const typeParams = (node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters;
-      if (typeParams && typeParams.params.length > 0) {
-        const names = scopeStack.pop();
-        if (names) {
-          for (const name of names) activeNames.delete(name);
-        }
-      }
+      exitTypeParams((node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters);
     }
 
     function enterFunctionType(node: TSESTree.TSFunctionType) {
-      const typeParams = node.typeParameters;
-      if (!typeParams || typeParams.params.length === 0) return;
-
-      const names = typeParams.params.map((p) => p.name.name);
-
-      for (let i = 0; i < names.length; i++) {
-        if (activeNames.has(names[i])) {
-          context.report({
-            node: typeParams.params[i],
-            messageId: "shadowedTypeParam",
-            data: { name: names[i] },
-          });
-        }
-      }
-
-      for (const name of names) activeNames.add(name);
-      scopeStack.push(names);
+      enterTypeParams(node.typeParameters);
     }
 
     function exitFunctionType(node: TSESTree.TSFunctionType) {
-      if (node.typeParameters && node.typeParameters.params.length > 0) {
-        const names = scopeStack.pop();
-        if (names) {
-          for (const name of names) activeNames.delete(name);
-        }
-      }
+      exitTypeParams(node.typeParameters);
     }
 
     function enterMethodDefinition(node: TSESTree.MethodDefinition) {
-      const typeParams = (node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters;
-      if (!typeParams || typeParams.params.length === 0) return;
-
-      const names = typeParams.params.map((p: TSESTree.TSTypeParameter) => p.name.name);
-
-      for (let i = 0; i < names.length; i++) {
-        if (activeNames.has(names[i])) {
-          context.report({
-            node: typeParams.params[i],
-            messageId: "shadowedTypeParam",
-            data: { name: names[i] },
-          });
-        }
-      }
-
-      for (const name of names) activeNames.add(name);
-      scopeStack.push(names);
+      enterTypeParams((node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters);
     }
 
     function exitMethodDefinition(node: TSESTree.MethodDefinition) {
-      const typeParams = (node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters;
-      if (typeParams && typeParams.params.length > 0) {
-        const names = scopeStack.pop();
-        if (names) {
-          for (const name of names) activeNames.delete(name);
-        }
-      }
+      exitTypeParams((node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters);
     }
 
     return {
