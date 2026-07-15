@@ -49,6 +49,15 @@ export default createRule({
       }
     };
 
+    const untrackVariable = (name: string) => {
+      for (let i = scopeStack.length - 1; i >= 0; i--) {
+        if (name in scopeStack[i]) {
+          delete scopeStack[i][name];
+          return;
+        }
+      }
+    };
+
     const isValidationMethod = (callee: TSESTree.Expression): boolean => {
       if (
         callee.type === "MemberExpression" &&
@@ -69,57 +78,6 @@ export default createRule({
       return "unknown";
     };
 
-    const TS_WRAPPER_TYPES = new Set([
-      "TSAsExpression",
-      "TSNonNullExpression",
-      "TSSatisfiesExpression",
-      "ChainExpression",
-    ]);
-
-    const unwrapTsWrapper = (node: TSESTree.Node): TSESTree.Node => {
-      let current = node;
-      while (TS_WRAPPER_TYPES.has(current.type)) {
-        if ("expression" in current && current.expression) {
-          current = current.expression;
-        } else {
-          break;
-        }
-      }
-      return current;
-    };
-
-    const getEffectiveParent = (
-      node: TSESTree.Node
-    ): TSESTree.Node | undefined => {
-      const ancestors = context.sourceCode.getAncestors(node);
-      if (ancestors.length === 0) return undefined;
-      return unwrapTsWrapper(ancestors[0]);
-    };
-
-    const extractIdentifiersFromPattern = (
-      node: TSESTree.Node,
-      out: string[] = []
-    ): string[] => {
-      if (node.type === "Identifier") {
-        out.push(node.name);
-      } else if (node.type === "ObjectPattern") {
-        for (const prop of node.properties) {
-          if (prop.type === "Property") {
-            extractIdentifiersFromPattern(prop.value, out);
-          }
-        }
-      } else if (node.type === "ArrayPattern") {
-        for (const element of node.elements) {
-          if (element) {
-            extractIdentifiersFromPattern(element, out);
-          }
-        }
-      } else if (node.type === "AssignmentPattern") {
-        extractIdentifiersFromPattern(node.left, out);
-      }
-      return out;
-    };
-
     const isJsonParseCall = (node: TSESTree.CallExpression): boolean => {
       const { callee } = node;
       return (
@@ -134,27 +92,18 @@ export default createRule({
     const isParentCallExpression = (
       node: TSESTree.CallExpression
     ): TSESTree.CallExpression | null => {
-      const p = getEffectiveParent(node);
+      const p = node.parent;
       if (p?.type !== "CallExpression") return null;
-      return p as TSESTree.CallExpression;
+      return p;
     };
 
     const isVariableDeclaratorWithId = (
       node: TSESTree.CallExpression
-    ): string[] | null => {
-      const p = getEffectiveParent(node);
+    ): string | null => {
+      const p = node.parent;
       if (p?.type !== "VariableDeclarator") return null;
-      const declarator = p as TSESTree.VariableDeclarator;
-      if (declarator.id.type === "Identifier") {
-        return [declarator.id.name];
-      }
-      if (
-        declarator.id.type === "ObjectPattern" ||
-        declarator.id.type === "ArrayPattern"
-      ) {
-        return extractIdentifiersFromPattern(declarator.id);
-      }
-      return null;
+      if (p.id.type !== "Identifier") return null;
+      return p.id.name;
     };
 
     const checkUnvalidatedArgs = (
@@ -206,11 +155,9 @@ export default createRule({
         return;
       }
 
-      const varNames = isVariableDeclaratorWithId(node);
-      if (varNames) {
-        for (const name of varNames) {
-          currentScope()[name] = node;
-        }
+      const varName = isVariableDeclaratorWithId(node);
+      if (varName) {
+        currentScope()[varName] = node;
       }
     };
 
@@ -221,6 +168,11 @@ export default createRule({
       "FunctionDeclaration:exit": exitScope,
       "FunctionExpression:exit": exitScope,
       "ArrowFunctionExpression:exit": exitScope,
+      AssignmentExpression(node) {
+        if (node.left.type === "Identifier") {
+          untrackVariable(node.left.name);
+        }
+      },
       CallExpression(node) {
         const { callee, arguments: args } = node;
 
