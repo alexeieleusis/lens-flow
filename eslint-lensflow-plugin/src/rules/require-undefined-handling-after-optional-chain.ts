@@ -493,36 +493,10 @@ export default createRule({
             const ifTest = anc.test;
             let isGuard = false;
             if (ifTest.type === "BinaryExpression") {
-              const { left, right, operator } = ifTest;
-              const isGuardOp = ["!=", "!==", "==", "==="].includes(operator);
-              if (isGuardOp) {
-                const leftMatch = left.type === "Identifier" && left.name === varName;
-                const rightMatch = right.type === "Identifier" && right.name === varName;
-                if (leftMatch || rightMatch) {
-                  const other = leftMatch ? right : left;
-                  const isNullLit = other.type === "Literal" && other.value === null;
-                  const isUndefId = other.type === "Identifier" && other.name === "undefined";
-                  if ((isNullLit || isUndefId) && (operator === "!=" || operator === "!==")) {
-                    isGuard = true;
-                  }
-                }
-              }
+              isGuard = isBinaryGuard(ifTest, varName);
             } else if (ifTest.type === "LogicalExpression" && ifTest.operator === "&&") {
               if (ifTest.left.type === "BinaryExpression") {
-                const { left, right, operator } = ifTest.left;
-                const isGuardOp = ["!=", "!==", "==", "==="].includes(operator);
-                if (isGuardOp) {
-                  const leftMatch = left.type === "Identifier" && left.name === varName;
-                  const rightMatch = right.type === "Identifier" && right.name === varName;
-                  if (leftMatch || rightMatch) {
-                    const other = leftMatch ? right : left;
-                    const isNullLit = other.type === "Literal" && other.value === null;
-                    const isUndefId = other.type === "Identifier" && other.name === "undefined";
-                    if ((isNullLit || isUndefId) && (operator === "!=" || operator === "!==")) {
-                      isGuard = true;
-                    }
-                  }
-                }
+                isGuard = isBinaryGuard(ifTest.left, varName);
               }
             }
             if (isGuard) {
