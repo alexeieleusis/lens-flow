@@ -8,9 +8,26 @@ function isNodeLike(v: unknown): v is TSESTree.Node {
   return v != null && typeof v === "object" && "type" in v;
 }
 
+type NodePropertyValue =
+  | TSESTree.Node
+  | TSESTree.Node[]
+  | string
+  | number
+  | boolean
+  | null
+  | undefined;
+
+function getNodeProps(node: TSESTree.Node): Record<string, NodePropertyValue> {
+  return node as unknown as Record<string, NodePropertyValue>;
+}
+
 const SKIP_KEYS = new Set(["loc", "range", "parent", "start", "end"]);
 
-function valuesEqual(aVal: unknown, bVal: unknown, visited: Set<string>): boolean {
+function valuesEqual(
+  aVal: NodePropertyValue,
+  bVal: NodePropertyValue,
+  visited: Set<string>,
+): boolean {
   if (Array.isArray(aVal) && Array.isArray(bVal)) {
     return arraysEqual(aVal, bVal, visited);
   }
@@ -23,8 +40,8 @@ function valuesEqual(aVal: unknown, bVal: unknown, visited: Set<string>): boolea
 }
 
 function arraysEqual(
-  aVal: unknown[],
-  bVal: unknown[],
+  aVal: TSESTree.Node[],
+  bVal: TSESTree.Node[],
   visited: Set<string>,
 ): boolean {
   if (aVal.length !== bVal.length) return false;
@@ -56,8 +73,8 @@ function astEquals(
 
   const childKeys = new Set(KEYS[a.type] ?? []);
 
-  const aProps = a as unknown as Record<string, unknown>;
-  const bProps = b as unknown as Record<string, unknown>;
+  const aProps = getNodeProps(a);
+  const bProps = getNodeProps(b);
 
   for (const key of Object.getOwnPropertyNames(aProps).sort()) {
     if (SKIP_KEYS.has(key)) continue;
