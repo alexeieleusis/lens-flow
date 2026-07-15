@@ -88,8 +88,9 @@ function checkPropertySignature(
   });
 }
 
-function checkCallSignature(
-  member: TSESTree.TSCallSignatureDeclaration,
+function checkSignatureWithParams(
+  member: TSESTree.Node & { params: TSESTree.Parameter[] },
+  messageId: "callSignatureOnCovariant" | "constructSignatureOnCovariant",
   covariantNames: Set<string>,
   context: Parameters<NonNullable<Parameters<typeof createRule>[0]["create"]>>[0],
 ) {
@@ -100,7 +101,7 @@ function checkCallSignature(
 
   context.report({
     node: member,
-    messageId: "callSignatureOnCovariant",
+    messageId,
     data: {
       paramName: paramText(match, context),
       url: KNOWLEDGE_URL,
@@ -108,24 +109,20 @@ function checkCallSignature(
   });
 }
 
+function checkCallSignature(
+  member: TSESTree.TSCallSignatureDeclaration,
+  covariantNames: Set<string>,
+  context: Parameters<NonNullable<Parameters<typeof createRule>[0]["create"]>>[0],
+) {
+  checkSignatureWithParams(member, "callSignatureOnCovariant", covariantNames, context);
+}
+
 function checkConstructSignature(
   member: TSESTree.TSConstructSignatureDeclaration,
   covariantNames: Set<string>,
   context: Parameters<NonNullable<Parameters<typeof createRule>[0]["create"]>>[0],
 ) {
-  if (!paramsContainAnyTypeRef(member.params, [...covariantNames])) return;
-
-  const match = findMatchedCovariantParam(member.params, covariantNames);
-  if (!match) return;
-
-  context.report({
-    node: member,
-    messageId: "constructSignatureOnCovariant",
-    data: {
-      paramName: paramText(match, context),
-      url: KNOWLEDGE_URL,
-    },
-  });
+  checkSignatureWithParams(member, "constructSignatureOnCovariant", covariantNames, context);
 }
 
 export default createRule({
