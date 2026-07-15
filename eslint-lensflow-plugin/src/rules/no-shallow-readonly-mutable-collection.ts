@@ -94,6 +94,14 @@ export default createRule({
 
       const propName = getPropertyName(node.key);
 
+      reportMutableCollection(node, propName, typeAnnotation);
+    }
+
+    function reportMutableCollection(
+      reportNode: TSESTree.PropertyDefinition | TSESTree.TSPropertySignature | TSESTree.TSParameterProperty,
+      propName: string,
+      typeAnnotation: TSESTree.TypeNode,
+    ): void {
       if (isTypeReference(typeAnnotation)) {
         const refNode = typeAnnotation as TSESTree.TSTypeReference;
         let typeName: string | undefined;
@@ -102,7 +110,7 @@ export default createRule({
         }
         if (typeName === "Map" || typeName === "Set") {
           context.report({
-            node,
+            node: reportNode,
             messageId: "mutableMapSet",
             data: { name: propName, collection: typeName },
           });
@@ -112,7 +120,7 @@ export default createRule({
             refNode.typeArguments?.params?.[0] ?? {} as TSESTree.TypeNode,
           );
           context.report({
-            node,
+            node: reportNode,
             messageId: "mutableArray",
             data: { name: propName, element: elementName },
           });
@@ -125,7 +133,7 @@ export default createRule({
           (typeAnnotation as TSESTree.TSArrayType).elementType,
         );
         context.report({
-          node,
+          node: reportNode,
           messageId: "mutableArray",
           data: { name: propName, element: elementName },
         });
@@ -133,7 +141,7 @@ export default createRule({
       }
 
       context.report({
-        node,
+        node: reportNode,
         messageId: "mutableIntersection",
         data: { name: propName },
       });
@@ -151,50 +159,7 @@ export default createRule({
       if (!isMutableCollectionType(typeAnnotation)) return;
 
       const propName = (typedParam as TSESTree.Identifier).name;
-
-      if (isTypeReference(typeAnnotation)) {
-        const refNode = typeAnnotation as TSESTree.TSTypeReference;
-        let typeName: string | undefined;
-        if (refNode.typeName.type === AST_NODE_TYPES.Identifier) {
-          typeName = (refNode.typeName as TSESTree.Identifier).name;
-        }
-        if (typeName === "Map" || typeName === "Set") {
-          context.report({
-            node,
-            messageId: "mutableMapSet",
-            data: { name: propName, collection: typeName },
-          });
-        }
-        if (typeName === "Array") {
-          const elementName = getArrayElementName(
-            refNode.typeArguments?.params?.[0] ?? {} as TSESTree.TypeNode,
-          );
-          context.report({
-            node,
-            messageId: "mutableArray",
-            data: { name: propName, element: elementName },
-          });
-        }
-        return;
-      }
-
-      if (isArrayType(typeAnnotation)) {
-        const elementName = getArrayElementName(
-          (typeAnnotation as TSESTree.TSArrayType).elementType,
-        );
-        context.report({
-          node,
-          messageId: "mutableArray",
-          data: { name: propName, element: elementName },
-        });
-        return;
-      }
-
-      context.report({
-        node,
-        messageId: "mutableIntersection",
-        data: { name: propName },
-      });
+      reportMutableCollection(node, propName, typeAnnotation);
     }
 
     return {
