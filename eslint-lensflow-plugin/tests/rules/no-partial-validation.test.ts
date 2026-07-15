@@ -210,5 +210,14 @@ if (typeof a.x === "number" && typeof b.p === "string") {
         { messageId: "partialValidation" },
       ],
     },
+    {
+      filename: TEST_FILENAME,
+      code: `interface Config { host: string; port: number; timeout: number }
+declare const config: Config;
+if ((function(config: { host: string }) { return typeof config.host === "string"; })() && typeof config.host === "string") {
+  /* outer config only has host checked, shadowed IIFE param is a separate binding */
+}`,
+      errors: [{ messageId: "partialValidation" }],
+    },
   ],
 });
