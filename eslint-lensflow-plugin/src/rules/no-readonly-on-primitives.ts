@@ -27,6 +27,38 @@ function unwrapParens(node: TSESTree.TypeNode): TSESTree.TypeNode {
   return node;
 }
 
+function getTypeName(unwrapped: TSESTree.TypeNode): string {
+  let typeName: string = unwrapped.type;
+  if (unwrapped.type === "TSLiteralType") {
+    const lit = unwrapped as unknown as { literal: { value?: unknown } };
+    const v = lit.literal.value;
+    if (typeof v === "number") typeName = "number";
+    else if (typeof v === "boolean") typeName = "boolean";
+    else typeName = "string";
+  }
+  return typeName;
+}
+
+function createReadonlyFix(
+  context: TSESLint.RuleContext<"redundantReadonly", []>,
+  targetNode: TSESTree.Node,
+): (fixer: TSESLint.RuleFixer) => TSESLint.RuleFix | TSESLint.RuleFix[] | null {
+  return (fixer) => {
+    const source = context.sourceCode;
+    const readonlyToken = source.getTokenBefore(
+      targetNode,
+      (token) => token.value === "readonly",
+    );
+    if (!readonlyToken) return null;
+    const nextToken = source.getTokenAfter(readonlyToken);
+    if (!nextToken) return null;
+    return fixer.removeRange([
+      readonlyToken.range[0],
+      nextToken.range[0],
+    ]);
+  };
+}
+
 export default createRule({
   name: "no-readonly-on-primitives",
   meta: {
@@ -71,33 +103,11 @@ export default createRule({
         propName = "this property";
       }
 
-      let typeName: string = unwrapped.type;
-      if (unwrapped.type === "TSLiteralType") {
-        const lit = unwrapped as unknown as { literal: { value?: unknown } };
-        const v = lit.literal.value;
-        if (typeof v === "number") typeName = "number";
-        else if (typeof v === "boolean") typeName = "boolean";
-        else typeName = "string";
-      }
-
       context.report({
         node,
         messageId: "redundantReadonly",
-        data: { name: propName, type: typeName },
-        fix(fixer) {
-          const source = context.sourceCode;
-          const readonlyToken = source.getTokenBefore(
-            node.key,
-            (token) => token.value === "readonly",
-          );
-          if (!readonlyToken) return null;
-          const nextToken = source.getTokenAfter(readonlyToken);
-          if (!nextToken) return null;
-          return fixer.removeRange([
-            readonlyToken.range[0],
-            nextToken.range[0],
-          ]);
-        },
+        data: { name: propName, type: getTypeName(unwrapped) },
+        fix: createReadonlyFix(context, node.key),
       });
     }
 
@@ -120,33 +130,11 @@ export default createRule({
 
       const propName = param.type === "Identifier" ? param.name : "this parameter";
 
-      let typeName: string = unwrapped.type;
-      if (unwrapped.type === "TSLiteralType") {
-        const lit = unwrapped as unknown as { literal: { value?: unknown } };
-        const v = lit.literal.value;
-        if (typeof v === "number") typeName = "number";
-        else if (typeof v === "boolean") typeName = "boolean";
-        else typeName = "string";
-      }
-
       context.report({
         node,
         messageId: "redundantReadonly",
-        data: { name: propName, type: typeName },
-        fix(fixer) {
-          const source = context.sourceCode;
-          const readonlyToken = source.getTokenBefore(
-            param,
-            (token) => token.value === "readonly",
-          );
-          if (!readonlyToken) return null;
-          const nextToken = source.getTokenAfter(readonlyToken);
-          if (!nextToken) return null;
-          return fixer.removeRange([
-            readonlyToken.range[0],
-            nextToken.range[0],
-          ]);
-        },
+        data: { name: propName, type: getTypeName(unwrapped) },
+        fix: createReadonlyFix(context, param),
       });
     }
 
