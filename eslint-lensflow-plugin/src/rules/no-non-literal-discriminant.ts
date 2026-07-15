@@ -62,6 +62,50 @@ export default createRule({
           hasLiteral: boolean;
         }
 
+        function processRuntimeType(
+          tsNode: ts.Node,
+          propMap: Map<string, PropEntry[]>,
+        ) {
+          const memberType = checker!.getTypeAtLocation(tsNode);
+          const props = checker!.getPropertiesOfType(memberType);
+          for (const prop of props) {
+            const propType = checker!.getTypeOfSymbolAtLocation(prop, tsNode);
+            const propName = prop.getName();
+            if (!DISCRIMINANT_NAMES.has(propName)) continue;
+
+            const isWidenedStr =
+              (propType.flags & ts.TypeFlags.String) !== 0 &&
+              (propType.flags & ts.TypeFlags.StringLiteral) === 0;
+            const isWidenedNum =
+              (propType.flags & ts.TypeFlags.Number) !== 0 &&
+              (propType.flags & ts.TypeFlags.NumberLiteral) === 0;
+            const isLiteralStr =
+              (propType.flags & ts.TypeFlags.StringLiteral) !== 0;
+            const isLiteralNum =
+              (propType.flags & ts.TypeFlags.NumberLiteral) !== 0;
+
+            if (!isWidenedStr && !isWidenedNum && !isLiteralStr && !isLiteralNum)
+              continue;
+
+            if (!prop.valueDeclaration) continue;
+            const estreeNode = parserServices.tsNodeToESTreeNodeMap.get(
+              prop.valueDeclaration,
+            ) as TSESTree.TSPropertySignature | undefined;
+            if (!estreeNode) continue;
+
+            const widened: "string" | "number" | null =
+              isWidenedStr ? "string" : isWidenedNum ? "number" : null;
+            const hasLiteralFlag = isLiteralStr || isLiteralNum;
+
+            const existing = propMap.get(propName);
+            if (existing) {
+              existing.push({ sig: estreeNode, widened, hasLiteral: hasLiteralFlag });
+            } else {
+              propMap.set(propName, [{ sig: estreeNode, widened, hasLiteral: hasLiteralFlag }]);
+            }
+          }
+        }
+
         const processType = (
           typeNode: TSESTree.TypeNode,
           visited: Set<TSESTree.TSTypeReference>,
@@ -115,66 +159,7 @@ export default createRule({
               ) {
                 const declType = (decl as ts.TypeAliasDeclaration).type;
                 if (declType) {
-                  const memberType = checker.getTypeAtLocation(tsNode);
-                  const props = checker.getPropertiesOfType(memberType);
-                  for (const prop of props) {
-                    const propType = checker.getTypeOfSymbolAtLocation(
-                      prop,
-                      tsNode,
-                    );
-                    const propName = prop.getName();
-                    if (!DISCRIMINANT_NAMES.has(propName)) continue;
-
-                    const isWidenedStr =
-                      (propType.flags & ts.TypeFlags.String) !== 0 &&
-                      (propType.flags & ts.TypeFlags.StringLiteral) === 0;
-                    const isWidenedNum =
-                      (propType.flags & ts.TypeFlags.Number) !== 0 &&
-                      (propType.flags & ts.TypeFlags.NumberLiteral) === 0;
-                    const isLiteralStr =
-                      (propType.flags & ts.TypeFlags.StringLiteral) !== 0;
-                    const isLiteralNum =
-                      (propType.flags & ts.TypeFlags.NumberLiteral) !== 0;
-
-                    if (
-                      !isWidenedStr &&
-                      !isWidenedNum &&
-                      !isLiteralStr &&
-                      !isLiteralNum
-                    )
-                      continue;
-
-                    if (!prop.valueDeclaration) continue;
-                    const estreeNode = parserServices.tsNodeToESTreeNodeMap.get(
-                      prop.valueDeclaration,
-                    ) as TSESTree.TSPropertySignature | undefined;
-                    if (!estreeNode) continue;
-
-                    const widened: "string" | "number" | null =
-                      isWidenedStr
-                        ? "string"
-                        : isWidenedNum
-                          ? "number"
-                          : null;
-                    const hasLiteral = isLiteralStr || isLiteralNum;
-
-                    const existing = propMap.get(propName);
-                    if (existing) {
-                      existing.push({
-                        sig: estreeNode,
-                        widened,
-                        hasLiteral,
-                      });
-                    } else {
-                      propMap.set(propName, [
-                        {
-                          sig: estreeNode,
-                          widened,
-                          hasLiteral,
-                        },
-                      ]);
-                    }
-                  }
+                  processRuntimeType(tsNode, propMap);
                   return;
                 }
               }
@@ -185,66 +170,7 @@ export default createRule({
           } else if (typeNode.type === "TSIndexedAccessType") {
             if (hasTypeChecker && checker) {
               const tsNode = parserServices.esTreeNodeToTSNodeMap.get(typeNode);
-              const memberType = checker.getTypeAtLocation(tsNode);
-              const props = checker.getPropertiesOfType(memberType);
-              for (const prop of props) {
-                const propType = checker.getTypeOfSymbolAtLocation(
-                  prop,
-                  tsNode,
-                );
-                const propName = prop.getName();
-                if (!DISCRIMINANT_NAMES.has(propName)) continue;
-
-                const isWidenedStr =
-                  (propType.flags & ts.TypeFlags.String) !== 0 &&
-                  (propType.flags & ts.TypeFlags.StringLiteral) === 0;
-                const isWidenedNum =
-                  (propType.flags & ts.TypeFlags.Number) !== 0 &&
-                  (propType.flags & ts.TypeFlags.NumberLiteral) === 0;
-                const isLiteralStr =
-                  (propType.flags & ts.TypeFlags.StringLiteral) !== 0;
-                const isLiteralNum =
-                  (propType.flags & ts.TypeFlags.NumberLiteral) !== 0;
-
-                if (
-                  !isWidenedStr &&
-                  !isWidenedNum &&
-                  !isLiteralStr &&
-                  !isLiteralNum
-                )
-                  continue;
-
-                if (!prop.valueDeclaration) continue;
-                const estreeNode = parserServices.tsNodeToESTreeNodeMap.get(
-                  prop.valueDeclaration,
-                ) as TSESTree.TSPropertySignature | undefined;
-                if (!estreeNode) continue;
-
-                const widened: "string" | "number" | null =
-                  isWidenedStr
-                    ? "string"
-                    : isWidenedNum
-                      ? "number"
-                      : null;
-                const hasLiteral = isLiteralStr || isLiteralNum;
-
-                const existing = propMap.get(propName);
-                if (existing) {
-                  existing.push({
-                    sig: estreeNode,
-                    widened,
-                    hasLiteral,
-                  });
-                } else {
-                  propMap.set(propName, [
-                    {
-                      sig: estreeNode,
-                      widened,
-                      hasLiteral,
-                    },
-                  ]);
-                }
-              }
+              processRuntimeType(tsNode, propMap);
             }
             return;
           } else if (typeNode.type === "TSIntersectionType") {
