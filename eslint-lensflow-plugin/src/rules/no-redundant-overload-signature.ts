@@ -1,25 +1,22 @@
 import { type TSESTree, TSESLint } from "@typescript-eslint/utils";
+import { visitorKeys as KEYS } from "@typescript-eslint/visitor-keys";
 import { createRule } from "../utils/rule-creator.js";
 import type { FnLikeNode } from "../utils/overload-grouping.js";
 import { createOverloadGroupVisitor } from "../utils/overload-grouping.js";
 
-function isNodeLike(
-  v: unknown,
-): v is Record<string, unknown> & { type: unknown } {
-  return (
-    v != null &&
-    typeof v === "object" &&
-    "type" in v
-  );
+function isNodeLike(v: unknown): v is TSESTree.Node {
+  return v != null && typeof v === "object" && "type" in v;
 }
 
-function valuesEqual(aVal: unknown, bVal: unknown): boolean {
+const SKIP_KEYS = new Set(["loc", "range", "parent", "start", "end"]);
+
+function valuesEqual(aVal: unknown, bVal: unknown, visited: Set<string>): boolean {
   if (Array.isArray(aVal) && Array.isArray(bVal)) {
-    return arraysEqual(aVal, bVal);
+    return arraysEqual(aVal, bVal, visited);
   }
 
   if (isNodeLike(aVal) && isNodeLike(bVal)) {
-    return astEquals(aVal as unknown as TSESTree.Node, bVal as unknown as TSESTree.Node);
+    return astEquals(aVal, bVal, visited);
   }
 
   return aVal === bVal;
@@ -28,6 +25,7 @@ function valuesEqual(aVal: unknown, bVal: unknown): boolean {
 function arraysEqual(
   aVal: unknown[],
   bVal: unknown[],
+  visited: Set<string>,
 ): boolean {
   if (aVal.length !== bVal.length) return false;
 
@@ -36,8 +34,7 @@ function arraysEqual(
     const bv = bVal[i];
 
     if (isNodeLike(av) && isNodeLike(bv)) {
-      if (!astEquals(av as unknown as TSESTree.Node, bv as unknown as TSESTree.Node))
-        return false;
+      if (!astEquals(av, bv, visited)) return false;
     } else if (av !== bv) {
       return false;
     }
@@ -47,39 +44,62 @@ function arraysEqual(
 }
 
 function astEquals(
-  a: TSESTree.Node | undefined | null,
-  b: TSESTree.Node | undefined | null,
+  a: TSESTree.Node,
+  b: TSESTree.Node,
+  visited: Set<string>,
 ): boolean {
-  if (!a && !b) return true;
-  if (!a || !b) return false;
   if (a.type !== b.type) return false;
 
-  const skip = new Set(["loc", "range", "parent"]);
-  const keysA = Object.keys(a as unknown as Record<string, unknown>).filter(
-    (k) => !skip.has(k),
-  );
-  const keysB = Object.keys(b as unknown as Record<string, unknown>).filter(
-    (k) => !skip.has(k),
-  );
+  const pairKey = `${a.type}:${String(a.range?.[0] ?? 0)}-${String(b.range?.[0] ?? 0)}`;
+  if (visited.has(pairKey)) return true;
+  visited.add(pairKey);
 
-  if (keysA.length !== keysB.length) return false;
+  const childKeys = new Set(KEYS[a.type] ?? []);
 
-  for (const key of keysA) {
-    const aVal = (a as unknown as Record<string, unknown>)[key];
-    const bVal = (b as unknown as Record<string, unknown>)[key];
+  const aProps = a as unknown as Record<string, unknown>;
+  const bProps = b as unknown as Record<string, unknown>;
 
-    if (!valuesEqual(aVal, bVal)) return false;
+  for (const key of Object.getOwnPropertyNames(aProps).sort()) {
+    if (SKIP_KEYS.has(key)) continue;
+
+    const aVal = aProps[key];
+    const bVal = bProps[key];
+
+    if (childKeys.has(key)) {
+      if (Array.isArray(aVal) && Array.isArray(bVal)) {
+        if (!arraysEqual(aVal, bVal, visited)) return false;
+      } else if (isNodeLike(aVal) && isNodeLike(bVal)) {
+        if (!astEquals(aVal, bVal, visited)) return false;
+      } else if ((aVal == null) !== (bVal == null)) {
+        return false;
+      }
+    } else if (aVal !== bVal) {
+      return false;
+    }
+  }
+
+  for (const key of Object.getOwnPropertyNames(bProps).sort()) {
+    if (SKIP_KEYS.has(key)) continue;
+    if (Object.prototype.hasOwnProperty.call(aProps, key)) continue;
+    return false;
   }
 
   return true;
 }
 
 function sigEquals(a: FnLikeNode, b: FnLikeNode): boolean {
+  const visited = new Set<string>();
+
   if (a.params.length !== b.params.length) return false;
   for (let i = 0; i < a.params.length; i++) {
-    if (!astEquals(a.params[i], b.params[i])) return false;
+    if (!astEquals(a.params[i], b.params[i], visited)) return false;
   }
-  return astEquals(a.returnType, b.returnType);
+
+  const aRet = a.returnType;
+  const bRet = b.returnType;
+  if (!aRet && !bRet) return true;
+  if (!aRet || !bRet) return false;
+  return astEquals(aRet.typeAnnotation, bRet.typeAnnotation, visited);
 }
 
 export default createRule({
