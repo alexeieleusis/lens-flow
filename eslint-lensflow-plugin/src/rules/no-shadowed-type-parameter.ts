@@ -25,31 +25,40 @@ export default createRule({
     const scopeStack: string[][] = [];
     const activeNames = new Set<string>();
 
-    function enterTypeParams(typeParams: TSESTree.TSTypeParameterDeclaration | undefined) {
-      if (!typeParams || typeParams.params.length === 0) return;
-
-      const names = typeParams.params.map((p) => p.name.name);
-
-      for (let i = 0; i < names.length; i++) {
-        if (activeNames.has(names[i])) {
-          context.report({
-            node: typeParams.params[i],
-            messageId: "shadowedTypeParam",
-            data: { name: names[i] },
-          });
-        }
+    function reportShadow(name: string, node: TSESTree.Node) {
+      if (activeNames.has(name)) {
+        context.report({ node, messageId: "shadowedTypeParam", data: { name } });
       }
+    }
 
+    function trackScope(names: string[]) {
       for (const name of names) activeNames.add(name);
       scopeStack.push(names);
     }
 
+    function untrackScope() {
+      const names = scopeStack.pop();
+      if (names) {
+        for (const name of names) activeNames.delete(name);
+      }
+    }
+
+    function enterTypeParams(typeParams: TSESTree.TSTypeParameterDeclaration | undefined) {
+      if (!typeParams || typeParams.params.length === 0) return;
+
+      const params = typeParams.params;
+      const names = params.map((p) => p.name.name);
+
+      for (let i = 0; i < names.length; i++) {
+        reportShadow(names[i], params[i]);
+      }
+
+      trackScope(names);
+    }
+
     function exitTypeParams(typeParams: TSESTree.TSTypeParameterDeclaration | undefined) {
       if (typeParams && typeParams.params.length > 0) {
-        const names = scopeStack.pop();
-        if (names) {
-          for (const name of names) activeNames.delete(name);
-        }
+        untrackScope();
       }
     }
 
@@ -98,24 +107,13 @@ export default createRule({
       const nameParam = typeParam.name;
       const name = typeof nameParam === "string" ? nameParam : nameParam.name;
 
-      if (activeNames.has(name)) {
-        context.report({
-          node: typeParam.name,
-          messageId: "shadowedTypeParam",
-          data: { name },
-        });
-      }
-
-      activeNames.add(name);
-      scopeStack.push([name]);
+      reportShadow(name, typeParam.name);
+      trackScope([name]);
     }
 
     function exitMappedType(node: TSESTree.TSMappedType) {
       if (node.typeParameter) {
-        const names = scopeStack.pop();
-        if (names) {
-          for (const name of names) activeNames.delete(name);
-        }
+        untrackScope();
       }
     }
 
