@@ -28,6 +28,10 @@ ruleTester.run("require-validation-after-json-parse", rule, {
     `let raw = JSON.parse(req.body);
     const validated = Schema.parse(raw);
     database.save(validated);`,
+    // Destructured variable validated before use
+    `const { data } = JSON.parse(req.body);
+    const validated = Schema.parse(data);
+    database.save(validated);`,
   ],
   invalid: [
     // JSON.parse result used directly in non-validation call
@@ -67,6 +71,24 @@ ruleTester.run("require-validation-after-json-parse", rule, {
     {
       code: `var data = JSON.parse(input);
       process(data);`,
+      errors: [{ messageId: "unvalidatedVariableUsage" }],
+    },
+    // Destructured object pattern — should report
+    {
+      code: `const { data } = JSON.parse(input);
+      database.save(data);`,
+      errors: [{ messageId: "unvalidatedVariableUsage" }],
+    },
+    // Destructured array pattern — should report
+    {
+      code: `const [data] = JSON.parse(input);
+      database.save(data);`,
+      errors: [{ messageId: "unvalidatedVariableUsage" }],
+    },
+    // Nested destructuring — should report
+    {
+      code: `const { user: { name } } = JSON.parse(input);
+      database.save(name);`,
       errors: [{ messageId: "unvalidatedVariableUsage" }],
     },
   ],

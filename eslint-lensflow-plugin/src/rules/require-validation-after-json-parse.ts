@@ -106,6 +106,32 @@ export default createRule({
       return p.id.name;
     };
 
+    const extractIdentifiersFromPattern = (
+      node: TSESTree.Node
+    ): string[] => {
+      const identifiers: string[] = [];
+      if (node.type === "Identifier") {
+        identifiers.push(node.name);
+      } else if (node.type === "ObjectPattern") {
+        for (const prop of node.properties) {
+          if (prop.type === "Property") {
+            identifiers.push(...extractIdentifiersFromPattern(prop.value));
+          }
+        }
+      } else if (node.type === "ArrayPattern") {
+        for (const element of node.elements) {
+          if (element) {
+            identifiers.push(...extractIdentifiersFromPattern(element));
+          }
+        }
+      } else if (node.type === "RestElement") {
+        identifiers.push(...extractIdentifiersFromPattern(node.argument));
+      } else if (node.type === "AssignmentPattern") {
+        identifiers.push(...extractIdentifiersFromPattern(node.left));
+      }
+      return identifiers;
+    };
+
     const checkUnvalidatedArgs = (
       callee: TSESTree.Expression,
       args: TSESTree.CallExpressionArgument[]
@@ -158,6 +184,15 @@ export default createRule({
       const varName = isVariableDeclaratorWithId(node);
       if (varName) {
         currentScope()[varName] = node;
+        return;
+      }
+
+      const p = node.parent;
+      if (p?.type === "VariableDeclarator" && p.id.type !== "Identifier") {
+        const names = extractIdentifiersFromPattern(p.id);
+        for (const name of names) {
+          currentScope()[name] = node;
+        }
       }
     };
 
@@ -171,6 +206,11 @@ export default createRule({
       AssignmentExpression(node) {
         if (node.left.type === "Identifier") {
           untrackVariable(node.left.name);
+        } else {
+          const names = extractIdentifiersFromPattern(node.left);
+          for (const name of names) {
+            untrackVariable(name);
+          }
         }
       },
       CallExpression(node) {
