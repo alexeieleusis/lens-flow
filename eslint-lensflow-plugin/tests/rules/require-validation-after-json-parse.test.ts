@@ -9,13 +9,14 @@ ruleTester.run("require-validation-after-json-parse", rule, {
     // JSON.parse result stored in variable, then validated before use
     `const raw = JSON.parse(req.body);
     const validated = Schema.safeParse(raw);
-    database.save(validated);`,
+    database.save(raw);`,
     // JSON.parse result used with a validation method
     `const raw = JSON.parse(input);
     const result = validator.validate(raw);`,
-    // JSON.parse result stored but only used in validation calls
+    // JSON.parse result validated with schema.validate, then safely used
     `const raw = JSON.parse(input);
-    const validated = schema.validate(raw);`,
+    const validated = schema.validate(raw);
+    database.save(raw);`,
     // let variable reassigned before use — no longer holds parsed data
     `let data = JSON.parse(input);
     data = { safe: true };
@@ -27,11 +28,35 @@ ruleTester.run("require-validation-after-json-parse", rule, {
     // let variable validated before use
     `let raw = JSON.parse(req.body);
     const validated = Schema.parse(raw);
-    database.save(validated);`,
-    // Destructured variable validated before use
+    database.save(raw);`,
+   // Destructured variable validated before use
     `const { data } = JSON.parse(req.body);
     const validated = Schema.parse(data);
-    database.save(validated);`,
+    database.save(data);`,
+    // JSON.parse result validated with decode, then safely used
+    `const raw = JSON.parse(input);
+    const decoded = validator.decode(raw);
+    database.save(raw);`,
+    // Nested function: outer-scope variable validated before use in callback
+    `const raw = JSON.parse(input);
+    const validated = Schema.parse(raw);
+    processLater(() => {
+      database.save(raw);
+    });`,
+    // Nested function: JSON.parse and validation both inside the function
+    `function handler() {
+      const data = JSON.parse(other);
+      Schema.parse(data);
+      fn(data);
+    }`,
+    // Shadowed variable: outer validated, inner has its own validated parse
+    `const data = JSON.parse(input);
+    Schema.parse(data);
+    function inner() {
+      const data = JSON.parse(other);
+      Schema.parse(data);
+      fn(data);
+    }`,
   ],
   invalid: [
     // JSON.parse result used directly in non-validation call
@@ -89,6 +114,24 @@ ruleTester.run("require-validation-after-json-parse", rule, {
     {
       code: `const { user: { name } } = JSON.parse(input);
       database.save(name);`,
+      errors: [{ messageId: "unvalidatedVariableUsage" }],
+    },
+    // Nested function: unvalidated outer variable leaks into callback scope
+    {
+      code: `const raw = JSON.parse(input);
+      processLater(() => {
+        database.save(raw);
+      });`,
+      errors: [{ messageId: "unvalidatedVariableUsage" }],
+    },
+    // Nested function: inner unvalidated parse shadows outer validated variable
+    {
+      code: `const data = JSON.parse(input);
+      Schema.parse(data);
+      function handler() {
+        const data = JSON.parse(other);
+        fn(data);
+      }`,
       errors: [{ messageId: "unvalidatedVariableUsage" }],
     },
   ],

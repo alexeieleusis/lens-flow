@@ -8,6 +8,28 @@ export default createRule({
     docs: {
       description:
         "Require schema validation after JSON.parse before using parsed data",
+      recommendation: false,
+      /**
+       * Limitation: scope tracking is per-variable-name, not per-declaration.
+       * A JSON.parse in an outer scope leaks into nested function scopes.
+       * If an outer variable is validated, the rule will not report its use
+       * inside callbacks or nested functions, even though they are logically
+       * separate execution contexts. Conversely, an inner scope that shadows
+       * an outer variable name with its own JSON.parse will be tracked
+       * independently, which is correct.
+       *
+       * Example of false negative:
+       *   const raw = JSON.parse(input);
+       *   Schema.parse(raw);
+       *   processLater(() => {
+       *     // raw is considered validated (from outer scope lookup),
+       *     // but the callback is a separate execution context.
+       *     database.save(raw);
+       *   });
+       *
+       * For strict per-scope tracking, consider using TypeScript's type
+       * system to narrow parsed data types.
+       */
     },
     messages: {
       directUnvalidated:
@@ -63,7 +85,7 @@ export default createRule({
         callee.type === "MemberExpression" &&
         callee.property.type === "Identifier"
       ) {
-        return /^(safeParse|parse|validate)$/.test(callee.property.name);
+        return /^(safeParse|parse|validate|decode)$/.test(callee.property.name);
       }
       return false;
     };
