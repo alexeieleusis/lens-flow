@@ -2,7 +2,8 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
 function findParentFunction(ancestors: TSESTree.Node[]): TSESTree.FunctionLike | null {
-  for (const node of ancestors) {
+  for (let i = ancestors.length - 1; i >= 0; i--) {
+    const node = ancestors[i];
     if (
       node.type === "FunctionDeclaration" ||
       node.type === "FunctionExpression" ||
