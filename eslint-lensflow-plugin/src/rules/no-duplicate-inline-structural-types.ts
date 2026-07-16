@@ -170,7 +170,7 @@ function canonicalize(node: TSESTree.TSTypeLiteral): string {
     }
   }
 
-  parts.sort();
+  parts.sort((a, b) => a.localeCompare(b));
   return parts.join("|");
 }
 
