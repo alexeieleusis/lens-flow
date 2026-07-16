@@ -99,13 +99,20 @@ export default createRule({
         return containsValidation(node.body);
       }
       if (node.type === "TryStatement") {
-        return (
-          containsValidation(node.block) ||
-          (node.handler ? containsValidation(node.handler.body) : false) ||
-          (node.finalizer ? containsValidation(node.finalizer) : false)
-        );
+        return containsValidationInTry(node, containsValidation);
       }
       return false;
+    }
+
+    function containsValidationInTry(
+      node: TSESTree.TryStatement,
+      check: (n: TSESTree.Node) => boolean,
+    ): boolean {
+      return (
+        check(node.block) ||
+        (node.handler ? check(node.handler.body) : false) ||
+        (node.finalizer ? check(node.finalizer) : false)
+      );
     }
 
     const reportedNodes = new Set<string>();
