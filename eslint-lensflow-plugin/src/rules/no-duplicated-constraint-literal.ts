@@ -155,7 +155,7 @@ function collectConditionals(
         let extendsType: TSESTree.TypeNode = ann.extendsType;
         if (extendsType.type !== "TSTypeLiteral") continue;
 
-        const key = serializeTypeLiteral(extendsType as TSESTree.TSTypeLiteral);
+        const key = serializeTypeLiteral(extendsType);
         result.push({ conditional: ann, key });
     }
 
