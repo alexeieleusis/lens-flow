@@ -130,7 +130,7 @@ export default createRule({
         const { callee, arguments: args } = node;
         if (callee.type !== "MemberExpression") return;
         if (callee.property.type !== "Identifier") return;
-       if (callee.property.name !== "catch") return;
+        if (callee.property.name !== "catch") return;
 
         const callback = args[0];
         if (!callback) return;
