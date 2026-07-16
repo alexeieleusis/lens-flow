@@ -29,6 +29,39 @@ function isSuccessFromFirstParam(effectName: string): boolean {
   return FIRST_PARAM_SUCCESS.has(effectName);
 }
 
+function isFunctionLikeNode(
+  dec: ts.Node,
+): dec is
+  | ts.FunctionDeclaration
+  | ts.MethodDeclaration
+  | ts.FunctionTypeNode {
+  return (
+    ts.isFunctionDeclaration(dec) ||
+    ts.isMethodDeclaration(dec) ||
+    ts.isFunctionTypeNode(dec)
+  );
+}
+
+function extractTypeReference(
+  decl: ts.Declaration | undefined,
+  checker: ts.TypeChecker,
+): ts.TypeReferenceNode | undefined {
+  if (!decl || !ts.isVariableDeclaration(decl)) return;
+
+  if (decl.type && ts.isTypeReferenceNode(decl.type)) {
+    return decl.type;
+  }
+
+  if (decl.initializer && ts.isCallExpression(decl.initializer)) {
+    const sig = checker.getResolvedSignature(decl.initializer);
+    if (!sig) return;
+
+    const dec = sig.getDeclaration();
+    if (isFunctionLikeNode(dec) && dec.type && ts.isTypeReferenceNode(dec.type))
+      return dec.type;
+  }
+}
+
 export default createRule({
   name: "no-effect-boundary-assertion",
   meta: {
@@ -69,33 +102,9 @@ export default createRule({
         const exprSym = checker.getSymbolAtLocation(exprTsNode);
         const decl = exprSym?.valueDeclaration;
 
-        let typeRef: ts.TypeReferenceNode | undefined;
+        const typeRef = extractTypeReference(decl, checker);
 
-        if (decl && ts.isVariableDeclaration(decl)) {
-          if (decl.type && ts.isTypeReferenceNode(decl.type)) {
-            // Explicit type annotation: declare const either: Either<AppError, User>
-            typeRef = decl.type;
-          } else if (decl.initializer && ts.isCallExpression(decl.initializer)) {
-            // Inferred from function call: const task = fetchUser(1)
-            const sig = checker.getResolvedSignature(decl.initializer);
-            if (sig) {
-              const dec = sig.getDeclaration();
-              if (
-                (ts.isFunctionDeclaration(dec) || ts.isMethodDeclaration(dec)) ||
-                ts.isFunctionTypeNode(dec)
-              ) {
-                if (dec.type && ts.isTypeReferenceNode(dec.type)) {
-                  typeRef = dec.type;
-                }
-              }
-            }
-          }
-        }
-
-        if (
-          !typeRef?.typeArguments ||
-          typeRef.typeArguments.length < 2
-        ) {
+        if (!typeRef?.typeArguments || typeRef.typeArguments.length < 2) {
           return;
         }
 
