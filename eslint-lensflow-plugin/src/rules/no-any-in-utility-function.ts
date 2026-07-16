@@ -66,6 +66,59 @@ function isParamAny(param: TSESTree.Parameter): boolean {
   return false;
 }
 
+function isStandalone(node: TSESTree.Node): boolean {
+  const parent = node.parent;
+  if (!parent) return false;
+
+  // Top-level: `function foo() {}` or `export function foo() {}`
+  if (parent.type === "Program" || parent.type === "ExportNamedDeclaration") {
+    return true;
+  }
+
+  // Top-level default: `export default function foo() {}`
+  if (parent.type === "ExportDefaultDeclaration") {
+    return true;
+  }
+
+  // `const foo = function() {}` / `const foo = () => {}`
+  if (parent.type === "VariableDeclarator") {
+    const decl = parent.parent;
+    if (decl?.type === "VariableDeclaration") {
+      const scope = decl.parent;
+      return (
+        scope?.type === "Program" ||
+        scope?.type === "ExportNamedDeclaration" ||
+        scope?.type === "ExportDefaultDeclaration"
+      );
+    }
+  }
+
+  // Top-level type alias: `type Foo = (x: any) => any`
+  if (parent.type === "TSTypeAliasDeclaration") {
+    const scope = parent.parent;
+    return (
+      scope?.type === "Program" ||
+      scope?.type === "ExportNamedDeclaration" ||
+      scope?.type === "ExportDefaultDeclaration"
+    );
+  }
+
+  // Inside top-level interface: `interface Foo { (x: any): any; bar(): any; }`
+  if (parent.type === "TSInterfaceBody") {
+    const iface = parent.parent;
+    if (iface?.type === "TSInterfaceDeclaration") {
+      const scope = iface.parent;
+      return (
+        scope?.type === "Program" ||
+        scope?.type === "ExportNamedDeclaration" ||
+        scope?.type === "ExportDefaultDeclaration"
+      );
+    }
+  }
+
+  return false;
+}
+
 export default createRule({
   name: "no-any-in-utility-function",
   meta: {
@@ -85,59 +138,6 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"anyParam" | "anyReturn", []>) {
-    function isStandalone(node: TSESTree.Node) {
-      const parent = node.parent;
-      if (!parent) return false;
-
-      // Top-level: `function foo() {}` or `export function foo() {}`
-      if (parent.type === "Program" || parent.type === "ExportNamedDeclaration") {
-        return true;
-      }
-
-      // Top-level default: `export default function foo() {}`
-      if (parent.type === "ExportDefaultDeclaration") {
-        return true;
-      }
-
-      // `const foo = function() {}` / `const foo = () => {}`
-      if (parent.type === "VariableDeclarator") {
-        const decl = parent.parent;
-        if (decl?.type === "VariableDeclaration") {
-          const scope = decl.parent;
-          return (
-            scope?.type === "Program" ||
-            scope?.type === "ExportNamedDeclaration" ||
-            scope?.type === "ExportDefaultDeclaration"
-          );
-        }
-      }
-
-      // Top-level type alias: `type Foo = (x: any) => any`
-      if (parent.type === "TSTypeAliasDeclaration") {
-        const scope = parent.parent;
-        return (
-          scope?.type === "Program" ||
-          scope?.type === "ExportNamedDeclaration" ||
-          scope?.type === "ExportDefaultDeclaration"
-        );
-      }
-
-      // Inside top-level interface: `interface Foo { (x: any): any; bar(): any; }`
-      if (parent.type === "TSInterfaceBody") {
-        const iface = parent.parent;
-        if (iface?.type === "TSInterfaceDeclaration") {
-          const scope = iface.parent;
-          return (
-            scope?.type === "Program" ||
-            scope?.type === "ExportNamedDeclaration" ||
-            scope?.type === "ExportDefaultDeclaration"
-          );
-        }
-      }
-
-      return false;
-    }
-
     function checkFunction(node: FunctionLikeNode) {
       if (!isStandalone(node)) {
         return;
