@@ -84,14 +84,13 @@ function isSelfReferentialInMember(declName: string, member: TSESTree.Node): boo
   }
 
   if (member.type === "TSCallSignatureDeclaration") {
-    const call = member as TSESTree.TSCallSignatureDeclaration;
-    for (const param of call.params) {
+    for (const param of member.params) {
       const typeAnn = getParamTypeAnnotation(param);
       if (typeAnn && isSelfReferential(declName, typeAnn.typeAnnotation)) {
         return true;
       }
     }
-    if (call.returnType && isSelfReferential(declName, call.returnType.typeAnnotation)) {
+    if (member.returnType && isSelfReferential(declName, member.returnType.typeAnnotation)) {
       return true;
     }
     return false;
