@@ -117,8 +117,7 @@ export default createRule({
         for (const literal of literals) {
           for (const member of literal.members) {
             if (
-              member.type !== "TSPropertySignature" &&
-              member.type !== "TSOptionalType"
+              member.type !== "TSPropertySignature"
             ) {
               return;
             }

@@ -63,14 +63,16 @@ export default createRule({
       if (expr.type === "Identifier") {
         const scope = context.sourceCode.getScope(node);
         const variable = scope.variables.find(v => v.name === expr.name);
+        const def = variable?.defs[0];
+        const parent = def?.parent;
         if (
-          variable &&
-          variable.defs.length > 0 &&
-          variable.defs[0].node.type === "VariableDeclarator" &&
-          variable.defs[0].parent.type === "VariableDeclaration" &&
-          variable.defs[0].parent.kind === "const" &&
-          variable.defs[0].node.init?.type === "CallExpression" &&
-          isJsonParseCall(variable.defs[0].node.init)
+          def &&
+          def.node.type === "VariableDeclarator" &&
+          parent &&
+          parent.type === "VariableDeclaration" &&
+          parent.kind === "const" &&
+          def.node.init?.type === "CallExpression" &&
+          isJsonParseCall(def.node.init)
         ) {
           context.report({
             node,

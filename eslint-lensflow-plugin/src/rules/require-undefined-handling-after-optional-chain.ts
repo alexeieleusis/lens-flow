@@ -143,6 +143,14 @@ function testContainsIsNullGuard(
     );
   }
 
+  if (test.type === "UnaryExpression") {
+    const unary = test as TSESTree.UnaryExpression;
+    if (unary.operator === "!" && unary.argument.type === "Identifier" && unary.argument.name === varName) {
+      return true;
+    }
+    return testContainsIsNullGuard(unary.argument, varName);
+  }
+
   return false;
 }
 
@@ -152,7 +160,8 @@ function isInsideIfGuard(
   varName: string,
 ): boolean | "stop" {
   const result = checkGuardedConsequent(current.test, current.consequent, node, varName);
-  if (result) return result;
+  if (result === true) return true;
+  if (result === "stop" && !testContainsIsNullGuard(current.test, varName)) return "stop";
 
   if (
     testContainsIsNullGuard(current.test, varName) &&
@@ -422,7 +431,14 @@ export default createRule({
       VariableDeclarator(node) {
         if (!node.init) return;
 
-        const init = node.init;
+       const init = node.init;
+
+        // Skip if init is a ?? expression (undefined is already handled)
+        if (init.type === "LogicalExpression" && init.operator === "??") {
+          if (hasOptionalAccess(init.left)) return;
+          return;
+        }
+
         if (init.type !== "ChainExpression") return;
 
         if (!hasOptionalAccess(init)) return;
@@ -430,11 +446,11 @@ export default createRule({
         // Skip if already handled with ??
         const parent = (node as { parent?: TSESTree.Node }).parent;
        if (
-           parent?.type === "LogicalExpression" &&
-           parent.operator === "??"
-         ) {
-          return;
-        }
+            parent?.type === "LogicalExpression" &&
+            parent.operator === "??"
+          ) {
+           return;
+         }
 
         const declName =
           node.id.type === "Identifier" ? node.id.name : null;
@@ -452,6 +468,28 @@ export default createRule({
             undefinedChainVars.add(declaredBinding);
           }
         }
+      },
+
+      CallExpression(callNode) {
+        if (callNode.callee.type !== "Identifier") return;
+
+        const varName = callNode.callee.name;
+        const binding = findBindingInScope(
+          context.sourceCode.getScope(callNode),
+          varName,
+        );
+        if (!binding || !undefinedChainVars.has(binding)) return;
+
+        if (isInsideGuard(callNode, varName, context.sourceCode)) return;
+
+        context.report({
+          node: callNode,
+          messageId: "unguardedAccess",
+          data: {
+            name: varName,
+            member: "()",
+          },
+        });
       },
 
       MemberExpression(memberNode) {
@@ -486,25 +524,32 @@ export default createRule({
           ) return;
         }
 
-        // Check if inside an if-block whose test guards against null/undefined
+        // Check for sibling throw-guard: if (x === undefined) throw; use after
         for (const anc of ancestors) {
-          if (isScopeBoundary(anc)) break;
-          if (anc.type === "IfStatement") {
-            const ifTest = anc.test;
-            let isGuard = false;
-            if (ifTest.type === "BinaryExpression") {
-              isGuard = isBinaryGuard(ifTest, varName);
-            } else if (ifTest.type === "LogicalExpression" && ifTest.operator === "&&") {
-              if (ifTest.left.type === "BinaryExpression") {
-                isGuard = isBinaryGuard(ifTest.left, varName);
+          if (anc.type === "FunctionDeclaration" || anc.type === "FunctionExpression" || anc.type === "ArrowFunctionExpression") break;
+          if (
+            (anc.type === "BlockStatement" || anc.type === "Program") &&
+            !memberNode.optional
+          ) {
+            const blockBody =
+              anc.type === "BlockStatement"
+                ? anc.body
+                : (anc as TSESTree.Program).body;
+            let foundGuard = false;
+            for (let i = 0; i < blockBody.length; i++) {
+              const stmt = blockBody[i];
+              if (
+                stmt.type === "IfStatement" &&
+                testContainsIsNullGuard(stmt.test, varName) &&
+                isTerminatingStatement(stmt.consequent)
+              ) {
+                foundGuard = true;
+              }
+              if (walkNodes(stmt, (n) => n === memberNode, { skipTypeAnnotations: true })) {
+                if (foundGuard) return;
+                break;
               }
             }
-            if (isGuard) {
-              if (walkNodes(anc.consequent, (n) => n === memberNode, { skipTypeAnnotations: true })) {
-                return;
-              }
-            }
-            break;
           }
         }
 

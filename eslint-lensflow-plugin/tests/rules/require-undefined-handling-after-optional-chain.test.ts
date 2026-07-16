@@ -159,7 +159,7 @@ if (cb !== undefined) {
       code: `
 interface Obj { callback?: () => void }
 declare const obj: Obj;
-const cb = obj?.callback ?? () => {};
+const cb = obj?.callback ?? (() => {});
 cb();
 `,
     },

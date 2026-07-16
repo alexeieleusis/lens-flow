@@ -32,7 +32,7 @@ function hasDynamicValue(node: TSESTree.Expression | null | undefined): boolean 
   }
 
   if (node.type === "UnaryExpression") {
-    if (node.operator === "typeof" || node.operator === "void") return false;
+    if (node.operator === "typeof") return false;
     return node.operator !== "-" || node.argument.type !== "Literal";
   }
 

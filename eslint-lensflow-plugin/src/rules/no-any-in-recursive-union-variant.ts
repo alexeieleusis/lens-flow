@@ -29,7 +29,7 @@ function hasTypeRefToName(
   collectTypeRefNames(member, refs);
   if (refs.has(name)) return true;
 
-  const target = member.type === "TSParenthesizedType" ? member.typeAnnotation : member;
+  const target = member;
   if (target.type === "TSTypeReference") {
     const ref = target;
     const refName =
@@ -50,7 +50,7 @@ function hasTypeRefToName(
 function findKeyword(node: TSESTree.TypeNode): "any" | "unknown" | null {
   if (node.type === "TSAnyKeyword") return "any";
   if (node.type === "TSUnknownKeyword") return "unknown";
-  if (node.type === "TSParenthesizedType") return findKeyword(node.typeAnnotation);
+ 
   if (node.type === "TSUnionType") {
     for (const t of node.types) {
       const found = findKeyword(t);
@@ -90,9 +90,7 @@ function collectAnyProps(
   unknownProps: TSESTree.TSPropertySignature[],
   typeAliases: Map<string, TSESTree.TypeNode>,
 ): void {
-  if (member.type === "TSParenthesizedType") {
-    return collectAnyProps(member.typeAnnotation, anyProps, unknownProps, typeAliases);
-  }
+ 
   if (member.type === "TSTypeLiteral") {
     collectAnyPropsFromLiteral(member, anyProps, unknownProps);
   } else if (member.type === "TSTypeReference") {

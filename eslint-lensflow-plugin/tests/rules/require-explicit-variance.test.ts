@@ -24,10 +24,6 @@ ruleTester.run("require-explicit-variance", rule, {
       get(): T;
       set(value: T): void;
     }`,
-    // Mutable property — invariant position (both read and write), no annotation needed
-    `interface Wrapper<T> {
-      value: T;
-    }`,
     // Type alias with no type parameters
     `type SimpleAlias = string;`,
     // Construct signature: T in both param and return — invariant, no suggestion

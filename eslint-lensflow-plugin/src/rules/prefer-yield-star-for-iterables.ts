@@ -28,9 +28,35 @@ function isArrayOrIterable(checker: ts.TypeChecker, argType: ts.Type): boolean {
     return false;
   }
 
-  // Authoritative iterator protocol check via TypeChecker
+  // Check iterator protocol via Symbol properties
   if (checker.getPropertyOfType(argType, "[Symbol.iterator]")) return true;
   if (checker.getPropertyOfType(argType, "[Symbol.asyncIterator]")) return true;
+
+ // Fallback: check type name for known iterable types.
+  // This catches generic Iterable<T>, Set, Map, etc. where symbol properties
+  // may not resolve via getPropertyOfType.
+  const typeStr = checker.typeToString(argType);
+  const iterablePrefixes = [
+    "Iterable<", "AsyncIterable<",
+    "Set<", "Map<", "WeakSet<", "WeakMap<",
+    "SetIterator<", "MapIterator<",
+    "Int8Array", "Uint8Array", "Uint8ClampedArray",
+    "Int16Array", "Uint16Array",
+    "Int32Array", "Uint32Array",
+    "Float32Array", "Float64Array", "BigInt64Array", "BigUint64Array",
+    "Generator<", "AsyncGenerator<",
+  ];
+  if (iterablePrefixes.some((p) => typeStr.startsWith(p))) return true;
+
+  // Check base types for known iterable interfaces
+  if (argType.isClassOrInterface()) {
+    const bases = argType.getBaseTypes();
+    if (bases) {
+      for (const base of bases) {
+        if (isArrayOrIterable(checker, base)) return true;
+      }
+    }
+  }
 
   return false;
 }

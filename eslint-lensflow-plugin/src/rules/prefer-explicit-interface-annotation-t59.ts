@@ -24,17 +24,11 @@ export default createRule({
 
         if (typeAnnotation.type === "TSTypeReference") {
           const typeNameNode = typeAnnotation.typeName;
-          const typeName =
-            typeNameNode.type === "Identifier"
-              ? typeNameNode.name
-              : typeNameNode.type === "TSQualifiedName"
-                ? typeNameNode.right.name
-                : null;
-          if (typeName === null) return;
+          if (typeNameNode.type !== "Identifier") return;
           context.report({
             node,
             messageId: "preferAnnotation",
-            data: { typeName },
+            data: { typeName: typeNameNode.name },
           });
         }
       },

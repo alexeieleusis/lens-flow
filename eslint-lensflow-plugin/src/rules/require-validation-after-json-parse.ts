@@ -8,7 +8,7 @@ export default createRule({
     docs: {
       description:
         "Require schema validation after JSON.parse before using parsed data",
-      recommendation: false,
+      // recommendation not supported in this ESLint version
       /**
        * Limitation: scope tracking is per-variable-name, not per-declaration.
        * A JSON.parse in an outer scope leaks into nested function scopes.

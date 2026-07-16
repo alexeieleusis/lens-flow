@@ -58,7 +58,7 @@ function serializeTypeNode(node: TSESTree.TypeNode): string {
       return `[${node.elementTypes.map(serializeTypeNode).join(",")}]`;
     case "TSNamedTupleMember": {
       const nm = node as TSESTree.TSNamedTupleMember;
-      const mods = [nm.readonly ? "R" : "", nm.optional ? "?" : ""].filter(Boolean).join("");
+      const mods = [nm.optional ? "?" : ""].filter(Boolean).join("");
       return `${nm.label.name}: ${serializeTypeNode(nm.elementType)}${mods}`;
     }
     case "TSAnyKeyword":

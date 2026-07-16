@@ -170,11 +170,6 @@ export default createRule({
       FunctionDeclaration: visitFunction,
       FunctionExpression: visitFunction,
       ArrowFunctionExpression: visitFunction,
-      MethodDefinition(node: TSESTree.MethodDefinition) {
-        if (node.value.type === "FunctionExpression") {
-          visitFunction(node.value);
-        }
-      },
     };
   },
 });

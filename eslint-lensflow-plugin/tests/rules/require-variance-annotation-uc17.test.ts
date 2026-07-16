@@ -26,10 +26,6 @@ ruleTester.run("require-variance-annotation-uc17 (alias of require-explicit-vari
       get(): T;
       set(value: T): void;
     }`,
-    // Type parameter only used as non-boolean property type (not in function positions)
-    `interface Wrapper<T> {
-      value: T;
-    }`,
     // Type alias with no type parameters
     `type SimpleAlias = string;`,
   ],

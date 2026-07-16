@@ -47,6 +47,31 @@ function isEffectivelyEmpty(stmt: TSESTree.Statement): boolean {
   return false;
 }
 
+function collectReferencedIdentifiers(node: TSESTree.Node): Set<string> {
+  const refs = new Set<string>();
+  function walk(n: TSESTree.Node) {
+    if (n.type === "Identifier") {
+      refs.add(n.name);
+      return;
+    }
+    for (const key in n) {
+      if (key === "parent" || key === "loc" || key === "range") continue;
+      const val = (n as unknown as Record<string, unknown>)[key];
+      if (val && typeof val === "object") {
+        if (Array.isArray(val)) {
+          for (const item of val) {
+            if (item && typeof item === "object" && "type" in item) walk(item);
+          }
+        } else if ("type" in val) {
+          walk(val as TSESTree.Node);
+        }
+      }
+    }
+  }
+  walk(node);
+  return refs;
+}
+
 function reportEatenErrorIfApplicable(
   callback: TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression,
   errorParamIds: string[],
@@ -68,11 +93,11 @@ function reportEatenErrorIfApplicable(
 
   if (errorParamIds.length === 0) return;
 
-  const paramBindings = context
-    .getDeclaredVariables(callback)
-    .filter((v) => errorParamIds.includes(v.name));
+  const bodyToCheck = callback.body;
+  const referencedIds = collectReferencedIdentifiers(bodyToCheck);
+  const anyParamUsed = errorParamIds.some((id) => referencedIds.has(id));
 
-  if (paramBindings.length > 0 && paramBindings.every((b) => b.references.length === 0)) {
+  if (!anyParamUsed) {
     context.report({
       node: callback,
       messageId: "ignoredParam",

@@ -44,11 +44,7 @@ function containsTypeLiteral(node: TSESTree.TypeNode): boolean {
     return node.types.some(containsTypeLiteral);
   }
 
-  if (node.type === "TSParenthesizedType") {
-    return containsTypeLiteral(node.typeAnnotation);
-  }
-
-  return false;
+   return false;
 }
 
 export default createRule({

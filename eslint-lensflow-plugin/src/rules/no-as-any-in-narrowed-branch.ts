@@ -214,7 +214,7 @@ function findNarrowedVariable(
       }
     }
 
-    if (candidate && resolveVariable(scopes, candidate) === castedVar) {
+    if (candidate && guardNode && resolveVariable(scopes, candidate) === castedVar) {
       return { id: candidate, guard: guardNode };
     }
   }

@@ -25,9 +25,56 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"mutationOfReadonly", []>) {
-    const readonlyFieldsStack: (Set<string> | null)[] = [];
-    const constructorDepthStack: number[] = [];
-    let constructorDepth = 0;
+    const readonlyFieldsMap = new Map<TSESTree.ClassBody, Set<string>>();
+    const constructorClassBodies: TSESTree.ClassBody[] = [];
+
+    function findEnclosingClassBody(node: TSESTree.Node): TSESTree.ClassBody | null {
+      let current: TSESTree.Node | undefined = node;
+      while (current) {
+        if (current.type === "ClassBody") return current;
+        current = current.parent;
+      }
+      return null;
+    }
+
+    function isInsideMatchingConstructor(enclosingClass: TSESTree.ClassBody): boolean {
+      return constructorClassBodies.includes(enclosingClass);
+    }
+
+    function getConstructorClassBody(node: TSESTree.MethodDefinition): TSESTree.ClassBody | null {
+      if (node.kind !== "constructor") return null;
+      return node.parent;
+    }
+
+    function checkAssignment(node: TSESTree.AssignmentExpression | TSESTree.UpdateExpression) {
+      let prop: TSESTree.Node;
+
+      if (node.type === "AssignmentExpression") {
+        if (node.left.type !== "MemberExpression") return;
+        if (node.left.object.type !== "ThisExpression") return;
+        prop = node.left.property;
+      } else {
+        if (node.argument.type !== "MemberExpression") return;
+        if (node.argument.object.type !== "ThisExpression") return;
+        prop = node.argument.property;
+      }
+
+      const fieldName = extractFieldName(prop);
+      if (!fieldName) return;
+
+      const enclosingClass = findEnclosingClassBody(node);
+      if (!enclosingClass) return;
+
+      const readonlyFields = readonlyFieldsMap.get(enclosingClass);
+      if (!readonlyFields || !readonlyFields.has(fieldName)) return;
+      if (isInsideMatchingConstructor(enclosingClass)) return;
+
+      context.report({
+        node,
+        messageId: "mutationOfReadonly",
+        data: { field: fieldName },
+      });
+    }
 
     return {
       ClassBody(node) {
@@ -60,74 +107,27 @@ export default createRule({
           }
         }
 
-        readonlyFieldsStack.push(readonlyFields.size > 0 ? readonlyFields : null);
+        readonlyFieldsMap.set(node, readonlyFields);
       },
-      "ClassBody:exit"() {
-        readonlyFieldsStack.pop();
+      "ClassBody:exit"(node) {
+        readonlyFieldsMap.delete(node);
       },
       MethodDefinition(node) {
-        if (node.kind === "constructor") {
-          constructorDepth++;
+        const classBody = getConstructorClassBody(node);
+        if (classBody) {
+          constructorClassBodies.push(classBody);
         }
       },
       "MethodDefinition:exit"(node) {
         if (node.kind === "constructor") {
-          constructorDepth--;
+          constructorClassBodies.pop();
         }
-      },
-      FunctionExpression() {
-        constructorDepthStack.push(constructorDepth);
-        constructorDepth = 0;
-      },
-      "FunctionExpression:exit"() {
-        constructorDepth = constructorDepthStack.pop()!;
-      },
-      ArrowFunctionExpression() {
-        constructorDepthStack.push(constructorDepth);
-        constructorDepth = 0;
-      },
-      "ArrowFunctionExpression:exit"() {
-        constructorDepth = constructorDepthStack.pop()!;
       },
       AssignmentExpression(node) {
-        const currentReadonlyFields = readonlyFieldsStack[readonlyFieldsStack.length - 1];
-        if (!currentReadonlyFields || constructorDepth > 0) return;
-
-        if (
-          node.left.type === "MemberExpression" &&
-          node.left.object.type === "ThisExpression"
-        ) {
-          const fieldName = extractFieldName(node.left.property);
-          if (fieldName && currentReadonlyFields.has(fieldName)) {
-            context.report({
-              node,
-              messageId: "mutationOfReadonly",
-              data: {
-                field: fieldName,
-              },
-            });
-          }
-        }
+        checkAssignment(node);
       },
       UpdateExpression(node) {
-        const currentReadonlyFields = readonlyFieldsStack[readonlyFieldsStack.length - 1];
-        if (!currentReadonlyFields || constructorDepth > 0) return;
-
-        if (
-          node.argument.type === "MemberExpression" &&
-          node.argument.object.type === "ThisExpression"
-        ) {
-          const fieldName = extractFieldName(node.argument.property);
-          if (fieldName && currentReadonlyFields.has(fieldName)) {
-            context.report({
-              node,
-              messageId: "mutationOfReadonly",
-              data: {
-                field: fieldName,
-              },
-            });
-          }
-        }
+        checkAssignment(node);
       },
     };
   },

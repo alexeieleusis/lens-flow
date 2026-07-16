@@ -44,8 +44,9 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ maxMarkers: 4 }],
-  create(context: TSESLint.RuleContext<"excessiveMarkers", [{ maxMarkers: number }]>) {
-    const { maxMarkers } = context.options[0];
+  create(context: TSESLint.RuleContext<"excessiveMarkers", [{ maxMarkers?: number }]>) {
+    const [{ maxMarkers: maxMarkersOpt } = {}] = context.options ?? [];
+    const maxMarkers = maxMarkersOpt ?? 4;
 
     const markers: Array<{ node: TSESTree.TSTypeAliasDeclaration; name: string }> = [];
 
@@ -84,7 +85,7 @@ export default createRule({
         }
       },
       "Program:exit"() {
-        if (markers.length > maxMarkers) {
+        if (markers.length >= maxMarkers) {
           context.report({
             node: markers[0].node,
             messageId: "excessiveMarkers",

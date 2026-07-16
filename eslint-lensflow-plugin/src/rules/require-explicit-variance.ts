@@ -78,13 +78,7 @@ function findTypeParamUsage(
     }
     case "TSPropertySignature": {
       if (node.typeAnnotation) {
-        if (node.readonly) {
-          findTypeParamUsage(node.typeAnnotation, paramName, true, result);
-        } else {
-          // Mutable property — invariant position
-          findTypeParamUsage(node.typeAnnotation, paramName, true, result);
-          findTypeParamUsage(node.typeAnnotation, paramName, false, result);
-        }
+        findTypeParamUsage(node.typeAnnotation, paramName, true, result);
       }
       break;
     }

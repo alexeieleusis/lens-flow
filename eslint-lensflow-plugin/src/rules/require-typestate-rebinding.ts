@@ -60,10 +60,12 @@ function hasSubsequentUse(
   body: TSESTree.Statement[],
   startIdx: number,
   targetName: string,
+  skipBlock: TSESTree.Node | null = null,
 ): boolean {
   for (let i = startIdx; i < body.length; i++) {
     const stmt = body[i];
     if (FUNCTION_BOUNDARY_TYPES.has(stmt.type)) continue;
+    if (skipBlock && stmt === skipBlock) continue;
     if (nodeHasTargetUse(stmt, targetName)) return true;
   }
   return false;
@@ -153,10 +155,10 @@ export default createRule({
       }
     }
 
-    function findLetBinding(bindingName: string): LetBinding | null {
+    function findLetBinding(bindingName: string): { binding: LetBinding; scopeIdx: number } | null {
       for (let i = scopeStack.length - 1; i >= 0; i--) {
-        const binding = scopeStack[i].letBindings.get(bindingName);
-        if (binding) return binding;
+        const b = scopeStack[i].letBindings.get(bindingName);
+        if (b) return { binding: b, scopeIdx: i };
       }
       return null;
     }
@@ -179,43 +181,6 @@ export default createRule({
       return null;
     }
 
-    function checkAndReportConstDeclarator(
-      declNode: TSESTree.VariableDeclaration,
-      declarator: TSESTree.VariableDeclarator,
-      scopeBody: TSESTree.Statement[],
-      idx: number,
-      objId: TSESTree.Identifier,
-    ) {
-      const init = declarator.init;
-      if (!init) return;
-
-      const callee = extractCallee(init);
-      const methodName = callee ? extractMethodName(callee) : null;
-
-      const constName =
-        declarator.id.type === "Identifier"
-          ? declarator.id.name
-          : context.sourceCode.getText(declarator.id);
-
-      if (
-        hasSubsequentUse(
-          scopeBody,
-          idx + 1,
-          objId.name,
-        )
-      ) {
-        context.report({
-          node: declarator,
-          messageId: "staleStateRef",
-          data: {
-            letName: objId.name,
-            constName,
-            methodName: methodName ?? "<method>",
-          },
-        });
-      }
-    }
-
     function processConstDeclarations(
       node: TSESTree.VariableDeclaration,
       currentScope: ScopeFrame,
@@ -229,20 +194,56 @@ export default createRule({
         const objId = isCallOnObject(init);
         if (!objId) continue;
 
-        const foundBinding = findLetBinding(objId.name);
-        if (!foundBinding) continue;
+        const found = findLetBinding(objId.name);
+        if (!found) continue;
 
-        if (foundBinding.letIdx >= idx) continue;
+        const { binding: foundBinding, scopeIdx: letScopeIdx } = found;
+        const currentScopeIdx = scopeStack.length - 1;
 
-        if (currentScope.stmtBody !== foundBinding.scopeBody) continue;
+        let letScopeBody: TSESTree.Statement[];
+        let startCheckIdx: number;
+        let constDeclBlock: TSESTree.Node | null = null;
 
-        checkAndReportConstDeclarator(
-          node,
-          declarator,
-          scopeBody,
-          idx,
-          objId,
-        );
+        if (currentScope.stmtBody === foundBinding.scopeBody) {
+          // Same scope: const must appear after the let
+          if (foundBinding.letIdx >= idx) continue;
+          letScopeBody = foundBinding.scopeBody;
+          startCheckIdx = idx + 1;
+        } else if (letScopeIdx < currentScopeIdx) {
+          // Cross-scope: let is in an outer scope, const is in a nested block
+          letScopeBody = foundBinding.scopeBody;
+          startCheckIdx = foundBinding.letIdx + 1;
+          // Find the block in the outer scope's body that contains this const
+          // so we can skip it when scanning for subsequent uses.
+          let p: TSESTree.Node | undefined = node.parent;
+          while (p) {
+            if (foundBinding.scopeBody.includes(p as TSESTree.Statement)) {
+              constDeclBlock = p;
+              break;
+            }
+            p = p.parent;
+          }
+        } else {
+          continue;
+        }
+
+        if (hasSubsequentUse(letScopeBody, startCheckIdx, objId.name, constDeclBlock)) {
+          context.report({
+            node: declarator,
+            messageId: "staleStateRef",
+            data: {
+              letName: objId.name,
+              constName:
+                declarator.id.type === "Identifier"
+                  ? declarator.id.name
+                  : context.sourceCode.getText(declarator.id),
+              methodName: (() => {
+                const callee = extractCallee(init);
+                return callee ? extractMethodName(callee) : "<method>";
+              })(),
+            },
+          });
+        }
       }
     }
 

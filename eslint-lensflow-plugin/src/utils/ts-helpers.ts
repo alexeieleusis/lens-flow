@@ -276,7 +276,7 @@ export function collectChildTypes(type: TSESTree.TypeNode): TSESTree.TypeNode[] 
   }
 }
 
-export function extractLiteralValues(tsType: ts.Type): (string | number | boolean)[] {
+export function extractLiteralValues(tsType: ts.Type, checker?: ts.TypeChecker): (string | number | boolean)[] {
   const values = new Set<string | number | boolean>();
 
   function visit(t: ts.Type) {
@@ -297,11 +297,45 @@ export function extractLiteralValues(tsType: ts.Type): (string | number | boolea
       return;
     }
     if ((t.flags & ts.TypeFlags.BooleanLiteral) !== 0) {
-      values.add((t as ts.Type & { value: boolean }).value);
+      const val = (t as ts.Type & { value?: boolean }).value;
+      if (val !== undefined) {
+        values.add(val);
+      } else if (checker) {
+        const str = checker.typeToString(t);
+        if (str === "true") values.add(true);
+        else if (str === "false") values.add(false);
+      }
+      return;
+    }
+    // Handle boolean keyword type (true | false widens to boolean)
+    if ((t.flags & ts.TypeFlags.Boolean) !== 0) {
+      values.add(true);
+      values.add(false);
+      return;
     }
   }
 
   visit(tsType);
+
+  // Fallback: if type has boolean members in a union, extract them
+  if (values.size === 0 && tsType.isUnion()) {
+    for (const member of tsType.types) {
+      if ((member.flags & ts.TypeFlags.BooleanLiteral) !== 0) {
+        const val = (member as ts.Type & { value?: boolean }).value;
+        if (val !== undefined) {
+          values.add(val);
+        } else if (checker) {
+          const str = checker.typeToString(member);
+          if (str === "true") values.add(true);
+          else if (str === "false") values.add(false);
+        }
+      } else if ((member.flags & ts.TypeFlags.Boolean) !== 0) {
+        values.add(true);
+        values.add(false);
+      }
+    }
+  }
+
   return [...values];
 }
 
@@ -315,8 +349,26 @@ export function checkSwitchExhaustiveness(
 ): void {
   if (!tsNode) return;
 
-  const discriminantType = checker.getTypeAtLocation(tsNode);
-  const literalValues = extractLiteralValues(discriminantType);
+  const rawType = checker.getTypeAtLocation(tsNode);
+  const discriminantType = checker.getApparentType(rawType);
+  let literalValues = extractLiteralValues(discriminantType, checker);
+
+  // true | false widens to intrinsic boolean, which getApparentType resolves
+  // to an ObjectType (Boolean) with no literal flags — handle explicitly.
+  if (literalValues.length === 0) {
+    const apparentStr = checker.typeToString(discriminantType).toLowerCase();
+    if (apparentStr === "boolean") {
+      literalValues = [true, false];
+    } else {
+      literalValues = extractLiteralValues(rawType, checker);
+      if (literalValues.length === 0) {
+        const rawStr = checker.typeToString(rawType).toLowerCase();
+        if (rawStr === "boolean") {
+          literalValues = [true, false];
+        }
+      }
+    }
+  }
 
   if (literalValues.length < 2) return;
 

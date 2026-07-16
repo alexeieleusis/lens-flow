@@ -54,7 +54,7 @@ export default createRule({
     }
 
     function extractIdentifier(
-      param: TSESTree.Parameter,
+      param: TSESTree.Parameter | TSESTree.Expression,
     ): TSESTree.Identifier | null {
       if (param.type === AST_NODE_TYPES.Identifier) return param;
       if (param.type === AST_NODE_TYPES.AssignmentPattern) {
