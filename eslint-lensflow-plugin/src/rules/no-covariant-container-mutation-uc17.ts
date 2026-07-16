@@ -182,7 +182,7 @@ export default createRule({
           );
         } else if (member.type === AST_NODE_TYPES.TSConstructSignatureDeclaration) {
           checkConstructSignature(
-            member as TSESTree.TSConstructSignatureDeclaration,
+            member,
             covariantNames,
             context,
           );
