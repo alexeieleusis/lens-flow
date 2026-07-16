@@ -27,7 +27,7 @@ function checkCallableBody(
     )
     .filter((member) => {
       const name = getPropertyName(member.key);
-      return name !== null && name.startsWith("_");
+      return name?.startsWith("_");
     });
 
   if (underscoreProps.length > 0) {
