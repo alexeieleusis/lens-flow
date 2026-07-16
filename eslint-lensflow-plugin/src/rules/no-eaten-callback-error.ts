@@ -47,28 +47,40 @@ function isEffectivelyEmpty(stmt: TSESTree.Statement): boolean {
   return false;
 }
 
-function collectReferencedIdentifiers(node: TSESTree.Node): Set<string> {
-  const refs = new Set<string>();
-  function walk(n: TSESTree.Node) {
-    if (n.type === "Identifier") {
-      refs.add(n.name);
-      return;
-    }
-    for (const key in n) {
-      if (key === "parent" || key === "loc" || key === "range") continue;
-      const val = (n as unknown as Record<string, unknown>)[key];
-      if (val && typeof val === "object") {
-        if (Array.isArray(val)) {
-          for (const item of val) {
-            if (item && typeof item === "object" && "type" in item) walk(item);
-          }
-        } else if ("type" in val) {
-          walk(val as TSESTree.Node);
-        }
+function isAstNode(val: unknown): val is TSESTree.Node {
+  return val != null && typeof val === "object" && "type" in val;
+}
+
+function collectNodeChildren(node: TSESTree.Node): TSESTree.Node[] {
+  const children: TSESTree.Node[] = [];
+  for (const key in node) {
+    if (key === "parent" || key === "loc" || key === "range") continue;
+    const val = (node as unknown as Record<string, unknown>)[key];
+    if (val == null || typeof val !== "object") continue;
+    if (Array.isArray(val)) {
+      for (const item of val) {
+        if (isAstNode(item)) children.push(item);
       }
+    } else if (isAstNode(val)) {
+      children.push(val);
     }
   }
-  walk(node);
+  return children;
+}
+
+function walkNode(node: TSESTree.Node, refs: Set<string>) {
+  if (node.type === "Identifier") {
+    refs.add(node.name);
+    return;
+  }
+  for (const child of collectNodeChildren(node)) {
+    walkNode(child, refs);
+  }
+}
+
+function collectReferencedIdentifiers(node: TSESTree.Node): Set<string> {
+  const refs = new Set<string>();
+  walkNode(node, refs);
   return refs;
 }
 
