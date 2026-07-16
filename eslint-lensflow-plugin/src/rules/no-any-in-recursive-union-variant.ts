@@ -51,11 +51,7 @@ function findKeywordInMembers(types: TSESTree.TypeNode[]): "any" | "unknown" | n
   for (const t of types) {
     if (t.type === "TSAnyKeyword") return "any";
     if (t.type === "TSUnknownKeyword") return "unknown";
-    if (t.type === "TSUnionType") {
-      const found = findKeywordInMembers(t.types);
-      if (found) return found;
-    }
-    if (t.type === "TSIntersectionType") {
+    if (t.type === "TSUnionType" || t.type === "TSIntersectionType") {
       const found = findKeywordInMembers(t.types);
       if (found) return found;
     }
