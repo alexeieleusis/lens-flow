@@ -47,23 +47,27 @@ function hasTypeRefToName(
   return false;
 }
 
+function findKeywordInMembers(types: TSESTree.TypeNode[]): "any" | "unknown" | null {
+  for (const t of types) {
+    if (t.type === "TSAnyKeyword") return "any";
+    if (t.type === "TSUnknownKeyword") return "unknown";
+    if (t.type === "TSUnionType") {
+      const found = findKeywordInMembers(t.types);
+      if (found) return found;
+    }
+    if (t.type === "TSIntersectionType") {
+      const found = findKeywordInMembers(t.types);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
 function findKeyword(node: TSESTree.TypeNode): "any" | "unknown" | null {
   if (node.type === "TSAnyKeyword") return "any";
   if (node.type === "TSUnknownKeyword") return "unknown";
- 
-  if (node.type === "TSUnionType") {
-    for (const t of node.types) {
-      const found = findKeyword(t);
-      if (found === "any") return "any";
-      if (found === "unknown") return "unknown";
-    }
-  } else if (node.type === "TSIntersectionType") {
-    for (const t of node.types) {
-      const found = findKeyword(t);
-      if (found === "any") return "any";
-      if (found === "unknown") return "unknown";
-    }
-  }
+  if (node.type === "TSUnionType") return findKeywordInMembers(node.types);
+  if (node.type === "TSIntersectionType") return findKeywordInMembers(node.types);
   return null;
 }
 
