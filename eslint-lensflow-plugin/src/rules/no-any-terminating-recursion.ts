@@ -98,7 +98,7 @@ function isSelfReferentialInMember(declName: string, member: TSESTree.Node): boo
   }
 
   if (member.type === "TSConstructSignatureDeclaration") {
-    const construct = member as TSESTree.TSConstructSignatureDeclaration;
+    const construct = member;
     for (const param of construct.params) {
       const typeAnn = getParamTypeAnnotation(param);
       if (typeAnn && isSelfReferential(declName, typeAnn.typeAnnotation)) {
