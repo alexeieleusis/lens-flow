@@ -12,9 +12,7 @@ function containsUnknownCast(node: TSESTree.Node): boolean {
     node.type === "TSNonNullExpression" ||
     node.type === "ChainExpression"
   ) {
-    return containsUnknownCast(
-      (node as TSESTree.TSSatisfiesExpression | TSESTree.TSNonNullExpression | TSESTree.ChainExpression).expression,
-    );
+    return containsUnknownCast(node.expression);
   }
   return false;
 }
