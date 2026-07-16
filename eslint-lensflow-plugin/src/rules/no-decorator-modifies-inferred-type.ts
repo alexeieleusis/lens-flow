@@ -34,36 +34,45 @@ function extractKeyname(key: TSESTree.Expression): string | null {
   return null;
 }
 
-function extractDefinePropertyCalls(
-  node: TSESTree.CallExpression,
-): string[] | null {
+function isObjectCall(node: TSESTree.CallExpression, methodName: string): boolean {
   const { callee } = node;
-  if (
+  return (
     callee.type === "MemberExpression" &&
     !callee.computed &&
     callee.object.type === "Identifier" &&
     callee.object.name === "Object" &&
     callee.property.type === "Identifier" &&
-    (callee.property.name === "defineProperty" ||
-      callee.property.name === "defineProperties")
-  ) {
-    if (callee.property.name === "defineProperty") {
-      const propArg = node.arguments[1] as TSESTree.Expression | undefined;
-      const name = propArg ? extractKeyname(propArg) : null;
-      if (name !== null) return [name];
-    } else {
-      const descArg = node.arguments[1];
-      if (descArg?.type === "ObjectExpression") {
-        const names: string[] = [];
-        for (const prop of descArg.properties) {
-          if (prop.type === "Property") {
-            const name = extractKeyname(prop.key);
-            if (name !== null) names.push(name);
-          }
-        }
-        if (names.length > 0) return names;
-      }
-    }
+    callee.property.name === methodName
+  );
+}
+
+function extractDefinePropertySingle(node: TSESTree.CallExpression): string[] | null {
+  const propArg = node.arguments[1] as TSESTree.Expression | undefined;
+  if (!propArg) return null;
+  const name = extractKeyname(propArg);
+  return name !== null ? [name] : null;
+}
+
+function extractDefinePropertiesMulti(node: TSESTree.CallExpression): string[] | null {
+  const descArg = node.arguments[1];
+  if (descArg?.type !== "ObjectExpression") return null;
+  const names: string[] = [];
+  for (const prop of descArg.properties) {
+    if (prop.type !== "Property") continue;
+    const name = extractKeyname(prop.key);
+    if (name !== null) names.push(name);
+  }
+  return names.length > 0 ? names : null;
+}
+
+function extractDefinePropertyCalls(
+  node: TSESTree.CallExpression,
+): string[] | null {
+  if (isObjectCall(node, "defineProperty")) {
+    return extractDefinePropertySingle(node);
+  }
+  if (isObjectCall(node, "defineProperties")) {
+    return extractDefinePropertiesMulti(node);
   }
   return null;
 }
