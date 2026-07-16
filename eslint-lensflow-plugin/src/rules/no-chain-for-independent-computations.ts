@@ -14,6 +14,13 @@ function extractIdentifier(
   return null;
 }
 
+function unwrapCallee(node: TSESTree.CallExpression): TSESTree.Node {
+  if (node.callee.type === AST_NODE_TYPES.ChainExpression) {
+    return node.callee.expression;
+  }
+  return node.callee;
+}
+
 export default createRule({
   name: "no-chain-for-independent-computations",
   meta: {
@@ -34,13 +41,6 @@ export default createRule({
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"noParamInChain" | "unusedParamInChain", []>) {
     const chainMethods = new Set(["chain", "flatMap"]);
-
-    function unwrapCallee(node: TSESTree.CallExpression): TSESTree.Node {
-      if (node.callee.type === AST_NODE_TYPES.ChainExpression) {
-        return node.callee.expression;
-      }
-      return node.callee;
-    }
 
     function isChainCall(node: TSESTree.CallExpression): boolean {
       const callee = unwrapCallee(node);
