@@ -16,6 +16,21 @@ function extractTypeName(node: TSESTree.TSTypeReference): string | null {
   return null;
 }
 
+function isDisallowedName(name: string, allowed: Set<string>): boolean {
+  return !allowed.has(name);
+}
+
+function findConcreteInMembers(
+  members: TSESTree.TypeNode[],
+  allowed: Set<string>,
+): string | null {
+  for (const member of members) {
+    const name = findConcreteType(member, allowed);
+    if (name) return name;
+  }
+  return null;
+}
+
 function findConcreteType(
   node: TSESTree.TypeNode,
   allowed: Set<string>,
@@ -28,22 +43,16 @@ function findConcreteType(
 
   if (current.type === "TSTypeReference") {
     const name = extractTypeName(current);
-    if (name && !allowed.has(name)) return name;
+    if (name && isDisallowedName(name, allowed)) return name;
     return null;
   }
 
   if (current.type === "TSUnionType") {
-    for (const member of current.types) {
-      const name = findConcreteType(member, allowed);
-      if (name) return name;
-    }
+    return findConcreteInMembers(current.types, allowed);
   }
 
   if (current.type === "TSIntersectionType") {
-    for (const member of current.types) {
-      const name = findConcreteType(member, allowed);
-      if (name) return name;
-    }
+    return findConcreteInMembers(current.types, allowed);
   }
 
   return null;
