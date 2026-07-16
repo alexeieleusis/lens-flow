@@ -94,9 +94,8 @@ function serializeTypeNode(node: TSESTree.TypeNode): string {
       return `new(${params}):${ret}`;
     }
     case "TSFunctionType": {
-      const ft = node as TSESTree.TSFunctionType;
-      const params = ft.params.map(paramToString).join(",");
-      const ret = ft.returnType ? serializeTypeAnnotation(ft.returnType) : "void";
+      const params = node.params.map(paramToString).join(",");
+      const ret = node.returnType ? serializeTypeAnnotation(node.returnType) : "void";
       return `(${params}):${ret}`;
     }
     default:
