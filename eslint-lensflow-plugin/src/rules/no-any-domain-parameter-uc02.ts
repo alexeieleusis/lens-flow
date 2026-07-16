@@ -1,39 +1,45 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
+function findAnyInTypeList(
+  types: TSESTree.TypeNode[],
+): TSESTree.TSAnyKeyword | null {
+  for (const typeNode of types) {
+    const found = containsAnyKeyword(typeNode);
+    if (found) return found;
+  }
+  return null;
+}
+
+function checkTypeReference(
+  node: TSESTree.TSTypeReference,
+): TSESTree.TSAnyKeyword | null {
+  const name = node.typeName;
+  if (
+    name.type === "Identifier" &&
+    (name.name === "Array" || name.name === "ReadonlyArray")
+  ) {
+    const typeParams = node.typeArguments?.params;
+    if (typeParams) {
+      return findAnyInTypeList(typeParams);
+    }
+  }
+  return null;
+}
+
 function containsAnyKeyword(node: TSESTree.TypeNode): TSESTree.TSAnyKeyword | null {
   if (node.type === "TSAnyKeyword") return node;
   if (node.type === "TSArrayType") {
     return containsAnyKeyword(node.elementType);
   }
   if (node.type === "TSUnionType") {
-    for (const unionType of node.types) {
-      const found = containsAnyKeyword(unionType);
-      if (found) return found;
-    }
-    return null;
+    return findAnyInTypeList(node.types);
   }
   if (node.type === "TSIntersectionType") {
-    for (const intersectionType of node.types) {
-      const found = containsAnyKeyword(intersectionType);
-      if (found) return found;
-    }
-    return null;
+    return findAnyInTypeList(node.types);
   }
   if (node.type === "TSTypeReference") {
-    const name = node.typeName;
-    if (
-      name.type === "Identifier" &&
-      (name.name === "Array" || name.name === "ReadonlyArray")
-    ) {
-      const typeParams = node.typeArguments?.params;
-      if (typeParams) {
-        for (const tp of typeParams) {
-          const found = containsAnyKeyword(tp);
-          if (found) return found;
-        }
-      }
-    }
+    return checkTypeReference(node);
   }
   return null;
 }
