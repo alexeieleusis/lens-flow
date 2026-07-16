@@ -10,6 +10,21 @@ type ParamNode =
   | TSESTree.ArrayPattern
   | TSESTree.TSParameterProperty;
 
+function getBaseNode(
+  param: Exclude<ParamNode, TSESTree.RestElement>,
+): TSESTree.Identifier | TSESTree.ObjectPattern | TSESTree.ArrayPattern | TSESTree.AssignmentPattern {
+  if (param.type === "AssignmentPattern") return param.left;
+  if (param.type === "TSParameterProperty") return param.parameter;
+  return param;
+}
+
+function getParamName(
+  base: TSESTree.Identifier | TSESTree.ObjectPattern | TSESTree.ArrayPattern | TSESTree.AssignmentPattern,
+  sourceCode: TSESLint.SourceCode,
+): string {
+  return base.type === "Identifier" ? base.name : sourceCode.getText(base);
+}
+
 function collectAnyParams(
   params: ParamNode[],
   sourceCode: TSESLint.SourceCode,
@@ -17,9 +32,7 @@ function collectAnyParams(
   const anyParams: Array<{ name: string; anyNode: TSESTree.TSAnyKeyword }> = [];
 
   for (const param of params) {
-    let base: TSESTree.Identifier | TSESTree.ObjectPattern | TSESTree.ArrayPattern | TSESTree.AssignmentPattern;
     if (param.type === "RestElement") {
-      // typeAnnotation is on the RestElement itself, name on argument
       const typeAnn = param.typeAnnotation?.typeAnnotation;
       if (typeAnn?.type === "TSAnyKeyword") {
         anyParams.push({
@@ -29,18 +42,10 @@ function collectAnyParams(
       }
       continue;
     }
-    if (param.type === "AssignmentPattern") {
-      base = param.left;
-    } else if (param.type === "TSParameterProperty") {
-      base = param.parameter;
-    } else {
-      base = param;
-    }
+    const base = getBaseNode(param);
     const typeAnn = base.typeAnnotation?.typeAnnotation;
     if (typeAnn?.type === "TSAnyKeyword") {
-      const paramName =
-        base.type === "Identifier" ? base.name : sourceCode.getText(base);
-      anyParams.push({ name: paramName, anyNode: typeAnn });
+      anyParams.push({ name: getParamName(base, sourceCode), anyNode: typeAnn });
     }
   }
 
