@@ -59,7 +59,7 @@ function isConflictingTypes(a: TSESTree.TypeNode, b: TSESTree.TypeNode): boolean
   }
 
   if (PRIMITIVE_TYPES.has(typeA) && typeB === "TSLiteralType") {
-    const lit = (b as TSESTree.TSLiteralType).literal;
+    const lit = b.literal;
     if (lit.type !== "Literal") return false;
     return !literalMatchesPrimitive(lit.value, typeA);
   }
