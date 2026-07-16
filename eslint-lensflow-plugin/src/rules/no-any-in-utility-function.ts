@@ -155,7 +155,7 @@ export default createRule({
 
       if (node.returnType?.typeAnnotation.type === "TSAnyKeyword") {
         context.report({
-          node: node.returnType!.typeAnnotation,
+          node: node.returnType.typeAnnotation,
           messageId: "anyReturn",
         });
       }
