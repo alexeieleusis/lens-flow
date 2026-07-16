@@ -84,23 +84,26 @@ function collectAnyPropsFromLiteral(
   }
 }
 
+function extractRefName(ref: TSESTree.TSTypeReference): string | null {
+  if (ref.typeName.type === "Identifier") {
+    return ref.typeName.name;
+  }
+  if (ref.typeName.type === "TSQualifiedName") {
+    return ref.typeName.right.name;
+  }
+  return null;
+}
+
 function collectAnyProps(
   member: TSESTree.TypeNode,
   anyProps: TSESTree.TSPropertySignature[],
   unknownProps: TSESTree.TSPropertySignature[],
   typeAliases: Map<string, TSESTree.TypeNode>,
 ): void {
- 
   if (member.type === "TSTypeLiteral") {
     collectAnyPropsFromLiteral(member, anyProps, unknownProps);
   } else if (member.type === "TSTypeReference") {
-    const ref = member;
-    let refName: string | null = null;
-    if (ref.typeName.type === "Identifier") {
-      refName = ref.typeName.name;
-    } else if (ref.typeName.type === "TSQualifiedName") {
-      refName = ref.typeName.right.name;
-    }
+    const refName = extractRefName(member);
     if (refName && typeAliases.has(refName)) {
       const resolved = typeAliases.get(refName)!;
       if (resolved.type === "TSTypeLiteral") {
