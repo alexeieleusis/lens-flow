@@ -76,7 +76,7 @@ export default createRule({
         const returns = findReturnStatements(fnNode);
         for (const ret of returns) {
           const objExpr = ret.argument ? unwrapSatisfies(ret.argument) : null;
-          if (!objExpr || objExpr.type !== "ObjectExpression") continue;
+          if (objExpr?.type !== "ObjectExpression") continue;
 
           const objKeys = getObjectKeys(objExpr);
           const extraProps = objKeys.filter((k) => !ifaceProps.has(k));
