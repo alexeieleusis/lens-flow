@@ -50,38 +50,31 @@ export default createRule({
 
     const markers: Array<{ node: TSESTree.TSTypeAliasDeclaration; name: string }> = [];
 
+    const checkTypeReference = (node: TSESTree.TSTypeAliasDeclaration) => {
+      const ann = node.typeAnnotation;
+      if (ann?.type !== "TSTypeReference") return false;
+      if (!/^(With|No)[A-Z]/.test(node.id.name)) return false;
+      const refName = ann.typeName.type === "Identifier" ? ann.typeName.name : "";
+      return !PRIMITIVES.has(refName);
+    };
+
+    const checkTypeLiteral = (node: TSESTree.TSTypeAliasDeclaration) => {
+      const ann = node.typeAnnotation;
+      if (ann?.type !== "TSTypeLiteral") return false;
+      const members = ann.members;
+      if (members.length !== 1) return false;
+      const member = members[0];
+      return (
+        member.type === "TSPropertySignature" &&
+        member.computed === true &&
+        member.key.type === "Literal"
+      );
+    };
+
     return {
       TSTypeAliasDeclaration(node) {
-        const aliasName = node.id.name;
-        const ann = node.typeAnnotation;
-
-        // Check for TSTypeReference where the alias name matches
-        // phantom state naming: /^With[A-Z]/ or /^No[A-Z]/, but only
-        // when the referenced type is meaningful (not a primitive).
-        if (ann?.type === "TSTypeReference") {
-          if (/^(With|No)[A-Z]/.test(aliasName)) {
-            const refName = ann.typeName.type === "Identifier" ? ann.typeName.name : "";
-            if (!PRIMITIVES.has(refName)) {
-              markers.push({ node, name: aliasName });
-              return;
-            }
-          }
-        }
-
-        // Check for TSTypeLiteral with exactly one TSPropertySignature
-        // that has computed: true and a TSLiteralType value
-        if (ann?.type === "TSTypeLiteral") {
-          const members = ann.members;
-          if (members.length === 1) {
-            const member = members[0];
-            if (
-              member.type === "TSPropertySignature" &&
-              member.computed === true &&
-              member.key.type === "Literal"
-            ) {
-              markers.push({ node, name: aliasName });
-            }
-          }
+        if (checkTypeReference(node) || checkTypeLiteral(node)) {
+          markers.push({ node, name: node.id.name });
         }
       },
       "Program:exit"() {
