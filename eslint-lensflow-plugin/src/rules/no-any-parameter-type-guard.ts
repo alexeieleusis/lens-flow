@@ -16,6 +16,25 @@ type ParamNode =
   | TSESTree.ObjectPattern
   | TSESTree.ArrayPattern;
 
+function isAnyParam(param: ParamNode): boolean {
+  // RestElement, ObjectPattern, ArrayPattern: typeAnnotation is on the node itself
+  if (
+    param.type === "RestElement" ||
+    param.type === "ObjectPattern" ||
+    param.type === "ArrayPattern"
+  ) {
+    return param.typeAnnotation?.typeAnnotation?.type === "TSAnyKeyword";
+  }
+
+  // AssignmentPattern: unwrap to .left
+  if (param.type === "AssignmentPattern") {
+    return isAnyParam(param.left);
+  }
+
+  // Identifier: check directly
+  return param.typeAnnotation?.typeAnnotation?.type === "TSAnyKeyword";
+}
+
 export default createRule({
   name: "no-any-parameter-type-guard",
   meta: {
@@ -33,35 +52,6 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"anyParamWithTypeGuard", []>) {
-    function hasAnyParam(params: any[]): boolean {
-      return params.some((param: any) => {
-        return isAnyParam(param);
-      });
-    }
-
-    function isAnyParam(param: any): boolean {
-      // RestElement, ObjectPattern, ArrayPattern: typeAnnotation is on the node itself
-      if (
-        param.type === "RestElement" ||
-        param.type === "ObjectPattern" ||
-        param.type === "ArrayPattern"
-      ) {
-        return param.typeAnnotation?.typeAnnotation?.type === "TSAnyKeyword";
-      }
-
-      // AssignmentPattern: unwrap to .left
-      if (param.type === "AssignmentPattern") {
-        return isAnyParam(param.left);
-      }
-
-      // Identifier: check directly
-      if (param.type === "Identifier") {
-        return param.typeAnnotation?.typeAnnotation?.type === "TSAnyKeyword";
-      }
-
-      return false;
-    }
-
     function checkFunction(node: any) {
       const params = node.params || [];
 
