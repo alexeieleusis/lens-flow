@@ -6,7 +6,6 @@ import noAnyArrayParameter from "./rules/no-any-array-parameter.js";
 import noAnyArrayReturn from "./rules/no-any-array-return.js";
 import noAnyBoundary from "./rules/no-any-boundary.js";
 import noAnyCallbackType from "./rules/no-any-callback-type.js";
-import noAnyCastChain from "./rules/no-any-cast-chain.js";
 import noAnyDomainParameterUc02 from "./rules/no-any-domain-parameter-uc02.js";
 import noAnyInCallable from "./rules/no-any-in-callable.js";
 import noAnyInDiscriminantCheckUc03 from "./rules/no-any-in-discriminant-check-uc03.js";
@@ -59,6 +58,7 @@ import noDeeplyNestedConditionalTypes from "./rules/no-deeply-nested-conditional
 import noDeeplyNestedUnionMembers from "./rules/no-deeply-nested-union-members.js";
 import noDirectBrandCast from "./rules/no-direct-brand-cast.js";
 import noDirectCircularAlias from "./rules/no-direct-circular-alias.js";
+import noDoubleCastAny from "./rules/no-double-cast-any.js";
 import noDoubleAssertion from "./rules/no-double-assertion.js";
 import noDuplicateDiscriminantValues from "./rules/no-duplicate-discriminant-values.js";
 import noDuplicateInlineStructuralTypes from "./rules/no-duplicate-inline-structural-types.js";
@@ -289,8 +289,7 @@ const plugin: {
     "no-any-array-return": noAnyArrayReturn,
     "no-any-boundary": noAnyBoundary,
      "no-any-callback-type": noAnyCallbackType,
-    "no-any-cast-chain": noAnyCastChain,
-    "no-any-domain-parameter-uc02": noAnyDomainParameterUc02,
+   "no-any-domain-parameter-uc02": noAnyDomainParameterUc02,
      "no-any-in-callable": noAnyInCallable,
     "no-any-in-discriminant-check-uc03": noAnyInDiscriminantCheckUc03,
     "no-any-in-interface": noAnyInInterface,
@@ -342,6 +341,7 @@ const plugin: {
     "no-deeply-nested-union-members": noDeeplyNestedUnionMembers,
     "no-direct-brand-cast": noDirectBrandCast,
     "no-direct-circular-alias": noDirectCircularAlias,
+    "no-double-cast-any": noDoubleCastAny,
     "no-double-assertion": noDoubleAssertion,
     "no-duplicate-discriminant-values": noDuplicateDiscriminantValues,
     "no-duplicate-inline-structural-types": noDuplicateInlineStructuralTypes,
