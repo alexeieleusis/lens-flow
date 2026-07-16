@@ -141,29 +141,32 @@ function isConstructorParamProperty(
   );
 }
 
-function getClassDeclaredProperties(body: TSESTree.ClassBody): Set<string> {
-  const declared = new Set<string>();
-  for (const member of body.body) {
-    if (!hasKey(member)) continue;
-    const name = keyToString(member.key);
-    if (name === null) continue;
+function processClassMember(member: TSESTree.ClassElement, declared: Set<string>): void {
+  if (!hasKey(member)) return;
+  const name = keyToString(member.key);
+  if (name === null) return;
 
-    if (isPropertyLike(member)) {
-      declared.add(name);
-    }
+  if (isPropertyLike(member)) {
+    declared.add(name);
+    return;
+  }
 
-    if (isMethodLike(member) && member.kind === "constructor" && member.value) {
-      declared.add(name);
+  if (isMethodLike(member)) {
+    declared.add(name);
+    if (member.kind === "constructor" && member.value) {
       for (const param of member.value.params) {
         if (isConstructorParamProperty(param)) {
           declared.add(param.parameter.name);
         }
       }
     }
+  }
+}
 
-    if (isMethodLike(member) && member.kind === "method") {
-      declared.add(name);
-    }
+function getClassDeclaredProperties(body: TSESTree.ClassBody): Set<string> {
+  const declared = new Set<string>();
+  for (const member of body.body) {
+    processClassMember(member, declared);
   }
   return declared;
 }
