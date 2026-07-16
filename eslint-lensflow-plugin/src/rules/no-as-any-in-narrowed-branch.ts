@@ -203,7 +203,7 @@ function findNarrowedVariable(
     if (parent.type === "IfStatement") {
       candidate = handleIfStatement(ancestors, parent as TSESTree.IfStatement);
       if (candidate) {
-        guardNode = (parent as TSESTree.IfStatement).test;
+        guardNode = parent.test;
       }
     }
 
