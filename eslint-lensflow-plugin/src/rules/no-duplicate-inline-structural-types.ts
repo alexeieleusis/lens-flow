@@ -86,7 +86,7 @@ function serializeTypeNode(node: TSESTree.TypeNode): string {
     case "TSObjectKeyword":
       return "object";
     case "TSTypeOperator":
-      return `type ${serializeTypeNode((node as TSESTree.TSTypeOperator).typeAnnotation as TSESTree.TypeNode)}`;
+      return `type ${serializeTypeNode(node.typeAnnotation as TSESTree.TypeNode)}`;
     case "TSConstructorType": {
       const params = node.params.map(paramToString).join(",");
       const ret = node.returnType ? serializeTypeAnnotation(node.returnType) : "unknown";
