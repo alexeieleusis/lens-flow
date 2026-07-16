@@ -32,12 +32,12 @@ function hasTypeRefToName(
   const target = member;
   if (target.type === "TSTypeReference") {
     const ref = target;
-    const refName =
-      ref.typeName.type === "Identifier"
-        ? ref.typeName.name
-        : ref.typeName.type === "TSQualifiedName"
-          ? ref.typeName.right.name
-          : null;
+    let refName: string | null = null;
+    if (ref.typeName.type === "Identifier") {
+      refName = ref.typeName.name;
+    } else if (ref.typeName.type === "TSQualifiedName") {
+      refName = ref.typeName.right.name;
+    }
     if (refName && typeAliases.has(refName) && !visited.has(refName)) {
       visited.add(refName);
       const resolved = typeAliases.get(refName)!;
