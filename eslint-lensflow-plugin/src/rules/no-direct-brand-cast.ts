@@ -96,7 +96,7 @@ function findEnclosingSmartConstructor(
     const current = ancestors[i];
     if (current.type === "ArrowFunctionExpression") {
       return isArrowSmartConstructor(
-        current as TSESTree.ArrowFunctionExpression,
+        current,
         ancestors,
         i,
       );
