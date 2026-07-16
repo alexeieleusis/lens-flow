@@ -55,7 +55,7 @@ function getParamTypeAnnotation(param: TSESTree.Node): TSESTree.TSTypeAnnotation
   if ((p as any).typeAnnotation) return (p as any).typeAnnotation;
   // AssignmentPattern: the annotation is on the left side (x: T = "default")
   if (p.type === "AssignmentPattern") {
-    const left = (p as TSESTree.AssignmentPattern).left;
+    const left = p.left;
     if (left.typeAnnotation) return left.typeAnnotation;
   }
   return null;
