@@ -42,7 +42,12 @@ export default createRule({
         );
 
         const hasDataProperty = properties.some((p) => {
-          const name = p.key.type === "Identifier" ? p.key.name : p.key.type === "Literal" ? String(p.key.value) : null;
+          let name: string | null = null;
+          if (p.key.type === "Identifier") {
+            name = p.key.name;
+          } else if (p.key.type === "Literal") {
+            name = String(p.key.value);
+          }
           return name === "data";
         });
 
