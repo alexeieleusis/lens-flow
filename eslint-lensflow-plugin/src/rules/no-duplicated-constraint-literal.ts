@@ -14,61 +14,72 @@ function getParamTypeAnnotation(p: TSESTree.Parameter): TSESTree.TypeNode | null
   return null;
 }
 
+function extractKeyName(key: TSESTree.PropertyName): string {
+  if (key.type === "Identifier") return key.name;
+  if (key.type === "Literal") return String(key.value);
+  return "";
+}
+
+function serializeParamList(params: TSESTree.Parameter[]): string {
+  return params.map((p) => serializeType(getParamTypeAnnotation(p))).join(",");
+}
+
+function serializeReturnType(node: { returnType?: { typeAnnotation?: TSESTree.TypeNode } }): string {
+  return node.returnType?.typeAnnotation ? serializeType(node.returnType.typeAnnotation) : "";
+}
+
+function serializePropertySignature(member: TSESTree.TSPropertySignature): string {
+  const keyName = extractKeyName(member.key);
+  const typeStr = member.typeAnnotation?.typeAnnotation
+    ? serializeType(member.typeAnnotation.typeAnnotation)
+    : "";
+  const mods = [member.readonly ? "r" : "", member.optional ? "?" : ""].filter(Boolean).join("");
+  return `prop:${keyName}:${typeStr}${mods}`;
+}
+
+function serializeMethodSignature(member: TSESTree.TSMethodSignature): string {
+  const keyName = extractKeyName(member.key);
+  const returnType = serializeReturnType(member);
+  const params = serializeParamList(member.params ?? []);
+  return `method:${keyName}(${params}):${returnType}`;
+}
+
+function serializeCallSignature(member: TSESTree.TSCallSignatureDeclaration): string {
+  const returnType = serializeReturnType(member);
+  const params = serializeParamList(member.params);
+  return `call(${params}):${returnType}`;
+}
+
+function serializeConstructSignature(member: TSESTree.TSConstructSignatureDeclaration): string {
+  const returnType = serializeReturnType(member);
+  const params = serializeParamList(member.params);
+  return `new(${params}):${returnType}`;
+}
+
+function serializeIndexSignature(member: TSESTree.TSIndexSignature): string {
+  const indexType = member.parameters[0]
+    ? serializeType(getParamTypeAnnotation(member.parameters[0]))
+    : "";
+  const typeStr = member.typeAnnotation?.typeAnnotation
+    ? serializeType(member.typeAnnotation.typeAnnotation)
+    : "";
+  return `index[${indexType}]:${typeStr}`;
+}
+
 function serializeTypeLiteral(node: TSESTree.TSTypeLiteral): string {
   const members: string[] = [];
 
   for (const member of node.members) {
     if (member.type === "TSPropertySignature") {
-      let keyName = "";
-      if (member.key.type === "Identifier") {
-        keyName = member.key.name;
-      } else if (member.key.type === "Literal") {
-        keyName = String(member.key.value);
-      }
-
-      let typeStr = "";
-      if (member.typeAnnotation?.typeAnnotation) {
-        typeStr = serializeType(member.typeAnnotation.typeAnnotation);
-      }
-
-      const mods = [member.readonly ? "r" : "", member.optional ? "?" : ""].filter(Boolean).join("");
-      members.push(`prop:${keyName}:${typeStr}${mods}`);
-
+      members.push(serializePropertySignature(member));
     } else if (member.type === "TSMethodSignature") {
-      let keyName = "";
-      if (member.key.type === "Identifier") {
-        keyName = member.key.name;
-      } else if (member.key.type === "Literal") {
-        keyName = String(member.key.value);
-      }
-      const returnType = member.returnType?.typeAnnotation
-        ? serializeType(member.returnType.typeAnnotation)
-        : "";
-      const params = (member.params ?? []).map((p) => serializeType(getParamTypeAnnotation(p))).join(",");
-      members.push(`method:${keyName}(${params}):${returnType}`);
-
+      members.push(serializeMethodSignature(member));
     } else if (member.type === "TSCallSignatureDeclaration") {
-      const returnType = member.returnType?.typeAnnotation
-        ? serializeType(member.returnType.typeAnnotation)
-        : "";
-      const params = member.params.map((p) => serializeType(getParamTypeAnnotation(p))).join(",");
-      members.push(`call(${params}):${returnType}`);
-
+      members.push(serializeCallSignature(member));
     } else if (member.type === "TSConstructSignatureDeclaration") {
-      const returnType = member.returnType?.typeAnnotation
-        ? serializeType(member.returnType.typeAnnotation)
-        : "";
-      const params = member.params.map((p) => serializeType(getParamTypeAnnotation(p))).join(",");
-      members.push(`new(${params}):${returnType}`);
-
+      members.push(serializeConstructSignature(member));
     } else if (member.type === "TSIndexSignature") {
-      const indexType = member.parameters[0]
-        ? serializeType(getParamTypeAnnotation(member.parameters[0]))
-        : "";
-      const typeStr = member.typeAnnotation?.typeAnnotation
-        ? serializeType(member.typeAnnotation.typeAnnotation)
-        : "";
-      members.push(`index[${indexType}]:${typeStr}`);
+      members.push(serializeIndexSignature(member));
     }
   }
 
