@@ -94,7 +94,7 @@ export default createRule({
         return true;
       }
 
-      // export default function foo() {}
+      // Top-level default: `export default function foo() {}`
       if (parent.type === "ExportDefaultDeclaration") {
         return true;
       }
