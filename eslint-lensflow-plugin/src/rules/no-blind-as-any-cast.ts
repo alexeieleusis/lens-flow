@@ -42,6 +42,17 @@ function containsEarlyExitOrBlock(node: TSESTree.Node): boolean {
   return false;
 }
 
+function containsValidationInTry(
+  node: TSESTree.TryStatement,
+  check: (n: TSESTree.Node) => boolean,
+): boolean {
+  return (
+    check(node.block) ||
+    (node.handler ? check(node.handler.body) : false) ||
+    (node.finalizer ? check(node.finalizer) : false)
+  );
+}
+
 export default createRule({
   name: "no-blind-as-any-cast",
   meta: {
@@ -102,17 +113,6 @@ export default createRule({
         return containsValidationInTry(node, containsValidation);
       }
       return false;
-    }
-
-    function containsValidationInTry(
-      node: TSESTree.TryStatement,
-      check: (n: TSESTree.Node) => boolean,
-    ): boolean {
-      return (
-        check(node.block) ||
-        (node.handler ? check(node.handler.body) : false) ||
-        (node.finalizer ? check(node.finalizer) : false)
-      );
     }
 
     const reportedNodes = new Set<string>();
