@@ -14,23 +14,65 @@ function getTypeName(name: TSESTree.EntityName | TSESTree.TSQualifiedName): stri
   return name.type;
 }
 
+const KEYWORD_TYPE_MAP = {
+  TSAnyKeyword: "any",
+  TSUnknownKeyword: "unknown",
+  TSStringKeyword: "string",
+  TSNumberKeyword: "number",
+  TSBigIntKeyword: "bigint",
+  TSBooleanKeyword: "boolean",
+  TSNullKeyword: "null",
+  TSUndefinedKeyword: "undefined",
+  TSVoidKeyword: "void",
+  TSSymbolKeyword: "symbol",
+  TSNeverKeyword: "never",
+  TSObjectKeyword: "object",
+};
+
+function serializeLiteralType(node: TSESTree.TSLiteralType): string {
+  const lit = node.literal;
+  if (lit.type === "Literal") return String(lit.value);
+  if (lit.type === "TemplateLiteral") return lit.quasis.map((q) => q.value.cooked ?? "").join("");
+  if (lit.type === "UnaryExpression") {
+    const arg = lit.argument;
+    const value = arg.type === "Literal" ? String(arg.value) : "";
+    return `${lit.operator}${value}`;
+  }
+  return (lit as { type: string }).type;
+}
+
+function serializeTemplateLiteralType(node: TSESTree.TSTemplateLiteralType): string {
+  const parts: string[] = [];
+  for (let i = 0; i < node.quasis.length; i++) {
+    parts.push(node.quasis[i].value.cooked ?? "");
+    if (i < node.types.length) {
+      parts.push(serializeTypeNode(node.types[i]));
+    }
+  }
+  return `\`${parts.join("")}\``;
+}
+
+function serializeCallableType(
+  params: TSESTree.Parameter[],
+  returnType: TSESTree.TSTypeAnnotation | null | undefined,
+  prefix: string,
+  defaultRet: string,
+): string {
+  const serializedParams = params.map(paramToString).join(",");
+  const ret = returnType ? serializeTypeAnnotation(returnType) : defaultRet;
+  return `${prefix}(${serializedParams}):${ret}`;
+}
+
 function serializeTypeNode(node: TSESTree.TypeNode): string {
+  if (node.type in KEYWORD_TYPE_MAP) return KEYWORD_TYPE_MAP[node.type as keyof typeof KEYWORD_TYPE_MAP];
+
   switch (node.type) {
     case "TSTypeReference":
       return getTypeName(node.typeName);
     case "TSTypeLiteral":
       return canonicalize(node);
-    case "TSLiteralType": {
-      const lit = node.literal;
-      if (lit.type === "Literal") return String(lit.value);
-      if (lit.type === "TemplateLiteral") return lit.quasis.map((q) => q.value.cooked ?? "").join("");
-      if (lit.type === "UnaryExpression") {
-        const arg = lit.argument;
-        const value = arg.type === "Literal" ? String(arg.value) : "";
-        return `${lit.operator}${value}`;
-      }
-      return (lit as { type: string }).type;
-    }
+    case "TSLiteralType":
+      return serializeLiteralType(node);
     case "TSUnionType":
       return `(${node.types.map(serializeTypeNode).join("|")})`;
     case "TSIntersectionType":
@@ -43,61 +85,26 @@ function serializeTypeNode(node: TSESTree.TypeNode): string {
       return `...${serializeTypeNode(node.typeAnnotation)}`;
     case "TSIndexedAccessType":
       return `${serializeTypeNode(node.objectType)}[${serializeTypeNode(node.indexType)}]`;
-    case "TSTemplateLiteralType": {
-      const parts: string[] = [];
-      for (let i = 0; i < node.quasis.length; i++) {
-        parts.push(node.quasis[i].value.cooked ?? "");
-        if (i < node.types.length) {
-          parts.push(`${serializeTypeNode(node.types[i])}`);
-        }
-      }
-      return `\`${parts.join("")}\``;
-    }
+    case "TSTemplateLiteralType":
+      return serializeTemplateLiteralType(node);
     case "TSTupleType":
       return `[${node.elementTypes.map(serializeTypeNode).join(",")}]`;
-    case "TSNamedTupleMember": {
-      const mods = [node.optional ? "?" : ""].filter(Boolean).join("");
-      return `${node.label.name}: ${serializeTypeNode(node.elementType)}${mods}`;
-    }
-    case "TSAnyKeyword":
-      return "any";
-    case "TSUnknownKeyword":
-      return "unknown";
-    case "TSStringKeyword":
-      return "string";
-    case "TSNumberKeyword":
-      return "number";
-    case "TSBigIntKeyword":
-      return "bigint";
-    case "TSBooleanKeyword":
-      return "boolean";
-    case "TSNullKeyword":
-      return "null";
-    case "TSUndefinedKeyword":
-      return "undefined";
-    case "TSVoidKeyword":
-      return "void";
-    case "TSSymbolKeyword":
-      return "symbol";
-    case "TSNeverKeyword":
-      return "never";
-    case "TSObjectKeyword":
-      return "object";
+    case "TSNamedTupleMember":
+      return serializeNamedTupleMember(node);
     case "TSTypeOperator":
       return `type ${serializeTypeNode(node.typeAnnotation as TSESTree.TypeNode)}`;
-    case "TSConstructorType": {
-      const params = node.params.map(paramToString).join(",");
-      const ret = node.returnType ? serializeTypeAnnotation(node.returnType) : "unknown";
-      return `new(${params}):${ret}`;
-    }
-    case "TSFunctionType": {
-      const params = node.params.map(paramToString).join(",");
-      const ret = node.returnType ? serializeTypeAnnotation(node.returnType) : "void";
-      return `(${params}):${ret}`;
-    }
+    case "TSConstructorType":
+      return serializeCallableType(node.params, node.returnType, "new", "unknown");
+    case "TSFunctionType":
+      return serializeCallableType(node.params, node.returnType, "(", "void");
     default:
       return `__${node.type}__`;
   }
+}
+
+function serializeNamedTupleMember(node: TSESTree.TSNamedTupleMember): string {
+  const mods = node.optional ? "?" : "";
+  return `${node.label.name}: ${serializeTypeNode(node.elementType)}${mods}`;
 }
 
 function serializeTypeAnnotation(node: TSESTree.TSTypeAnnotation): string {
