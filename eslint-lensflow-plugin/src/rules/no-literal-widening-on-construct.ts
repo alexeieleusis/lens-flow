@@ -18,6 +18,26 @@ const DISCRIMINANT_NAMES = new Set([
   "flavor",
 ]);
 
+function isAsConstCast(node: TSESTree.Node): boolean {
+  if (node.type !== "TSAsExpression") return false;
+  const ta = node.typeAnnotation;
+  if (ta.type !== "TSTypeReference") return false;
+  if (ta.typeName.type !== "Identifier") return false;
+  return ta.typeName.name === "const";
+}
+
+function getPropKeyName(prop: TSESTree.Property): string | null {
+  if (prop.key.type === "Identifier") return prop.key.name;
+  if (prop.key.type === "Literal" && typeof prop.key.value === "string") {
+    return prop.key.value;
+  }
+  return null;
+}
+
+function isStringLiteralProp(prop: TSESTree.Property): boolean {
+  return prop.value.type === "Literal" && typeof prop.value.value === "string";
+}
+
 export default createRule({
   name: "no-literal-widening-on-construct",
   meta: {
@@ -38,64 +58,38 @@ export default createRule({
     const parserServices = ESLintUtils.getParserServices(context);
     if (!parserServices.program) return {};
 
+    const reportIfWidenedDiscriminant = (
+      prop: TSESTree.Property,
+      varName: string
+    ): boolean => {
+      const propType = parserServices.getTypeAtLocation(prop);
+      if ((propType.flags & ts.TypeFlags.StringLiteral) !== 0) return false;
+
+      const propName = getPropKeyName(prop);
+      if (propName === null) return false;
+      if (!DISCRIMINANT_NAMES.has(propName)) return false;
+
+      context.report({
+        node: prop,
+        messageId: "widen",
+        data: { varName, discriminant: propName },
+      });
+      return true;
+    };
+
     return {
       VariableDeclarator(node: TSESTree.VariableDeclarator) {
         if (node.init?.type !== "ObjectExpression") return;
         if (node.id.type !== "Identifier") return;
-
-        // Skip if there's an explicit type annotation — narrowing is already handled
         if (node.id.typeAnnotation) return;
-
-        // Skip if wrapped in `satisfies`
-        if (node.init.parent?.type === "TSSatisfiesExpression") {
-          return;
-        }
-
-        // Skip if wrapped in `as const`
-        if (node.init.parent?.type === "TSAsExpression" &&
-            node.init.parent.typeAnnotation.type === "TSTypeReference" &&
-            node.init.parent.typeAnnotation.typeName.type === "Identifier" &&
-            node.init.parent.typeAnnotation.typeName.name === "const") {
-          return;
-        }
+        if (node.init.parent?.type === "TSSatisfiesExpression") return;
+        if (isAsConstCast(node.init.parent)) return;
 
         for (const prop of node.init.properties) {
           if (prop.type !== "Property") continue;
+          if (!isStringLiteralProp(prop)) continue;
 
-          // Check for string literal values (potential DU discriminants)
-          if (
-            prop.value.type !== "Literal" ||
-            typeof prop.value.value !== "string"
-          ) continue;
-
-          // Check if the literal has widened in its object context
-          const propType = parserServices.getTypeAtLocation(prop);
-          const isNarrowed = (propType.flags & ts.TypeFlags.StringLiteral) !== 0;
-
-          if (!isNarrowed) {
-            let propName: string | null;
-            if (prop.key.type === "Identifier") {
-              propName = prop.key.name;
-            } else if (prop.key.type === "Literal" && typeof prop.key.value === "string") {
-              propName = prop.key.value;
-            } else {
-              propName = null;
-            }
-            if (propName === null) continue;
-
-            // Only flag properties with discriminant-like names
-            if (!DISCRIMINANT_NAMES.has(propName)) continue;
-
-            context.report({
-              node: prop,
-              messageId: "widen",
-              data: {
-                varName: node.id.name,
-                discriminant: propName,
-              },
-            });
-            return;
-          }
+          if (reportIfWidenedDiscriminant(prop, node.id.name)) return;
         }
       },
     };
