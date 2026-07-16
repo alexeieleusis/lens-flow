@@ -59,7 +59,7 @@ export default createRule({
       }
 
       const reportNode = declarationAncestor || node;
-      const name = declarationAncestor ? (declarationAncestor.id ? declarationAncestor.id.name : "anonymous") : "anonymous";
+      const name = declarationAncestor && declarationAncestor.id ? declarationAncestor.id.name : "anonymous";
 
       if (optionalCount > thresholdOptional) {
         context.report({
