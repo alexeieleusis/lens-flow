@@ -303,8 +303,7 @@ function reportSwitchCastInDiscriminantCheck(
       enclosingSwitch.discriminant,
     );
     if (
-      switchBase &&
-      switchBase.name === castBase.name &&
+      switchBase?.name === castBase.name &&
       areSameVariable(scopeManager, enclosingSwitch, switchBase, castBase)
     ) {
       context.report({
