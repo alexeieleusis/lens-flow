@@ -52,9 +52,10 @@ export default createRule({
         let parentName = "the containing type";
         if (node.parent?.type === "TSTypeLiteral" || node.parent?.type === "TSInterfaceBody") {
           const grandParent = node.parent.parent;
-          if (grandParent?.type === "TSTypeAliasDeclaration" && grandParent.id.type === "Identifier") {
-            parentName = grandParent.id.name;
-          } else if (grandParent?.type === "TSInterfaceDeclaration" && grandParent.id.type === "Identifier") {
+          if (
+            (grandParent?.type === "TSTypeAliasDeclaration" || grandParent?.type === "TSInterfaceDeclaration") &&
+            grandParent.id.type === "Identifier"
+          ) {
             parentName = grandParent.id.name;
           }
         }
