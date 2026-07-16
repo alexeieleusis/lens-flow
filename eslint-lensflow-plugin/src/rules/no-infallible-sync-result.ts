@@ -6,6 +6,14 @@ import { walkNodes } from "../utils/ast-helpers.js";
 
 const URL = knowledgeUrl("catalog/T12-effect-tracking.md");
 
+function getTypeArgs(
+  node: TSESTree.TSTypeReference,
+): TSESTree.TypeNode[] | null {
+  const args = node.typeArguments?.params;
+  if (!args || args.length < 2) return null;
+  return args;
+}
+
 function hasFailurePath(node: TSESTree.Node): boolean {
   return node.type === "AwaitExpression" ||
     node.type === "ThrowStatement" ||
@@ -79,8 +87,8 @@ export default createRule({
 
       if (node.typeParameters) return;
 
-      const typeArgs = typeAnnotation.typeArguments?.params;
-      if (!typeArgs || typeArgs.length < 2) return;
+      const typeArgs = getTypeArgs(typeAnnotation);
+      if (!typeArgs) return;
 
       const errorArgIndex = typeName === "Result" ? 1 : 0;
       const errorArgNode = typeArgs[errorArgIndex];
