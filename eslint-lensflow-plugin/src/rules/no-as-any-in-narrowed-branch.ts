@@ -208,7 +208,7 @@ function findNarrowedVariable(
     }
 
     if (parent.type === "SwitchCase") {
-      candidate = handleSwitchCase(ancestors, parent as TSESTree.SwitchCase);
+      candidate = handleSwitchCase(ancestors, parent);
       if (candidate) {
         guardNode = parent;
       }
