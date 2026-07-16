@@ -139,7 +139,7 @@ function resolveVariable(
     if (!block?.range) continue;
     if (
       identifier.range![0] >= block.range[0] &&
-      identifier.range![1] <= block.range[1]
+      identifier.range[1] <= block.range[1]
     ) {
       innermost = s;
     }
