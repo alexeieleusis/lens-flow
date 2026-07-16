@@ -178,44 +178,59 @@ function hasReassignmentBetween(
   return false;
 }
 
+type NarrowedCandidate = { id: TSESTree.Identifier; guard: TSESTree.Node };
+
+function extractGuardFromIf(
+  ancestors: TSESTree.Node[],
+  ifStmt: TSESTree.IfStatement,
+): NarrowedCandidate | null {
+  const narrowed = handleIfStatement(ancestors, ifStmt);
+  if (!narrowed) return null;
+  return { id: narrowed, guard: ifStmt.test };
+}
+
+function extractGuardFromSwitch(
+  ancestors: TSESTree.Node[],
+  sc: TSESTree.SwitchCase,
+): NarrowedCandidate | null {
+  const narrowed = handleSwitchCase(ancestors, sc);
+  if (!narrowed) return null;
+  return { id: narrowed, guard: sc };
+}
+
+function isFunctionBoundary(node: TSESTree.Node): boolean {
+  return (
+    node.type === "ArrowFunctionExpression" ||
+    node.type === "FunctionExpression" ||
+    node.type === "FunctionDeclaration"
+  );
+}
+
 function findNarrowedVariable(
   ancestors: TSESTree.Node[],
   castedId: TSESTree.Identifier,
   scopes: unknown[],
-): { id: TSESTree.Identifier; guard: TSESTree.Node } | null {
+): NarrowedCandidate | null {
   const castedVar = resolveVariable(scopes, castedId);
   if (!castedVar) return null;
 
   for (let i = ancestors.length - 1; i >= 0; i--) {
     const parent = ancestors[i];
 
-    if (
-      parent.type === "ArrowFunctionExpression" ||
-      parent.type === "FunctionExpression" ||
-      parent.type === "FunctionDeclaration"
-    ) {
+    if (isFunctionBoundary(parent)) {
       return null;
     }
 
-    let candidate: TSESTree.Identifier | null = null;
-    let guardNode: TSESTree.Node | null = null;
+    let candidate: NarrowedCandidate | null = null;
 
     if (parent.type === "IfStatement") {
-      candidate = handleIfStatement(ancestors, parent);
-      if (candidate) {
-        guardNode = parent.test;
-      }
+      candidate = extractGuardFromIf(ancestors, parent);
+    } else if (parent.type === "SwitchCase") {
+      candidate = extractGuardFromSwitch(ancestors, parent);
     }
 
-    if (parent.type === "SwitchCase") {
-      candidate = handleSwitchCase(ancestors, parent);
-      if (candidate) {
-        guardNode = parent;
-      }
-    }
-
-    if (candidate && guardNode && resolveVariable(scopes, candidate) === castedVar) {
-      return { id: candidate, guard: guardNode };
+    if (candidate && resolveVariable(scopes, candidate.id) === castedVar) {
+      return candidate;
     }
   }
 
