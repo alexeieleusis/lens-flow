@@ -72,7 +72,7 @@ function isConflictingTypes(a: TSESTree.TypeNode, b: TSESTree.TypeNode): boolean
 
   if (typeA === "TSTypeLiteral" && typeB === "TSTypeLiteral") {
     const mapA = collectProperties((a as TSESTree.TSTypeLiteral).members);
-    const mapB = collectProperties((b as TSESTree.TSTypeLiteral).members);
+    const mapB = collectProperties(b.members);
     for (const [prop, entriesA] of mapA) {
       const entriesB = mapB.get(prop);
       if (!entriesB) continue;
