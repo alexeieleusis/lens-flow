@@ -9,22 +9,23 @@ function unwrapExpression(
   return node;
 }
 
+function findTSTypeLiteralInTypes(
+  types: TSESTree.TypeNode[],
+): TSESTree.TypeNode | undefined {
+  for (const type of types) {
+    if (type.type === "TSTypeLiteral") return type;
+    const unwrapped = unwrapTypeAnnotation(type);
+    if (unwrapped.type === "TSTypeLiteral") return unwrapped;
+  }
+  return undefined;
+}
+
 function unwrapTypeAnnotation(
   node: TSESTree.TypeNode,
 ): TSESTree.TypeNode {
-  if (node.type === "TSIntersectionType") {
-    for (const type of node.types) {
-      if (type.type === "TSTypeLiteral") return type;
-      const unwrapped = unwrapTypeAnnotation(type);
-      if (unwrapped.type === "TSTypeLiteral") return unwrapped;
-    }
-  }
-  if (node.type === "TSUnionType") {
-    for (const type of node.types) {
-      if (type.type === "TSTypeLiteral") return type;
-      const unwrapped = unwrapTypeAnnotation(type);
-      if (unwrapped.type === "TSTypeLiteral") return unwrapped;
-    }
+  if (node.type === "TSIntersectionType" || node.type === "TSUnionType") {
+    const found = findTSTypeLiteralInTypes(node.types);
+    if (found) return found;
   }
   return node;
 }
