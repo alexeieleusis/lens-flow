@@ -50,7 +50,7 @@ function extractDefinePropertySingle(node: TSESTree.CallExpression): string[] | 
   const propArg = node.arguments[1] as TSESTree.Expression | undefined;
   if (!propArg) return null;
   const name = extractKeyname(propArg);
-  return name !== null ? [name] : null;
+  return name === null ? null : [name];
 }
 
 function extractDefinePropertiesMulti(node: TSESTree.CallExpression): string[] | null {
