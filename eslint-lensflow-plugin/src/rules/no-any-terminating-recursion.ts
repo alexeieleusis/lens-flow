@@ -128,21 +128,27 @@ function checkCallSignatureForAny(sig: TSESTree.TSCallSignatureDeclaration | TSE
   return results;
 }
 
+function checkMethodSignatureForAny(sig: TSESTree.TSMethodSignature): AnyOrUnknownNode[] {
+  const results: AnyOrUnknownNode[] = [];
+  for (const param of sig.params) {
+    const typeAnn = getParamTypeAnnotation(param);
+    if (typeAnn) {
+      results.push(findAnyOrUnknown(typeAnn.typeAnnotation));
+    }
+  }
+  if (sig.returnType) {
+    results.push(findAnyOrUnknown(sig.returnType.typeAnnotation));
+  }
+  return results;
+}
+
 function findAnyOrUnknownInInterfaceBody(body: TSESTree.TSInterfaceBody): AnyOrUnknownNode[] {
   const results: AnyOrUnknownNode[] = [];
   for (const m of body.body) {
     if (m.type === "TSPropertySignature" && m.typeAnnotation) {
       results.push(findAnyOrUnknown(m.typeAnnotation.typeAnnotation));
     } else if (m.type === "TSMethodSignature") {
-      for (const param of m.params) {
-        const typeAnn = getParamTypeAnnotation(param);
-        if (typeAnn) {
-          results.push(findAnyOrUnknown(typeAnn.typeAnnotation));
-        }
-      }
-      if (m.returnType) {
-        results.push(findAnyOrUnknown(m.returnType.typeAnnotation));
-      }
+      results.push(...checkMethodSignatureForAny(m));
     } else if (m.type === "TSCallSignatureDeclaration") {
       results.push(...checkCallSignatureForAny(m));
     } else if (m.type === "TSConstructSignatureDeclaration") {
