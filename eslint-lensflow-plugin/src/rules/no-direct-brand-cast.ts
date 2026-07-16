@@ -81,8 +81,7 @@ function findEnclosingSmartConstructor(
     if (current.type === "ArrowFunctionExpression") {
       const declarator = ancestors[i - 1];
       if (
-        declarator &&
-        declarator.type === "VariableDeclarator" &&
+        declarator?.type === "VariableDeclarator" &&
         declarator.id.type === "Identifier" &&
         SMART_CONSTRUCTOR_RE.test(declarator.id.name)
       ) {
