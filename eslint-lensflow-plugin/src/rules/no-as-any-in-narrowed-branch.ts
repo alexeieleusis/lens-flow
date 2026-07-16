@@ -260,7 +260,7 @@ export default createRule({
         if (!narrowedResult) return;
 
         if (castedVar && narrowedResult.guard.range) {
-          if (hasReassignmentBetween(castedVar, narrowedResult.guard.range[1], castedId.range![0])) {
+          if (hasReassignmentBetween(castedVar, narrowedResult.guard.range[1], castedId.range[0])) {
             return;
           }
         }
