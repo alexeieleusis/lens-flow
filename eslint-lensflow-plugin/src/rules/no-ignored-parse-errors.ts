@@ -1,5 +1,5 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 const BUILT_IN_RECEIVERS = new Set([
   "Date",
@@ -63,49 +63,47 @@ export default createRule({
       options?.allowedReceivers ?? [],
     );
 
+    const isAllowedReceiver = (obj: TSESTree.Node) => {
+      if (obj.type !== "Identifier") return false;
+      return BUILT_IN_RECEIVERS.has(obj.name) || allowedReceivers.has(obj.name);
+    };
+
+    const isInsideTryCatch = (node: TSESTree.Node) => {
+      const ancestors = context.sourceCode.getAncestors(node);
+      let inCatch = false;
+      for (let i = ancestors.length - 1; i >= 0; i--) {
+        const type = ancestors[i].type;
+
+        // Stop at function boundaries — a .parse() inside a nested callback
+        // throws outside any outer try/catch scope.
+        if (
+          type === "FunctionDeclaration" ||
+          type === "FunctionExpression" ||
+          type === "ArrowFunctionExpression"
+        ) {
+          break;
+        }
+
+        if (type === "CatchClause") {
+          inCatch = true;
+        } else if (type === "TryStatement") {
+          if (!inCatch) return true;
+          inCatch = false;
+        }
+      }
+      return false;
+    };
+
     return {
       CallExpression(node) {
         const callee = node.callee;
         if (callee.type !== "MemberExpression") return;
         if (callee.property.type !== "Identifier") return;
 
-        const methodName = callee.property.name;
-        if (methodName !== "parse") return;
+        if (callee.property.name !== "parse") return;
+        if (isAllowedReceiver(callee.object)) return;
 
-        const obj = callee.object;
-        if (obj.type === "Identifier") {
-          if (BUILT_IN_RECEIVERS.has(obj.name)) return;
-          if (allowedReceivers.has(obj.name)) return;
-        }
-
-        const ancestors = context.sourceCode.getAncestors(node);
-        let hasTryCatch = false;
-        let inCatch = false;
-        for (let i = ancestors.length - 1; i >= 0; i--) {
-          const type = ancestors[i].type;
-
-          // Stop at function boundaries — a .parse() inside a nested callback
-          // throws outside any outer try/catch scope.
-          if (
-            type === "FunctionDeclaration" ||
-            type === "FunctionExpression" ||
-            type === "ArrowFunctionExpression"
-          ) {
-            break;
-          }
-
-          if (type === "CatchClause") {
-            inCatch = true;
-          } else if (type === "TryStatement") {
-            if (!inCatch) {
-              hasTryCatch = true;
-              break;
-            }
-            inCatch = false;
-          }
-        }
-
-        if (!hasTryCatch) {
+        if (!isInsideTryCatch(node)) {
           context.report({
             node,
             messageId: "unhandledParse",
