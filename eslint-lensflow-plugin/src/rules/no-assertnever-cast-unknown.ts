@@ -3,9 +3,8 @@ import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 function containsUnknownCast(node: TSESTree.Node): boolean {
   if (node.type === "TSAsExpression") {
-    const cast = node as TSESTree.TSAsExpression;
-    if (cast.typeAnnotation.type === "TSUnknownKeyword") return true;
-    return containsUnknownCast(cast.expression);
+    if (node.typeAnnotation.type === "TSUnknownKeyword") return true;
+    return containsUnknownCast(node.expression);
   }
   if (
     node.type === "TSSatisfiesExpression" ||
