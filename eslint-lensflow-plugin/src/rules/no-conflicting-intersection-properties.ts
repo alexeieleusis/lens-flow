@@ -43,6 +43,25 @@ function literalMatchesPrimitive(litVal: unknown, primType: string): boolean {
   }
 }
 
+function isLiteralVsPrimitiveConflict(
+  a: TSESTree.TypeNode,
+  b: TSESTree.TypeNode,
+  typeA: string,
+  typeB: string,
+): boolean {
+  if (PRIMITIVE_TYPES.has(typeA) && typeB === "TSLiteralType") {
+    const lit = (b as TSESTree.TSLiteralType).literal;
+    if (lit.type !== "Literal") return false;
+    return !literalMatchesPrimitive(lit.value, typeA);
+  }
+  if (typeA === "TSLiteralType" && PRIMITIVE_TYPES.has(typeB)) {
+    const lit = (a as TSESTree.TSLiteralType).literal;
+    if (lit.type !== "Literal") return false;
+    return !literalMatchesPrimitive(lit.value, typeB);
+  }
+  return false;
+}
+
 function isConflictingTypes(a: TSESTree.TypeNode, b: TSESTree.TypeNode): boolean {
   const typeA = a.type;
   const typeB = b.type;
@@ -58,16 +77,8 @@ function isConflictingTypes(a: TSESTree.TypeNode, b: TSESTree.TypeNode): boolean
     return !literalValueEquals(litA.value, litB.value);
   }
 
-  if (PRIMITIVE_TYPES.has(typeA) && typeB === "TSLiteralType") {
-    const lit = b.literal;
-    if (lit.type !== "Literal") return false;
-    return !literalMatchesPrimitive(lit.value, typeA);
-  }
-
-  if (typeA === "TSLiteralType" && PRIMITIVE_TYPES.has(typeB)) {
-    const lit = a.literal;
-    if (lit.type !== "Literal") return false;
-    return !literalMatchesPrimitive(lit.value, typeB);
+  if (isLiteralVsPrimitiveConflict(a, b, typeA, typeB)) {
+    return true;
   }
 
   if (typeA === "TSTypeLiteral" && typeB === "TSTypeLiteral") {
