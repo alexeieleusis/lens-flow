@@ -81,7 +81,7 @@ function checkPairIncompatible(
   // Get symbol name from either symbol or alias symbol
   const symA = typeA.getSymbol() || typeA.aliasSymbol;
   const symB = typeB.getSymbol() || typeB.aliasSymbol;
-  if (!symA || !symB || symA.name !== symB.name) return false;
+  if (symA?.name !== symB?.name) return false;
 
   // Get type arguments using checker API (works for both built-in and user-defined generics)
   const argsA = checker.getTypeArguments(typeA as ts.TypeReference);
