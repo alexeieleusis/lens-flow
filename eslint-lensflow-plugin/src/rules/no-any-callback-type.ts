@@ -13,14 +13,13 @@ function isAnyCallback(node: CallableNode): boolean {
 
   let isAnyArrayType = false;
 
-  if (typeAnn?.type === "TSArrayType" && typeAnn.elementType.type === "TSAnyKeyword") {
-    isAnyArrayType = true;
-  } else if (
-    typeAnn?.type === "TSTypeReference" &&
-    typeAnn.typeName.type === "Identifier" &&
-    typeAnn.typeName.name === "ReadonlyArray" &&
-    typeAnn.typeArguments?.params.length === 1 &&
-    typeAnn.typeArguments.params[0].type === "TSAnyKeyword"
+  if (
+    (typeAnn?.type === "TSArrayType" && typeAnn.elementType.type === "TSAnyKeyword") ||
+    (typeAnn?.type === "TSTypeReference" &&
+      typeAnn.typeName.type === "Identifier" &&
+      typeAnn.typeName.name === "ReadonlyArray" &&
+      typeAnn.typeArguments?.params.length === 1 &&
+      typeAnn.typeArguments.params[0].type === "TSAnyKeyword")
   ) {
     isAnyArrayType = true;
   }
