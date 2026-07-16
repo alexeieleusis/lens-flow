@@ -275,7 +275,6 @@ import requireUndefinedHandlingAfterOptionalChain from "./rules/require-undefine
 import requireUnionDiscriminant from "./rules/require-union-discriminant.js";
 import requireUnknownAfterJsonParse from "./rules/require-unknown-after-json-parse.js";
 import requireValidationAfterJsonParse from "./rules/require-validation-after-json-parse.js";
-import requireVarianceAnnotationUc17 from "./rules/require-variance-annotation-uc17.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 const plugin: {
   rules: Record<string, TSESLint.RuleModule<string, readonly unknown[]>>;
@@ -559,7 +558,6 @@ const plugin: {
     "require-union-discriminant": requireUnionDiscriminant,
     "require-unknown-after-json-parse": requireUnknownAfterJsonParse,
     "require-validation-after-json-parse": requireValidationAfterJsonParse,
-    "require-variance-annotation-uc17": requireVarianceAnnotationUc17,
   },
   configs: {},
 };
