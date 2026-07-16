@@ -63,6 +63,42 @@ export default createRule({
   create(context: TSESLint.RuleContext<"leakyReturn", []>) {
     const interfaces = new Map<string, Set<string>>();
 
+    function checkObjectProps(
+      nodeToReport: TSESTree.Node,
+      objExpr: TSESTree.ObjectExpression,
+      ifaceProps: Set<string>,
+      interfaceName: string,
+    ) {
+      const objKeys = getObjectKeys(objExpr);
+      const extraProps = objKeys.filter((k) => !ifaceProps.has(k));
+      if (extraProps.length > 0) {
+        context.report({
+          node: nodeToReport,
+          messageId: "leakyReturn",
+          data: {
+            extraProps: extraProps.join(", "),
+            interfaceName,
+          },
+        });
+      }
+    }
+
+    function checkFunctionBody(
+      fnNode: FunctionNode,
+      ifaceProps: Set<string>,
+      interfaceName: string,
+    ) {
+      if (fnNode.body.type === "BlockStatement") {
+        for (const ret of findReturnStatements(fnNode)) {
+          const objExpr = ret.argument ? unwrapSatisfies(ret.argument) : null;
+          if (objExpr?.type !== "ObjectExpression") continue;
+          checkObjectProps(ret, objExpr, ifaceProps, interfaceName);
+        }
+      } else if (fnNode.body.type === "ObjectExpression") {
+        checkObjectProps(fnNode.body, fnNode.body, ifaceProps, interfaceName);
+      }
+    }
+
     function checkFunction(fnNode: FunctionNode) {
       const returnTypeAnn = fnNode.returnType?.typeAnnotation;
       if (returnTypeAnn?.type !== "TSTypeReference") return;
@@ -72,39 +108,7 @@ export default createRule({
       const ifaceProps = interfaces.get(interfaceName);
       if (!ifaceProps) return;
 
-      if (fnNode.body.type === "BlockStatement") {
-        const returns = findReturnStatements(fnNode);
-        for (const ret of returns) {
-          const objExpr = ret.argument ? unwrapSatisfies(ret.argument) : null;
-          if (objExpr?.type !== "ObjectExpression") continue;
-
-          const objKeys = getObjectKeys(objExpr);
-          const extraProps = objKeys.filter((k) => !ifaceProps.has(k));
-          if (extraProps.length > 0) {
-            context.report({
-              node: ret,
-              messageId: "leakyReturn",
-              data: {
-                extraProps: extraProps.join(", "),
-                interfaceName,
-              },
-            });
-          }
-        }
-      } else if (fnNode.body.type === "ObjectExpression") {
-        const objKeys = getObjectKeys(fnNode.body);
-        const extraProps = objKeys.filter((k) => !ifaceProps.has(k));
-        if (extraProps.length > 0) {
-          context.report({
-            node: fnNode.body,
-            messageId: "leakyReturn",
-            data: {
-              extraProps: extraProps.join(", "),
-              interfaceName,
-            },
-          });
-        }
-      }
+      checkFunctionBody(fnNode, ifaceProps, interfaceName);
     }
 
     return {
