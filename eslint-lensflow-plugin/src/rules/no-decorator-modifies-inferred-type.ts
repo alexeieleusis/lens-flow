@@ -104,6 +104,34 @@ function hasKey(
   ].includes(member.type);
 }
 
+function isPropertyLike(
+  member: TSESTree.ClassElement,
+): member is TSESTree.PropertyDefinition | TSESTree.TSAbstractPropertyDefinition | TSESTree.AccessorProperty {
+  return (
+    member.type === "PropertyDefinition" ||
+    member.type === "TSAbstractPropertyDefinition" ||
+    member.type === "AccessorProperty"
+  );
+}
+
+function isMethodLike(
+  member: TSESTree.ClassElement,
+): member is TSESTree.MethodDefinition | TSESTree.TSAbstractMethodDefinition {
+  return (
+    member.type === "MethodDefinition" ||
+    member.type === "TSAbstractMethodDefinition"
+  );
+}
+
+function isConstructorParamProperty(
+  param: TSESTree.Parameter,
+): param is TSESTree.TSParameterProperty & { parameter: TSESTree.Identifier } {
+  return (
+    param.type === "TSParameterProperty" &&
+    param.parameter.type === "Identifier"
+  );
+}
+
 function getClassDeclaredProperties(body: TSESTree.ClassBody): Set<string> {
   const declared = new Set<string>();
   for (const member of body.body) {
@@ -111,36 +139,20 @@ function getClassDeclaredProperties(body: TSESTree.ClassBody): Set<string> {
     const name = keyToString(member.key);
     if (name === null) continue;
 
-    if (
-      member.type === "PropertyDefinition" ||
-      member.type === "TSAbstractPropertyDefinition" ||
-      member.type === "AccessorProperty"
-    ) {
+    if (isPropertyLike(member)) {
       declared.add(name);
     }
 
-    if (
-      (member.type === "MethodDefinition" ||
-        member.type === "TSAbstractMethodDefinition") &&
-      member.kind === "constructor" &&
-      member.value
-    ) {
+    if (isMethodLike(member) && member.kind === "constructor" && member.value) {
       declared.add(name);
       for (const param of member.value.params) {
-        if (
-          param.type === "TSParameterProperty" &&
-          param.parameter.type === "Identifier"
-        ) {
+        if (isConstructorParamProperty(param)) {
           declared.add(param.parameter.name);
         }
       }
     }
 
-    if (
-      (member.type === "MethodDefinition" ||
-        member.type === "TSAbstractMethodDefinition") &&
-      member.kind === "method"
-    ) {
+    if (isMethodLike(member) && member.kind === "method") {
       declared.add(name);
     }
   }
