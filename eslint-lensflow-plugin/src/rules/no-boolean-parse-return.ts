@@ -54,7 +54,7 @@ export default createRule({
     ) {
       if (!nameNode) return;
       if (nameNode.type !== "Identifier" && nameNode.type !== "Literal" && nameNode.type !== "PrivateIdentifier") return;
-      const name = nameNode.type === "Identifier" ? nameNode.name : nameNode.type === "Literal" ? String(nameNode.value ?? "") : nameNode.name;
+      const name = nameNode.type === "Literal" ? String(nameNode.value ?? "") : nameNode.name;
       if (!NAME_PATTERN.test(name)) return;
       if (returnType?.type === "TSBooleanKeyword") {
         context.report({
