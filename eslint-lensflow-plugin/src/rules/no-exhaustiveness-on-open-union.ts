@@ -121,9 +121,14 @@ export default createRule({
         if (declarations) {
           for (const decl of declarations) {
             let typeNode: ts.TypeNode | undefined;
-            if (ts.isParameter(decl)) typeNode = decl.type;
-            else if (ts.isVariableDeclaration(decl)) typeNode = decl.type;
-            else if (ts.isPropertyDeclaration(decl) || ts.isPropertySignature(decl)) typeNode = decl.type;
+            if (
+              ts.isParameter(decl) ||
+              ts.isVariableDeclaration(decl) ||
+              ts.isPropertyDeclaration(decl) ||
+              ts.isPropertySignature(decl)
+            ) {
+              typeNode = decl.type;
+            }
 
             if (typeNode && isOpenUnionFromSyntax(typeNode)) return true;
           }
