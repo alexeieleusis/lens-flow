@@ -71,22 +71,29 @@ function isConflictingTypes(a: TSESTree.TypeNode, b: TSESTree.TypeNode): boolean
   }
 
   if (typeA === "TSTypeLiteral" && typeB === "TSTypeLiteral") {
-    const mapA = collectProperties(a.members);
-    const mapB = collectProperties(b.members);
-    for (const [prop, entriesA] of mapA) {
-      const entriesB = mapB.get(prop);
-      if (!entriesB) continue;
-      for (const ea of entriesA) {
-        for (const eb of entriesB) {
-          if (isConflictingTypes(ea.typeAnnotation, eb.typeAnnotation)) {
-            return true;
-          }
+    return areTypeLiteralMembersConflicting(a, b);
+  }
+
+  return false;
+}
+
+function areTypeLiteralMembersConflicting(
+  a: TSESTree.TSTypeLiteral,
+  b: TSESTree.TSTypeLiteral,
+): boolean {
+  const mapA = collectProperties(a.members);
+  const mapB = collectProperties(b.members);
+  for (const [prop, entriesA] of mapA) {
+    const entriesB = mapB.get(prop);
+    if (!entriesB) continue;
+    for (const ea of entriesA) {
+      for (const eb of entriesB) {
+        if (isConflictingTypes(ea.typeAnnotation, eb.typeAnnotation)) {
+          return true;
         }
       }
     }
-    return false;
   }
-
   return false;
 }
 
