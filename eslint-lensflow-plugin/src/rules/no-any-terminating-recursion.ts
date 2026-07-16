@@ -117,17 +117,7 @@ function checkCallSignatureForAny(sig: TSESTree.TSCallSignatureDeclaration | TSE
 }
 
 function checkMethodSignatureForAny(sig: TSESTree.TSMethodSignature): AnyOrUnknownNode[] {
-  const results: AnyOrUnknownNode[] = [];
-  for (const param of sig.params) {
-    const typeAnn = getParamTypeAnnotation(param);
-    if (typeAnn) {
-      results.push(findAnyOrUnknown(typeAnn.typeAnnotation));
-    }
-  }
-  if (sig.returnType) {
-    results.push(findAnyOrUnknown(sig.returnType.typeAnnotation));
-  }
-  return results;
+  return checkCallSignatureForAny(sig as unknown as TSESTree.TSCallSignatureDeclaration);
 }
 
 function findAnyOrUnknownInInterfaceBody(body: TSESTree.TSInterfaceBody): AnyOrUnknownNode[] {
