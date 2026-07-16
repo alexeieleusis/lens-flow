@@ -60,7 +60,7 @@ function isTypeguardNode(
   if (node.type === "BinaryExpression") {
     const binNode = node as TSESTree.BinaryExpression;
     if (binNode.operator === "instanceof" && binNode.left.type === "Identifier") {
-      return { paramName: (binNode.left as TSESTree.Identifier).name, kind: "instanceof" };
+      return { paramName: binNode.left.name, kind: "instanceof" };
     }
     return null;
   }
