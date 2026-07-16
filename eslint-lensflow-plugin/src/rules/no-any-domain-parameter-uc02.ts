@@ -56,84 +56,69 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"anyParam" | "anyArrayParam", []>) {
+    function extractFromTypedNode(
+      name: string,
+      node: { typeAnnotation?: { typeAnnotation?: TSESTree.TypeNode } },
+    ): { name: string; typeAnnotation: TSESTree.TypeNode } | null {
+      const ta = node.typeAnnotation?.typeAnnotation;
+      if (!ta) return null;
+      return { name, typeAnnotation: ta };
+    }
+
+    function extractFromAssignmentPattern(
+      param: TSESTree.AssignmentPattern,
+    ): { name: string; typeAnnotation: TSESTree.TypeNode } | null {
+      const left = param.left;
+      if (left.type === "Identifier") {
+        return extractFromTypedNode(left.name, left);
+      }
+      if (left.type === "ObjectPattern" || left.type === "ArrayPattern") {
+        return extractFromTypedNode("(destructured)", left);
+      }
+      return null;
+    }
+
+    function extractFromRestElement(
+      param: TSESTree.RestElement,
+    ): { name: string; typeAnnotation: TSESTree.TypeNode } | null {
+      const arg = param.argument;
+      const ta = param.typeAnnotation?.typeAnnotation;
+      if (ta) {
+        return {
+          name: arg.type === "Identifier" ? arg.name : "(destructured)",
+          typeAnnotation: ta,
+        };
+      }
+      if (arg.type === "ObjectPattern" || arg.type === "ArrayPattern") {
+        return extractFromTypedNode("(destructured)", arg);
+      }
+      return null;
+    }
+
+    function extractFromPattern(
+      param: TSESTree.ObjectPattern | TSESTree.ArrayPattern,
+    ): { name: string; typeAnnotation: TSESTree.TypeNode } | null {
+      return extractFromTypedNode("(destructured)", param);
+    }
+
     function extractTypeInfo(
       param: TSESTree.Parameter,
     ): { name: string; typeAnnotation: TSESTree.TypeNode } | null {
       if (param.type === "Identifier") {
-        if (param.typeAnnotation?.typeAnnotation) {
-          return {
-            name: param.name,
-            typeAnnotation: param.typeAnnotation.typeAnnotation,
-          };
-        }
-        return null;
+        return extractFromTypedNode(param.name, param);
       }
-
       if (param.type === "AssignmentPattern") {
-        const left = param.left;
-        if (
-          left.type === "Identifier" &&
-          left.typeAnnotation?.typeAnnotation
-        ) {
-          return {
-            name: left.name,
-            typeAnnotation: left.typeAnnotation.typeAnnotation,
-          };
-        }
-        if (
-          (left.type === "ObjectPattern" || left.type === "ArrayPattern") &&
-          left.typeAnnotation?.typeAnnotation
-        ) {
-          return {
-            name: "(destructured)",
-            typeAnnotation: left.typeAnnotation.typeAnnotation,
-          };
-        }
-        return null;
+        return extractFromAssignmentPattern(param);
       }
-
       if (param.type === "RestElement") {
-        const arg = param.argument;
-
-        if (param.typeAnnotation?.typeAnnotation) {
-          return {
-            name:
-              arg.type === "Identifier"
-                ? arg.name
-                : "(destructured)",
-            typeAnnotation: param.typeAnnotation.typeAnnotation,
-          };
-        }
-
-        if (
-          (arg.type === "ObjectPattern" || arg.type === "ArrayPattern") &&
-          arg.typeAnnotation?.typeAnnotation
-        ) {
-          return {
-            name: "(destructured)",
-            typeAnnotation: arg.typeAnnotation.typeAnnotation,
-          };
-        }
-        return null;
+        return extractFromRestElement(param);
       }
-
       if (param.type === "TSParameterProperty") {
         return extractTypeInfo(param.parameter);
       }
-
-      if (
-        param.type === "ObjectPattern" ||
-        param.type === "ArrayPattern"
-      ) {
-        if (param.typeAnnotation?.typeAnnotation) {
-          return {
-            name: "(destructured)",
-            typeAnnotation: param.typeAnnotation.typeAnnotation,
-          };
-        }
-        return null;
+      if (param.type === "ObjectPattern" || param.type === "ArrayPattern") {
+        return extractFromPattern(param);
       }
-
       return null;
     }
 
