@@ -6,7 +6,7 @@ function isBrandSymbolName(name: string): boolean {
   // - ends with "_brand" (e.g., MyType_brand)
   // - contains "$$" (e.g., $$type, $$MyBrand)
   // - underscore-prefixed (e.g., _brand, _type, _key)
-  return /\$[$]/.test(name) || /\b_brand$/.test(name) || /^_/.test(name);
+  return /\$[$]/.test(name) || /\b_brand$/.test(name) || name.startsWith('_');
 }
 
 export default createRule({
