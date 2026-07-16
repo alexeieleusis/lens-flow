@@ -1,6 +1,19 @@
 import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
+function extractIdentifier(
+  param: TSESTree.Parameter | TSESTree.Expression,
+): TSESTree.Identifier | null {
+  if (param.type === AST_NODE_TYPES.Identifier) return param;
+  if (param.type === AST_NODE_TYPES.AssignmentPattern) {
+    return extractIdentifier(param.left);
+  }
+  if (param.type === AST_NODE_TYPES.RestElement) {
+    return extractIdentifier(param.argument);
+  }
+  return null;
+}
+
 export default createRule({
   name: "no-chain-for-independent-computations",
   meta: {
@@ -51,19 +64,6 @@ export default createRule({
       if (!isChainCall(parent)) return null;
       if (parent.arguments[0] !== callback) return null;
       return parent;
-    }
-
-    function extractIdentifier(
-      param: TSESTree.Parameter | TSESTree.Expression,
-    ): TSESTree.Identifier | null {
-      if (param.type === AST_NODE_TYPES.Identifier) return param;
-      if (param.type === AST_NODE_TYPES.AssignmentPattern) {
-        return extractIdentifier(param.left);
-      }
-      if (param.type === AST_NODE_TYPES.RestElement) {
-        return extractIdentifier(param.argument);
-      }
-      return null;
     }
 
     function checkCallbackParams(
