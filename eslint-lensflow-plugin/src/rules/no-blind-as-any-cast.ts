@@ -1,6 +1,47 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
+function containsEarlyExitOrBlock(node: TSESTree.Node): boolean {
+  if (
+    node.type === "ThrowStatement" ||
+    node.type === "ReturnStatement" ||
+    node.type === "WhileStatement" ||
+    node.type === "ForStatement" ||
+    node.type === "DoWhileStatement"
+  ) {
+    return true;
+  }
+  if (node.type === "BlockStatement") {
+    return node.body.some(containsEarlyExitOrBlock);
+  }
+  if (node.type === "IfStatement") {
+    return (
+      containsEarlyExitOrBlock(node.consequent) ||
+      (node.alternate ? containsEarlyExitOrBlock(node.alternate) : false)
+    );
+  }
+  if (node.type === "LabeledStatement") {
+    return containsEarlyExitOrBlock(node.body);
+  }
+  if (node.type === "WithStatement") {
+    return containsEarlyExitOrBlock(node.body);
+  }
+  if (node.type === "SwitchStatement") {
+    return node.cases.some((c) =>
+      c.consequent.some(containsEarlyExitOrBlock),
+    );
+  }
+  if (node.type === "VariableDeclaration") {
+    return node.declarations.some(
+      (d) => d.init && containsEarlyExitOrBlock(d.init),
+    );
+  }
+  if (node.type === "ForOfStatement" || node.type === "ForInStatement") {
+    return containsEarlyExitOrBlock(node.body);
+  }
+  return false;
+}
+
 export default createRule({
   name: "no-blind-as-any-cast",
   meta: {
@@ -18,47 +59,6 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"blindAsAnyCast", []>) {
-    function containsEarlyExitOrBlock(node: TSESTree.Node): boolean {
-      if (
-        node.type === "ThrowStatement" ||
-        node.type === "ReturnStatement" ||
-        node.type === "WhileStatement" ||
-        node.type === "ForStatement" ||
-        node.type === "DoWhileStatement"
-      ) {
-        return true;
-      }
-      if (node.type === "BlockStatement") {
-        return node.body.some(containsEarlyExitOrBlock);
-      }
-      if (node.type === "IfStatement") {
-        return (
-          containsEarlyExitOrBlock(node.consequent) ||
-          (node.alternate ? containsEarlyExitOrBlock(node.alternate) : false)
-        );
-      }
-      if (node.type === "LabeledStatement") {
-        return containsEarlyExitOrBlock(node.body);
-      }
-      if (node.type === "WithStatement") {
-        return containsEarlyExitOrBlock(node.body);
-      }
-      if (node.type === "SwitchStatement") {
-        return node.cases.some((c) =>
-          c.consequent.some(containsEarlyExitOrBlock),
-        );
-      }
-      if (node.type === "VariableDeclaration") {
-        return node.declarations.some(
-          (d) => d.init && containsEarlyExitOrBlock(d.init),
-        );
-      }
-      if (node.type === "ForOfStatement" || node.type === "ForInStatement") {
-        return containsEarlyExitOrBlock(node.body);
-      }
-      return false;
-    }
-
     function isGuardIf(node: TSESTree.Node): node is TSESTree.IfStatement {
       return (
         node.type === "IfStatement" && containsEarlyExitOrBlock(node.consequent)
