@@ -63,6 +63,30 @@ function isPlainPrimitive(
   return checker.isTypeAssignableTo(sourceType, basePrimitive);
 }
 
+function isNamedSmartConstructor(node: TSESTree.Node): boolean {
+  if (
+    node.type !== "FunctionDeclaration" &&
+    node.type !== "FunctionExpression"
+  ) {
+    return false;
+  }
+  const fn = node as TSESTree.FunctionDeclaration | TSESTree.FunctionExpression;
+  return fn.id != null && SMART_CONSTRUCTOR_RE.test(fn.id.name);
+}
+
+function isArrowSmartConstructor(
+  arrow: TSESTree.ArrowFunctionExpression,
+  ancestors: TSESTree.Node[],
+  index: number,
+): boolean {
+  const declarator = ancestors[index - 1];
+  return (
+    declarator?.type === "VariableDeclarator" &&
+    declarator.id.type === "Identifier" &&
+    SMART_CONSTRUCTOR_RE.test(declarator.id.name)
+  );
+}
+
 function findEnclosingSmartConstructor(
   context: TSESLint.RuleContext<string, []>,
   node: TSESTree.Node,
@@ -70,25 +94,14 @@ function findEnclosingSmartConstructor(
   const ancestors = context.sourceCode.getAncestors(node);
   for (let i = ancestors.length - 1; i >= 0; i--) {
     const current = ancestors[i];
-    if (current.type === "FunctionDeclaration") {
-      if (current.id) return SMART_CONSTRUCTOR_RE.test(current.id.name);
-      return false;
-    }
-    if (current.type === "FunctionExpression") {
-      if (current.id) return SMART_CONSTRUCTOR_RE.test(current.id.name);
-      return false;
-    }
     if (current.type === "ArrowFunctionExpression") {
-      const declarator = ancestors[i - 1];
-      if (
-        declarator?.type === "VariableDeclarator" &&
-        declarator.id.type === "Identifier" &&
-        SMART_CONSTRUCTOR_RE.test(declarator.id.name)
-      ) {
-        return true;
-      }
-      return false;
+      return isArrowSmartConstructor(
+        current as TSESTree.ArrowFunctionExpression,
+        ancestors,
+        i,
+      );
     }
+    if (isNamedSmartConstructor(current)) return true;
   }
   return false;
 }
