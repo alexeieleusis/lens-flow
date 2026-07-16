@@ -132,44 +132,51 @@ function paramToString(p: TSESTree.Parameter): string {
   return `${name}:${typeAnn}`;
 }
 
+function serializePropertySignature(m: TSESTree.TSPropertySignature): string {
+  const typeAnn = m.typeAnnotation ? serializeTypeAnnotation(m.typeAnnotation) : "unknown";
+  const mods = [m.readonly ? "R" : "", m.optional ? "?" : ""].filter(Boolean).join("");
+  return `P:${memberKey(m)}:${typeAnn}${mods}`;
+}
+
+function serializeMethodSignature(m: TSESTree.TSMethodSignature): string {
+  const params = m.params.map(paramToString).join(",");
+  const ret = m.returnType ? serializeTypeAnnotation(m.returnType) : "void";
+  const mods = [m.readonly ? "R" : "", m.optional ? "?" : ""].filter(Boolean).join("");
+  return `M:${memberKey(m)}(${params}):${ret}${mods}`;
+}
+
+function serializeCallSignature(m: TSESTree.TSCallSignatureDeclaration): string {
+  const params = m.params.map(paramToString).join(",");
+  const ret = m.returnType ? serializeTypeAnnotation(m.returnType) : "void";
+  return `C(${params}):${ret}`;
+}
+
+function serializeConstructSignature(m: TSESTree.TSConstructSignatureDeclaration): string {
+  const params = m.params.map(paramToString).join(",");
+  const ret = m.returnType ? serializeTypeAnnotation(m.returnType) : "unknown";
+  return `N(${params}):${ret}`;
+}
+
+function serializeIndexSignature(m: TSESTree.TSIndexSignature): string {
+  const params = m.parameters.map(paramToString).join(",");
+  const ret = m.typeAnnotation ? serializeTypeAnnotation(m.typeAnnotation) : "unknown";
+  return `I(${params}):${ret}`;
+}
+
+function serializeMember(m: TSESTree.TypeElement): string {
+  if (m.type === "TSPropertySignature") return serializePropertySignature(m);
+  if (m.type === "TSMethodSignature") return serializeMethodSignature(m);
+  if (m.type === "TSCallSignatureDeclaration") return serializeCallSignature(m);
+  if (m.type === "TSConstructSignatureDeclaration") return serializeConstructSignature(m);
+  if (m.type === "TSIndexSignature") return serializeIndexSignature(m);
+  return `__unknown__`;
+}
+
 function canonicalize(node: TSESTree.TSTypeLiteral): string {
   const parts: string[] = [];
-
   for (const m of node.members) {
-    if (m.type === "TSPropertySignature") {
-      const typeAnn = m.typeAnnotation
-        ? serializeTypeAnnotation(m.typeAnnotation)
-        : "unknown";
-      const mods = [m.readonly ? "R" : "", m.optional ? "?" : ""].filter(Boolean).join("");
-      parts.push(`P:${memberKey(m)}:${typeAnn}${mods}`);
-    } else if (m.type === "TSMethodSignature") {
-      const params = m.params.map(paramToString).join(",");
-      const ret = m.returnType
-        ? serializeTypeAnnotation(m.returnType)
-        : "void";
-      const mods = [m.readonly ? "R" : "", m.optional ? "?" : ""].filter(Boolean).join("");
-      parts.push(`M:${memberKey(m)}(${params}):${ret}${mods}`);
-    } else if (m.type === "TSCallSignatureDeclaration") {
-      const params = m.params.map(paramToString).join(",");
-      const ret = m.returnType
-        ? serializeTypeAnnotation(m.returnType)
-        : "void";
-      parts.push(`C(${params}):${ret}`);
-    } else if (m.type === "TSConstructSignatureDeclaration") {
-      const params = m.params.map(paramToString).join(",");
-      const ret = m.returnType
-        ? serializeTypeAnnotation(m.returnType)
-        : "unknown";
-      parts.push(`N(${params}):${ret}`);
-    } else if (m.type === "TSIndexSignature") {
-      const params = m.parameters.map(paramToString).join(",");
-      const ret = m.typeAnnotation
-        ? serializeTypeAnnotation(m.typeAnnotation)
-        : "unknown";
-      parts.push(`I(${params}):${ret}`);
-    }
+    parts.push(serializeMember(m));
   }
-
   parts.sort((a, b) => a.localeCompare(b));
   return parts.join("|");
 }
