@@ -112,6 +112,68 @@ export default createRule({
       return current.type === "AwaitExpression" ? current : null;
     }
 
+    function checkIdentifierObject(
+      obj: TSESTree.Identifier,
+      methodName: string,
+      callNode: TSESTree.CallExpression,
+    ) {
+      const scope = context.sourceCode.getScope(obj);
+      const variable = findVariableByReference(scope, obj);
+      if (!variable || variable.defs.length === 0) return;
+
+      const def = variable.defs.find(
+        (d: Definition) => d.node.type === "VariableDeclarator",
+      );
+      if (def?.node.type !== "VariableDeclarator") return;
+
+      const declarator = def.node as TSESTree.VariableDeclarator;
+      const init = declarator.init;
+      if (!init) return;
+
+      const awaited = unwrapToAwait(init);
+      if (!awaited) return;
+
+      if (!isAsyncIterableCall(awaited.argument)) return;
+      if (hasBeenReassigned(variable, declarator, callNode)) return;
+
+      const tsVarIdent = parserServices.esTreeNodeToTSNodeMap.get(obj);
+      if (!tsVarIdent) return;
+
+      if (!isArrayType(checker, checker.getTypeAtLocation(tsVarIdent as ts.Expression))) return;
+
+      context.report({
+        node: init,
+        messageId: "collectThenTransform",
+        data: { method: methodName },
+      });
+    }
+
+    function checkDirectObject(
+      obj: TSESTree.Node,
+      methodName: string,
+    ) {
+      const awaited = unwrapToAwait(obj);
+      if (!awaited) return;
+
+      const awaitedArg = awaited.argument;
+      if (
+        awaitedArg.type !== "CallExpression" ||
+        !isAsyncIterableCall(awaitedArg)
+      )
+        return;
+
+      const tsAwaited = parserServices.esTreeNodeToTSNodeMap.get(awaited);
+      if (!tsAwaited) return;
+
+      if (!isArrayType(checker, checker.getTypeAtLocation(tsAwaited as ts.Expression))) return;
+
+      context.report({
+        node: awaited,
+        messageId: "collectThenTransform",
+        data: { method: methodName },
+      });
+    }
+
     return {
       CallExpression(node) {
         const callee = node.callee;
@@ -123,66 +185,9 @@ export default createRule({
         if (!ARRAY_TRANSFORM_METHODS.has(methodName)) return;
 
         if (callee.object.type === "Identifier") {
-          const scope = context.sourceCode.getScope(callee.object);
-          const variable = findVariableByReference(scope, callee.object);
-          if (!variable || variable.defs.length === 0) return;
-
-          const def = variable.defs.find(
-            (d: Definition) => d.node.type === "VariableDeclarator",
-          );
-          if (def?.node.type !== "VariableDeclarator") return;
-
-          const declarator = def.node as TSESTree.VariableDeclarator;
-          const init = declarator.init;
-          if (!init) return;
-
-          const awaited = unwrapToAwait(init);
-          if (!awaited) return;
-
-          const awaitedExpr = awaited.argument;
-          if (!isAsyncIterableCall(awaitedExpr)) return;
-
-          if (hasBeenReassigned(variable, declarator, node)) return;
-
-          const tsVarIdent =
-            parserServices.esTreeNodeToTSNodeMap.get(callee.object);
-          if (!tsVarIdent) return;
-
-          const varType = checker.getTypeAtLocation(
-            tsVarIdent as ts.Expression,
-          );
-          if (!isArrayType(checker, varType)) return;
-
-          context.report({
-            node: init,
-            messageId: "collectThenTransform",
-            data: { method: methodName },
-          });
+          checkIdentifierObject(callee.object, methodName, node);
         } else {
-          const awaited = unwrapToAwait(callee.object);
-          if (!awaited) return;
-
-          const awaitedArg = awaited.argument;
-          if (
-            awaitedArg.type !== "CallExpression" ||
-            !isAsyncIterableCall(awaitedArg)
-          )
-            return;
-
-          const tsAwaited =
-            parserServices.esTreeNodeToTSNodeMap.get(awaited);
-          if (!tsAwaited) return;
-
-          const awaitedType = checker.getTypeAtLocation(
-            tsAwaited as ts.Expression,
-          );
-          if (!isArrayType(checker, awaitedType)) return;
-
-          context.report({
-            node: awaited,
-            messageId: "collectThenTransform",
-            data: { method: methodName },
-          });
+          checkDirectObject(callee.object, methodName);
         }
       },
     };
