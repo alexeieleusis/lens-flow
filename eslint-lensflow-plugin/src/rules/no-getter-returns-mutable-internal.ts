@@ -1,6 +1,26 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
+const MUTABLE_COLLECTIONS = new Set(["Map", "Set", "Array"]);
+const READONLY_COLLECTIONS = new Set(["ReadonlyMap", "ReadonlySet", "ReadonlyArray"]);
+
+function resolveTypeName(
+  typeName: TSESTree.TypeName,
+  sourceCode: TSESLint.SourceCode,
+): string | null {
+  if (typeName.type === "Identifier") {
+    return typeName.name;
+  }
+  const full = sourceCode.getText(typeName);
+  return full.split(".").pop() || null;
+}
+
+function isKnownMutableByName(name: string): boolean {
+  if (MUTABLE_COLLECTIONS.has(name)) return true;
+  if (READONLY_COLLECTIONS.has(name)) return false;
+  return false;
+}
+
 function isMutableType(
   node: TSESTree.TypeNode,
   sourceCode: TSESLint.SourceCode,
@@ -14,21 +34,9 @@ function isMutableType(
   }
 
   if (node.type === "TSTypeReference") {
-    const typeName = node.typeName;
-    let name: string | null = null;
-    if (typeName.type === "Identifier") {
-      name = typeName.name;
-    } else {
-      const full = sourceCode.getText(typeName);
-      name = full.split(".").pop() || null;
-    }
-    if (name) {
-      if (["Map", "Set", "Array"].includes(name)) {
-        return true;
-      }
-      if (["ReadonlyMap", "ReadonlySet", "ReadonlyArray"].includes(name)) {
-        return false;
-      }
+    const name = resolveTypeName(node.typeName, sourceCode);
+    if (name && isKnownMutableByName(name)) {
+      return true;
     }
     return false;
   }
