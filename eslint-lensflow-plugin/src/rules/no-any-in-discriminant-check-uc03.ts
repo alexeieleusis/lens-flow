@@ -141,45 +141,67 @@ function extractPropName(expr: TSESTree.Expression): string {
   return "property";
 }
 
-function findDiscriminantForBase(
-  test: TSESTree.Expression,
+function checkBinaryDiscriminant(
+  test: TSESTree.BinaryExpression,
   baseName: string,
 ): string | null {
-  if (test.type === "BinaryExpression") {
-    const side =
-      getBaseIdentifier(test.left)?.name === baseName ? test.left : test.right;
-    if (
-      side.type === "MemberExpression" &&
-      side.property.type === "Identifier" &&
-      isDiscriminantProperty(side.property.name)
-    ) {
-      return side.property.name;
-    }
-  }
-  if (test.type === "LogicalExpression") {
-    const left = findDiscriminantForBase(test.left, baseName);
-    if (left) return left;
-    return findDiscriminantForBase(test.right, baseName);
-  }
-  if (test.type === "UnaryExpression") {
-    return findDiscriminantForBase(test.argument, baseName);
-  }
-  if (test.type === "CallExpression") {
-    for (const arg of test.arguments) {
-      if (arg.type !== "SpreadElement") {
-        const found = findDiscriminantForBase(arg, baseName);
-        if (found) return found;
-      }
-    }
-  }
+  const side =
+    getBaseIdentifier(test.left)?.name === baseName ? test.left : test.right;
   if (
-    test.type === "MemberExpression" &&
+    side.type === "MemberExpression" &&
+    side.property.type === "Identifier" &&
+    isDiscriminantProperty(side.property.name)
+  ) {
+    return side.property.name;
+  }
+  return null;
+}
+
+function checkLogicalDiscriminant(
+  test: TSESTree.LogicalExpression,
+  baseName: string,
+): string | null {
+  const left = findDiscriminantForBase(test.left, baseName);
+  if (left) return left;
+  return findDiscriminantForBase(test.right, baseName);
+}
+
+function checkCallDiscriminant(
+  test: TSESTree.CallExpression,
+  baseName: string,
+): string | null {
+  for (const arg of test.arguments) {
+    if (arg.type !== "SpreadElement") {
+      const found = findDiscriminantForBase(arg, baseName);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+function checkMemberDiscriminant(
+  test: TSESTree.MemberExpression,
+  baseName: string,
+): string | null {
+  if (
     test.property.type === "Identifier" &&
     isDiscriminantProperty(test.property.name)
   ) {
     const base = getBaseIdentifier(test.object);
     if (base?.name === baseName) return test.property.name;
   }
+  return null;
+}
+
+function findDiscriminantForBase(
+  test: TSESTree.Expression,
+  baseName: string,
+): string | null {
+  if (test.type === "BinaryExpression") return checkBinaryDiscriminant(test, baseName);
+  if (test.type === "LogicalExpression") return checkLogicalDiscriminant(test, baseName);
+  if (test.type === "UnaryExpression") return findDiscriminantForBase(test.argument, baseName);
+  if (test.type === "CallExpression") return checkCallDiscriminant(test, baseName);
+  if (test.type === "MemberExpression") return checkMemberDiscriminant(test, baseName);
   return null;
 }
 
