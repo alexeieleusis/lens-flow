@@ -53,6 +53,12 @@ function containsValidationInTry(
   );
 }
 
+function isGuardIf(node: TSESTree.Node): node is TSESTree.IfStatement {
+  return (
+    node.type === "IfStatement" && containsEarlyExitOrBlock(node.consequent)
+  );
+}
+
 export default createRule({
   name: "no-blind-as-any-cast",
   meta: {
@@ -70,11 +76,6 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"blindAsAnyCast", []>) {
-    function isGuardIf(node: TSESTree.Node): node is TSESTree.IfStatement {
-      return (
-        node.type === "IfStatement" && containsEarlyExitOrBlock(node.consequent)
-      );
-    }
 
     function containsValidation(node: TSESTree.Node): boolean {
       if (node.type === "ThrowStatement") return true;
