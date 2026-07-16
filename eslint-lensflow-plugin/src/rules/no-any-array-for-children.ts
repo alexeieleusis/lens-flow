@@ -34,18 +34,12 @@ export default createRule({
 
         const typeAnn = node.typeAnnotation?.typeAnnotation;
 
-        let isAnyArray = false;
-
-        if (typeAnn?.type === "TSArrayType" && typeAnn.elementType.type === "TSAnyKeyword") {
-          isAnyArray = true;
-        } else if (
-          typeAnn?.type === "TSTypeReference" &&
-          typeAnn.typeName.type === "Identifier" &&
-          typeAnn.typeName.name === "Array" &&
-          typeAnn.typeArguments?.params?.[0]?.type === "TSAnyKeyword"
-        ) {
-          isAnyArray = true;
-        }
+        const isAnyArray =
+          (typeAnn?.type === "TSArrayType" && typeAnn.elementType.type === "TSAnyKeyword") ||
+          (typeAnn?.type === "TSTypeReference" &&
+            typeAnn.typeName.type === "Identifier" &&
+            typeAnn.typeName.name === "Array" &&
+            typeAnn.typeArguments?.params?.[0]?.type === "TSAnyKeyword");
 
         if (!isAnyArray) return;
 
