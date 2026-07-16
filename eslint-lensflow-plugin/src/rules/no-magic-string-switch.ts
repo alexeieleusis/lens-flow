@@ -14,7 +14,7 @@ function getParamIdentifier(
   if (p.type === "AssignmentPattern" && p.left.type === "Identifier")
     return p.left;
   if (p.type === "RestElement" && p.argument.type === "Identifier")
-    return p.argument as TSESTree.Identifier;
+    return p.argument;
   return null;
 }
 
