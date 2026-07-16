@@ -61,53 +61,42 @@ function getParamTypeAnnotation(param: TSESTree.Node): TSESTree.TSTypeAnnotation
   return null;
 }
 
+function checkParamsAndReturnType(
+  declName: string,
+  params: readonly TSESTree.Node[],
+  returnType: TSESTree.TSTypeAnnotation | undefined
+): boolean {
+  for (const param of params) {
+    const typeAnn = getParamTypeAnnotation(param);
+    if (typeAnn && isSelfReferential(declName, typeAnn.typeAnnotation)) {
+      return true;
+    }
+  }
+  if (returnType && isSelfReferential(declName, returnType.typeAnnotation)) {
+    return true;
+  }
+  return false;
+}
+
 function isSelfReferentialInMember(declName: string, member: TSESTree.Node): boolean {
   if (member.type === "TSPropertySignature") {
     const sig = member as TSESTree.TSPropertySignature;
     if (sig.typeAnnotation) {
       return isSelfReferential(declName, sig.typeAnnotation.typeAnnotation);
     }
+    return false;
   }
 
   if (member.type === "TSMethodSignature") {
-    const method = member as TSESTree.TSMethodSignature;
-    for (const param of method.params) {
-      const typeAnn = getParamTypeAnnotation(param);
-      if (typeAnn && isSelfReferential(declName, typeAnn.typeAnnotation)) {
-        return true;
-      }
-    }
-    if (method.returnType && isSelfReferential(declName, method.returnType.typeAnnotation)) {
-      return true;
-    }
-    return false;
+    return checkParamsAndReturnType(declName, member.params, member.returnType);
   }
 
   if (member.type === "TSCallSignatureDeclaration") {
-    for (const param of member.params) {
-      const typeAnn = getParamTypeAnnotation(param);
-      if (typeAnn && isSelfReferential(declName, typeAnn.typeAnnotation)) {
-        return true;
-      }
-    }
-    if (member.returnType && isSelfReferential(declName, member.returnType.typeAnnotation)) {
-      return true;
-    }
-    return false;
+    return checkParamsAndReturnType(declName, member.params, member.returnType);
   }
 
   if (member.type === "TSConstructSignatureDeclaration") {
-    const construct = member;
-    for (const param of construct.params) {
-      const typeAnn = getParamTypeAnnotation(param);
-      if (typeAnn && isSelfReferential(declName, typeAnn.typeAnnotation)) {
-        return true;
-      }
-    }
-    if (construct.returnType && isSelfReferential(declName, construct.returnType.typeAnnotation)) {
-      return true;
-    }
-    return false;
+    return checkParamsAndReturnType(declName, member.params, member.returnType);
   }
 
   return false;
