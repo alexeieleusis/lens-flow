@@ -176,7 +176,7 @@ export default createRule({
           );
         } else if (member.type === AST_NODE_TYPES.TSCallSignatureDeclaration) {
           checkCallSignature(
-            member as TSESTree.TSCallSignatureDeclaration,
+            member,
             covariantNames,
             context,
           );
