@@ -95,12 +95,12 @@ function collectAnyProps(
     collectAnyPropsFromLiteral(member, anyProps, unknownProps);
   } else if (member.type === "TSTypeReference") {
     const ref = member;
-    const refName =
-      ref.typeName.type === "Identifier"
-        ? ref.typeName.name
-        : ref.typeName.type === "TSQualifiedName"
-          ? ref.typeName.right.name
-          : null;
+    let refName: string | null = null;
+    if (ref.typeName.type === "Identifier") {
+      refName = ref.typeName.name;
+    } else if (ref.typeName.type === "TSQualifiedName") {
+      refName = ref.typeName.right.name;
+    }
     if (refName && typeAliases.has(refName)) {
       const resolved = typeAliases.get(refName)!;
       if (resolved.type === "TSTypeLiteral") {
