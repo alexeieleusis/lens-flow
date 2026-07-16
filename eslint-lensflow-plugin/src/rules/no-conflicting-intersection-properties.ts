@@ -52,7 +52,7 @@ function isConflictingTypes(a: TSESTree.TypeNode, b: TSESTree.TypeNode): boolean
   }
 
   if (typeA === "TSLiteralType" && typeB === "TSLiteralType") {
-    const litA = (a as TSESTree.TSLiteralType).literal;
+    const litA = a.literal;
     const litB = b.literal;
     if (litA.type !== "Literal" || litB.type !== "Literal") return false;
     return !literalValueEquals(litA.value, litB.value);
