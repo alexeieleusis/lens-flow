@@ -73,12 +73,14 @@ export default createRule({
           const isNarrowed = (propType.flags & ts.TypeFlags.StringLiteral) !== 0;
 
           if (!isNarrowed) {
-            const propName =
-              prop.key.type === "Identifier"
-                ? prop.key.name
-                : prop.key.type === "Literal" && typeof prop.key.value === "string"
-                  ? prop.key.value
-                  : null;
+            let propName: string | null;
+            if (prop.key.type === "Identifier") {
+              propName = prop.key.name;
+            } else if (prop.key.type === "Literal" && typeof prop.key.value === "string") {
+              propName = prop.key.value;
+            } else {
+              propName = null;
+            }
             if (propName === null) continue;
 
             // Only flag properties with discriminant-like names
