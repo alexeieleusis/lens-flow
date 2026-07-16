@@ -24,7 +24,7 @@ export default createRule({
 
         const ancestors = context.sourceCode.getAncestors(node);
         const innermostSwitchCase = [...ancestors].reverse().find((a) => a.type === "SwitchCase");
-        if (innermostSwitchCase && (innermostSwitchCase as TSESTree.SwitchCase).test === null) {
+        if (innermostSwitchCase && innermostSwitchCase.test === null) {
           context.report({ node, messageId: "bypassExhaustiveness" });
         }
       },
