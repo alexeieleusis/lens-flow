@@ -49,7 +49,7 @@ function getParamTypeAnnotation(param: TSESTree.Node): TSESTree.TSTypeAnnotation
   // Unwrap RestElement (...args, ...{a}, ...x = "default")
   let p = param;
   if (p.type === "RestElement") {
-    p = (p as TSESTree.RestElement).argument;
+    p = p.argument;
   }
   // Check for typeAnnotation on the param itself (Identifier, ObjectPattern, ArrayPattern, RestElement)
   if ((p as any).typeAnnotation) return (p as any).typeAnnotation;
