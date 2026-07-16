@@ -94,8 +94,7 @@ export default createRule({
         }
 
         if (
-          !typeRef ||
-          !typeRef.typeArguments ||
+          !typeRef?.typeArguments ||
           typeRef.typeArguments.length < 2
         ) {
           return;
