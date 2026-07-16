@@ -80,11 +80,10 @@ export default createRule({
             const sig = checker.getResolvedSignature(decl.initializer);
             if (sig) {
               const dec = sig.getDeclaration();
-              if (ts.isFunctionDeclaration(dec) || ts.isMethodDeclaration(dec)) {
-                if (dec.type && ts.isTypeReferenceNode(dec.type)) {
-                  typeRef = dec.type;
-                }
-              } else if (ts.isFunctionTypeNode(dec)) {
+              if (
+                (ts.isFunctionDeclaration(dec) || ts.isMethodDeclaration(dec)) ||
+                ts.isFunctionTypeNode(dec)
+              ) {
                 if (dec.type && ts.isTypeReferenceNode(dec.type)) {
                   typeRef = dec.type;
                 }
