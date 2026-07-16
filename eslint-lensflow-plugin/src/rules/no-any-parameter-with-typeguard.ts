@@ -53,7 +53,7 @@ function isTypeguardNode(
   if (node.type === "UnaryExpression") {
     const unaryNode = node as TSESTree.UnaryExpression;
     if (unaryNode.operator === "typeof" && unaryNode.argument.type === "Identifier") {
-      return { paramName: (unaryNode.argument as TSESTree.Identifier).name, kind: "typeof" };
+      return { paramName: unaryNode.argument.name, kind: "typeof" };
     }
     return null;
   }
