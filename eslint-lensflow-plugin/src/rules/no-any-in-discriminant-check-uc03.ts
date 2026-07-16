@@ -60,53 +60,65 @@ function findEnclosingSwitch(
   return null;
 }
 
+function isDiscriminantMember(
+  expr: TSESTree.Expression,
+): expr is TSESTree.MemberExpression & { property: TSESTree.Identifier } {
+  return (
+    expr.type === "MemberExpression" &&
+    expr.property.type === "Identifier" &&
+    isDiscriminantProperty(expr.property.name)
+  );
+}
+
+function addBases(bases: Set<TSESTree.Identifier>, source: Iterable<TSESTree.Identifier>) {
+  for (const b of source) bases.add(b);
+}
+
+function processBinaryExpression(
+  test: TSESTree.BinaryExpression,
+): Set<TSESTree.Identifier> {
+  const bases = new Set<TSESTree.Identifier>();
+  const sides: TSESTree.Expression[] = [test.left, test.right].filter(
+    (n): n is TSESTree.Expression => n.type !== "PrivateIdentifier",
+  );
+  for (const side of sides) {
+    if (isDiscriminantMember(side)) {
+      const base = getBaseIdentifier(side);
+      if (base) bases.add(base);
+    }
+  }
+  return bases;
+}
+
+function processCallExpression(
+  test: TSESTree.CallExpression,
+): Set<TSESTree.Identifier> {
+  const bases = new Set<TSESTree.Identifier>();
+  for (const arg of test.arguments) {
+    if (arg.type !== "SpreadElement") {
+      addBases(bases, extractBasesFromTest(arg));
+    }
+  }
+  return bases;
+}
+
 function extractBasesFromTest(
   test: TSESTree.Expression,
 ): Set<TSESTree.Identifier> {
-  const bases = new Set<TSESTree.Identifier>();
-  if (test.type === "BinaryExpression") {
-    const leftBase = getBaseIdentifier(test.left);
-    if (
-      test.left.type === "MemberExpression" &&
-      test.left.property.type === "Identifier" &&
-      isDiscriminantProperty(test.left.property.name) &&
-      leftBase
-    ) {
-      bases.add(leftBase);
-    }
-    const rightBase = getBaseIdentifier(test.right);
-    if (
-      test.right.type === "MemberExpression" &&
-      test.right.property.type === "Identifier" &&
-      isDiscriminantProperty(test.right.property.name) &&
-      rightBase
-    ) {
-      bases.add(rightBase);
-    }
-  }
+  if (test.type === "BinaryExpression") return processBinaryExpression(test);
   if (test.type === "LogicalExpression") {
-    for (const b of extractBasesFromTest(test.left)) bases.add(b);
-    for (const b of extractBasesFromTest(test.right)) bases.add(b);
+    const bases = new Set<TSESTree.Identifier>();
+    addBases(bases, extractBasesFromTest(test.left));
+    addBases(bases, extractBasesFromTest(test.right));
+    return bases;
   }
-  if (test.type === "UnaryExpression") {
-    for (const b of extractBasesFromTest(test.argument)) bases.add(b);
-  }
-  if (test.type === "CallExpression") {
-    for (const arg of test.arguments) {
-      if (arg.type !== "SpreadElement") {
-        for (const b of extractBasesFromTest(arg)) bases.add(b);
-      }
-    }
-  }
-  if (
-    test.type === "MemberExpression" &&
-    test.property.type === "Identifier" &&
-    isDiscriminantProperty(test.property.name)
-  ) {
+  if (test.type === "UnaryExpression") return extractBasesFromTest(test.argument);
+  if (test.type === "CallExpression") return processCallExpression(test);
+  if (isDiscriminantMember(test)) {
     const base = getBaseIdentifier(test.object);
-    if (base) bases.add(base);
+    if (base) return new Set([base]);
   }
-  return bases;
+  return new Set();
 }
 
 function extractBaseFromSwitchDiscriminant(
