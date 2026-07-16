@@ -57,6 +57,21 @@ function isArrayType(checker: ts.TypeChecker, type: ts.Type): boolean {
   return checker.typeToString(type).startsWith("ReadonlyArray<");
 }
 
+function unwrapToAwait(
+  n: TSESTree.Node,
+): TSESTree.AwaitExpression | null {
+  let current: TSESTree.Node = n;
+  while (
+    current.type === "TSAsExpression" ||
+    current.type === "TSTypeAssertion" ||
+    current.type === "TSNonNullExpression" ||
+    current.type === "TSSatisfiesExpression"
+  ) {
+    current = current.expression;
+  }
+  return current.type === "AwaitExpression" ? current : null;
+}
+
 export default createRule({
   name: "no-collect-then-transform",
   meta: {
@@ -95,21 +110,6 @@ export default createRule({
       );
 
       return hasAsyncIteratorSignature(argType, checker);
-    }
-
-    function unwrapToAwait(
-      n: TSESTree.Node,
-    ): TSESTree.AwaitExpression | null {
-      let current: TSESTree.Node = n;
-      while (
-        current.type === "TSAsExpression" ||
-        current.type === "TSTypeAssertion" ||
-        current.type === "TSNonNullExpression" ||
-        current.type === "TSSatisfiesExpression"
-      ) {
-        current = current.expression;
-      }
-      return current.type === "AwaitExpression" ? current : null;
     }
 
     function checkIdentifierObject(
