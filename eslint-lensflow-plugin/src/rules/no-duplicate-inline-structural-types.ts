@@ -206,6 +206,27 @@ export default createRule({
     const entries: Entry[] = [];
     const visited = new Set<number>();
 
+    function processParamWithLiteral(param: TSESTree.Parameter) {
+      let target: TSESTree.Identifier | undefined;
+      if (param.type === "Identifier") {
+        target = param;
+      } else if (param.type === "AssignmentPattern" && param.left.type === "Identifier") {
+        target = param.left;
+      } else if (param.type === "RestElement" && param.argument.type === "Identifier") {
+        target = param.argument;
+      } else if (
+        param.type === "TSParameterProperty" &&
+        param.parameter.type === "Identifier"
+      ) {
+        target = param.parameter;
+      }
+
+      const lit = target?.typeAnnotation?.typeAnnotation;
+      if (lit?.type === "TSTypeLiteral" && lit.members.length > 0) {
+        entries.push({ canonical: canonicalize(lit), node: lit });
+      }
+    }
+
     function checkParams(
       params: ReadonlyArray<TSESTree.Parameter>,
       nodeStart?: number,
@@ -213,54 +234,7 @@ export default createRule({
       if (nodeStart !== undefined && visited.has(nodeStart)) return;
       if (nodeStart !== undefined) visited.add(nodeStart);
       for (const param of params) {
-        if (
-          param.type === "Identifier" &&
-          param.typeAnnotation?.typeAnnotation.type === "TSTypeLiteral"
-        ) {
-          const lit = param.typeAnnotation.typeAnnotation;
-          if (lit.members.length > 0) {
-            entries.push({
-              canonical: canonicalize(lit),
-              node: lit,
-            });
-          }
-        } else if (
-          param.type === "AssignmentPattern" &&
-          param.left.type === "Identifier" &&
-          param.left.typeAnnotation?.typeAnnotation.type === "TSTypeLiteral"
-        ) {
-          const lit = param.left.typeAnnotation.typeAnnotation;
-          if (lit.members.length > 0) {
-            entries.push({
-              canonical: canonicalize(lit),
-              node: lit,
-            });
-          }
-        } else if (
-          param.type === "RestElement" &&
-          param.argument.type === "Identifier" &&
-          param.argument.typeAnnotation?.typeAnnotation.type === "TSTypeLiteral"
-        ) {
-          const lit = param.argument.typeAnnotation.typeAnnotation;
-          if (lit.members.length > 0) {
-            entries.push({
-              canonical: canonicalize(lit),
-              node: lit,
-            });
-          }
-        } else if (
-          param.type === "TSParameterProperty" &&
-          param.parameter.type === "Identifier" &&
-          param.parameter.typeAnnotation?.typeAnnotation.type === "TSTypeLiteral"
-        ) {
-          const lit = param.parameter.typeAnnotation.typeAnnotation;
-          if (lit.members.length > 0) {
-            entries.push({
-              canonical: canonicalize(lit),
-              node: lit,
-            });
-          }
-        }
+        processParamWithLiteral(param);
       }
     }
 
