@@ -28,12 +28,14 @@ export default createRule({
     function checkFunction(node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression) {
       // Prefer the function's own id (FunctionDeclaration, named FunctionExpression).
       // Fall back to the enclosing VariableDeclarator's id (arrow, anonymous FE).
-      const nameNode =
-        node.type === "FunctionDeclaration"
-          ? node.id
-          : node.type === "FunctionExpression" && node.id
-            ? node.id
-            : declaratorIds[declaratorIds.length - 1];
+      let nameNode: TSESTree.Identifier | null | undefined;
+      if (node.type === "FunctionDeclaration") {
+        nameNode = node.id;
+      } else if (node.type === "FunctionExpression" && node.id) {
+        nameNode = node.id;
+      } else {
+        nameNode = declaratorIds[declaratorIds.length - 1];
+      }
 
       if (!nameNode) return;
       if (!NAME_PATTERN.test(nameNode.name)) return;
