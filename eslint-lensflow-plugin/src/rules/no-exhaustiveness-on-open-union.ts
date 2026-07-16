@@ -114,23 +114,26 @@ export default createRule({
 
     const checker = program.getTypeChecker();
 
+    function declHasOpenUnionType(decl: ts.Node): boolean {
+      let typeNode: ts.TypeNode | undefined;
+      if (
+        ts.isParameter(decl) ||
+        ts.isVariableDeclaration(decl) ||
+        ts.isPropertyDeclaration(decl) ||
+        ts.isPropertySignature(decl)
+      ) {
+        typeNode = decl.type;
+      }
+      return typeNode != null && isOpenUnionFromSyntax(typeNode);
+    }
+
     function isDiscriminantOpenUnion(tsNode: ts.Node): boolean {
       const symbol = checker.getSymbolAtLocation(tsNode);
       if (symbol) {
         const declarations = symbol.getDeclarations();
         if (declarations) {
           for (const decl of declarations) {
-            let typeNode: ts.TypeNode | undefined;
-            if (
-              ts.isParameter(decl) ||
-              ts.isVariableDeclaration(decl) ||
-              ts.isPropertyDeclaration(decl) ||
-              ts.isPropertySignature(decl)
-            ) {
-              typeNode = decl.type;
-            }
-
-            if (typeNode && isOpenUnionFromSyntax(typeNode)) return true;
+            if (declHasOpenUnionType(decl)) return true;
           }
         }
       }
