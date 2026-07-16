@@ -88,9 +88,8 @@ function serializeTypeNode(node: TSESTree.TypeNode): string {
     case "TSTypeOperator":
       return `type ${serializeTypeNode((node as TSESTree.TSTypeOperator).typeAnnotation as TSESTree.TypeNode)}`;
     case "TSConstructorType": {
-      const ct = node as TSESTree.TSConstructorType;
-      const params = ct.params.map(paramToString).join(",");
-      const ret = ct.returnType ? serializeTypeAnnotation(ct.returnType) : "unknown";
+      const params = node.params.map(paramToString).join(",");
+      const ret = node.returnType ? serializeTypeAnnotation(node.returnType) : "unknown";
       return `new(${params}):${ret}`;
     }
     case "TSFunctionType": {
