@@ -259,9 +259,8 @@ function memberContainsOutputRef(
       : false;
   }
   if (member.type === AST_NODE_TYPES.TSCallSignatureDeclaration) {
-    const c = member as TSESTree.TSCallSignatureDeclaration;
-    return c.returnType?.typeAnnotation
-      ? containsTypeRefInOutput(c.returnType.typeAnnotation, paramName, depth)
+    return member.returnType?.typeAnnotation
+      ? containsTypeRefInOutput(member.returnType.typeAnnotation, paramName, depth)
       : false;
   }
   if (member.type === AST_NODE_TYPES.TSConstructSignatureDeclaration) {
