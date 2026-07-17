@@ -50,6 +50,30 @@ function getReturnTypeNode(node: FnLikeNode): TSESTree.TypeNode | null {
   return null;
 }
 
+function resolveParamType(
+  fn: FnLikeNode,
+  index: number,
+  checker: ts.TypeChecker,
+  esTreeNodeToTSNodeMap: { get: (node: TSESTree.Node) => ts.Node | undefined },
+  fallback: ts.Type,
+): ts.Type {
+  const typed = getTypedParam(fn.params[index]);
+  if (typed) {
+    const tsNode = esTreeNodeToTSNodeMap.get(typed);
+    if (tsNode) {
+      return checker.getTypeFromTypeNode(tsNode as ts.TypeNode);
+    }
+  }
+  const paramId = getParamIdentifier(fn, index);
+  if (paramId) {
+    const tsId = esTreeNodeToTSNodeMap.get(paramId);
+    if (tsId) {
+      return checker.getTypeAtLocation(tsId as ts.Identifier);
+    }
+  }
+  return fallback;
+}
+
 function isParamTypeNarrow(
   impl: FnLikeNode,
   overload: FnLikeNode,
@@ -57,47 +81,12 @@ function isParamTypeNarrow(
   checker: ts.TypeChecker,
   esTreeNodeToTSNodeMap: { get: (node: TSESTree.Node) => ts.Node | undefined },
 ): boolean {
-  const overloadTyped = getTypedParam(overload.params[index]);
-  let overloadParamType: ts.Type;
- if (overloadTyped) {
-    const tsNode = esTreeNodeToTSNodeMap.get(overloadTyped);
-    if (tsNode) {
-      overloadParamType = checker.getTypeFromTypeNode(tsNode as ts.TypeNode);
-    } else {
-      overloadParamType = checker.getUnknownType();
-    }
-  } else {
-    overloadParamType = checker.getUnknownType();
-  }
-  }
-
-  const implTyped = getTypedParam(impl.params[index]);
-  let implParamType: ts.Type;
-  if (implTyped) {
-    const tsNode = esTreeNodeToTSNodeMap.get(implTyped);
-    if (tsNode) {
-      implParamType = checker.getTypeFromTypeNode(tsNode as ts.TypeNode);
-    } else {
-      const implParamId = getParamIdentifier(impl, index);
-      if (implParamId) {
-        implParamType = checker.getTypeAtLocation(
-          esTreeNodeToTSNodeMap.get(implParamId) as ts.Identifier,
-        );
-      } else {
-        implParamType = checker.getAnyType();
-      }
-    }
-  } else {
-    const implParamId = getParamIdentifier(impl, index);
-    if (implParamId) {
-      implParamType = checker.getTypeAtLocation(
-        esTreeNodeToTSNodeMap.get(implParamId) as ts.Identifier,
-      );
-    } else {
-      implParamType = checker.getAnyType();
-    }
-  }
-
+  const overloadParamType = resolveParamType(
+    overload, index, checker, esTreeNodeToTSNodeMap, checker.getUnknownType(),
+  );
+  const implParamType = resolveParamType(
+    impl, index, checker, esTreeNodeToTSNodeMap, checker.getAnyType(),
+  );
   return !checker.isTypeAssignableTo(overloadParamType, implParamType);
 }
 
