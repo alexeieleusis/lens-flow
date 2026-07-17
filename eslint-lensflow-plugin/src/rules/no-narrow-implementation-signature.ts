@@ -59,15 +59,16 @@ function isParamTypeNarrow(
 ): boolean {
   const overloadTyped = getTypedParam(overload.params[index]);
   let overloadParamType: ts.Type;
-  if (!overloadTyped) {
-    overloadParamType = checker.getUnknownType();
-  } else {
+ if (overloadTyped) {
     const tsNode = esTreeNodeToTSNodeMap.get(overloadTyped);
     if (tsNode) {
       overloadParamType = checker.getTypeFromTypeNode(tsNode as ts.TypeNode);
     } else {
       overloadParamType = checker.getUnknownType();
     }
+  } else {
+    overloadParamType = checker.getUnknownType();
+  }
   }
 
   const implTyped = getTypedParam(impl.params[index]);
