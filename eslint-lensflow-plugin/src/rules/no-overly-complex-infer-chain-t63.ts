@@ -2,39 +2,43 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
+function hasInferInConstructor(node: TSESTree.TypeNode): boolean {
+  if (node.type !== "TSConstructorType") return false;
+  const ctor = node as unknown as TSESTree.TSConstructorType;
+  const params = ctor.params ?? [];
+  if (params.some((p: TSESTree.Parameter) => {
+    const inner = p.type === "TSParameterProperty" ? p.parameter : p;
+    const ta = inner.typeAnnotation?.typeAnnotation;
+    return ta ? containsInfer(ta) : false;
+  })) return true;
+  const ret = ctor.returnType?.typeAnnotation;
+  return ret ? containsInfer(ret) : false;
+}
+
 function containsInfer(node: TSESTree.TypeNode): boolean {
   if (node.type === "TSInferType") return true;
-  if (node.type === "TSTemplateLiteralType") return node.types.some(containsInfer);
-  if (node.type === "TSUnionType") return node.types.some(containsInfer);
-  if (node.type === "TSIntersectionType") return node.types.some(containsInfer);
-  if (node.type === "TSConditionalType") return containsInfer(node.checkType) || containsInfer(node.extendsType);
-  if (node.type === "TSTypeOperator") return node.typeAnnotation ? containsInfer(node.typeAnnotation) : false;
-  if (node.type === "TSConstructorType") {
-    const ctor = node as unknown as TSESTree.TSConstructorType;
-    const params = ctor.params ?? [];
-    return params.some((p: TSESTree.Parameter) => {
-      const inner = p.type === "TSParameterProperty" ? p.parameter : p;
-      const ta = inner.typeAnnotation?.typeAnnotation;
-      return ta ? containsInfer(ta) : false;
-    }) ||
-      ctor.returnType?.typeAnnotation ? containsInfer((ctor.returnType as TSESTree.TSTypeAnnotation).typeAnnotation) : false;
+  if (hasInferInConstructor(node)) return true;
+  if (node.type === "TSConditionalType") {
+    return containsInfer(node.checkType) || containsInfer(node.extendsType);
   }
-  if (isNodeWithTypeAnnotation(node)) return node.typeAnnotation ? containsInfer(node.typeAnnotation) : false;
-  if (isNodeWithElementType(node)) return node.elementType ? containsInfer(node.elementType) : false;
+  if (node.type === "TSTypeOperator") {
+    return node.typeAnnotation ? containsInfer(node.typeAnnotation) : false;
+  }
+  for (const prop of ["types", "typeAnnotation", "elementType"]) {
+    if (prop in node) {
+      const child = (node as unknown as Record<string, unknown>)[prop];
+      if (child) {
+        if (Array.isArray(child)) {
+          if (child.some(containsInfer)) return true;
+        } else if (typeof child === "object" && "type" in child) {
+          if (containsInfer(child as TSESTree.TypeNode)) return true;
+        }
+      }
+    }
+  }
   return false;
 }
 
-function isNodeWithTypeAnnotation(
-  node: TSESTree.TypeNode,
-): node is TSESTree.TypeNode & { typeAnnotation: TSESTree.TypeNode } {
-  return "typeAnnotation" in node && !!node.typeAnnotation;
-}
-
-function isNodeWithElementType(
-  node: TSESTree.TypeNode,
-): node is TSESTree.TypeNode & { elementType: TSESTree.TypeNode } {
-  return "elementType" in node && !!node.elementType;
-}
 
 function hasTemplateInferExtendsType(node: TSESTree.TSConditionalType): boolean {
   let ext = node.extendsType;
