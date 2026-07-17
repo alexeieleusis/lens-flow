@@ -210,6 +210,35 @@ export default createRule({
       scopeStack.pop();
     }
 
+    function checkCallExpressionObj(
+      callObj: TSESTree.CallExpression,
+      prop: { type: string; name: string },
+      memberNode: TSESTree.MemberExpression,
+    ) {
+      let callee = callObj.callee;
+      if (callee.type === "ChainExpression") {
+        callee = callee.expression;
+      }
+      if (callee.type === "Identifier" && isGenericFn(callee)) {
+        context.report({
+          node: memberNode,
+          messageId: "runtimeMetadataOnCall",
+          data: { property: prop.name, funcName: callee.name },
+        });
+        return;
+      }
+      if (callee.type === "MemberExpression") {
+        const baseIdentifier = getBaseIdentifier(callee);
+        if (baseIdentifier && isGenericFn(baseIdentifier)) {
+          context.report({
+            node: memberNode,
+            messageId: "runtimeMetadataOnCall",
+            data: { property: prop.name, funcName: baseIdentifier.name },
+          });
+        }
+      }
+    }
+
     return {
       FunctionDeclaration: enterFn,
       "FunctionDeclaration:exit": exitFn,
@@ -235,7 +264,6 @@ export default createRule({
 
         let obj = mn.object as TSESTree.Expression;
 
-        // Unwrap ChainExpression (optional chaining) to reach the inner expression
         if (obj.type === "ChainExpression") {
           obj = obj.expression;
         }
@@ -250,43 +278,12 @@ export default createRule({
                 paramName: obj.name,
               },
             });
-            return;
           }
+          return;
         }
 
         if (obj.type === "CallExpression") {
-          let callee = obj.callee;
-          // Unwrap ChainExpression around the callee
-          if (callee.type === "ChainExpression") {
-            callee = callee.expression;
-          }
-          if (callee?.type === "Identifier" && isGenericFn(callee)) {
-            context.report({
-              node,
-              messageId: "runtimeMetadataOnCall",
-              data: {
-                property: property.name,
-                funcName: callee.name,
-              },
-            });
-            return;
-          }
-          // Handle nested MemberExpression callees like factory.create<T>().constructor
-          if (callee?.type === "MemberExpression") {
-            const memCallee = callee as TSESTree.MemberExpression;
-            const baseIdentifier = getBaseIdentifier(memCallee);
-            if (baseIdentifier && isGenericFn(baseIdentifier)) {
-              context.report({
-                node,
-                messageId: "runtimeMetadataOnCall",
-                data: {
-                  property: property.name,
-                  funcName: baseIdentifier.name,
-                },
-              });
-              return;
-            }
-          }
+          checkCallExpressionObj(obj, property, node);
         }
       },
 
