@@ -58,12 +58,14 @@ export default createRule({
         if (literal.type !== "Literal" || typeof literal.value !== "string")
           return;
 
-        const propName =
-          thisMember.property.type === "Identifier"
-            ? thisMember.property.name
-            : thisMember.property.type === "Literal"
-              ? String(thisMember.property.value)
-              : "?";
+        let propName: string;
+        if (thisMember.property.type === "Identifier") {
+          propName = thisMember.property.name;
+        } else if (thisMember.property.type === "Literal") {
+          propName = String(thisMember.property.value);
+        } else {
+          propName = "?";
+        }
 
         context.report({
           node,
