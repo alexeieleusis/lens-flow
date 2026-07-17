@@ -7,10 +7,7 @@ function unwrapTSExpressions(node: TSESTree.Expression): TSESTree.Expression {
     current.type === "TSNonNullExpression" ||
     current.type === "ChainExpression"
   ) {
-    current =
-      current.type === "TSNonNullExpression"
-        ? current.expression
-        : current.expression;
+    current = current.expression;
   }
   return current;
 }
