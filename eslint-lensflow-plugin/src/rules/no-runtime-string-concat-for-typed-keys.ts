@@ -9,14 +9,7 @@ function unwrapExpression(node: TSESTree.Node): TSESTree.Node {
     node.type === "TSTypeAssertion" ||
     node.type === "ChainExpression"
   ) {
-    node = (
-      node as
-        | TSESTree.TSAsExpression
-        | TSESTree.TSNonNullExpression
-        | TSESTree.TSSatisfiesExpression
-        | TSESTree.TSTypeAssertion
-        | TSESTree.ChainExpression
-    ).expression;
+    node = node.expression;
   }
   return node;
 }
