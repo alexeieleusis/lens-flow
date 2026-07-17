@@ -116,6 +116,20 @@ function walk(node: TSESTree.Node): TSESTree.Node[] {
   return result;
 }
 
+function isValidationComparison(bin: TSESTree.BinaryExpression, params: Set<string>): boolean {
+  const hasParam = involvesParam(bin.left, params) || involvesParam(bin.right, params);
+  const hasLiteral = isLiteralLike(bin.left) || isLiteralLike(bin.right);
+  return hasParam && hasLiteral;
+}
+
+function findThrowInBothBranches(ifNode: TSESTree.IfStatement): TSESTree.ThrowStatement | null {
+  let throwNode = findThrow(ifNode.consequent);
+  if (!throwNode && ifNode.alternate) {
+    throwNode = findThrow(ifNode.alternate);
+  }
+  return throwNode;
+}
+
 function reportValidationInCallback(
   cb: TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression,
   context: Readonly<Parameters<NonNullable<Parameters<typeof createRule>[0]["create"]>>[0]>,
@@ -134,17 +148,9 @@ function reportValidationInCallback(
     const bin = ifNode.test as TSESTree.BinaryExpression;
     if (!COMPARISON_OPERATORS.has(bin.operator)) continue;
 
-    const hasParam =
-      involvesParam(bin.left, params) || involvesParam(bin.right, params);
-    const hasLiteral =
-      isLiteralLike(bin.left) || isLiteralLike(bin.right);
-    if (!hasParam || !hasLiteral) continue;
+    if (!isValidationComparison(bin, params)) continue;
 
-    let throwNode: TSESTree.ThrowStatement | null = null;
-    throwNode = findThrow(ifNode.consequent);
-    if (!throwNode && ifNode.alternate) {
-      throwNode = findThrow(ifNode.alternate);
-    }
+    const throwNode = findThrowInBothBranches(ifNode);
     if (throwNode && !reported.has(throwNode)) {
       reported.add(throwNode);
       context.report({
