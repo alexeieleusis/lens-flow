@@ -68,9 +68,8 @@ export default createRule({
         if (
           def &&
           def.node.type === "VariableDeclarator" &&
-          parent &&
-          parent.type === "VariableDeclaration" &&
-          parent.kind === "const" &&
+          parent?.type === "VariableDeclaration" &&
+          parent?.kind === "const" &&
           def.node.init?.type === "CallExpression" &&
           isJsonParseCall(def.node.init)
         ) {
