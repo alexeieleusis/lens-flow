@@ -35,7 +35,7 @@ function isSealedSymbolMember(member: TSESTree.TSInterfaceBody["body"][number]):
 
     if (keyName && keyName.startsWith("_")) {
       const typeAnn = member.typeAnnotation?.typeAnnotation;
-      if (typeAnn && typeAnn.type === "TSNeverKeyword") {
+      if (typeAnn?.type === "TSNeverKeyword") {
         return true;
       }
     }
