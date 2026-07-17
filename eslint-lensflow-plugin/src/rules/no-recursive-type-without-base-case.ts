@@ -70,7 +70,7 @@ function hasStructuralReduction(
   }
 
   if (current.type === "TSIntersectionType") {
-    const members = (current as TSESTree.TSIntersectionType).types;
+    const members = current.types;
     for (const member of members) {
       if (hasStructuralReduction(member, genericParams, inferNames)) return true;
     }
