@@ -255,8 +255,7 @@ export default createRule({
         }
 
         if (obj.type === "CallExpression") {
-          const callObj = obj as TSESTree.CallExpression;
-          let callee = callObj.callee;
+          let callee = obj.callee;
           // Unwrap ChainExpression around the callee
           if (callee.type === "ChainExpression") {
             callee = callee.expression;
