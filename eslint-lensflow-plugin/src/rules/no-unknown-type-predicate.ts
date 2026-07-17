@@ -21,7 +21,7 @@ function getParamName(param: TSESTree.Parameter): string {
 
 function getTypeAnnotation(param: TSESTree.Parameter): TSESTree.TSTypeAnnotation | undefined {
   if (param.type === "TSParameterProperty") return param.parameter.typeAnnotation;
-  return (param as TSESTree.Identifier | TSESTree.RestElement | TSESTree.ArrayPattern | TSESTree.ObjectPattern | TSESTree.AssignmentPattern).typeAnnotation;
+  return param.typeAnnotation;
 }
 
 function visitFunction(
