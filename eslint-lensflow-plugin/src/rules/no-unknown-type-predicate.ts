@@ -16,7 +16,6 @@ function getParamName(param: TSESTree.Parameter): string {
   if (unwrapped.type === "Identifier") return unwrapped.name;
   if (unwrapped.type === "TSParameterProperty") return "(modifier-param)";
   return "(parameter)";
-  return "(parameter)";
 }
 
 function getTypeAnnotation(param: TSESTree.Parameter): TSESTree.TSTypeAnnotation | undefined {
