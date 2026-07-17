@@ -2,6 +2,28 @@ import { createRule } from "../utils/rule-creator.js";
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { walk } from "../utils/ast-helpers.js";
 
+function normalizeParam(
+  param: TSESTree.Parameter,
+): TSESTree.Identifier | null {
+  if (param.type === "TSParameterProperty") {
+    return normalizeParam(param.parameter);
+  }
+  if (param.type === "AssignmentPattern") {
+    const left = param.left as TSESTree.Identifier | TSESTree.ArrayPattern | TSESTree.ObjectPattern;
+    if (left.type === "Identifier") return left;
+    return null;
+  }
+  if (param.type === "RestElement") {
+    const arg = param.argument as TSESTree.Identifier | TSESTree.ArrayPattern | TSESTree.ObjectPattern;
+    if (arg.type === "Identifier") return arg;
+    return null;
+  }
+  if (param.type === "Identifier") {
+    return param;
+  }
+  return null;
+}
+
 export default createRule({
   name: "prefer-constraint-over-runtime-guard",
   meta: {
@@ -19,28 +41,6 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"preferConstraint", []>) {
-    function normalizeParam(
-      param: TSESTree.Parameter,
-    ): TSESTree.Identifier | null {
-      if (param.type === "TSParameterProperty") {
-        return normalizeParam(param.parameter);
-      }
-      if (param.type === "AssignmentPattern") {
-        const left = param.left as TSESTree.Identifier | TSESTree.ArrayPattern | TSESTree.ObjectPattern;
-        if (left.type === "Identifier") return left;
-        return null;
-      }
-      if (param.type === "RestElement") {
-        const arg = param.argument as TSESTree.Identifier | TSESTree.ArrayPattern | TSESTree.ObjectPattern;
-        if (arg.type === "Identifier") return arg;
-        return null;
-      }
-      if (param.type === "Identifier") {
-        return param;
-      }
-      return null;
-    }
-
     function isSameVariable(
       ident: TSESTree.Identifier,
       target: TSESLint.Scope.Variable,
