@@ -17,7 +17,7 @@ function containsInfer(node: TSESTree.TypeNode): boolean {
       const ta = inner.typeAnnotation?.typeAnnotation;
       return ta ? containsInfer(ta) : false;
     }) ||
-      ctor.returnType && ctor.returnType.typeAnnotation ? containsInfer((ctor.returnType as TSESTree.TSTypeAnnotation).typeAnnotation) : false;
+      ctor.returnType?.typeAnnotation ? containsInfer((ctor.returnType as TSESTree.TSTypeAnnotation).typeAnnotation) : false;
   }
   if (isNodeWithTypeAnnotation(node)) return node.typeAnnotation ? containsInfer(node.typeAnnotation) : false;
   if (isNodeWithElementType(node)) return node.elementType ? containsInfer(node.elementType) : false;
