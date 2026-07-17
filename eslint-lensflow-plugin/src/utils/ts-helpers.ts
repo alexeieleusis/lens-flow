@@ -311,7 +311,6 @@ export function extractLiteralValues(tsType: ts.Type, checker?: ts.TypeChecker):
     if ((t.flags & ts.TypeFlags.Boolean) !== 0) {
       values.add(true);
       values.add(false);
-      return;
     }
   }
 
