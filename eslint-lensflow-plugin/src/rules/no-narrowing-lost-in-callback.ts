@@ -135,6 +135,22 @@ function collectChildNodes(
   return [];
 }
 
+function findCallbacksFromValue(
+  val: unknown,
+  visited: WeakSet<object>,
+): (TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression)[] {
+  const results: (
+    | TSESTree.ArrowFunctionExpression
+    | TSESTree.FunctionExpression
+  )[] = [];
+  if (val && typeof val === "object") {
+    for (const child of collectChildNodes(val)) {
+      results.push(...findCallbacks(child, visited));
+    }
+  }
+  return results;
+}
+
 function findCallbacks(
   node: TSESTree.Node,
   visited: WeakSet<object> = new WeakSet(),
@@ -152,20 +168,16 @@ function findCallbacks(
     if (cb) callbacks.push(cb);
   }
 
-  const isFuncBoundary =
+  const skipBody =
     node.type === "FunctionDeclaration" ||
     node.type === "FunctionExpression" ||
     node.type === "ArrowFunctionExpression";
 
   for (const key of Object.keys(node)) {
-    if (key === "parent" || key === "loc" || key === "range") continue;
-    if (isFuncBoundary && key === "body") continue;
+    if (SKIP_KEYS.has(key)) continue;
+    if (skipBody && key === "body") continue;
     const val = (node as unknown as Record<string, unknown>)[key];
-    if (val && typeof val === "object") {
-      for (const child of collectChildNodes(val)) {
-        callbacks.push(...findCallbacks(child, visited));
-      }
-    }
+    callbacks.push(...findCallbacksFromValue(val, visited));
   }
   return callbacks;
 }
