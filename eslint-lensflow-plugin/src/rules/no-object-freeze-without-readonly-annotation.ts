@@ -69,6 +69,17 @@ export default createRule({
       return null;
     }
 
+    function isObjectFreezeCall(node: TSESTree.CallExpression): boolean {
+      const callee = node.callee;
+      return (
+        callee.type === AST_NODE_TYPES.MemberExpression &&
+        callee.object?.type === AST_NODE_TYPES.Identifier &&
+        callee.object.name === "Object" &&
+        callee.property?.type === AST_NODE_TYPES.Identifier &&
+        callee.property.name === "freeze"
+      );
+    }
+
     function isDirectInit(declarator: TSESTree.VariableDeclarator, target: TSESTree.Node): boolean {
       if (!declarator.init) return false;
       let unwrapped = declarator.init;
@@ -77,67 +88,53 @@ export default createRule({
         unwrapped.type === AST_NODE_TYPES.TSNonNullExpression ||
         unwrapped.type === AST_NODE_TYPES.TSSatisfiesExpression
       ) {
-        unwrapped =
-          unwrapped.type === AST_NODE_TYPES.TSAsExpression
-            ? unwrapped.expression
-            : unwrapped.type === AST_NODE_TYPES.TSNonNullExpression
-              ? unwrapped.expression
-              : unwrapped.expression;
+        unwrapped = unwrapped.expression;
       }
       return unwrapped === target;
     }
 
-    return {
-      CallExpression(node) {
-        const callee = node.callee;
-        if (
-          callee.type !== AST_NODE_TYPES.MemberExpression ||
-          callee.object?.type !== AST_NODE_TYPES.Identifier ||
-          callee.object.name !== "Object" ||
-          callee.property?.type !== AST_NODE_TYPES.Identifier ||
-          callee.property.name !== "freeze"
-        ) {
+    function isPerAncestor(ancestor: TSESTree.Node): boolean {
+      return (
+        ancestor.type === AST_NODE_TYPES.Property ||
+        ancestor.type === AST_NODE_TYPES.ArrayExpression
+      );
+    }
+
+    function isFunctionAncestor(ancestor: TSESTree.Node): boolean {
+      return (
+        ancestor.type === AST_NODE_TYPES.FunctionDeclaration ||
+        ancestor.type === AST_NODE_TYPES.FunctionExpression ||
+        ancestor.type === AST_NODE_TYPES.ArrowFunctionExpression
+      );
+    }
+
+    function handleIndirectInit(declarator: TSESTree.VariableDeclarator, node: TSESTree.CallExpression): void {
+      const ancestors = context.sourceCode.getAncestors(node);
+      for (let i = ancestors.length - 1; i >= 0; i--) {
+        const ancestor = ancestors[i];
+        if (ancestor === declarator) break;
+        if (isPerAncestor(ancestor)) return;
+        if (isFunctionAncestor(ancestor)) {
+          context.report({ node, messageId: "missingReadonly" });
           return;
         }
+      }
+      if (hasAsConst(declarator) || hasReadonlyAnnotation(declarator)) return;
+      context.report({ node, messageId: "missingReadonly" });
+    }
+
+    return {
+      CallExpression(node) {
+        if (!isObjectFreezeCall(node)) return;
 
         const declarator = findDirectDeclarator(node);
         if (!declarator) return;
 
         if (isDirectInit(declarator, node)) {
           if (hasAsConst(declarator) || hasReadonlyAnnotation(declarator)) return;
-          context.report({
-            node,
-            messageId: "missingReadonly",
-          });
+          context.report({ node, messageId: "missingReadonly" });
         } else {
-          const ancestors = context.sourceCode.getAncestors(node);
-          for (let i = ancestors.length - 1; i >= 0; i--) {
-            const ancestor = ancestors[i];
-            if (ancestor === declarator) break;
-            if (
-              ancestor.type === AST_NODE_TYPES.Property ||
-              ancestor.type === AST_NODE_TYPES.ArrayExpression
-            ) {
-              return;
-            }
-            if (
-              ancestor.type === AST_NODE_TYPES.FunctionDeclaration ||
-              ancestor.type === AST_NODE_TYPES.FunctionExpression ||
-              ancestor.type === AST_NODE_TYPES.ArrowFunctionExpression
-            ) {
-              context.report({
-                node,
-                messageId: "missingReadonly",
-              });
-              return;
-            }
-          }
-
-          if (hasAsConst(declarator) || hasReadonlyAnnotation(declarator)) return;
-          context.report({
-            node,
-            messageId: "missingReadonly",
-          });
+          handleIndirectInit(declarator, node);
         }
       },
     };
