@@ -8,6 +8,23 @@ function getNameFromKey(key: TSESTree.Node): string | null {
   return null;
 }
 
+function extractParamIdentifier(
+  firstParam: TSESTree.Parameter,
+): TSESTree.Identifier | null {
+  if (firstParam.type === "AssignmentPattern") {
+    return firstParam.left.type === "Identifier" ? firstParam.left : null;
+  }
+  if (firstParam.type === "RestElement") {
+    const arg = firstParam.argument;
+    const unwrapped = arg.type === "AssignmentPattern" ? arg.left : arg;
+    return unwrapped.type === "Identifier" ? unwrapped : null;
+  }
+  if (firstParam.type === "Identifier") {
+    return firstParam;
+  }
+  return null;
+}
+
 export default createRule({
   name: "require-assertnever-never-parameter",
   meta: {
@@ -27,23 +44,6 @@ export default createRule({
   create(context: TSESLint.RuleContext<"badParamType", []>) {
     const assertNeverPattern = /^assertNever$/;
     const assertExhaustivePattern = /^assertExhaustive$/;
-
-    function extractParamIdentifier(
-      firstParam: TSESTree.Parameter,
-    ): TSESTree.Identifier | null {
-      if (firstParam.type === "AssignmentPattern") {
-        return firstParam.left.type === "Identifier" ? firstParam.left : null;
-      }
-      if (firstParam.type === "RestElement") {
-        const arg = firstParam.argument;
-        const unwrapped = arg.type === "AssignmentPattern" ? arg.left : arg;
-        return unwrapped.type === "Identifier" ? unwrapped : null;
-      }
-      if (firstParam.type === "Identifier") {
-        return firstParam;
-      }
-      return null;
-    }
 
     function checkParams(
       funcName: string,
