@@ -43,12 +43,14 @@ export default createRule({
             typeAnn &&
             (PRIMITIVE_KEYWORDS.has(typeAnn.type) || isPrimitiveUnion(typeAnn))
           ) {
-            const propName =
-              member.key.type === "Identifier"
-                ? member.key.name
-                : member.key.type === "Literal"
-                  ? String(member.key.value)
-                  : "unknown";
+            let propName: string;
+            if (member.key.type === "Identifier") {
+              propName = member.key.name;
+            } else if (member.key.type === "Literal") {
+              propName = String(member.key.value);
+            } else {
+              propName = "unknown";
+            }
             context.report({
               node: member,
               messageId: "protectedMutablePrimitive",
