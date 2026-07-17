@@ -45,6 +45,30 @@ function hasReadonlyAnnotation(declarator: TSESTree.VariableDeclarator): boolean
   return false;
 }
 
+function isObjectFreezeCall(node: TSESTree.CallExpression): boolean {
+  const callee = node.callee;
+  return (
+    callee.type === AST_NODE_TYPES.MemberExpression &&
+    callee.object?.type === AST_NODE_TYPES.Identifier &&
+    callee.object.name === "Object" &&
+    callee.property?.type === AST_NODE_TYPES.Identifier &&
+    callee.property.name === "freeze"
+  );
+}
+
+function isDirectInit(declarator: TSESTree.VariableDeclarator, target: TSESTree.Node): boolean {
+  if (!declarator.init) return false;
+  let unwrapped = declarator.init;
+  while (
+    unwrapped.type === AST_NODE_TYPES.TSAsExpression ||
+    unwrapped.type === AST_NODE_TYPES.TSNonNullExpression ||
+    unwrapped.type === AST_NODE_TYPES.TSSatisfiesExpression
+  ) {
+    unwrapped = unwrapped.expression;
+  }
+  return unwrapped === target;
+}
+
 export default createRule({
   name: "no-object-freeze-without-readonly-annotation",
   meta: {
@@ -67,30 +91,6 @@ export default createRule({
         if (ancestor.type === AST_NODE_TYPES.VariableDeclarator) return ancestor;
       }
       return null;
-    }
-
-    function isObjectFreezeCall(node: TSESTree.CallExpression): boolean {
-      const callee = node.callee;
-      return (
-        callee.type === AST_NODE_TYPES.MemberExpression &&
-        callee.object?.type === AST_NODE_TYPES.Identifier &&
-        callee.object.name === "Object" &&
-        callee.property?.type === AST_NODE_TYPES.Identifier &&
-        callee.property.name === "freeze"
-      );
-    }
-
-    function isDirectInit(declarator: TSESTree.VariableDeclarator, target: TSESTree.Node): boolean {
-      if (!declarator.init) return false;
-      let unwrapped = declarator.init;
-      while (
-        unwrapped.type === AST_NODE_TYPES.TSAsExpression ||
-        unwrapped.type === AST_NODE_TYPES.TSNonNullExpression ||
-        unwrapped.type === AST_NODE_TYPES.TSSatisfiesExpression
-      ) {
-        unwrapped = unwrapped.expression;
-      }
-      return unwrapped === target;
     }
 
     function isPerAncestor(ancestor: TSESTree.Node): boolean {
