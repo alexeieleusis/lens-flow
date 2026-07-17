@@ -190,10 +190,14 @@ function isLetDeclared(varName: string, scopeNode: TSESTree.Node): boolean {
   const body = (scopeNode as any).body;
   if (!body) return false;
 
+  function isLetIdentifierDecl(decl: TSESTree.VariableDeclarator, name: string): boolean {
+    return decl.id.type === "Identifier" && decl.id.name === name;
+  }
+
   function searchNode(node: TSESTree.Node): boolean {
     if (node.type === "VariableDeclaration" && node.kind === "let") {
       for (const decl of node.declarations) {
-        if (decl.id.type === "Identifier" && decl.id.name === varName) {
+        if (isLetIdentifierDecl(decl, varName)) {
           return true;
         }
       }
