@@ -339,6 +339,25 @@ function collectNestedStatementArrays(stmt: TSESTree.Statement): TSESTree.Statem
     }
   }
 
+  function extractFromTry(s: TSESTree.TryStatement) {
+    extract(s.block.body);
+    if (s.handler) extract(s.handler.body.body);
+    if (s.finalizer) extract(s.finalizer.body);
+  }
+
+  function extractFromSwitch(s: TSESTree.SwitchStatement) {
+    for (const sc of s.cases) {
+      for (const cons of sc.consequent) {
+        if (cons.type === "BlockStatement") {
+          results.push(cons.body);
+          for (const inner of cons.body) extractNested(inner);
+        } else {
+          extractNested(cons);
+        }
+      }
+    }
+  }
+
   function extractNested(s: TSESTree.Statement) {
     switch (s.type) {
       case "BlockStatement":
@@ -363,21 +382,10 @@ function collectNestedStatementArrays(stmt: TSESTree.Statement): TSESTree.Statem
         extractNested(s.body);
         break;
       case "TryStatement":
-        extract(s.block.body);
-        if (s.handler) extract(s.handler.body.body);
-        if (s.finalizer) extract(s.finalizer.body);
+        extractFromTry(s);
         break;
       case "SwitchStatement":
-        for (const sc of s.cases) {
-          for (const cons of sc.consequent) {
-            if (cons.type === "BlockStatement") {
-              results.push(cons.body);
-              for (const inner of cons.body) extractNested(inner);
-            } else {
-              extractNested(cons);
-            }
-          }
-        }
+        extractFromSwitch(s);
         break;
     }
   }
