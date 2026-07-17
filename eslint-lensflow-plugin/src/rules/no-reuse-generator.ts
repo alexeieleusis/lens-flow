@@ -84,7 +84,7 @@ export default createRule({
         let binding: TSESLint.Scope.Variable | null = null;
         for (let s: TSESLint.Scope.Scope | null = scope; s; s = s.upper) {
           const v = s.set.get(right.name);
-          if (v && v.references.some((ref) => ref.identifier === right)) {
+          if (v?.references.some((ref) => ref.identifier === right)) {
             binding = v;
             break;
           }
