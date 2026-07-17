@@ -39,9 +39,24 @@ export default createRule({
       return returnTypeNode.type === "TSBooleanKeyword";
     }
 
+    function findEnclosingClassName(ancestors: TSESTree.Node[], startIndex: number): string {
+      for (let i = startIndex - 1; i >= 0; i--) {
+        const ancestor = ancestors[i];
+        if (ancestor.type === "ClassDeclaration" && ancestor.id) return ancestor.id.name;
+        if (ancestor.type === "ClassExpression" && ancestor.id) return ancestor.id.name;
+      }
+      return "anonymous";
+    }
+
+    function findArrowFunctionName(ancestors: TSESTree.Node[], startIndex: number): string | null {
+      const varDecl = ancestors.slice(startIndex + 1).find((a) => a.type === "VariableDeclarator");
+      if (varDecl?.id.type === "Identifier") return varDecl.id.name;
+      return null;
+    }
+
     function findEnclosingFunction(callNode: TSESTree.CallExpression): string | null {
       const ancestors = context.sourceCode.getAncestors(callNode);
-      for (const node of ancestors) {
+      for (const [index, node] of ancestors.entries()) {
         if (node.type === "FunctionDeclaration" && node.id) {
           return node.id.name;
         }
@@ -49,29 +64,10 @@ export default createRule({
           return node.id.name;
         }
         if (node.type === "MethodDefinition" && node.key.type === "Identifier") {
-          let className = "anonymous";
-          const idx = ancestors.indexOf(node);
-          for (let i = idx - 1; i >= 0; i--) {
-            const a = ancestors[i];
-            if (a.type === "ClassDeclaration" && a.id) {
-              className = a.id.name;
-              break;
-            }
-            if (a.type === "ClassExpression" && a.id) {
-              className = a.id.name;
-              break;
-            }
-          }
-          return `${className}.${node.key.name}`;
+          return `${findEnclosingClassName(ancestors, index)}.${node.key.name}`;
         }
         if (node.type === "ArrowFunctionExpression") {
-          const varDecl = ancestors
-            .slice(ancestors.indexOf(node) + 1)
-            .find((a) => a.type === "VariableDeclarator");
-          if (varDecl?.id.type === "Identifier") {
-            return varDecl.id.name;
-          }
-          return null;
+          return findArrowFunctionName(ancestors, index);
         }
       }
       return null;
