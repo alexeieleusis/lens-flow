@@ -28,6 +28,35 @@ export default createRule({
 
     const checker = program.getTypeChecker();
 
+    function getEnclosingType(node: TSESTree.Node): ts.Type | undefined {
+      const ancestor = context.sourceCode
+        .getAncestors(node)
+        .reverse()
+        .find(
+          (a) =>
+            a.type === "ClassDeclaration" ||
+            a.type === "ClassExpression" ||
+            a.type === "TSInterfaceDeclaration",
+        );
+      if (!ancestor) return;
+
+      const tsAncestor =
+        parserServices.esTreeNodeToTSNodeMap.get(ancestor);
+      if (!tsAncestor) return;
+
+      if (ts.isClassDeclaration(tsAncestor) || ts.isClassExpression(tsAncestor)) {
+        const classLike = tsAncestor as ts.ClassLikeDeclaration;
+        if (classLike.name) {
+          const classSym = checker.getSymbolAtLocation(classLike.name);
+          if (classSym) return checker.getDeclaredTypeOfSymbol(classSym);
+        }
+      } else if (ts.isInterfaceDeclaration(tsAncestor)) {
+        const ifaceSym = checker.getSymbolAtLocation(tsAncestor.name);
+        if (ifaceSym) return checker.getDeclaredTypeOfSymbol(ifaceSym);
+      }
+      return;
+    }
+
     function checkTypePredicate(node: TSESTree.Node & { returnType?: TSESTree.TSTypeAnnotation }) {
       const returnAnn = node.returnType?.typeAnnotation;
       if (returnAnn?.type !== "TSTypePredicate") return;
@@ -46,38 +75,7 @@ export default createRule({
       const predicateType = checker.getTypeAtLocation(tsTypeNode);
       const predicateTypeStr = checker.typeToString(predicateType);
 
-      let enclosingType: ts.Type | undefined;
-
-      const ancestor = context.sourceCode
-        .getAncestors(node)
-        .reverse()
-        .find(
-          (a) =>
-            a.type === "ClassDeclaration" ||
-            a.type === "ClassExpression" ||
-            a.type === "TSInterfaceDeclaration",
-        );
-
-      if (!ancestor) return;
-
-      const tsAncestor =
-        parserServices.esTreeNodeToTSNodeMap.get(ancestor);
-      if (!tsAncestor) return;
-
-      if (ts.isClassDeclaration(tsAncestor) || ts.isClassExpression(tsAncestor)) {
-        const classLike = tsAncestor as ts.ClassLikeDeclaration;
-        if (classLike.name) {
-          const classSym = checker.getSymbolAtLocation(classLike.name);
-          if (classSym) {
-            enclosingType = checker.getDeclaredTypeOfSymbol(classSym);
-          }
-        }
-      } else if (ts.isInterfaceDeclaration(tsAncestor)) {
-        const ifaceSym = checker.getSymbolAtLocation(tsAncestor.name);
-        if (ifaceSym) {
-          enclosingType = checker.getDeclaredTypeOfSymbol(ifaceSym);
-        }
-      }
+      const enclosingType = getEnclosingType(node);
       if (!enclosingType) return;
 
       const enclosingTypeStr = checker.typeToString(enclosingType);
