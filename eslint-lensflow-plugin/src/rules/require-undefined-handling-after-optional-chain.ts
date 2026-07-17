@@ -83,7 +83,7 @@ function isTerminatingStatement(stmt: TSESTree.Node): boolean {
   if (stmt.type === "ThrowStatement") return true;
   if (stmt.type === "ReturnStatement") return true;
   if (stmt.type === "BlockStatement") {
-    return (stmt as TSESTree.BlockStatement).body.some(isTerminatingStatement);
+    return stmt.body.some(isTerminatingStatement);
   }
   return false;
 }
