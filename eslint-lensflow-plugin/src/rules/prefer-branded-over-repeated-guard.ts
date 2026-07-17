@@ -68,10 +68,7 @@ export default createRule({
           const varDecl = ancestors
             .slice(ancestors.indexOf(node) + 1)
             .find((a) => a.type === "VariableDeclarator");
-          if (
-            varDecl &&
-            varDecl.id.type === "Identifier"
-          ) {
+          if (varDecl?.id.type === "Identifier") {
             return varDecl.id.name;
           }
           return null;
