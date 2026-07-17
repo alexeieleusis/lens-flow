@@ -8,6 +8,22 @@ function extractFieldName(key: TSESTree.Node): string | null {
   return null;
 }
 
+function isReadonlyField(member: TSESTree.ClassElement): member is TSESTree.PropertyDefinition {
+  return member.type === "PropertyDefinition" && member.readonly;
+}
+
+function collectConstructorParamFields(member: TSESTree.MethodDefinition, fields: Set<string>) {
+  if (member.kind !== "constructor" || !member.value) return;
+  for (const param of member.value.params) {
+    if (param.type === "TSParameterProperty") {
+      const inner = param.parameter;
+      if (inner.type === "Identifier") {
+        fields.add(inner.name);
+      }
+    }
+  }
+}
+
 export default createRule({
   name: "no-readonly-on-mutated-class-field",
   meta: {
@@ -81,29 +97,14 @@ export default createRule({
         const readonlyFields = new Set<string>();
 
         for (const member of node.body) {
-          if (
-            member.type === "PropertyDefinition" &&
-            member.readonly
-          ) {
+          if (isReadonlyField(member)) {
             const fieldName = extractFieldName(member.key);
             if (fieldName) {
               readonlyFields.add(fieldName);
             }
           }
-
-          if (
-            member.type === "MethodDefinition" &&
-            member.kind === "constructor" &&
-            member.value
-          ) {
-            for (const param of member.value.params) {
-              if (param.type === "TSParameterProperty") {
-                const inner = param.parameter;
-                if (inner.type === "Identifier") {
-                  readonlyFields.add(inner.name);
-                }
-              }
-            }
+          if (member.type === "MethodDefinition") {
+            collectConstructorParamFields(member, readonlyFields);
           }
         }
 
