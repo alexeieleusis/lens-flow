@@ -404,7 +404,7 @@ export function isUsedAsInputInBody(
       );
     }
     if (member.type === AST_NODE_TYPES.TSIndexSignature) {
-      return (member as TSESTree.TSIndexSignature).parameters.some((p) => {
+      return member.parameters.some((p) => {
         const tp = paramTypeAnnotation(p);
         return tp ? containsTypeRef(tp, paramName) : false;
       });
