@@ -181,14 +181,6 @@ export default createRule({
       checkFunctionLike(node, node);
     }
 
-   function checkMethodDefinition(node: TSESTree.MethodDefinition) {
-      // MethodDefinition doesn't carry typeParameters directly — they're on
-      // `node.value` (FunctionExpression), which is already visited by
-      // `FunctionExpression`. Skip here to avoid double-reporting.
-      // Abstract methods (`TSAbstractMethodDefinition`) have an empty body
-      // value; handled by the TSAbstractMethodDefinition visitor below.
-    }
-
     return {
       FunctionDeclaration: checkFunction,
       FunctionExpression: checkFunction,
@@ -197,7 +189,6 @@ export default createRule({
       TSFunctionType: checkTSFunctionType,
       TSMethodSignature: checkTSMethodSignature,
       TSCallSignatureDeclaration: checkTSCallSignatureDeclaration,
-      MethodDefinition: checkMethodDefinition,
     };
   },
 });
