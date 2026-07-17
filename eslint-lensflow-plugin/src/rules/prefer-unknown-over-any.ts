@@ -215,11 +215,9 @@ export default createRule({
       const anyParams = findAnyParams(node.params);
 
       let funcScope: TSESLint.Scope.Scope | null = scopeManager.acquire(node) ?? scopeManager.acquire(node.body);
-      if (!funcScope) {
-        funcScope = scopeManager.scopes.find(
-          (s) => s.type === "function" && s.variables.some((v) => v.name === anyParams[0]?.name),
-        ) ?? null;
-      }
+      funcScope ??= scopeManager.scopes.find(
+        (s) => s.type === "function" && s.variables.some((v) => v.name === anyParams[0]?.name),
+      ) ?? null;
       if (!funcScope) {
         return;
       }
