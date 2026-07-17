@@ -82,7 +82,7 @@ export default createRule({
       if (!enclosingClass) return;
 
       const readonlyFields = readonlyFieldsMap.get(enclosingClass);
-      if (!readonlyFields || !readonlyFields.has(fieldName)) return;
+      if (!readonlyFields?.has(fieldName)) return;
       if (isInsideMatchingConstructor(enclosingClass)) return;
 
       context.report({
