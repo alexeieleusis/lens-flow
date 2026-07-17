@@ -43,6 +43,28 @@ function isReadonlyTypeAnnotation(node: TSESTree.TypeNode): boolean {
   });
 }
 
+function findVariableInScope(
+  sourceCode: TSESLint.SourceCode,
+  identifier: TSESTree.Identifier,
+): TSESLint.Scope.Variable | null {
+  let scope: TSESLint.Scope.Scope | null = sourceCode.getScope(identifier);
+  while (scope) {
+    const v = scope.set.get(identifier.name);
+    if (v) return v;
+    scope = scope.upper;
+  }
+  return null;
+}
+
+function isReadonlyVariable(
+  variable: TSESLint.Scope.Variable,
+): boolean {
+  return variable.defs.some((def) => {
+    const typeAnn = getTypeAnnotationFromDef(def);
+    return typeAnn != null && isReadonlyTypeAnnotation(typeAnn);
+  });
+}
+
 function getTypeAnnotationFromDef(
   def: TSESLint.Scope.Definition,
 ): TSESTree.TypeNode | null {
@@ -92,6 +114,67 @@ function getTypeAnnotationFromDef(
   }
 }
 
+function getMemberName(
+  property: TSESTree.Expression | TSESTree.PrivateIdentifier,
+): string | null {
+  if (property.type === "Identifier") return property.name;
+  if (property.type === "Literal") return String(property.value);
+  return null;
+}
+
+function checkReadonlyIdentifierSpread(
+  context: TSESLint.RuleContext<"spreadReadonlyArray", []>,
+  spreadId: TSESTree.Identifier,
+  spreadElement: TSESTree.SpreadElement,
+) {
+  const variable = findVariableInScope(context.sourceCode, spreadId);
+  if (!variable) return;
+  if (isReadonlyVariable(variable)) {
+    context.report({
+      node: spreadElement,
+      messageId: "spreadReadonlyArray",
+      data: { name: spreadId.name },
+    });
+  }
+}
+
+function checkReadonlyMemberSpread(
+  context: TSESLint.RuleContext<"spreadReadonlyArray", []>,
+  memberExpr: TSESTree.MemberExpression,
+  spreadElement: TSESTree.SpreadElement,
+) {
+  const memberName = getMemberName(memberExpr.property);
+  if (!memberName) return;
+
+  const unwrappedObject = unwrapTSExpressions(memberExpr.object);
+  if (unwrappedObject.type !== "Identifier") return;
+
+  const objectVariable = findVariableInScope(
+    context.sourceCode,
+    unwrappedObject,
+  );
+  if (!objectVariable) return;
+
+  const isReadonly = objectVariable.defs.some((def) => {
+    const typeAnn = getTypeAnnotationFromDef(def);
+    if (typeAnn?.type !== "TSTypeLiteral") return false;
+    return typeAnn.members.some((m) => {
+      if (m.type !== "TSPropertySignature") return false;
+      if (getMemberName(m.key) !== memberName) return false;
+      if (!m.typeAnnotation) return false;
+      return isReadonlyTypeAnnotation(m.typeAnnotation.typeAnnotation);
+    });
+  });
+
+  if (isReadonly) {
+    context.report({
+      node: spreadElement,
+      messageId: "spreadReadonlyArray",
+      data: { name: `${unwrappedObject.name}.${memberName}` },
+    });
+  }
+}
+
 export default createRule({
   name: "no-spread-readonly-workaround",
   meta: {
@@ -117,97 +200,13 @@ export default createRule({
             arg.elements.length === 1 &&
             arg.elements[0]?.type === "SpreadElement"
           ) {
-            const rawArg = arg.elements[0].argument;
-            const inner = unwrapTSExpressions(rawArg);
+            const spreadElement = arg.elements[0];
+            const inner = unwrapTSExpressions(spreadElement.argument);
 
             if (inner.type === "Identifier") {
-              const spreadId = inner;
-              let scope: TSESLint.Scope.Scope | null =
-                context.sourceCode.getScope(spreadId);
-              let variable: TSESLint.Scope.Variable | null = null;
-              while (scope) {
-                const v = scope.set.get(spreadId.name);
-                if (v) {
-                  variable = v;
-                  break;
-                }
-                scope = scope.upper;
-              }
-
-              if (!variable) continue;
-
-              const isReadonly = variable.defs.some((def) => {
-                const typeAnn = getTypeAnnotationFromDef(def);
-                return typeAnn != null && isReadonlyTypeAnnotation(typeAnn);
-              });
-
-              if (isReadonly) {
-                context.report({
-                  node: arg.elements[0],
-                  messageId: "spreadReadonlyArray",
-                  data: { name: spreadId.name },
-                });
-              }
+              checkReadonlyIdentifierSpread(context, inner, spreadElement);
             } else if (inner.type === "MemberExpression") {
-              let memberName: string | null = null;
-              if (inner.property.type === "Identifier") {
-                memberName = inner.property.name;
-              } else if (inner.property.type === "Literal") {
-                memberName = String(inner.property.value);
-              }
-
-              if (!memberName) continue;
-
-              const objectExpr = inner.object;
-              const unwrappedObject = unwrapTSExpressions(objectExpr);
-
-              if (unwrappedObject.type !== "Identifier") continue;
-
-              let objectScope: TSESLint.Scope.Scope | null =
-                context.sourceCode.getScope(unwrappedObject);
-              let objectVariable: TSESLint.Scope.Variable | null = null;
-              while (objectScope) {
-                const v = objectScope.set.get(unwrappedObject.name);
-                if (v) {
-                  objectVariable = v;
-                  break;
-                }
-                objectScope = objectScope.upper;
-              }
-
-              if (!objectVariable) continue;
-
-              const isReadonly = objectVariable.defs.some((def) => {
-                const typeAnn = getTypeAnnotationFromDef(def);
-                if (typeAnn?.type !== "TSTypeLiteral") return false;
-
-                const member = typeAnn.members.find((m) => {
-                  if (m.type !== "TSPropertySignature") return false;
-                  const key = m.key;
-
-                  let keyName: string | null = null;
-                  if (key.type === "Identifier") {
-                    keyName = key.name;
-                  } else if (key.type === "Literal") {
-                    keyName = String(key.value);
-                  }
-
-                  if (keyName !== memberName) return false;
-
-                  if (!m.typeAnnotation) return false;
-                  return isReadonlyTypeAnnotation(m.typeAnnotation.typeAnnotation);
-                });
-
-                return !!member;
-              });
-
-              if (isReadonly) {
-                context.report({
-                  node: arg.elements[0],
-                  messageId: "spreadReadonlyArray",
-                  data: { name: `${unwrappedObject.name}.${memberName}` },
-                });
-              }
+              checkReadonlyMemberSpread(context, inner, spreadElement);
             }
           }
         }
