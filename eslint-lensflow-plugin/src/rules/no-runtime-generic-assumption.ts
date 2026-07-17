@@ -146,22 +146,22 @@ export default createRule({
       return false;
     }
 
-    function isGenericFn(callee: TSESTree.Identifier): boolean {
-      const scope = context.sourceCode.getScope(callee);
-      let found: { identifiers: TSESTree.Identifier[]; name: string } | undefined;
+    function findScopeVariable(node: TSESTree.Identifier): TSESLint.Scope.Variable | null {
+      const scope = context.sourceCode.getScope(node);
       let currentScope: TSESLint.Scope.Scope | null = scope;
       while (currentScope) {
         for (const v of currentScope.variables) {
-          if (v.name === callee.name) {
-            found = v as { identifiers: TSESTree.Identifier[]; name: string };
-            break;
-          }
+          if (v.name === node.name) return v;
         }
-        if (found) break;
         currentScope = currentScope.upper;
       }
+      return null;
+    }
+
+    function isGenericFn(callee: TSESTree.Identifier): boolean {
+      const found = findScopeVariable(callee);
       if (!found) return false;
-      for (const id of found.identifiers) {
+      for (const id of (found as { identifiers: TSESTree.Identifier[] }).identifiers) {
         const parent = (id as { parent?: unknown }).parent;
         if (!parent) continue;
         const p = parent as {
