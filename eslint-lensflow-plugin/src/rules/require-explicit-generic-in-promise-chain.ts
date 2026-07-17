@@ -53,9 +53,8 @@ export default createRule({
         const thenProp = checker.getPropertyOfType(innerReturnType, "then");
         const thenType = thenProp ? checker.getTypeOfSymbol(thenProp) : undefined;
         if (
-          !thenType ||
           !thenType
-            .getCallSignatures()
+            ?.getCallSignatures()
             .some((sig) => {
               const decl = sig.getDeclaration();
               return decl && decl.name?.getText() === "then";
