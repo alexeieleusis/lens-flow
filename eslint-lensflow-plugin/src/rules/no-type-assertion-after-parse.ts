@@ -66,8 +66,7 @@ export default createRule({
         const def = variable?.defs[0];
         const parent = def?.parent;
         if (
-          def &&
-          def.node.type === "VariableDeclarator" &&
+          def?.node?.type === "VariableDeclarator" &&
           parent?.type === "VariableDeclaration" &&
           parent?.kind === "const" &&
           def.node.init?.type === "CallExpression" &&
