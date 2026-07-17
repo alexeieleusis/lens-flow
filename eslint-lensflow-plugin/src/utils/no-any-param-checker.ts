@@ -28,7 +28,6 @@ function getParamTypeAnnotation(param: TSESTree.Parameter): TSESTree.TypeNode | 
   if (param.type === "ObjectPattern" || param.type === "ArrayPattern") {
     return param.typeAnnotation?.typeAnnotation;
   }
-  return;
 }
 
 function checkFunctionLikeParams(params: TSESTree.Parameter[]): boolean {
