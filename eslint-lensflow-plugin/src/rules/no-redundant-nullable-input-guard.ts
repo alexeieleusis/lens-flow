@@ -47,6 +47,17 @@ const PRIMITIVE_KEYWORDS = new Set([
 
 const NULLISH_KEYWORDS = new Set(["TSNullKeyword", "TSUndefinedKeyword"]);
 
+const TS_WRAPPER_TYPES = new Set([
+  "TSNonNullExpression",
+  "TSAsExpression",
+  "TSSatisfiesExpression",
+  "TSTypeAssertion",
+]);
+
+function isTSWrapperType(node: TSESTree.Node): node is TSESTree.Node & { expression: TSESTree.Node } {
+  return TS_WRAPPER_TYPES.has(node.type);
+}
+
 function getNullableTypeSignature(typeAnn: TSESTree.TypeNode): string | null {
   if (typeAnn.type !== "TSUnionType") return null;
 
@@ -70,9 +81,7 @@ function getNullableTypeSignature(typeAnn: TSESTree.TypeNode): string | null {
   return "other-nullable";
 }
 
-function hasNestedFunction(node: TSESTree.Node): boolean {
-  if (node.type === "ArrowFunctionExpression" || node.type === "FunctionExpression")
-    return true;
+function collectChildNodes(node: TSESTree.Node): TSESTree.Node[] {
   const children: TSESTree.Node[] = [];
   const skipProps = new Set(["loc", "range", "parent", "start", "end"]);
   for (const [key, value] of Object.entries(node as unknown as Record<string, unknown>)) {
@@ -88,7 +97,13 @@ function hasNestedFunction(node: TSESTree.Node): boolean {
       }
     }
   }
-  return children.some(hasNestedFunction);
+  return children;
+}
+
+function hasNestedFunction(node: TSESTree.Node): boolean {
+  if (node.type === "ArrowFunctionExpression" || node.type === "FunctionExpression")
+    return true;
+  return collectChildNodes(node).some(hasNestedFunction);
 }
 
 function referencesParam(expr: TSESTree.Expression | TSESTree.PrivateIdentifier | null | undefined, paramName: string): boolean {
@@ -149,16 +164,10 @@ function normalizeGuardPattern(test: TSESTree.Expression, paramName: string): st
     } else if (node.type === "BinaryExpression" || node.type === "LogicalExpression") {
       walk(node.left);
       walk(node.right);
+    } else if (isTSWrapperType(node)) {
+      walk(node.expression);
     } else if (node.type === "Identifier" && node.name === paramName) {
       parts.push("param");
-    } else if (node.type === "TSNonNullExpression") {
-      walk(node.expression);
-    } else if (node.type === "TSAsExpression") {
-      walk(node.expression);
-    } else if (node.type === "TSSatisfiesExpression") {
-      walk(node.expression);
-    } else if (node.type === "TSTypeAssertion") {
-      walk(node.expression);
     }
   }
 
@@ -167,89 +176,100 @@ function normalizeGuardPattern(test: TSESTree.Expression, paramName: string): st
   return parts.length > 0 ? parts.join("+") : null;
 }
 
-function findGuardInBody(body: TSESTree.BlockStatement, paramName: string): string | null {
-  if (!body?.body) return null;
+const NESTING_LIMIT = 10;
 
-  const NESTING_LIMIT = 10;
+function extractStatements(node: TSESTree.Statement): TSESTree.Statement[] {
+  if (node.type === "BlockStatement") return node.body;
+  return [node];
+}
 
-  function extractStatements(node: TSESTree.Statement): TSESTree.Statement[] {
-    if (node.type === "BlockStatement") return node.body;
-    return [node];
+function walkStatements(
+  stmts: TSESTree.Statement[],
+  depth: number,
+  paramName: string,
+): string | null {
+  if (depth > NESTING_LIMIT) return null;
+
+  for (const stmt of stmts.slice(0, 10)) {
+    if (hasNestedFunction(stmt)) continue;
+    if (stmt.type === "IfStatement") {
+      const result = walkIfStatement(stmt, paramName, depth);
+      if (result) return result;
+    } else {
+      const result = walkChildStatements(stmt, paramName, depth);
+      if (result) return result;
+    }
   }
 
-  function walkStatements(stmts: TSESTree.Statement[], depth: number): string | null {
-    if (depth > NESTING_LIMIT) return null;
+  return null;
+}
 
-    for (const stmt of stmts.slice(0, 10)) {
-      // Skip statements containing nested functions — guards inside belong to different scope
-      if (hasNestedFunction(stmt)) continue;
+function walkIfStatement(
+  stmt: TSESTree.IfStatement,
+  paramName: string,
+  depth: number,
+): string | null {
+  const pattern = normalizeGuardPattern(stmt.test, paramName);
+  if (pattern) return pattern;
+  if (stmt.consequent) {
+    const nested = walkStatements(extractStatements(stmt.consequent), depth + 1, paramName);
+    if (nested) return nested;
+  }
+  if (stmt.alternate) {
+    const nested = walkStatements(extractStatements(stmt.alternate), depth + 1, paramName);
+    if (nested) return nested;
+  }
+  return null;
+}
 
-      if (stmt.type === "IfStatement") {
-        const pattern = normalizeGuardPattern(stmt.test, paramName);
-        if (pattern) return pattern;
-        if (stmt.consequent) {
-          const nested = walkStatements(extractStatements(stmt.consequent), depth + 1);
-          if (nested) return nested;
-        }
-        if (stmt.alternate) {
-          const nested = walkStatements(extractStatements(stmt.alternate), depth + 1);
-          if (nested) return nested;
-        }
-      }
+function walkChildStatements(
+  stmt: TSESTree.Statement,
+  paramName: string,
+  depth: number,
+): string | null {
+  const children = getChildStatements(stmt);
+  for (const child of children) {
+    const nested = walkStatements(extractStatements(child), depth + 1, paramName);
+    if (nested) return nested;
+  }
+  return null;
+}
 
-      if (stmt.type === "ForStatement" || stmt.type === "ForInStatement" || stmt.type === "ForOfStatement") {
-        if (stmt.body) {
-          const nested = walkStatements(extractStatements(stmt.body), depth + 1);
-          if (nested) return nested;
-        }
-      }
+function getChildStatements(stmt: TSESTree.Statement): TSESTree.Statement[] {
+  const loopTypes = new Set(["ForStatement", "ForInStatement", "ForOfStatement"]);
+  if (loopTypes.has(stmt.type) && stmt.body) return [stmt.body];
 
-      if (stmt.type === "WhileStatement" || stmt.type === "DoWhileStatement") {
-        if (stmt.body) {
-          const nested = walkStatements(extractStatements(stmt.body), depth + 1);
-          if (nested) return nested;
-        }
-      }
+  const whileTypes = new Set(["WhileStatement", "DoWhileStatement"]);
+  if (whileTypes.has(stmt.type) && stmt.body) return [stmt.body];
 
-      if (stmt.type === "WithStatement") {
-        const nested = walkStatements(extractStatements(stmt.body), depth + 1);
-        if (nested) return nested;
-      }
+  if (stmt.type === "WithStatement" && stmt.body) return [stmt.body];
 
-      if (stmt.type === "TryStatement") {
-        if (stmt.block?.body) {
-          const nested = walkStatements(stmt.block.body, depth + 1);
-          if (nested) return nested;
-        }
-        if (stmt.handler?.body?.body) {
-          const nested = walkStatements(stmt.handler.body.body, depth + 1);
-          if (nested) return nested;
-        }
-        if (stmt.finalizer?.body) {
-          const nested = walkStatements(stmt.finalizer.body, depth + 1);
-          if (nested) return nested;
-        }
-      }
+  if (stmt.type === "LabeledStatement" && stmt.body) return [stmt.body];
 
-      if (stmt.type === "LabeledStatement" && stmt.body) {
-        const nested = walkStatements(extractStatements(stmt.body), depth + 1);
-        if (nested) return nested;
-      }
-
-      if (stmt.type === "SwitchStatement" && stmt.cases) {
-        for (const caseClause of stmt.cases || []) {
-          if (caseClause.consequent) {
-            const nested = walkStatements(caseClause.consequent, depth + 1);
-            if (nested) return nested;
-          }
-        }
+  if (stmt.type === "SwitchStatement" && stmt.cases) {
+    const result: TSESTree.Statement[] = [];
+    for (const caseClause of stmt.cases) {
+      if (caseClause.consequent) {
+        result.push(...caseClause.consequent);
       }
     }
-
-    return null;
+    return result;
   }
 
-  return walkStatements(body.body, 0);
+  if (stmt.type === "TryStatement") {
+    const result: TSESTree.Statement[] = [];
+    if (stmt.block?.body) result.push(...stmt.block.body);
+    if (stmt.handler?.body?.body) result.push(...stmt.handler.body.body);
+    if (stmt.finalizer?.body) result.push(...stmt.finalizer.body);
+    return result;
+  }
+
+  return [];
+}
+
+function findGuardInBody(body: TSESTree.BlockStatement, paramName: string): string | null {
+  if (!body?.body) return null;
+  return walkStatements(body.body, 0, paramName);
 }
 
 interface FuncInfo {
