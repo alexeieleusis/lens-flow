@@ -33,7 +33,7 @@ function extractIdentifiers(node: TSESTree.Node, names: Set<string>): void {
   if (node.type === "Identifier") {
     names.add(node.name);
   } else if (node.type === "ObjectPattern") {
-    for (const prop of (node as TSESTree.ObjectPattern).properties) {
+    for (const prop of node.properties) {
       if (prop.value) extractIdentifiers(prop.value, names);
     }
   } else if (node.type === "ArrayPattern") {
