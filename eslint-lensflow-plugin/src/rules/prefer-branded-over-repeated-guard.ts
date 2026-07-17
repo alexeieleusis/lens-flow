@@ -105,7 +105,7 @@ export default createRule({
         const ancestors = context.sourceCode.getAncestors(node);
         const varDecl = ancestors.find((a) => a.type === "VariableDeclarator");
         let name = "";
-        if (varDecl && varDecl.id.type === "Identifier") {
+        if (varDecl?.id.type === "Identifier") {
           name = varDecl.id.name;
         }
         const retType = node.returnType?.typeAnnotation;
