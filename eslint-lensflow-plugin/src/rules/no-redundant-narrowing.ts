@@ -23,6 +23,20 @@ function collectIdentifiers(
   return out;
 }
 
+function resolveBinding(
+  context: Parameters<ReturnType<typeof createRule>["create"]>[0],
+  node: TSESTree.Node,
+  name: string,
+): TSESLint.Scope.Variable | undefined {
+  let scope: TSESLint.Scope.Scope | null = context.sourceCode.getScope(node);
+  while (scope) {
+    const binding = scope.set.get(name);
+    if (binding) return binding;
+    scope = scope.upper;
+  }
+  return;
+}
+
 function testsEqual(
   context: Parameters<ReturnType<typeof createRule>["create"]>[0],
   a: TSESTree.Node,
@@ -38,25 +52,8 @@ function testsEqual(
   if (idsA.length !== idsB.length) return false;
 
   for (let i = 0; i < idsA.length; i++) {
-    const idA = idsA[i];
-    const idB = idsB[i];
-
-    let scopeA: TSESLint.Scope.Scope | null = context.sourceCode.getScope(a);
-    let bindingA: TSESLint.Scope.Variable | undefined;
-    while (scopeA) {
-      bindingA = scopeA.set.get(idA.name);
-      if (bindingA) break;
-      scopeA = scopeA.upper;
-    }
-
-    let scopeB: TSESLint.Scope.Scope | null = context.sourceCode.getScope(b);
-    let bindingB: TSESLint.Scope.Variable | undefined;
-    while (scopeB) {
-      bindingB = scopeB.set.get(idB.name);
-      if (bindingB) break;
-      scopeB = scopeB.upper;
-    }
-
+    const bindingA = resolveBinding(context, a, idsA[i].name);
+    const bindingB = resolveBinding(context, b, idsB[i].name);
     if (bindingA !== bindingB) return false;
   }
 
