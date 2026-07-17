@@ -131,7 +131,7 @@ function bodyOnlyNarrows(
     }
 
     if (parent.type === "MemberExpression" && parent.object === currentNode) {
-      const isNarrowed = narrowingScope.some((s) => s === true);
+      const isNarrowed = narrowingScope.includes(true);
       if (!isNarrowed) {
         hasUnsafeDirectAccess = true;
       }
