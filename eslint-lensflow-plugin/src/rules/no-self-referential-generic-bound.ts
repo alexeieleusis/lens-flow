@@ -121,57 +121,81 @@ function checkIndexedAccessType(
   );
 }
 
+function checkTypeParameterNode(
+  node: TSESTree.TSTypeParameter,
+  paramName: string,
+): boolean {
+  if (node.name.name === paramName) return true;
+  if (node.constraint && containsTypeParamReference(node.constraint, paramName)) {
+    return true;
+  }
+  if (node.default && containsTypeParamReference(node.default, paramName)) {
+    return true;
+  }
+  return false;
+}
+
+const typeHandlers: Record<
+  string,
+  (node: TSESTree.Node, paramName: string) => boolean
+> = {
+  TSTypeParameter: (node, paramName) =>
+    checkTypeParameterNode(node as TSESTree.TSTypeParameter, paramName),
+  TSTypeReference: (node, paramName) =>
+    checkTypeReference(node as TSESTree.TSTypeReference, paramName),
+  TSUnionType: (node, paramName) =>
+    (node as TSESTree.TSUnionType).types.some((t) =>
+      containsTypeParamReference(t, paramName)
+    ),
+  TSIntersectionType: (node, paramName) =>
+    (node as TSESTree.TSIntersectionType).types.some((t) =>
+      containsTypeParamReference(t, paramName)
+    ),
+  TSArrayType: (node, paramName) =>
+    containsTypeParamReference(
+      (node as TSESTree.TSArrayType).elementType,
+      paramName
+    ),
+  TSTupleType: (node, paramName) =>
+    (node as TSESTree.TSTupleType).elementTypes.some((e) =>
+      containsTypeParamReference(e, paramName)
+    ),
+  TSFunctionType: (node, paramName) =>
+    checkFunctionOrConstructorType(
+      node as TSESTree.TSFunctionType,
+      paramName
+    ),
+  TSConstructorType: (node, paramName) =>
+    checkFunctionOrConstructorType(
+      node as TSESTree.TSConstructorType,
+      paramName
+    ),
+  TSTypeQuery: (node, paramName) =>
+    checkTypeQuery(node as TSESTree.TSTypeQuery, paramName),
+  TSTypeLiteral: (node, paramName) =>
+    checkTypeLiteral(node as TSESTree.TSTypeLiteral, paramName),
+  TSConditionalType: (node, paramName) =>
+    checkConditionalType(node as TSESTree.TSConditionalType, paramName),
+  TSMappedType: (node, paramName) =>
+    checkMappedType(node as TSESTree.TSMappedType, paramName),
+  TSIndexedAccessType: (node, paramName) =>
+    checkIndexedAccessType(node as TSESTree.TSIndexedAccessType, paramName),
+  TSQualifiedName: (node, paramName) => {
+    const qualified = node as TSESTree.TSQualifiedName;
+    return (
+      containsTypeParamReference(qualified.left, paramName) ||
+      containsTypeParamReference(qualified.right, paramName)
+    );
+  },
+};
+
 function containsTypeParamReference(
   node: TSESTree.Node,
   paramName: string,
 ): boolean {
-  if (node.type === "TSTypeParameter") {
-    if (node.name.name === paramName) return true;
-    return (
-      (node.constraint ? containsTypeParamReference(node.constraint, paramName) : false) ||
-      (node.default ? containsTypeParamReference(node.default, paramName) : false)
-    );
-  }
-  if (node.type === "TSTypeReference") {
-    return checkTypeReference(node, paramName);
-  }
-  if (node.type === "TSUnionType" || node.type === "TSIntersectionType") {
-    return node.types.some((t) => containsTypeParamReference(t, paramName));
-  }
-  if (node.type === "TSArrayType") {
-    return containsTypeParamReference(node.elementType, paramName);
-  }
-  if (node.type === "TSTupleType") {
-    return node.elementTypes.some((e) => containsTypeParamReference(e, paramName));
-  }
-  if (node.type === "TSFunctionType" || node.type === "TSConstructorType") {
-    return checkFunctionOrConstructorType(node, paramName);
-  }
-  if (node.type === "TSTypeQuery") {
-    return checkTypeQuery(node, paramName);
-  }
-  if (node.type === "TSTypeLiteral") {
-    return checkTypeLiteral(node, paramName);
-  }
-  if (node.type === "TSConditionalType") {
-    return checkConditionalType(node, paramName);
-  }
-  if (node.type === "TSMappedType") {
-    return checkMappedType(node, paramName);
-  }
-  if (node.type === "TSIndexedAccessType") {
-    return checkIndexedAccessType(node, paramName);
-  }
-  if (node.type === "TSQualifiedName") {
-    return (
-      containsTypeParamReference(
-        (node as unknown as { left: TSESTree.Node; right: TSESTree.Node }).left,
-        paramName
-      ) || containsTypeParamReference(
-        (node as unknown as { left: TSESTree.Node; right: TSESTree.Node }).right,
-        paramName
-      )
-    );
+  const handler = typeHandlers[node.type];
+  if (handler) {
+    return handler(node, paramName);
   }
   return false;
 }
