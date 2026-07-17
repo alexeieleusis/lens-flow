@@ -6,7 +6,7 @@ function isMutableCollectionType(node: TSESTree.TypeNode): boolean {
     const arrNode = node as TSESTree.TSArrayType;
     if (
       arrNode.elementType?.type === AST_NODE_TYPES.TSTypeOperator &&
-      (arrNode.elementType as TSESTree.TSTypeOperator).operator === "readonly"
+      arrNode.elementType.operator === "readonly"
     ) {
       return false;
     }
