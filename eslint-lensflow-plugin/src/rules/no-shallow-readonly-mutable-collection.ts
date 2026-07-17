@@ -28,8 +28,7 @@ function isMutableCollectionType(node: TSESTree.TypeNode): boolean {
   }
 
   if (node.type === AST_NODE_TYPES.TSUnionType) {
-    const unionNode = node as TSESTree.TSUnionType;
-    return unionNode.types.some((t) => isMutableCollectionType(t));
+    return node.types.some((t) => isMutableCollectionType(t));
   }
 
   return false;
