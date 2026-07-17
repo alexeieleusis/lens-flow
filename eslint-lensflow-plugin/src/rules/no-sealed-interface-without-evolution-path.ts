@@ -1,47 +1,37 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
+function isIndexSignatureSealed(member: TSESTree.TSInterfaceBody["body"][number]): boolean {
+  if (member.type !== "TSIndexSignature" || member.parameters.length === 0) {
+    return false;
+  }
+  const param = member.parameters[0];
+  if (param.type !== "Identifier") return false;
+  const paramType = param.typeAnnotation?.typeAnnotation;
+  if (!paramType) return false;
+
+  if (paramType.type === "TSTypeOperator" && paramType.operator === "unique") {
+    return true;
+  }
+  return paramType.type === "TSTypeQuery";
+}
+
+function isComputedSealedProperty(member: TSESTree.TSInterfaceBody["body"][number]): boolean {
+  if (member.type !== "TSPropertySignature" || !member.computed) return false;
+
+  let keyName: string | null = null;
+  if (member.key.type === "Identifier") {
+    keyName = member.key.name;
+  } else if (member.key.type === "Literal") {
+    keyName = String(member.key.value);
+  }
+  if (!keyName?.startsWith("_")) return false;
+
+  return member.typeAnnotation?.typeAnnotation?.type === "TSNeverKeyword";
+}
+
 function isSealedSymbolMember(member: TSESTree.TSInterfaceBody["body"][number]): boolean {
-  // Index signature: [key: unique symbol]: never
-  if (member.type === "TSIndexSignature" && member.parameters.length > 0) {
-    const param = member.parameters[0];
-    if (param.type === "Identifier") {
-      const paramType = param.typeAnnotation?.typeAnnotation;
-      if (paramType) {
-        if (
-          paramType.type === "TSTypeOperator" &&
-          paramType.operator === "unique"
-        ) {
-          return true;
-        }
-        if (paramType.type === "TSTypeQuery") {
-          return true;
-        }
-      }
-    }
-  }
-
-  // Computed property with underscore-prefixed key and never type: [_sealed]: never or ["_sealed"]: never
-  if (
-    member.type === "TSPropertySignature" &&
-    member.computed
-  ) {
-    let keyName: string | null = null;
-    if (member.key.type === "Identifier") {
-      keyName = member.key.name;
-    } else if (member.key.type === "Literal") {
-      keyName = String(member.key.value);
-    }
-
-    if (keyName?.startsWith("_")) {
-      const typeAnn = member.typeAnnotation?.typeAnnotation;
-      if (typeAnn?.type === "TSNeverKeyword") {
-        return true;
-      }
-    }
-  }
-
-  return false;
+  return isIndexSignatureSealed(member) || isComputedSealedProperty(member);
 }
 
 export default createRule({
