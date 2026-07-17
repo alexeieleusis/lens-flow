@@ -12,6 +12,30 @@ function isPrimitiveUnion(node: TSESTree.TypeNode): node is TSESTree.TSUnionType
   return node.types.every((t) => PRIMITIVE_KEYWORDS.has(t.type));
 }
 
+function isProtectedMutableWithInit(
+  member: TSESTree.ClassElement
+): member is TSESTree.PropertyDefinition & {
+  accessibility: "protected";
+  value: TSESTree.Expression;
+} {
+  if (member.type !== "PropertyDefinition") return false;
+  if (member.accessibility !== "protected") return false;
+  if (member.static) return false;
+  if (member.readonly) return false;
+  if (!member.value) return false;
+  return true;
+}
+
+function hasPrimitiveType(node: TSESTree.TypeNode): boolean {
+  return PRIMITIVE_KEYWORDS.has(node.type) || isPrimitiveUnion(node);
+}
+
+function getPropertyName(key: TSESTree.ClassElement["key"]): string {
+  if (key.type === "Identifier") return key.name;
+  if (key.type === "Literal") return String(key.value);
+  return "unknown";
+}
+
 export default createRule({
   name: "no-protected-mutable-primitive-state",
   meta: {
@@ -31,30 +55,14 @@ export default createRule({
     return {
       ClassBody(node) {
         for (const member of node.body) {
-          if (member.type !== "PropertyDefinition") continue;
-          if (member.accessibility !== "protected") continue;
-          if (member.static) continue;
-          if (member.readonly) continue;
-
-          if (!member.value) continue;
+          if (!isProtectedMutableWithInit(member)) continue;
 
           const typeAnn = member.typeAnnotation?.typeAnnotation;
-          if (
-            typeAnn &&
-            (PRIMITIVE_KEYWORDS.has(typeAnn.type) || isPrimitiveUnion(typeAnn))
-          ) {
-            let propName: string;
-            if (member.key.type === "Identifier") {
-              propName = member.key.name;
-            } else if (member.key.type === "Literal") {
-              propName = String(member.key.value);
-            } else {
-              propName = "unknown";
-            }
+          if (typeAnn && hasPrimitiveType(typeAnn)) {
             context.report({
               node: member,
               messageId: "protectedMutablePrimitive",
-              data: { name: propName },
+              data: { name: getPropertyName(member.key) },
             });
           }
         }
