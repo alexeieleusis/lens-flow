@@ -536,8 +536,7 @@ export default createRule({
                 ? anc.body
                 : (anc as TSESTree.Program).body;
             let foundGuard = false;
-            for (let i = 0; i < blockBody.length; i++) {
-              const stmt = blockBody[i];
+            for (const stmt of blockBody) {
               if (
                 stmt.type === "IfStatement" &&
                 testContainsIsNullGuard(stmt.test, varName) &&
