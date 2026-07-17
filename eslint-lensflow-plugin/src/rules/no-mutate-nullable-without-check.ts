@@ -132,26 +132,36 @@ function loopHasTerminatingGuard(stmt: unknown, objName: string, propName: strin
   return stmts.some((inner) => isTerminatingNullGuard(inner, objName, propName));
 }
 
+function stmtIsTerminatingGuard(stmt: unknown, node: unknown, objName: string, propName: string): boolean {
+  return stmtBlockContainsNode(stmt, node)
+    || nullGuardIfContainsNode(stmt, node, objName, propName)
+    || loopHasTerminatingGuard(stmt, objName, propName);
+}
+
+function checkNestedStmt(stmt: unknown, node: unknown, objName: string, propName: string): boolean {
+  if (typeof stmt !== "object" || stmt == null || !("type" in stmt)) return true;
+  const s = stmt as { type: string; consequent?: unknown; alternate?: unknown; body?: unknown };
+
+  if (s.type === "IfStatement") {
+    if (s.consequent && !checkBlockForGuard(s.consequent, node, objName, propName)) return false;
+    if (s.alternate && !checkBlockForGuard(s.alternate, node, objName, propName)) return false;
+  }
+  if (LOOP_TYPES.has(s.type) && s.body) {
+    if (!checkBlockForGuard(s.body, node, objName, propName)) return false;
+  }
+  if (s.type === "SwitchStatement" && s.body) {
+    if (!checkBlockForGuard(s.body, node, objName, propName)) return false;
+  }
+  return true;
+}
+
 function checkBlockForGuard(body: unknown, node: unknown, objName: string, propName: string): boolean {
   if (!body || typeof body !== "object" || !("type" in body)) return true;
   if ((body as { type: string }).type !== "BlockStatement") return true;
   const stmts = (body as unknown as { body: unknown[] }).body;
   for (const stmt of stmts) {
-    if (stmtBlockContainsNode(stmt, node)) return false;
-    if (nullGuardIfContainsNode(stmt, node, objName, propName)) return false;
-    if (loopHasTerminatingGuard(stmt, objName, propName)) return false;
-    // Recurse into nested if/switch bodies to find guards
-    if (typeof stmt === "object" && stmt != null && "type" in stmt) {
-      const s = stmt as { type: string; consequent?: unknown; alternate?: unknown; body?: unknown };
-      if (s.type === "IfStatement") {
-        if (s.consequent && !checkBlockForGuard(s.consequent, node, objName, propName)) return false;
-        if (s.alternate && !checkBlockForGuard(s.alternate, node, objName, propName)) return false;
-      } else if (LOOP_TYPES.has(s.type) && s.body) {
-        if (!checkBlockForGuard(s.body, node, objName, propName)) return false;
-      } else if (s.type === "SwitchStatement" && s.body) {
-        if (!checkBlockForGuard(s.body, node, objName, propName)) return false;
-      }
-    }
+    if (stmtIsTerminatingGuard(stmt, node, objName, propName)) return false;
+    if (!checkNestedStmt(stmt, node, objName, propName)) return false;
   }
   return true;
 }
