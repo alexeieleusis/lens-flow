@@ -69,7 +69,7 @@ function isNodeAfterInSameBlock(
     const body =
       parent.type === "BlockStatement"
         ? parent.body
-        : (parent as TSESTree.Program).body;
+        : parent.body;
     const ifIndex = body.indexOf(ifStatement as any);
     if (ifIndex < 0) return false;
     for (let i = ifIndex + 1; i < body.length; i++) {
