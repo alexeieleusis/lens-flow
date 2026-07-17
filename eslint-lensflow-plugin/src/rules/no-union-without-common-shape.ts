@@ -2,6 +2,18 @@ import ts from "typescript";
 import { ESLintUtils, type TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
+const PRIMITIVE_TYPE_FLAGS =
+  ts.TypeFlags.Any |
+  ts.TypeFlags.Unknown |
+  ts.TypeFlags.Never |
+  ts.TypeFlags.String |
+  ts.TypeFlags.Number |
+  ts.TypeFlags.Boolean |
+  ts.TypeFlags.ESSymbol |
+  ts.TypeFlags.Undefined |
+  ts.TypeFlags.Null |
+  ts.TypeFlags.Void;
+
 function extractPropsFromLiteral(
   literal: import("@typescript-eslint/types").TSESTree.TSTypeLiteral,
 ): Set<string> {
@@ -16,6 +28,34 @@ function extractPropsFromLiteral(
     }
   }
   return names;
+}
+
+function gatherPropertySets(
+  unionNode: import("@typescript-eslint/types").TSESTree.TSUnionType,
+  checker: ts.TypeChecker,
+  parserServices: ReturnType<typeof ESLintUtils.getParserServices>,
+): Set<string>[] {
+  const propertySets: Set<string>[] = [];
+
+  for (const member of unionNode.types) {
+    const tsNode = parserServices.esTreeNodeToTSNodeMap.get(member);
+    if (!tsNode) continue;
+
+    const memberType = checker.getTypeAtLocation(tsNode);
+
+    if ((memberType.flags & PRIMITIVE_TYPE_FLAGS) !== 0) {
+      continue;
+    }
+
+    const props = checker.getPropertiesOfType(memberType);
+    const names = new Set(props.map((p) => p.getName()));
+
+    if (names.size > 0) {
+      propertySets.push(names);
+    }
+  }
+
+  return propertySets;
 }
 
 export default createRule({
@@ -51,41 +91,15 @@ export default createRule({
 
     return {
       TSUnionType(node) {
-        const propertySets: Set<string>[] = [];
-
-        for (const member of node.types) {
-          if (checker && parserServices) {
-            const tsNode = parserServices.esTreeNodeToTSNodeMap.get(member);
-            if (!tsNode) continue;
-
-            const memberType = checker.getTypeAtLocation(tsNode);
-
-            if (
-              (memberType.flags &
-                (ts.TypeFlags.Any |
-                  ts.TypeFlags.Unknown |
-                  ts.TypeFlags.Never |
-                  ts.TypeFlags.String |
-                  ts.TypeFlags.Number |
-                  ts.TypeFlags.Boolean |
-                  ts.TypeFlags.ESSymbol |
-                  ts.TypeFlags.Undefined |
-                  ts.TypeFlags.Null |
-                  ts.TypeFlags.Void)) !== 0
-            ) {
-              continue;
-            }
-
-            const props = checker.getPropertiesOfType(memberType);
-            const names = new Set(props.map((p) => p.getName()));
-
-            if (names.size > 0) {
-              propertySets.push(names);
-            }
-          } else if (member.type === "TSTypeLiteral") {
-            propertySets.push(extractPropsFromLiteral(member));
-          }
-        }
+        const propertySets =
+          checker && parserServices
+            ? gatherPropertySets(node, checker, parserServices)
+            : node.types
+                  .filter(
+                    (m): m is import("@typescript-eslint/types").TSESTree.TSTypeLiteral =>
+                      m.type === "TSTypeLiteral",
+                  )
+                  .map(extractPropsFromLiteral);
 
         if (propertySets.length < 2) return;
 
