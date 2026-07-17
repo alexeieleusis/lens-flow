@@ -259,7 +259,7 @@ export default createRule({
           let callee = callObj.callee;
           // Unwrap ChainExpression around the callee
           if (callee.type === "ChainExpression") {
-            callee = (callee as TSESTree.ChainExpression).expression;
+            callee = callee.expression;
           }
           if (callee?.type === "Identifier" && isGenericFn(callee)) {
             context.report({
