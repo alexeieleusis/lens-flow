@@ -37,12 +37,14 @@ function resolveUnionNode(
   let currentNode: TSESTree.TypeNode = current;
 
   while (currentNode.type === "TSTypeReference") {
-    const typeName: string | null =
-      currentNode.typeName.type === "Identifier"
-        ? currentNode.typeName.name
-        : currentNode.typeName.type === "TSQualifiedName"
-          ? currentNode.typeName.right.name
-          : null;
+    let typeName: string | null;
+    if (currentNode.typeName.type === "Identifier") {
+      typeName = currentNode.typeName.name;
+    } else if (currentNode.typeName.type === "TSQualifiedName") {
+      typeName = currentNode.typeName.right.name;
+    } else {
+      typeName = null;
+    }
 
     if (!typeName || !typeAliases.has(typeName)) {
       return null;
