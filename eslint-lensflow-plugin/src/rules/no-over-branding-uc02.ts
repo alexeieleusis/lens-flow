@@ -1,7 +1,7 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-const brandPattern = /^(.*[_]*brand|brand.*)$/i;
+const brandPattern = /^(.*_*brand|brand.*)$/i;
 
 function hasBrandMarker(member: TSESTree.TypeNode): boolean {
   if (member.type !== "TSTypeLiteral") return false;
