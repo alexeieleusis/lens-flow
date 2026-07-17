@@ -1,5 +1,11 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+function getLastName(typeName: TSESTree.EntityName): string {
+  if (typeName.type === "Identifier") return typeName.name;
+  if (typeName.type === "TSQualifiedName") return getLastName(typeName.right);
+  return "";
+}
 
 export default createRule({
   name: "no-partial-record",
@@ -20,33 +26,19 @@ export default createRule({
   create(context: TSESLint.RuleContext<"noPartialRecord", []>) {
     return {
       TSTypeReference(node) {
-        const typeName = node.typeName;
-        let outerName: string | null = null;
-        if (typeName.type === "Identifier") {
-          outerName = typeName.name;
-        } else if (typeName.type === "TSQualifiedName") {
-          outerName = typeName.right.name;
-        }
-        if (outerName === "Partial") {
-          const params = node.typeArguments?.params;
-          if (params && params.length >= 1) {
-            const innerType = params[0];
-            if (innerType.type === "TSTypeReference") {
-              let innerName: string | null = null;
-              if (innerType.typeName.type === "Identifier") {
-                innerName = innerType.typeName.name;
-              } else if (innerType.typeName.type === "TSQualifiedName") {
-                innerName = innerType.typeName.right.name;
-              }
-              if (innerName === "Record") {
-                context.report({
-                  node,
-                  messageId: "noPartialRecord",
-                });
-              }
-            }
-          }
-        }
+        if (getLastName(node.typeName) !== "Partial") return;
+
+        const params = node.typeArguments?.params;
+        if (!params || params.length < 1) return;
+
+        const innerType = params[0];
+        if (innerType.type !== "TSTypeReference") return;
+        if (getLastName(innerType.typeName) !== "Record") return;
+
+        context.report({
+          node,
+          messageId: "noPartialRecord",
+        });
       },
     };
   },
