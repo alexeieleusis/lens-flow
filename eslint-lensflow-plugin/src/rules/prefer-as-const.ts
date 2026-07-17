@@ -42,7 +42,7 @@ function isAsConstSafeReplacement(
   const typeKeys = new Set<string>();
   for (const member of typeMembers) {
     if (member.type !== "TSPropertySignature" || !member.key) continue;
-    const key = getPropertyName(member.key as TSESTree.Property["key"]);
+    const key = getPropertyName(member.key);
     if (key !== null) typeKeys.add(key);
   }
 
