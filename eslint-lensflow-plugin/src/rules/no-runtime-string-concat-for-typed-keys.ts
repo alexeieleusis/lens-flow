@@ -21,28 +21,34 @@ function unwrapExpression(node: TSESTree.Node): TSESTree.Node {
   return node;
 }
 
+function isFuncNode(node: TSESTree.Node): node is TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression {
+  return (
+    node.type === "FunctionDeclaration" ||
+    node.type === "FunctionExpression" ||
+    node.type === "ArrowFunctionExpression"
+  );
+}
+
+function hasStringParam(
+  func: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression,
+  paramName: string,
+): boolean {
+  for (const param of func.params) {
+    if (param.type === "Identifier" && param.name === paramName) {
+      return param.typeAnnotation?.typeAnnotation?.type === "TSStringKeyword";
+    }
+  }
+  return false;
+}
+
 function isStringParamInEnclosingFunction(
   node: TSESTree.Node,
   paramName: string,
 ): boolean {
   let current: TSESTree.Node | undefined = node.parent;
   while (current) {
-    if (
-      current.type === "FunctionDeclaration" ||
-      current.type === "FunctionExpression" ||
-      current.type === "ArrowFunctionExpression"
-    ) {
-      const func = current as TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression;
-      for (const param of func.params) {
-        if (param.type === "Identifier" && param.name === paramName) {
-          const typeAnn = param.typeAnnotation?.typeAnnotation;
-          if (typeAnn?.type === "TSStringKeyword") {
-            return true;
-          }
-          return false;
-        }
-      }
-      return false;
+    if (isFuncNode(current)) {
+      return hasStringParam(current, paramName);
     }
     current = current.parent;
   }
