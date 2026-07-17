@@ -274,7 +274,6 @@ export function collectChildTypes(type: TSESTree.TypeNode): TSESTree.TypeNode[] 
         return [maybeParenthesized.typeAnnotation];
       }
       return [];
-      return [];
   }
 }
 
