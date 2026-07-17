@@ -69,7 +69,7 @@ export default createRule({
     function checkMethodDefinition(node: TSESTree.MethodDefinition) {
       const value = node.value as TSESTree.Node;
       if (value.type === "FunctionExpression" || value.type === "ArrowFunctionExpression") {
-        checkFunction(value as TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression);
+        checkFunction(value);
       }
     }
 
