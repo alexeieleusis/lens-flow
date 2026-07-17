@@ -5,6 +5,8 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const URL = knowledgeUrl("catalog/T01-algebraic-data-types.md");
 
+type WidenedKind = "string" | "number" | null;
+
 const DISCRIMINANT_NAMES = new Set([
   "kind",
   "type",
@@ -27,7 +29,7 @@ function getPropertyName(key: TSESTree.Expression): string | null {
 }
 
 function classifyTypeFlags(propType: ts.Type): {
-  widened: "string" | "number" | null;
+  widened: WidenedKind;
   hasLiteral: boolean;
 } {
   const isWidenedStr =
@@ -80,7 +82,7 @@ export default createRule({
 
         interface PropEntry {
           sig: TSESTree.TSPropertySignature;
-          widened: "string" | "number" | null;
+          widened: WidenedKind;
           hasLiteral: boolean;
         }
 
@@ -111,7 +113,7 @@ export default createRule({
         function addPropToMap(
           propName: string,
           sig: TSESTree.TSPropertySignature,
-          widened: "string" | "number" | null,
+          widened: WidenedKind,
           hasLiteral: boolean,
           propMap: Map<string, PropEntry[]>,
         ) {
@@ -129,7 +131,7 @@ export default createRule({
         ): {
           propName: string;
           sig: TSESTree.TSPropertySignature;
-          widened: "string" | "number" | null;
+          widened: WidenedKind;
           hasLiteral: boolean;
         } | null {
           if (member.type !== "TSPropertySignature") return null;
@@ -138,7 +140,7 @@ export default createRule({
           const typeAnn = member.typeAnnotation?.typeAnnotation;
           if (!typeAnn) return null;
 
-          const widened: "string" | "number" | null =
+          const widened: WidenedKind =
             typeAnn.type === "TSStringKeyword"
               ? "string"
               : typeAnn.type === "TSNumberKeyword"
