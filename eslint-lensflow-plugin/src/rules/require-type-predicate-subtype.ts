@@ -40,7 +40,7 @@ export default createRule({
         parserServices.esTreeNodeToTSNodeMap.get(pred);
       if (!tsPredNode) return;
 
-      const tsTypeNode = (tsPredNode as ts.TypePredicateNode).type;
+      const tsTypeNode = tsPredNode.type;
       if (!tsTypeNode) return;
 
       const predicateType = checker.getTypeAtLocation(tsTypeNode);
