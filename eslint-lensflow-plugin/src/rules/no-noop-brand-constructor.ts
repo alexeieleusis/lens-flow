@@ -21,12 +21,12 @@ function isBrandedType(node: TSESTree.TypeNode): boolean {
         if (member.type !== "TSPropertySignature" || !member.key) return false;
         const key = member.key;
         if (key.type !== "Identifier" && key.type !== "Literal") return false;
-        const name =
-          key.type === "Identifier"
-            ? key.name
-            : typeof key.value === "string"
-              ? key.value
-              : null;
+        let name: string | null = null;
+        if (key.type === "Identifier") {
+          name = key.name;
+        } else if (typeof key.value === "string") {
+          name = key.value;
+        }
         if (!name) return false;
         return (
           name === "_brand" ||
