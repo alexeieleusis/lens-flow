@@ -3,10 +3,9 @@ import { createRule } from "../utils/rule-creator.js";
 
 function isMutableCollectionType(node: TSESTree.TypeNode): boolean {
   if (node.type === AST_NODE_TYPES.TSArrayType) {
-    const arrNode = node as TSESTree.TSArrayType;
     if (
-      arrNode.elementType?.type === AST_NODE_TYPES.TSTypeOperator &&
-      arrNode.elementType.operator === "readonly"
+      node.elementType?.type === AST_NODE_TYPES.TSTypeOperator &&
+      node.elementType.operator === "readonly"
     ) {
       return false;
     }
