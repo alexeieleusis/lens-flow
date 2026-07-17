@@ -33,7 +33,7 @@ function isSealedSymbolMember(member: TSESTree.TSInterfaceBody["body"][number]):
           ? String(member.key.value)
           : null;
 
-    if (keyName && keyName.startsWith("_")) {
+    if (keyName?.startsWith("_")) {
       const typeAnn = member.typeAnnotation?.typeAnnotation;
       if (typeAnn?.type === "TSNeverKeyword") {
         return true;
