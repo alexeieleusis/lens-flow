@@ -32,12 +32,12 @@ export default createRule({
           if (params && params.length >= 1) {
             const innerType = params[0];
             if (innerType.type === "TSTypeReference") {
-              const innerName =
-                innerType.typeName.type === "Identifier"
-                  ? innerType.typeName.name
-                  : innerType.typeName.type === "TSQualifiedName"
-                    ? innerType.typeName.right.name
-                    : null;
+              let innerName: string | null = null;
+              if (innerType.typeName.type === "Identifier") {
+                innerName = innerType.typeName.name;
+              } else if (innerType.typeName.type === "TSQualifiedName") {
+                innerName = innerType.typeName.right.name;
+              }
               if (innerName === "Record") {
                 context.report({
                   node,
