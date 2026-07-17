@@ -21,12 +21,12 @@ export default createRule({
     return {
       TSTypeReference(node) {
         const typeName = node.typeName;
-        const outerName =
-          typeName.type === "Identifier"
-            ? typeName.name
-            : typeName.type === "TSQualifiedName"
-              ? typeName.right.name
-              : null;
+        let outerName: string | null = null;
+        if (typeName.type === "Identifier") {
+          outerName = typeName.name;
+        } else if (typeName.type === "TSQualifiedName") {
+          outerName = typeName.right.name;
+        }
         if (outerName === "Partial") {
           const params = node.typeArguments?.params;
           if (params && params.length >= 1) {
