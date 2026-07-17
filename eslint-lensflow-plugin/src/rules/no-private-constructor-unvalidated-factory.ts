@@ -77,52 +77,43 @@ function bodyHasValidation(
   });
 }
 
+function isStatementValidationGuard(
+  stmt: TSESTree.Statement,
+  className: string,
+): boolean {
+  if (stmt.type === AST_NODE_TYPES.BlockStatement) {
+    return bodyHasValidation(stmt, className);
+  }
+  if (stmt.type === AST_NODE_TYPES.ThrowStatement) {
+    return true;
+  }
+  if (
+    stmt.type === AST_NODE_TYPES.ReturnStatement &&
+    stmt.argument?.type === AST_NODE_TYPES.NewExpression &&
+    stmt.argument.callee.type === AST_NODE_TYPES.Identifier &&
+    stmt.argument.callee.name === className
+  ) {
+    return true;
+  }
+  if (
+    stmt.type === AST_NODE_TYPES.ExpressionStatement &&
+    stmt.expression.type === AST_NODE_TYPES.CallExpression
+  ) {
+    return isValidationCall(stmt.expression);
+  }
+  return false;
+}
+
 function isValidationGuard(
   node: TSESTree.IfStatement,
   className: string,
 ): boolean {
-  if (node.consequent.type === AST_NODE_TYPES.BlockStatement) {
-    if (bodyHasValidation(node.consequent, className)) return true;
-  }
-  if (node.consequent.type === AST_NODE_TYPES.ThrowStatement) {
-    return true;
-  }
-  if (
-    node.consequent.type === AST_NODE_TYPES.ReturnStatement &&
-    node.consequent.argument?.type === AST_NODE_TYPES.NewExpression &&
-    node.consequent.argument.callee.type === AST_NODE_TYPES.Identifier &&
-    node.consequent.argument.callee.name === className
-  ) {
-    return true;
-  }
-  if (
-    node.consequent.type === AST_NODE_TYPES.ExpressionStatement &&
-    node.consequent.expression.type === AST_NODE_TYPES.CallExpression
-  ) {
-    if (isValidationCall(node.consequent.expression)) return true;
-  }
-  if (node.alternate?.type === AST_NODE_TYPES.BlockStatement) {
-    if (bodyHasValidation(node.alternate, className)) return true;
-  }
-  if (node.alternate?.type === AST_NODE_TYPES.ThrowStatement) {
-    return true;
-  }
-  if (
-    node.alternate?.type === AST_NODE_TYPES.ReturnStatement &&
-    node.alternate.argument?.type === AST_NODE_TYPES.NewExpression &&
-    node.alternate.argument.callee.type === AST_NODE_TYPES.Identifier &&
-    node.alternate.argument.callee.name === className
-  ) {
-    return true;
-  }
-  if (
-    node.alternate?.type === AST_NODE_TYPES.ExpressionStatement &&
-    node.alternate.expression.type === AST_NODE_TYPES.CallExpression
-  ) {
-    if (isValidationCall(node.alternate.expression)) return true;
-  }
-  if (node.alternate?.type === AST_NODE_TYPES.IfStatement) {
-    return isValidationGuard(node.alternate, className);
+  if (isStatementValidationGuard(node.consequent, className)) return true;
+  if (node.alternate) {
+    if (isStatementValidationGuard(node.alternate, className)) return true;
+    if (node.alternate.type === AST_NODE_TYPES.IfStatement) {
+      return isValidationGuard(node.alternate, className);
+    }
   }
   return false;
 }
