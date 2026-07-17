@@ -96,12 +96,12 @@ export default createRule({
 
       const paramNameSet = findTypeParamNames(node.typeParameters);
 
-      const members =
-        node.type === AST_NODE_TYPES.TSInterfaceDeclaration
-          ? node.body?.body
-          : node.typeAnnotation?.type === AST_NODE_TYPES.TSTypeLiteral
-            ? node.typeAnnotation.members
-            : undefined;
+      let members: readonly TSESTree.TypeElement[] | undefined;
+      if (node.type === AST_NODE_TYPES.TSInterfaceDeclaration) {
+        members = node.body?.body;
+      } else if (node.typeAnnotation?.type === AST_NODE_TYPES.TSTypeLiteral) {
+        members = node.typeAnnotation.members;
+      }
       if (!members || members.length === 0) return;
 
       const allMembersPhantom = members.every((member) => {
