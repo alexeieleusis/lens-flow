@@ -98,7 +98,20 @@ export default createRule({
         reportedDeclarations.add(node.range[0]);
 
         const letToken = context.sourceCode.getFirstToken(node);
-        const hasFix = letToken?.value === "let";
+        if (!letToken) {
+          for (let i = 0; i < violatingDeclarators.length; i++) {
+            context.report({
+              node: violatingDeclarators[i].id,
+              messageId: "preferConst",
+              data: {
+                literalType: String(violatingDeclarators[i].literalType),
+                widenedType: violatingDeclarators[i].widenedType,
+              },
+            });
+          }
+          return;
+        }
+        const hasFix = letToken.value === "let";
 
         for (let i = 0; i < violatingDeclarators.length; i++) {
           const decl = violatingDeclarators[i];
@@ -114,7 +127,7 @@ export default createRule({
             ...(i === 0 && hasFix
               ? {
                   fix(fixer: TSESLint.RuleFixer) {
-                    return fixer.replaceText(letToken!, "const");
+                    return fixer.replaceText(letToken, "const");
                   },
                 }
               : {}),
