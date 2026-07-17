@@ -129,7 +129,7 @@ export default createRule({
       TSInterfaceBody(node) {
         checkNode(
           node.body,
-          node.parent as TSESTree.TSInterfaceDeclaration,
+          node.parent,
           "interface",
           "TSInterfaceDeclaration",
         );
