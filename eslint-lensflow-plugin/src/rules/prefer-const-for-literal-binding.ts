@@ -1,6 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
+type WidenedPrimitive = "string" | "number" | "boolean";
+
 export default createRule({
   name: "prefer-const-for-literal-binding",
   meta: {
@@ -33,7 +35,7 @@ export default createRule({
 
     function getLiteralInfo(
       init: TSESTree.Literal | TSESTree.TemplateLiteral
-    ): { literalType: string | number; widenedType: "string" | "number" | "boolean" } | null {
+    ): { literalType: string | number; widenedType: WidenedPrimitive } | null {
       if (init.type === "TemplateLiteral") {
         if (init.expressions.length !== 0) return null;
         const cooked = init.quasis[0].value.cooked;
@@ -52,7 +54,7 @@ export default createRule({
       } else {
         return null;
       }
-      const widenedType = typeof val as "string" | "number" | "boolean";
+      const widenedType = typeof val as WidenedPrimitive;
       return { literalType, widenedType };
     }
 
@@ -68,7 +70,7 @@ export default createRule({
 
         const violatingDeclarators: (TSESTree.VariableDeclarator & {
           literalType: string | number;
-          widenedType: "string" | "number" | "boolean";
+          widenedType: WidenedPrimitive;
         })[] = [];
 
         for (const declarator of node.declarations) {
