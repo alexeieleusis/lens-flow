@@ -126,10 +126,7 @@ function isValidationGuard(
   ) {
     if (isValidationCall(node.alternate.expression)) return true;
   }
-  if (
-    node.alternate &&
-    node.alternate.type === AST_NODE_TYPES.IfStatement
-  ) {
+  if (node.alternate?.type === AST_NODE_TYPES.IfStatement) {
     return isValidationGuard(node.alternate, className);
   }
   return false;
