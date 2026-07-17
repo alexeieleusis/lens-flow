@@ -121,6 +121,19 @@ export function containsAnyType(node: TSESTree.TypeNode): boolean {
   return false;
 }
 
+function shouldSkipParam(param: TSESTree.Parameter, typeNode: TSESTree.TypeNode | undefined): boolean {
+  if (param.type === "TSParameterProperty") return true;
+  if (typeNode?.type === "TSFunctionType" || typeNode?.type === "TSConstructorType") return true;
+  return false;
+}
+
+function extractParamName(param: TSESTree.Parameter, sourceCode: TSESLint.SourceCode): string {
+  let inner: TSESTree.Node = param;
+  if (param.type === "AssignmentPattern") inner = param.left;
+  if (inner.type === "RestElement") inner = (inner as TSESTree.RestElement).argument;
+  return inner.type === "Identifier" ? (inner as TSESTree.Identifier).name : sourceCode.getText(param);
+}
+
 /**
  * Checks function parameters for `any` types and reports violations.
  * Skips TSParameterProperty nodes (handled separately).
@@ -131,24 +144,13 @@ export function checkAnyParams(
   messageId: string
 ) {
   for (const param of params) {
-    if (param.type === "TSParameterProperty") continue;
-
     const typeNode = getParamTypeAnnotation(param);
-
-    if (typeNode && (typeNode.type === "TSFunctionType" || typeNode.type === "TSConstructorType")) {
-      continue;
-    }
-
+    if (shouldSkipParam(param, typeNode)) continue;
     if (typeNode && containsAnyType(typeNode)) {
-      let inner: TSESTree.Node = param;
-      if (param.type === "AssignmentPattern") inner = param.left;
-      if (inner.type === "RestElement") inner = inner.argument;
-      const paramName =
-        inner.type === "Identifier" ? inner.name : context.sourceCode.getText(param);
       context.report({
         node: param,
         messageId,
-        data: { name: paramName },
+        data: { name: extractParamName(param, context.sourceCode) },
       });
     }
   }
