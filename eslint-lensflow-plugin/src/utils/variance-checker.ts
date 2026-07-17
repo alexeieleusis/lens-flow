@@ -349,10 +349,7 @@ function propertyTypeHasInputRef(
           );
         }
         if (m.type === AST_NODE_TYPES.TSConstructSignatureDeclaration) {
-          return paramsContainTypeRef(
-            (m as TSESTree.TSConstructSignatureDeclaration).params,
-            paramName,
-          );
+          return paramsContainTypeRef(m.params, paramName);
         }
         if (m.type === AST_NODE_TYPES.TSPropertySignature) {
           const inner = (m as TSESTree.TSPropertySignature).typeAnnotation
