@@ -13,8 +13,7 @@ function isRecordAny(node: TSESTree.TSTypeReference): boolean {
 
   const params = node.typeArguments?.params;
   return !!(
-    params &&
-    params.length === 2 &&
+    params?.length === 2 &&
     params[0].type === "TSStringKeyword" &&
     params[1].type === "TSAnyKeyword"
   );
