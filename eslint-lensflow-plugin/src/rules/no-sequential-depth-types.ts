@@ -104,61 +104,86 @@ function findChains(members: AliasEntry[]): AliasEntry[][] {
   return chains;
 }
 
-function getNextRef(node: TSESTree.TSTypeAliasDeclaration): string | null {
-  const typeLiterals = unwrapTSTypeLiteral(node.typeAnnotation);
-  if (typeLiterals.length === 0) return null;
-
-  for (const typeLiteral of typeLiterals) {
-    for (const member of typeLiteral.members) {
-      if (member.type !== "TSPropertySignature") continue;
-      const propType = member.typeAnnotation?.typeAnnotation;
-      if (!propType) continue;
-
-      if (propType.type === "TSArrayType") {
-        const refs = extractTypeRefs(propType.elementType);
-        for (const ref of refs) {
-          const typeName = getRefName(ref.typeName);
-          if (typeName) return typeName;
-        }
-      }
-
-      if (propType.type === "TSTypeReference") {
-        const baseName = getRefName(propType.typeName);
-        if (baseName === "Array" || baseName === "ReadonlyArray") {
-          if (propType.typeArguments?.params[0]) {
-            const refs = extractTypeRefs(propType.typeArguments.params[0]);
-            for (const ref of refs) {
-              const typeName = getRefName(ref.typeName);
-              if (typeName) return typeName;
-            }
-          }
-        }
+function getAllMembers(
+  type: TSESTree.TypeNode | null | undefined,
+): TSESTree.TSPropertySignature[] {
+  const members: TSESTree.TSPropertySignature[] = [];
+  for (const literal of unwrapTSTypeLiteral(type)) {
+    for (const member of literal.members) {
+      if (member.type === "TSPropertySignature") {
+        members.push(member);
       }
     }
   }
+  return members;
+}
 
-  for (const typeLiteral of typeLiterals) {
-    for (const member of typeLiteral.members) {
-      if (member.type !== "TSPropertySignature") continue;
-      const propType = member.typeAnnotation?.typeAnnotation;
-      if (!propType) continue;
+function findRefInNodes(type: TSESTree.TypeNode): string | null {
+  for (const ref of extractTypeRefs(type)) {
+    const name = getRefName(ref.typeName);
+    if (name) return name;
+  }
+  return null;
+}
 
-      if (propType.type === "TSArrayType") continue;
+function isKnownArrayLike(name: string | null): boolean {
+  return name === "Array" || name === "ReadonlyArray";
+}
 
-      if (propType.type === "TSTypeReference") {
-        const baseName = getRefName(propType.typeName);
-        if (baseName === "Array" || baseName === "ReadonlyArray") continue;
-      }
+function checkArrayLike(member: TSESTree.TSPropertySignature): string | null {
+  const propType = member.typeAnnotation?.typeAnnotation;
+  if (!propType) return null;
 
-      const refs = extractTypeRefs(propType);
-      for (const ref of refs) {
-        const typeName = getRefName(ref.typeName);
-        if (typeName) return typeName;
-      }
+  if (propType.type === "TSArrayType") {
+    return findRefInNodes(propType.elementType);
+  }
+
+  if (propType.type === "TSTypeReference") {
+    const baseName = getRefName(propType.typeName);
+    if (isKnownArrayLike(baseName) && propType.typeArguments?.params[0]) {
+      return findRefInNodes(propType.typeArguments.params[0]);
     }
   }
 
   return null;
+}
+
+function checkPriorityMember(member: TSESTree.TSPropertySignature): string | null {
+  return checkArrayLike(member);
+}
+
+function checkFallbackMember(member: TSESTree.TSPropertySignature): string | null {
+  const propType = member.typeAnnotation?.typeAnnotation;
+  if (!propType) return null;
+  if (propType.type === "TSArrayType") return null;
+
+  if (propType.type === "TSTypeReference") {
+    const baseName = getRefName(propType.typeName);
+    if (isKnownArrayLike(baseName)) return null;
+  }
+
+  return findRefInNodes(propType);
+}
+
+function findFirstRef(
+  members: TSESTree.TSPropertySignature[],
+  checker: (member: TSESTree.TSPropertySignature) => string | null,
+): string | null {
+  for (const member of members) {
+    const result = checker(member);
+    if (result) return result;
+  }
+  return null;
+}
+
+function getNextRef(node: TSESTree.TSTypeAliasDeclaration): string | null {
+  const members = getAllMembers(node.typeAnnotation);
+  if (members.length === 0) return null;
+
+  const priorityRef = findFirstRef(members, checkPriorityMember);
+  if (priorityRef) return priorityRef;
+
+  return findFirstRef(members, checkFallbackMember);
 }
 
 function unwrapTSTypeLiteral(
