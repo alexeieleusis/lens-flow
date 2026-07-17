@@ -106,7 +106,7 @@ export default createRule({
         const refNode = typeAnnotation as TSESTree.TSTypeReference;
         let typeName: string | undefined;
         if (refNode.typeName.type === AST_NODE_TYPES.Identifier) {
-          typeName = (refNode.typeName as TSESTree.Identifier).name;
+          typeName = refNode.typeName.name;
         }
         if (typeName === "Map" || typeName === "Set") {
           context.report({
