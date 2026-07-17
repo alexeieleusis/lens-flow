@@ -84,8 +84,14 @@ function getTypeAnnotationFromDef(
         const params = fn.params;
         const defName = def.name.type === "Identifier" ? def.name.name : null;
         for (const param of params) {
-          const paramName = param.type === "Identifier" ? param.name :
-            param.type === "AssignmentPattern" && param.left.type === "Identifier" ? param.left.name : null;
+          let paramName: string | null;
+          if (param.type === "Identifier") {
+            paramName = param.name;
+          } else if (param.type === "AssignmentPattern" && param.left.type === "Identifier") {
+            paramName = param.left.name;
+          } else {
+            paramName = null;
+          }
           if (!defName || paramName !== defName) continue;
           if (param.type === "Identifier" && param.typeAnnotation) {
               return param.typeAnnotation.typeAnnotation;
