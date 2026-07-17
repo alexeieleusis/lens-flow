@@ -237,7 +237,7 @@ export default createRule({
 
         // Unwrap ChainExpression (optional chaining) to reach the inner expression
         if (obj.type === "ChainExpression") {
-          obj = (obj as TSESTree.ChainExpression).expression;
+          obj = obj.expression;
         }
 
         if (obj.type === "Identifier" && obj.name) {
