@@ -26,12 +26,12 @@ function isSealedSymbolMember(member: TSESTree.TSInterfaceBody["body"][number]):
     member.type === "TSPropertySignature" &&
     member.computed
   ) {
-    const keyName =
-      member.key.type === "Identifier"
-        ? member.key.name
-        : member.key.type === "Literal"
-          ? String(member.key.value)
-          : null;
+    let keyName: string | null = null;
+    if (member.key.type === "Identifier") {
+      keyName = member.key.name;
+    } else if (member.key.type === "Literal") {
+      keyName = String(member.key.value);
+    }
 
     if (keyName?.startsWith("_")) {
       const typeAnn = member.typeAnnotation?.typeAnnotation;
