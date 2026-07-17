@@ -120,8 +120,7 @@ function isValidationGuard(
     return true;
   }
   if (
-    node.alternate &&
-    node.alternate.type === AST_NODE_TYPES.ExpressionStatement &&
+    node.alternate?.type === AST_NODE_TYPES.ExpressionStatement &&
     node.alternate.expression.type === AST_NODE_TYPES.CallExpression
   ) {
     if (isValidationCall(node.alternate.expression)) return true;
