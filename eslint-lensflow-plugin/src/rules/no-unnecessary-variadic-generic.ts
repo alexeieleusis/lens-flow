@@ -299,6 +299,20 @@ export default createRule({
       }
     }
 
+    function resolveVariable(
+      name: string,
+      node: TSESTree.Node,
+    ): TSESLint.Scope.Variable | undefined {
+      let scope: TSESLint.Scope.Scope | null = context.sourceCode.getScope(node);
+      while (scope) {
+        for (const v of scope.variables) {
+          if (v.name === name) return v;
+        }
+        scope = scope.upper;
+      }
+      return undefined;
+    }
+
     return {
       FunctionDeclaration: enterFn,
       "FunctionDeclaration:exit": exitFn,
@@ -320,23 +334,8 @@ export default createRule({
 
         const varId = callNode.callee.object;
         const methodName = callNode.callee.property.name;
+        const resolved = resolveVariable(varId.name, callNode);
 
-        // Resolve the identifier's binding using scope analysis
-        let scope: TSESLint.Scope.Scope | null = context.sourceCode.getScope(callNode);
-        let resolved: TSESLint.Scope.Variable | undefined;
-
-        while (scope) {
-          for (const v of scope.variables) {
-            if (v.name === varId.name) {
-              resolved = v;
-              break;
-            }
-          }
-          if (resolved) break;
-          scope = scope.upper;
-        }
-
-        // Walk the stack from innermost to outermost to find the matching generic
         for (let i = fnStack.length - 1; i >= 0; i--) {
           for (const data of fnStack[i].values()) {
             if (
