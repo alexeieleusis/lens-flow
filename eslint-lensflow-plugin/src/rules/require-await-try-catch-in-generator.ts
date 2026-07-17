@@ -33,22 +33,21 @@ export default createRule({
           const current = ancestors[i];
 
           if (current.type === "TryStatement") {
-            const tryNode = current as TSESTree.TryStatement;
             const inTry =
-              tryNode.block.range &&
-              isInsideRange(tryNode.block.range[0], tryNode.block.range[1], node);
+              current.block.range &&
+              isInsideRange(current.block.range[0], current.block.range[1], node);
             const inCatch =
-              tryNode.handler?.body.range &&
+              current.handler?.body.range &&
               isInsideRange(
-                tryNode.handler.body.range[0],
-                tryNode.handler.body.range[1],
+                current.handler.body.range[0],
+                current.handler.body.range[1],
                 node,
               );
             const inFinally =
-              tryNode.finalizer?.range &&
+              current.finalizer?.range &&
               isInsideRange(
-                tryNode.finalizer.range[0],
-                tryNode.finalizer.range[1],
+                current.finalizer.range[0],
+                current.finalizer.range[1],
                 node,
               );
             if (inTry || inCatch || inFinally) return;
