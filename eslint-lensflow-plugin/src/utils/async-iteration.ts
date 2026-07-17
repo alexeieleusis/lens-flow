@@ -16,7 +16,7 @@ export function hasAsyncIteratorSignature(
   const prop = type.getApparentProperties().find((p) =>
     String(p.escapedName).startsWith("__@asyncIterator@"),
   );
-  if (!prop || !prop.valueDeclaration) return false;
+  if (!prop?.valueDeclaration) return false;
 
   const propType = checker.getTypeOfSymbolAtLocation(prop, prop.valueDeclaration);
   return propType.getCallSignatures().length > 0;
