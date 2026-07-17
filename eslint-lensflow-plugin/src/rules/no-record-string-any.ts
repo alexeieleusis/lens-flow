@@ -30,6 +30,20 @@ function reportRecordAny(
   });
 }
 
+function handleTypeReference(
+  context: TSESLint.RuleContext<"recordAny", []>,
+  refNode: TSESTree.TSTypeReference,
+): void {
+  if (isRecordAny(refNode)) {
+    reportRecordAny(context, refNode);
+  }
+  if (refNode.typeArguments) {
+    for (const p of refNode.typeArguments.params) {
+      recurseIntoType(context, p);
+    }
+  }
+}
+
 function recurseIntoType(
   context: TSESLint.RuleContext<"recordAny", []>,
   typeNode: TSESTree.TypeNode,
@@ -37,15 +51,7 @@ function recurseIntoType(
   if (typeNode.type === "TSUnionType" || typeNode.type === "TSIntersectionType") {
     for (const t of typeNode.types) recurseIntoType(context, t);
   } else if (typeNode.type === "TSTypeReference") {
-    const tn = typeNode;
-    if (isRecordAny(tn)) {
-      reportRecordAny(context, tn);
-    }
-    if (tn.typeArguments) {
-      for (const p of tn.typeArguments.params) {
-        recurseIntoType(context, p);
-      }
-    }
+    handleTypeReference(context, typeNode);
   } else if (typeNode.type === "TSTypeOperator") {
     if (typeNode.typeAnnotation) {
       recurseIntoType(context, typeNode.typeAnnotation);
