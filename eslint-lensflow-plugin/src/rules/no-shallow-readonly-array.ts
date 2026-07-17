@@ -20,6 +20,13 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"shallowReadonlyArray" | "shallowReadonlyArrayRef", []>) {
+    function getPropName(
+      node: TSESTree.TSPropertySignature | TSESTree.PropertyDefinition,
+      source: TSESLint.SourceCode,
+    ) {
+      return node.key.type === "Identifier" ? node.key.name : source.getText(node.key);
+    }
+
     function checkShallowReadonlyArray(
       node: TSESTree.TSPropertySignature | TSESTree.PropertyDefinition,
     ) {
@@ -29,44 +36,32 @@ export default createRule({
       if (!typeAnn) return;
 
       const source = context.sourceCode;
+      const propName = getPropName(node, source);
 
       if (typeAnn.type === "TSArrayType") {
         const typeName = source.getText(typeAnn);
         if (typeName.startsWith("readonly ")) return;
-        const propName =
-          node.key.type === "Identifier" ? node.key.name : source.getText(node.key);
-
         context.report({
           node,
           messageId: "shallowReadonlyArray",
-          data: {
-            name: propName,
-            type: typeName,
-          },
+          data: { name: propName, type: typeName },
         });
       }
 
       if (typeAnn.type === "TSTypeReference") {
         const tn = typeAnn.typeName;
-        if (tn.type === "Identifier" && tn.name === "Array") {
-          const elemTypes = typeAnn.typeArguments?.params ?? [];
-          const elemText = elemTypes.length
-            ? elemTypes
-                .map((e: TSESTree.Node) => source.getText(e))
-                .join(", ")
-            : "unknown";
-          const propName =
-            node.key.type === "Identifier" ? node.key.name : source.getText(node.key);
+        if (tn.type !== "Identifier" || tn.name !== "Array") return;
 
-          context.report({
-            node,
-            messageId: "shallowReadonlyArrayRef",
-            data: {
-              name: propName,
-              element: elemText,
-            },
-          });
-        }
+        const elemTypes = typeAnn.typeArguments?.params ?? [];
+        const elemText = elemTypes.length
+          ? elemTypes.map((e: TSESTree.Node) => source.getText(e)).join(", ")
+          : "unknown";
+
+        context.report({
+          node,
+          messageId: "shallowReadonlyArrayRef",
+          data: { name: propName, element: elemText },
+        });
       }
     }
 
