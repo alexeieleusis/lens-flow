@@ -178,7 +178,7 @@ export default createRule({
       MethodDefinition(node) {
         if (
           node.key.type !== AST_NODE_TYPES.Identifier ||
-          (node.key as TSESTree.Identifier).name !== "constructor"
+          node.key.name !== "constructor"
         ) return;
 
         for (const param of node.value.params) {
