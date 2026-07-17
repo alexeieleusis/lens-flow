@@ -225,7 +225,7 @@ export default createRule({
       }
 
       for (const { name, anyNode, paramNode } of anyParams) {
-        if (paramNode && paramNode.type === "Identifier" && bodyOnlyNarrows(body, paramNode, funcScope)) {
+        if (paramNode?.type === "Identifier" && bodyOnlyNarrows(body, paramNode, funcScope)) {
           context.report({
             node: anyNode,
             messageId: "preferUnknown",
