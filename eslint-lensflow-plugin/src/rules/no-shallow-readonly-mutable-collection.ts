@@ -45,7 +45,7 @@ function isTypeReference(node: TSESTree.TypeNode): boolean {
 
 function getPropertyName(key: TSESTree.PropertyName): string {
   if (key.type === AST_NODE_TYPES.Identifier) {
-    return (key as TSESTree.Identifier).name;
+    return key.name;
   }
   if (key.type === AST_NODE_TYPES.Literal) {
     return String((key as TSESTree.Literal).value);
