@@ -3,6 +3,7 @@ import { createRule } from "../utils/rule-creator.js";
 
 const TS_UNION = "TSUnionType";
 const IDENTIFIER = "Identifier";
+const TS_PARAM_PROP = "TSParameterProperty";
 
 function getUnionFingerprint(
   sourceCode: TSESLint.SourceCode,
@@ -47,36 +48,39 @@ export default createRule({
   create(context: TSESLint.RuleContext<"sharedUnionWithoutGeneric", []>) {
     const sourceCode = context.sourceCode;
 
-    function checkFunction(node: FunctionLikeNode) {
-      if (hasTypeParameters(node)) return;
-
-      const params = node.params;
-
+    function collectUnionGroups(params: TSESTree.Parameter[]) {
       const unionGroups = new Map<string, { name: string; param: TSESTree.Parameter }[]>();
 
       for (const param of params) {
-        let effectiveParam = param.type === "TSParameterProperty" ? param.parameter : param;
+        let effectiveParam = param.type === TS_PARAM_PROP ? (param as any).parameter : param;
         if (effectiveParam.type === "AssignmentPattern") {
-          effectiveParam = effectiveParam.left;
+          effectiveParam = (effectiveParam as TSESTree.AssignmentPattern).left;
         }
-        const typeAnn = effectiveParam.typeAnnotation;
+        const typeAnn = (effectiveParam as TSESTree.Identifier).typeAnnotation;
         if (!typeAnn) continue;
 
         const typeAnnotation = typeAnn.typeAnnotation;
-        if (typeAnnotation.type !== TS_UNION)
-          continue;
+        if (typeAnnotation.type !== TS_UNION) continue;
 
         const fingerprint = getUnionFingerprint(sourceCode, typeAnnotation);
         const paramName =
           effectiveParam.type === IDENTIFIER
-            ? effectiveParam.name
-            : sourceCode.getText(effectiveParam);
+            ? (effectiveParam as TSESTree.Identifier).name
+            : sourceCode.getText(effectiveParam as TSESTree.Node);
 
         if (!unionGroups.has(fingerprint)) {
           unionGroups.set(fingerprint, []);
         }
         unionGroups.get(fingerprint)!.push({ name: paramName, param });
       }
+
+      return unionGroups;
+    }
+
+    function checkFunction(node: FunctionLikeNode) {
+      if (hasTypeParameters(node)) return;
+
+      const unionGroups = collectUnionGroups(node.params);
 
       for (const [fingerprint, groupEntries] of unionGroups) {
         if (groupEntries.length >= 2) {
