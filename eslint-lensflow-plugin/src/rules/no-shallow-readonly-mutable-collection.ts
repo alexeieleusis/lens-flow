@@ -23,8 +23,7 @@ function isMutableCollectionType(node: TSESTree.TypeNode): boolean {
   }
 
   if (node.type === AST_NODE_TYPES.TSIntersectionType) {
-    const interNode = node as TSESTree.TSIntersectionType;
-    return interNode.types.some((t) => isMutableCollectionType(t));
+    return node.types.some((t) => isMutableCollectionType(t));
   }
 
   if (node.type === AST_NODE_TYPES.TSUnionType) {
