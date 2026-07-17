@@ -16,7 +16,7 @@ function isMutableCollectionType(node: TSESTree.TypeNode): boolean {
   if (node.type === AST_NODE_TYPES.TSTypeReference) {
     const refNode = node as TSESTree.TSTypeReference;
     if (refNode.typeName.type === AST_NODE_TYPES.Identifier) {
-      const name = (refNode.typeName as TSESTree.Identifier).name;
+      const name = refNode.typeName.name;
       return name === "Map" || name === "Set" || name === "Array";
     }
     return false;
