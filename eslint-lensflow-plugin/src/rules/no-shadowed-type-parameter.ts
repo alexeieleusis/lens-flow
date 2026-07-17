@@ -101,20 +101,14 @@ export default createRule({
     }
 
     function enterMappedType(node: TSESTree.TSMappedType) {
-      const typeParam = node.typeParameter;
-      if (!typeParam) return;
+      const name = node.key.name;
 
-      const nameParam = typeParam.name;
-      const name = typeof nameParam === "string" ? nameParam : nameParam.name;
-
-      reportShadow(name, typeParam.name);
+      reportShadow(name, node.key);
       trackScope([name]);
     }
 
-    function exitMappedType(node: TSESTree.TSMappedType) {
-      if (node.typeParameter) {
-        untrackScope();
-      }
+    function exitMappedType() {
+      untrackScope();
     }
 
     function enterMethodSignature(node: TSESTree.TSMethodSignature) {
@@ -205,8 +199,8 @@ export default createRule({
       TSMappedType(node) {
         enterMappedType(node);
       },
-      "TSMappedType:exit"(node) {
-        exitMappedType(node);
+      "TSMappedType:exit"() {
+        exitMappedType();
       },
       TSMethodSignature(node) {
         enterMethodSignature(node);
