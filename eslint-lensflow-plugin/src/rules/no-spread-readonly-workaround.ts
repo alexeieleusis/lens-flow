@@ -65,6 +65,44 @@ function isReadonlyVariable(
   });
 }
 
+function getParamName(param: TSESTree.Parameter): string | null {
+  if (param.type === "Identifier") return param.name;
+  if (
+    param.type === "AssignmentPattern" &&
+    param.left.type === "Identifier"
+  )
+    return param.left.name;
+  return null;
+}
+
+function getTypeAnnotationFromParamNode(
+  param: TSESTree.Parameter,
+): TSESTree.TypeNode | null {
+  if (param.type === "Identifier" && param.typeAnnotation)
+    return param.typeAnnotation.typeAnnotation;
+  if (
+    param.type === "AssignmentPattern" &&
+    param.left.type === "Identifier" &&
+    param.left.typeAnnotation
+  )
+    return param.left.typeAnnotation.typeAnnotation;
+  return null;
+}
+
+function findParamTypeAnnotation(
+  fn: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression,
+  def: TSESLint.Scope.Definition,
+): TSESTree.TypeNode | null {
+  const defName = def.name.type === "Identifier" ? def.name.name : null;
+  for (const param of fn.params) {
+    const paramName = getParamName(param);
+    if (defName && paramName === defName) {
+      return getTypeAnnotationFromParamNode(param);
+    }
+  }
+  return null;
+}
+
 function getTypeAnnotationFromDef(
   def: TSESLint.Scope.Definition,
 ): TSESTree.TypeNode | null {
@@ -78,42 +116,18 @@ function getTypeAnnotationFromDef(
     }
     case "Parameter": {
       const node = def.node;
-      // def.node may be the parameter itself or the containing function
-      if (node.type === "FunctionDeclaration" || node.type === "FunctionExpression" || node.type === "ArrowFunctionExpression") {
-        const fn = node as TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression;
-        const params = fn.params;
-        const defName = def.name.type === "Identifier" ? def.name.name : null;
-        for (const param of params) {
-          let paramName: string | null;
-          if (param.type === "Identifier") {
-            paramName = param.name;
-          } else if (param.type === "AssignmentPattern" && param.left.type === "Identifier") {
-            paramName = param.left.name;
-          } else {
-            paramName = null;
-          }
-          if (!defName || paramName !== defName) continue;
-          if (param.type === "Identifier" && param.typeAnnotation) {
-              return param.typeAnnotation.typeAnnotation;
-            }
-            if (param.type === "AssignmentPattern" && param.left.type === "Identifier" && param.left.typeAnnotation) {
-              return param.left.typeAnnotation.typeAnnotation;
-            }
-        }
-        return null;
+      if (
+        node.type === "FunctionDeclaration" ||
+        node.type === "FunctionExpression" ||
+        node.type === "ArrowFunctionExpression"
+      ) {
+        return findParamTypeAnnotation(
+          node as TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression,
+          def,
+        );
       }
       const param = node as unknown as TSESTree.Parameter;
-      if (param.type === "Identifier" && param.typeAnnotation) {
-        return param.typeAnnotation.typeAnnotation;
-      }
-      if (
-        param.type === "AssignmentPattern" &&
-        param.left.type === "Identifier" &&
-        param.left.typeAnnotation
-      ) {
-        return param.left.typeAnnotation.typeAnnotation;
-      }
-      return null;
+      return getTypeAnnotationFromParamNode(param);
     }
     default:
       return null;
