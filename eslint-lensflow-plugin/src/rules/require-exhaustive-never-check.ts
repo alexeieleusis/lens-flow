@@ -75,8 +75,8 @@ export default createRule({
         const ifAncestor = findIfAncestorInBody(node, funcInfo.body);
         if (ifAncestor) {
           if (funcInfo.body.body[funcInfo.body.body.length - 1] !== ifAncestor) return;
-        } else {
-          if (funcInfo.body.body[funcInfo.body.body.length - 1] !== node) return;
+        } else if (funcInfo.body.body[funcInfo.body.body.length - 1] !== node) {
+          return;
         }
 
         const info = collectSiblingIfChain(node);
