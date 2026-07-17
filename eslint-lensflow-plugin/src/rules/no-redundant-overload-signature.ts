@@ -76,7 +76,7 @@ function astEquals(
   const aProps = getNodeProps(a);
   const bProps = getNodeProps(b);
 
-  for (const key of Object.getOwnPropertyNames(aProps).sort()) {
+  for (const key of Object.getOwnPropertyNames(aProps).sort((a, b) => a.localeCompare(b))) {
     if (SKIP_KEYS.has(key)) continue;
 
     const aVal = aProps[key];
