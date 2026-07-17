@@ -18,34 +18,36 @@ function getMembers(
   return node.members;
 }
 
+function extractTypeName(node: TSESTree.TSTypeReference): string | null {
+  if (node.typeName.type === "Identifier") {
+    return node.typeName.name;
+  }
+
+  if (node.typeName.type === "TSQualifiedName") {
+    return node.typeName.right.name;
+  }
+
+  return null;
+}
+
 function resolveUnionNode(
   annotation: TSESTree.TypeNode,
   typeAliases: Map<string, TSESTree.TypeNode>,
 ): TSESTree.TSUnionType | null {
-  let current: TSESTree.TypeNode = annotation;
-
-  if (current.type === "TSUnionType") {
-    return current;
+  if (annotation.type === "TSUnionType") {
+    return annotation;
   }
 
-  if (current.type !== "TSTypeReference") {
+  if (annotation.type !== "TSTypeReference") {
     return null;
   }
 
   // Follow alias chains: type A = B; type B = "x" | "y";
   const visited = new Set<string>();
-  let currentNode: TSESTree.TypeNode = current;
+  let currentNode: TSESTree.TypeNode = annotation;
 
   while (currentNode.type === "TSTypeReference") {
-    let typeName: string | null;
-    if (currentNode.typeName.type === "Identifier") {
-      typeName = currentNode.typeName.name;
-    } else if (currentNode.typeName.type === "TSQualifiedName") {
-      typeName = currentNode.typeName.right.name;
-    } else {
-      typeName = null;
-    }
-
+    const typeName = extractTypeName(currentNode);
     if (!typeName || !typeAliases.has(typeName)) {
       return null;
     }
@@ -57,15 +59,16 @@ function resolveUnionNode(
 
     const aliasType: TSESTree.TypeNode = typeAliases.get(typeName)!;
 
+    if (aliasType.type === "TSTypeReference") {
+      currentNode = aliasType;
+      continue;
+    }
+
     if (aliasType.type === "TSUnionType") {
       return aliasType;
     }
 
-    if (aliasType.type === "TSTypeReference") {
-      currentNode = aliasType;
-    } else {
-      return null;
-    }
+    return null;
   }
 
   return null;
