@@ -106,6 +106,97 @@ export default createRule({
           }
         }
 
+        function addPropToMap(
+          propName: string,
+          sig: TSESTree.TSPropertySignature,
+          widened: "string" | "number" | null,
+          hasLiteral: boolean,
+          propMap: Map<string, PropEntry[]>,
+        ) {
+          const entry: PropEntry = { sig, widened, hasLiteral };
+          const existing = propMap.get(propName);
+          if (existing) {
+            existing.push(entry);
+          } else {
+            propMap.set(propName, [entry]);
+          }
+        }
+
+        function analyzePropertySignature(
+          member: TSESTree.TypeElement,
+        ): {
+          propName: string;
+          sig: TSESTree.TSPropertySignature;
+          widened: "string" | "number" | null;
+          hasLiteral: boolean;
+        } | null {
+          if (member.type !== "TSPropertySignature") return null;
+          const propName = getPropertyName(member.key);
+          if (!propName) return null;
+          const typeAnn = member.typeAnnotation?.typeAnnotation;
+          if (!typeAnn) return null;
+
+          const widened: "string" | "number" | null =
+            typeAnn.type === "TSStringKeyword"
+              ? "string"
+              : typeAnn.type === "TSNumberKeyword"
+                ? "number"
+                : null;
+
+          return {
+            propName,
+            sig: member,
+            widened,
+            hasLiteral: typeAnn.type === "TSLiteralType",
+          };
+        }
+
+        function processTypeReference(
+          typeNode: TSESTree.TSTypeReference,
+          visited: Set<TSESTree.TSTypeReference>,
+          propMap: Map<string, PropEntry[]>,
+        ) {
+          if (visited.has(typeNode)) return;
+
+          if (hasTypeChecker && checker) {
+            const tsNode = parserServices.esTreeNodeToTSNodeMap.get(typeNode);
+            const symbol = checker.getSymbolAtLocation(tsNode);
+            const decl = symbol?.declarations?.[0];
+
+            if (decl?.kind === ts.SyntaxKind.TypeAliasDeclaration) {
+              const declType = (decl as ts.TypeAliasDeclaration).type;
+              if (declType) {
+                processRuntimeType(tsNode, propMap);
+                return;
+              }
+            }
+          }
+
+          visited = new Set(visited);
+          visited.add(typeNode);
+        }
+
+        function processIndexedAccessType(
+          typeNode: TSESTree.TSIndexedAccessType,
+          propMap: Map<string, PropEntry[]>,
+        ) {
+          if (hasTypeChecker && checker) {
+            const tsNode = parserServices.esTreeNodeToTSNodeMap.get(typeNode);
+            processRuntimeType(tsNode, propMap);
+          }
+        }
+
+        function processIntersectionType(
+          typeNode: TSESTree.TSIntersectionType,
+          visited: Set<TSESTree.TSTypeReference>,
+          out: TSESTree.TSTypeLiteral[],
+          propMap: Map<string, PropEntry[]>,
+        ) {
+          for (const intersectMember of typeNode.types) {
+            processType(intersectMember, visited, out, propMap);
+          }
+        }
+
         const processType = (
           typeNode: TSESTree.TypeNode,
           visited: Set<TSESTree.TSTypeReference>,
@@ -115,66 +206,22 @@ export default createRule({
           if (typeNode.type === "TSTypeLiteral") {
             out.push(typeNode);
             for (const member of typeNode.members) {
-              if (member.type !== "TSPropertySignature") continue;
-              const propName = getPropertyName(member.key);
-              if (!propName) continue;
-              const typeAnn = member.typeAnnotation?.typeAnnotation;
-              if (!typeAnn) continue;
-
-              let widened: "string" | "number" | null = null;
-              if (typeAnn.type === "TSStringKeyword") {
-                widened = "string";
-              } else if (typeAnn.type === "TSNumberKeyword") {
-                widened = "number";
-              }
-
-              const existing = propMap.get(propName);
-              if (existing) {
-                existing.push({
-                  sig: member,
-                  widened,
-                  hasLiteral: typeAnn.type === "TSLiteralType",
-                });
-              } else {
-                propMap.set(propName, [
-                  {
-                    sig: member,
-                    widened,
-                    hasLiteral: typeAnn.type === "TSLiteralType",
-                  },
-                ]);
-              }
+              const analysis = analyzePropertySignature(member);
+              if (!analysis) continue;
+              addPropToMap(
+                analysis.propName,
+                analysis.sig,
+                analysis.widened,
+                analysis.hasLiteral,
+                propMap,
+              );
             }
           } else if (typeNode.type === "TSTypeReference") {
-            if (visited.has(typeNode)) return;
-
-            if (hasTypeChecker && checker) {
-              const tsNode = parserServices.esTreeNodeToTSNodeMap.get(typeNode);
-              const symbol = checker.getSymbolAtLocation(tsNode);
-              const decl = symbol?.declarations?.[0];
-
-              if (decl?.kind === ts.SyntaxKind.TypeAliasDeclaration) {
-                const declType = (decl as ts.TypeAliasDeclaration).type;
-                if (declType) {
-                  processRuntimeType(tsNode, propMap);
-                  return;
-                }
-              }
-            }
-
-            visited = new Set(visited);
-            visited.add(typeNode);
+            processTypeReference(typeNode, visited, propMap);
           } else if (typeNode.type === "TSIndexedAccessType") {
-            if (hasTypeChecker && checker) {
-              const tsNode = parserServices.esTreeNodeToTSNodeMap.get(typeNode);
-              processRuntimeType(tsNode, propMap);
-            }
-            return;
+            processIndexedAccessType(typeNode, propMap);
           } else if (typeNode.type === "TSIntersectionType") {
-            for (const intersectMember of typeNode.types) {
-              processType(intersectMember, visited, out, propMap);
-            }
-            return;
+            processIntersectionType(typeNode, visited, out, propMap);
           }
         };
 
