@@ -61,7 +61,7 @@ function findEnclosingDeclaration(
     if (
       current.type === "TSInterfaceDeclaration"
     ) {
-      return current as TSESTree.TSInterfaceDeclaration;
+      return current;
     }
     current = (current as TSESTree.Node & { parent?: TSESTree.Node }).parent;
   }
