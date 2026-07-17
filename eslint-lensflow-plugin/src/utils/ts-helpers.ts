@@ -279,12 +279,18 @@ export function collectChildTypes(type: TSESTree.TypeNode): TSESTree.TypeNode[] 
 export function extractLiteralValues(tsType: ts.Type, checker?: ts.TypeChecker): (string | number | boolean)[] {
   const values = new Set<string | number | boolean>();
 
-  function visit(t: ts.Type) {
-    if (t.isUnion()) {
-      for (const member of t.types) visit(member);
-      return;
+  function extractBooleanLiteral(t: ts.Type): boolean | undefined {
+    const val = (t as ts.Type & { value?: boolean }).value;
+    if (val !== undefined) return val;
+    if (checker) {
+      const str = checker.typeToString(t);
+      if (str === "true") return true;
+      if (str === "false") return false;
     }
-    if (t.isIntersection()) {
+  }
+
+  function visit(t: ts.Type) {
+    if (t.isUnion() || t.isIntersection()) {
       for (const member of t.types) visit(member);
       return;
     }
@@ -297,14 +303,8 @@ export function extractLiteralValues(tsType: ts.Type, checker?: ts.TypeChecker):
       return;
     }
     if ((t.flags & ts.TypeFlags.BooleanLiteral) !== 0) {
-      const val = (t as ts.Type & { value?: boolean }).value;
-      if (val !== undefined) {
-        values.add(val);
-      } else if (checker) {
-        const str = checker.typeToString(t);
-        if (str === "true") values.add(true);
-        else if (str === "false") values.add(false);
-      }
+      const val = extractBooleanLiteral(t);
+      if (val !== undefined) values.add(val);
       return;
     }
     // Handle boolean keyword type (true | false widens to boolean)
