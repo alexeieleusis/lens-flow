@@ -73,7 +73,7 @@ export default createRule({
     );
     const program = parserServices.program;
     const hasTypeChecker = !!program;
-    const checker = hasTypeChecker ? program!.getTypeChecker() : null;
+    const checker = program ? program.getTypeChecker() : null;
 
     return {
       TSUnionType(node) {
