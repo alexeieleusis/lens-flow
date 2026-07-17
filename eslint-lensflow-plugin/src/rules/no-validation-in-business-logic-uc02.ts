@@ -41,7 +41,7 @@ function extractIdentifiers(node: TSESTree.Node, names: Set<string>): void {
       if (element) extractIdentifiers(element, names);
     }
   } else if (node.type === "RestElement") {
-    extractIdentifiers((node as TSESTree.RestElement).argument, names);
+    extractIdentifiers(node.argument, names);
   } else if (node.type === "AssignmentPattern") {
     extractIdentifiers(node.left, names);
   }
