@@ -13,7 +13,7 @@ function getNameFromPattern(pattern: TSESTree.Node): string | null {
   }
   if (pattern.type === AST_NODE_TYPES.ArrayPattern) {
     const elem = pattern.elements[0];
-    if (elem && elem.type === AST_NODE_TYPES.Identifier) return elem.name;
+    if (elem?.type === AST_NODE_TYPES.Identifier) return elem.name;
     return null;
   }
   return null;
