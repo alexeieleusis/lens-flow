@@ -534,7 +534,7 @@ export default createRule({
             const blockBody =
               anc.type === "BlockStatement"
                 ? anc.body
-                : (anc as TSESTree.Program).body;
+                : anc.body;
             let foundGuard = false;
             for (const stmt of blockBody) {
               if (
