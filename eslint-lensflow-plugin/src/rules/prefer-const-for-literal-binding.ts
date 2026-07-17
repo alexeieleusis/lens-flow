@@ -3,6 +3,31 @@ import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 type WidenedPrimitive = "string" | "number" | "boolean";
 
+function getLiteralInfo(
+  init: TSESTree.Literal | TSESTree.TemplateLiteral
+): { literalType: string | number; widenedType: WidenedPrimitive } | null {
+  if (init.type === "TemplateLiteral") {
+    if (init.expressions.length !== 0) return null;
+    const cooked = init.quasis[0].value.cooked;
+    if (cooked === null) return null;
+    return { literalType: `"${cooked}"`, widenedType: "string" };
+  }
+
+  const val = init.value;
+  let literalType: string | number | null;
+  if (typeof val === "string") {
+    literalType = `"${val}"`;
+  } else if (typeof val === "number") {
+    literalType = val;
+  } else if (typeof val === "boolean") {
+    literalType = String(val);
+  } else {
+    return null;
+  }
+  const widenedType = typeof val as WidenedPrimitive;
+  return { literalType, widenedType };
+}
+
 export default createRule({
   name: "prefer-const-for-literal-binding",
   meta: {
@@ -31,31 +56,6 @@ export default createRule({
         currentScope = currentScope.upper!;
       }
       return variable?.references.some((ref) => ref.isWrite() && !ref.init) ?? false;
-    }
-
-    function getLiteralInfo(
-      init: TSESTree.Literal | TSESTree.TemplateLiteral
-    ): { literalType: string | number; widenedType: WidenedPrimitive } | null {
-      if (init.type === "TemplateLiteral") {
-        if (init.expressions.length !== 0) return null;
-        const cooked = init.quasis[0].value.cooked;
-        if (cooked === null) return null;
-        return { literalType: `"${cooked}"`, widenedType: "string" };
-      }
-
-      const val = init.value;
-      let literalType: string | number | null;
-      if (typeof val === "string") {
-        literalType = `"${val}"`;
-      } else if (typeof val === "number") {
-        literalType = val;
-      } else if (typeof val === "boolean") {
-        literalType = String(val);
-      } else {
-        return null;
-      }
-      const widenedType = typeof val as WidenedPrimitive;
-      return { literalType, widenedType };
     }
 
     return {
