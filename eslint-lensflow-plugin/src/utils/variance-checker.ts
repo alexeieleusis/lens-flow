@@ -392,10 +392,7 @@ export function isUsedAsInputInBody(
       }
     }
     if (member.type === AST_NODE_TYPES.TSCallSignatureDeclaration) {
-      return paramsContainTypeRef(
-        (member as TSESTree.TSCallSignatureDeclaration).params,
-        paramName,
-      );
+      return paramsContainTypeRef(member.params, paramName);
     }
     if (member.type === AST_NODE_TYPES.TSConstructSignatureDeclaration) {
       return paramsContainTypeRef(member.params, paramName);
