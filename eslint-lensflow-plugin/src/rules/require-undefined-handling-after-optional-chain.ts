@@ -137,10 +137,7 @@ function testContainsIsNullGuard(
   }
 
   if (test.type === "LogicalExpression") {
-    return testContainsIsNullGuard(
-      (test as TSESTree.LogicalExpression).left,
-      varName,
-    );
+    return testContainsIsNullGuard(test.left, varName);
   }
 
   if (test.type === "UnaryExpression") {
