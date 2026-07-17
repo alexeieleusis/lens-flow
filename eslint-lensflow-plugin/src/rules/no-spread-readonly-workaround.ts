@@ -70,7 +70,7 @@ function getTypeAnnotationFromDef(
 ): TSESTree.TypeNode | null {
   switch (def.type) {
     case "Variable": {
-      const id = (def.node as TSESTree.VariableDeclarator).id;
+      const id = def.node.id;
       if (id.type === "Identifier" && id.typeAnnotation) {
         return id.typeAnnotation.typeAnnotation;
       }
