@@ -72,7 +72,7 @@ function isParameterTypedWith(
 
   function matches(node: TSESTree.TypeNode): boolean {
     if (node.type === "TSTypeReference") {
-      return getRightmostIdentifier(node.typeName as TSESTree.EntityName) === typeParamName;
+      return getRightmostIdentifier(node.typeName) === typeParamName;
     }
     if (node.type === "TSUnionType") {
       return node.types.some(matches);
