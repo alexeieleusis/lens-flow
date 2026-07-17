@@ -146,7 +146,7 @@ function checkBlockForGuard(body: unknown, node: unknown, objName: string, propN
       if (s.type === "IfStatement") {
         if (s.consequent && !checkBlockForGuard(s.consequent, node, objName, propName)) return false;
         if (s.alternate && !checkBlockForGuard(s.alternate, node, objName, propName)) return false;
-      } else if (LOOP_TYPES.has(s.type as string) && s.body) {
+      } else if (LOOP_TYPES.has(s.type) && s.body) {
         if (!checkBlockForGuard(s.body, node, objName, propName)) return false;
       } else if (s.type === "SwitchStatement" && s.body) {
         if (!checkBlockForGuard(s.body, node, objName, propName)) return false;
