@@ -138,12 +138,14 @@ export default createRule({
 
         for (const member of flagged) {
           const propDef = member as TSESTree.PropertyDefinition;
-          const propName =
-            propDef.key.type === "Identifier"
-              ? propDef.key.name
-              : propDef.key.type === "Literal" && typeof propDef.key.value === "string"
-                ? propDef.key.value
-                : "?";
+          let propName;
+          if (propDef.key.type === "Identifier") {
+            propName = propDef.key.name;
+          } else if (propDef.key.type === "Literal" && typeof propDef.key.value === "string") {
+            propName = propDef.key.value;
+          } else {
+            propName = "?";
+          }
           context.report({
             node: member,
             messageId: "publicInternalState",
