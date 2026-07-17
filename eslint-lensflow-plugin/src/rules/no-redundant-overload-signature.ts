@@ -60,6 +60,47 @@ function arraysEqual(
   return true;
 }
 
+function propertyValuesMatch(
+  key: string,
+  aVal: NodePropertyValue,
+  bVal: NodePropertyValue,
+  childKeys: Set<string>,
+  visited: Set<string>,
+): boolean {
+  if (!childKeys.has(key)) return aVal === bVal;
+
+  if (Array.isArray(aVal) && Array.isArray(bVal)) {
+    return arraysEqual(aVal, bVal, visited);
+  }
+  if (isNodeLike(aVal) && isNodeLike(bVal)) {
+    return astEquals(aVal, bVal, visited);
+  }
+  return (aVal == null) === (bVal == null);
+}
+
+function allPropertiesMatch(
+  aProps: Record<string, NodePropertyValue>,
+  bProps: Record<string, NodePropertyValue>,
+  childKeys: Set<string>,
+  visited: Set<string>,
+): boolean {
+  const aKeys = Object.getOwnPropertyNames(aProps).sort((a, b) => a.localeCompare(b));
+  const bKeys = Object.getOwnPropertyNames(bProps).sort((a, b) => a.localeCompare(b));
+
+  for (const key of aKeys) {
+    if (SKIP_KEYS.has(key)) continue;
+    if (!propertyValuesMatch(key, aProps[key], bProps[key], childKeys, visited)) return false;
+  }
+
+  for (const key of bKeys) {
+    if (SKIP_KEYS.has(key)) continue;
+    if (Object.prototype.hasOwnProperty.call(aProps, key)) continue;
+    return false;
+  }
+
+  return true;
+}
+
 function astEquals(
   a: TSESTree.Node,
   b: TSESTree.Node,
@@ -72,36 +113,10 @@ function astEquals(
   visited.add(pairKey);
 
   const childKeys = new Set(KEYS[a.type] ?? []);
-
   const aProps = getNodeProps(a);
   const bProps = getNodeProps(b);
 
-  for (const key of Object.getOwnPropertyNames(aProps).sort((a, b) => a.localeCompare(b))) {
-    if (SKIP_KEYS.has(key)) continue;
-
-    const aVal = aProps[key];
-    const bVal = bProps[key];
-
-    if (childKeys.has(key)) {
-      if (Array.isArray(aVal) && Array.isArray(bVal)) {
-        if (!arraysEqual(aVal, bVal, visited)) return false;
-      } else if (isNodeLike(aVal) && isNodeLike(bVal)) {
-        if (!astEquals(aVal, bVal, visited)) return false;
-      } else if ((aVal == null) !== (bVal == null)) {
-        return false;
-      }
-    } else if (aVal !== bVal) {
-      return false;
-    }
-  }
-
-  for (const key of Object.getOwnPropertyNames(bProps).sort((a, b) => a.localeCompare(b))) {
-    if (SKIP_KEYS.has(key)) continue;
-    if (Object.prototype.hasOwnProperty.call(aProps, key)) continue;
-    return false;
-  }
-
-  return true;
+  return allPropertiesMatch(aProps, bProps, childKeys, visited);
 }
 
 function sigEquals(a: FnLikeNode, b: FnLikeNode): boolean {
