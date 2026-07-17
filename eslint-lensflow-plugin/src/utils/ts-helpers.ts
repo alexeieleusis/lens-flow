@@ -268,12 +268,13 @@ export function collectChildTypes(type: TSESTree.TypeNode): TSESTree.TypeNode[] 
       return [...type.types];
     case "TSOptionalType":
       return [type.typeAnnotation];
-    default:
+    default: {
       const maybeParenthesized = type as unknown as { type: string; typeAnnotation?: TSESTree.TypeNode };
       if (maybeParenthesized.type === "TSParenthesizedType" && maybeParenthesized.typeAnnotation) {
         return [maybeParenthesized.typeAnnotation];
       }
       return [];
+    }
   }
 }
 
