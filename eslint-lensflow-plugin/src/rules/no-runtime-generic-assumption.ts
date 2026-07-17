@@ -179,7 +179,7 @@ export default createRule({
         current = (current as TSESTree.MemberExpression).object;
       }
       if (current.type === "Identifier") {
-        return current as TSESTree.Identifier;
+        return current;
       }
       return null;
     }
