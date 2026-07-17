@@ -1,6 +1,8 @@
 import ts from "typescript";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
+export type LiteralValue = string | number | boolean;
+
 export function containsAny(typeNode: TSESTree.TypeNode): boolean {
   if (typeNode.type === "TSAnyKeyword") return true;
   if (typeNode.type === "TSUnionType" || typeNode.type === "TSIntersectionType") {
@@ -276,8 +278,8 @@ export function collectChildTypes(type: TSESTree.TypeNode): TSESTree.TypeNode[] 
   }
 }
 
-export function extractLiteralValues(tsType: ts.Type, checker?: ts.TypeChecker): (string | number | boolean)[] {
-  const values = new Set<string | number | boolean>();
+export function extractLiteralValues(tsType: ts.Type, checker?: ts.TypeChecker): (LiteralValue)[] {
+  const values = new Set<LiteralValue>();
 
   function extractBooleanLiteral(t: ts.Type): boolean | undefined {
     const val = (t as ts.Type & { value?: boolean }).value;
@@ -342,7 +344,7 @@ function resolveLiteralValues(
   rawType: ts.Type,
   discriminantType: ts.Type,
   checker: ts.TypeChecker,
-): (string | number | boolean)[] {
+): (LiteralValue)[] {
   let literalValues = extractLiteralValues(discriminantType, checker);
 
   if (literalValues.length === 0) {
@@ -365,8 +367,8 @@ function resolveLiteralValues(
 
 function collectMatchedCaseValues(
   cases: TSESTree.SwitchCase[],
-): Set<string | number | boolean> {
-  const matchedValues = new Set<string | number | boolean>();
+): Set<LiteralValue> {
+  const matchedValues = new Set<LiteralValue>();
 
   for (const case_ of cases) {
     const val = getLiteralFromExpr(case_.test);
