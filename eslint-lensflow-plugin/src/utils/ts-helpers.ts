@@ -339,6 +339,46 @@ export function extractLiteralValues(tsType: ts.Type, checker?: ts.TypeChecker):
   return [...values];
 }
 
+function resolveLiteralValues(
+  rawType: ts.Type,
+  discriminantType: ts.Type,
+  checker: ts.TypeChecker,
+): (string | number | boolean)[] {
+  let literalValues = extractLiteralValues(discriminantType, checker);
+
+  if (literalValues.length === 0) {
+    const apparentStr = checker.typeToString(discriminantType).toLowerCase();
+    if (apparentStr === "boolean") {
+      return [true, false];
+    }
+
+    literalValues = extractLiteralValues(rawType, checker);
+    if (literalValues.length === 0) {
+      const rawStr = checker.typeToString(rawType).toLowerCase();
+      if (rawStr === "boolean") {
+        return [true, false];
+      }
+    }
+  }
+
+  return literalValues;
+}
+
+function collectMatchedCaseValues(
+  cases: TSESTree.SwitchCase[],
+): Set<string | number | boolean> {
+  const matchedValues = new Set<string | number | boolean>();
+
+  for (const case_ of cases) {
+    const val = getLiteralFromExpr(case_.test);
+    if (val !== null) {
+      matchedValues.add(val);
+    }
+  }
+
+  return matchedValues;
+}
+
 export function checkSwitchExhaustiveness(
   node: TSESTree.SwitchStatement,
   checker: ts.TypeChecker,
@@ -351,42 +391,19 @@ export function checkSwitchExhaustiveness(
 
   const rawType = checker.getTypeAtLocation(tsNode);
   const discriminantType = checker.getApparentType(rawType);
-  let literalValues = extractLiteralValues(discriminantType, checker);
 
   // true | false widens to intrinsic boolean, which getApparentType resolves
   // to an ObjectType (Boolean) with no literal flags — handle explicitly.
-  if (literalValues.length === 0) {
-    const apparentStr = checker.typeToString(discriminantType).toLowerCase();
-    if (apparentStr === "boolean") {
-      literalValues = [true, false];
-    } else {
-      literalValues = extractLiteralValues(rawType, checker);
-      if (literalValues.length === 0) {
-        const rawStr = checker.typeToString(rawType).toLowerCase();
-        if (rawStr === "boolean") {
-          literalValues = [true, false];
-        }
-      }
-    }
-  }
+  const literalValues = resolveLiteralValues(rawType, discriminantType, checker);
 
   if (literalValues.length < 2) return;
 
-  const matchedValues = new Set<string | number | boolean>();
-
-  for (const case_ of node.cases) {
-    const val = getLiteralFromExpr(case_.test);
-    if (val !== null) {
-      matchedValues.add(val);
-    }
-  }
-
+  const matchedValues = collectMatchedCaseValues(node.cases);
   const missing = literalValues.filter((v) => !matchedValues.has(v));
 
   if (missing.length === 0) return;
 
   const defaultCase = node.cases.find((c) => c.test === null);
-
   if (defaultCase && defaultHasNeverAssertion(defaultCase.consequent)) {
     return;
   }
