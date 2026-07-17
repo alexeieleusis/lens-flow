@@ -149,12 +149,12 @@ export default createRule({
                 });
               }
             } else if (inner.type === "MemberExpression") {
-              const memberName =
-                inner.property.type === "Identifier"
-                  ? inner.property.name
-                  : inner.property.type === "Literal"
-                    ? String(inner.property.value)
-                    : null;
+              let memberName: string | null = null;
+              if (inner.property.type === "Identifier") {
+                memberName = inner.property.name;
+              } else if (inner.property.type === "Literal") {
+                memberName = String(inner.property.value);
+              }
 
               if (!memberName) continue;
 
