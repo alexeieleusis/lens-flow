@@ -8,7 +8,7 @@ function findBinding(
 ): TSESLint.Scope.Variable | null {
   for (let s: TSESLint.Scope.Scope | null = scope; s; s = s.upper) {
     const binding = s.set.get(name);
-    if (binding && binding.identifiers.includes(targetId)) {
+    if (binding?.identifiers.includes(targetId)) {
       return binding;
     }
   }
