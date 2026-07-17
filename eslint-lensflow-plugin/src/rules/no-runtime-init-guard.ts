@@ -21,72 +21,106 @@ export default createRule({
     return {
       IfStatement(node) {
         const ancestors = context.sourceCode.getAncestors(node);
-        // Walk innermost-to-outermost to find the immediate enclosing function.
-        let enclosingFnIndex = -1;
-        for (let i = ancestors.length - 1; i >= 0; i--) {
-          const a = ancestors[i];
-          if (
-            a.type === "FunctionDeclaration" ||
-            a.type === "FunctionExpression" ||
-            a.type === "ArrowFunctionExpression"
-          ) {
-            enclosingFnIndex = i;
-            break;
-          }
-        }
-        if (enclosingFnIndex < 0) return;
+        const methodContext = findEnclosingMethod(ancestors);
+        if (!methodContext) return;
 
-        // Only flag when that function is the direct body of a class method.
-        const parent = ancestors[enclosingFnIndex - 1];
-        const isInsideMethod =
-          parent?.type === "MethodDefinition" ||
-          (parent?.type === "PropertyDefinition" &&
-            (parent.value?.type === "ArrowFunctionExpression" ||
-              parent.value?.type === "FunctionExpression"));
-        if (!isInsideMethod) return;
+        const throwInfo = extractThrowInfo(node);
+        if (!throwInfo) return;
 
-        let throwStmt: TSESTree.ThrowStatement | null = null;
-        let throwInAlternate = false;
+        const { throwStmt, throwInAlternate } = throwInfo;
 
-        if (node.consequent.type === "ThrowStatement") {
-          throwStmt = node.consequent;
-        } else if (node.alternate) {
-          if (node.alternate.type === "ThrowStatement") {
-            throwStmt = node.alternate;
-            throwInAlternate = true;
-          } else if (
-            node.alternate.type === "BlockStatement" &&
-            node.alternate.body.length === 1 &&
-            node.alternate.body[0].type === "ThrowStatement"
-          ) {
-            throwStmt = node.alternate.body[0];
-            throwInAlternate = true;
-          }
-        }
+        if (!isErrorConstructor(throwStmt)) return;
 
-        if (!throwStmt) return;
+        const target = extractTestTarget(node, throwInAlternate);
+        if (!target) return;
 
-        const thrown = throwStmt.argument;
-        if (thrown?.type !== "NewExpression") return;
-
-        const callee = thrown.callee;
-        if (callee.type !== "Identifier" || !/^Error$/.test(callee.name))
-          return;
-
-        let target: TSESTree.Node;
-        if (node.test.type === "UnaryExpression" && node.test.operator === "!") {
-          target = node.test.argument;
-        } else if (throwInAlternate && node.test.type === "MemberExpression") {
-          target = node.test;
-        } else {
-          return;
-        }
-
-        if (target.type !== "MemberExpression") return;
-        if (target.object.type !== "ThisExpression") return;
+        if (!isThisMemberExpression(target)) return;
 
         context.report({ node, messageId: "runtimeInitGuard" });
       },
     };
   },
 });
+
+function findEnclosingMethod(ancestors: TSESTree.Node[]) {
+  let enclosingFnIndex = -1;
+  for (let i = ancestors.length - 1; i >= 0; i--) {
+    if (isFunctionNode(ancestors[i])) {
+      enclosingFnIndex = i;
+      break;
+    }
+  }
+  if (enclosingFnIndex < 0) return null;
+
+  const parent = ancestors[enclosingFnIndex - 1];
+  if (!parent) return null;
+
+  if (parent.type === "MethodDefinition") return { parent };
+  if (parent.type === "PropertyDefinition") {
+    const valType = parent.value?.type;
+    if (valType === "ArrowFunctionExpression" || valType === "FunctionExpression") {
+      return { parent };
+    }
+  }
+  return null;
+}
+
+function isFunctionNode(node: TSESTree.Node): boolean {
+  return (
+    node.type === "FunctionDeclaration" ||
+    node.type === "FunctionExpression" ||
+    node.type === "ArrowFunctionExpression"
+  );
+}
+
+function extractThrowInfo(
+  node: TSESTree.IfStatement
+): { throwStmt: TSESTree.ThrowStatement; throwInAlternate: boolean } | null {
+  if (node.consequent.type === "ThrowStatement") {
+    return { throwStmt: node.consequent, throwInAlternate: false };
+  }
+
+  if (!node.alternate) return null;
+
+  if (node.alternate.type === "ThrowStatement") {
+    return { throwStmt: node.alternate, throwInAlternate: true };
+  }
+
+  if (
+    node.alternate.type === "BlockStatement" &&
+    node.alternate.body.length === 1 &&
+    node.alternate.body[0].type === "ThrowStatement"
+  ) {
+    return { throwStmt: node.alternate.body[0], throwInAlternate: true };
+  }
+
+  return null;
+}
+
+function isErrorConstructor(throwStmt: TSESTree.ThrowStatement): boolean {
+  const thrown = throwStmt.argument;
+  if (thrown?.type !== "NewExpression") return false;
+
+  const callee = thrown.callee;
+  return callee.type === "Identifier" && /^Error$/.test(callee.name);
+}
+
+function extractTestTarget(
+  node: TSESTree.IfStatement,
+  throwInAlternate: boolean
+): TSESTree.Node | null {
+  if (node.test.type === "UnaryExpression" && node.test.operator === "!") {
+    return node.test.argument;
+  }
+  if (throwInAlternate && node.test.type === "MemberExpression") {
+    return node.test;
+  }
+  return null;
+}
+
+function isThisMemberExpression(node: TSESTree.Node): boolean {
+  return (
+    node.type === "MemberExpression" &&
+    node.object.type === "ThisExpression"
+  );
+}
