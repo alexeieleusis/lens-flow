@@ -88,21 +88,25 @@ function hasMethodAccessingProperty(classBody: TSESTree.ClassBody, propertyName:
         return true;
       }
     }
-    if (member.type === "PropertyDefinition" && member.value) {
-      if (
-        member.value.type === "ArrowFunctionExpression" &&
-        accessesProperty(member.value)
-      ) {
-        return true;
-      }
-      if (
-        member.value.type === "FunctionExpression" &&
-        member.value.body &&
-        accessesProperty(member.value.body)
-      ) {
+    if (member.type === "PropertyDefinition") {
+      if (propertyDefAccessesProperty(member, accessesProperty)) {
         return true;
       }
     }
+  }
+  return false;
+}
+
+function propertyDefAccessesProperty(
+  member: TSESTree.PropertyDefinition,
+  accessesProperty: (body: TSESTree.Node) => boolean
+): boolean {
+  if (!member.value) return false;
+  if (member.value.type === "ArrowFunctionExpression") {
+    return accessesProperty(member.value);
+  }
+  if (member.value.type === "FunctionExpression" && member.value.body) {
+    return accessesProperty(member.value.body);
   }
   return false;
 }
