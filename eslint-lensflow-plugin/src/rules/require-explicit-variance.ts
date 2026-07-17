@@ -92,12 +92,11 @@ function findTypeParamUsage(
       break;
     }
     case "TSConstructSignatureDeclaration": {
-      const csd = node as TSESTree.TSConstructSignatureDeclaration;
-      (csd.params || []).forEach((p) => {
+      (node.params || []).forEach((p) => {
         if ("typeAnnotation" in p && p.typeAnnotation)
           findTypeParamUsage(p.typeAnnotation, paramName, false, result);
       });
-      if (csd.returnType) findTypeParamUsage(csd.returnType.typeAnnotation, paramName, true, result);
+      if (node.returnType) findTypeParamUsage(node.returnType.typeAnnotation, paramName, true, result);
       break;
     }
     case "TSMethodSignature": {
