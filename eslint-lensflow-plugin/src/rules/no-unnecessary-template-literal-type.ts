@@ -28,8 +28,9 @@ export default createRule({
         const innerAny = inner as any;
         if (innerAny.type === "TSParenthesizedType")
           inner = innerAny.typeAnnotation as TSESTree.TypeNode;
+        const narrowed = inner;
         const targetType =
-          inner.type === "TSUnionType" ? (inner as TSESTree.TSUnionType).types : [inner];
+          narrowed.type === "TSUnionType" ? narrowed.types : [narrowed];
 
         if (
           targetType.length === 0 ||
