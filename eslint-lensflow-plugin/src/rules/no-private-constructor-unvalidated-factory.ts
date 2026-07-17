@@ -101,7 +101,7 @@ function isValidationGuard(
   ) {
     if (isValidationCall(node.consequent.expression)) return true;
   }
-  if (node.alternate && node.alternate.type === AST_NODE_TYPES.BlockStatement) {
+  if (node.alternate?.type === AST_NODE_TYPES.BlockStatement) {
     if (bodyHasValidation(node.alternate, className)) return true;
   }
   if (node.alternate?.type === AST_NODE_TYPES.ThrowStatement) {
