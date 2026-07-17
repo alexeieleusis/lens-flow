@@ -99,12 +99,10 @@ export function looksLikeZodSchema(
       const init = def.node.init;
 
       // Unwrap parentheses so `const x = (z.object({}))` still works.
-      const unwrapped =
-        init.type === "TSAsExpression"
-          ? init.expression
-          : init.type === "TSTypeAssertion"
-            ? init.expression
-            : init;
+      let unwrapped = init;
+      if (init.type === "TSAsExpression" || init.type === "TSTypeAssertion") {
+        unwrapped = init.expression;
+      }
 
       if (unwrapped.type === "CallExpression") {
         return isZodLikeCall(unwrapped);
