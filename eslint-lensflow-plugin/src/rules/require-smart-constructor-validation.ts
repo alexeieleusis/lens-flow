@@ -46,7 +46,7 @@ function unwrapTSExpression(node: TSESTree.Node): TSESTree.Node {
     node.type === "TSSatisfiesExpression" ||
     node.type === "ChainExpression"
   ) {
-    node = (node as TSESTree.TSAsExpression | TSESTree.TSNonNullExpression | TSESTree.TSSatisfiesExpression | TSESTree.ChainExpression).expression;
+    node = node.expression;
   }
   return node;
 }
