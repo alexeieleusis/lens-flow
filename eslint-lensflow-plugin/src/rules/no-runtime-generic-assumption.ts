@@ -261,7 +261,7 @@ export default createRule({
           if (callee.type === "ChainExpression") {
             callee = (callee as TSESTree.ChainExpression).expression;
           }
-          if (callee?.type === "Identifier" && isGenericFn(callee as TSESTree.Identifier)) {
+          if (callee?.type === "Identifier" && isGenericFn(callee)) {
             context.report({
               node,
               messageId: "runtimeMetadataOnCall",
