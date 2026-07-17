@@ -70,7 +70,7 @@ function checkSymbolUnsafe(type: ts.Type): string[] | null {
   }
 
   if (symName === "Function") {
- if (type.getCallSignatures().length > 0) return ["Function"];
+    if (type.getCallSignatures().length > 0) return ["Function"];
     return null;
   }
 
