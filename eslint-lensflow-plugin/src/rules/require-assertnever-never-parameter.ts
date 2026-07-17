@@ -1,6 +1,13 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
+function getNameFromKey(key: TSESTree.Node): string | null {
+  if (key.type === "Identifier") return key.name;
+  if (key.type === "Literal" && typeof key.value === "string")
+    return key.value;
+  return null;
+}
+
 export default createRule({
   name: "require-assertnever-never-parameter",
   meta: {
@@ -64,13 +71,6 @@ export default createRule({
           },
         });
       }
-    }
-
-    function getNameFromKey(key: TSESTree.Node): string | null {
-      if (key.type === "Identifier") return key.name;
-      if (key.type === "Literal" && typeof key.value === "string")
-        return key.value;
-      return null;
     }
 
     function checkFunction(
