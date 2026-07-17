@@ -55,9 +55,8 @@ function getPropertyName(key: TSESTree.PropertyName): string {
 
 function getArrayElementName(elementType: TSESTree.TypeNode): string {
   if (elementType.type === AST_NODE_TYPES.TSTypeReference) {
-    const refNode = elementType as TSESTree.TSTypeReference;
-    if (refNode.typeName.type === AST_NODE_TYPES.Identifier) {
-      return refNode.typeName.name;
+    if (elementType.typeName.type === AST_NODE_TYPES.Identifier) {
+      return elementType.typeName.name;
     }
   }
   return elementType.type;
