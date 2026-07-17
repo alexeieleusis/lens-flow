@@ -129,10 +129,8 @@ function findTypeParamUsage(
       break;
     }
     case "TSMappedType": {
-      // typeParameter (e.g., "K in keyof T") — bound is contravariant
-      if (node.typeParameter) {
-        findTypeParamUsage(node.typeParameter.constraint, paramName, false, result);
-      }
+      // constraint (e.g., "K in keyof T") — bound is contravariant
+      findTypeParamUsage(node.constraint, paramName, false, result);
       // typeAnnotation uses T covariantly
       if (node.typeAnnotation) {
         findTypeParamUsage(node.typeAnnotation, paramName, true, result);
