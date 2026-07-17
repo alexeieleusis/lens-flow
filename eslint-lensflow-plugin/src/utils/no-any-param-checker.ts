@@ -31,94 +31,95 @@ function getParamTypeAnnotation(param: TSESTree.Parameter): TSESTree.TypeNode | 
   return;
 }
 
+function checkFunctionLikeParams(params: TSESTree.Parameter[]): boolean {
+  return params.some((p) => {
+    const typeAnn = getParamTypeAnnotation(p);
+    return typeAnn != null && containsAnyType(typeAnn);
+  });
+}
+
+function checkFunctionLikeReturnType(node: { returnType?: { typeAnnotation?: TSESTree.TypeNode } }): boolean {
+  if (node.returnType?.typeAnnotation) {
+    return containsAnyType(node.returnType.typeAnnotation);
+  }
+  return false;
+}
+
+function checkTypeLiteralMembers(members: TSESTree.TypeElement[]): boolean {
+  return members.some((member) => {
+    if (member.type === "TSPropertySignature" && member.typeAnnotation?.typeAnnotation) {
+      return containsAnyType(member.typeAnnotation.typeAnnotation);
+    }
+    if (member.type === "TSCallSignatureDeclaration" || member.type === "TSConstructSignatureDeclaration") {
+      if (checkFunctionLikeParams(member.params)) return true;
+      return checkFunctionLikeReturnType(member);
+    }
+    return false;
+  });
+}
+
+const typeHandlers: Record<string, (node: TSESTree.TypeNode) => boolean> = {
+  TSAnyKeyword: () => true,
+  TSUnionType: (node) => (node as TSESTree.TSUnionType).types.some((m) => containsAnyType(m)),
+  TSIntersectionType: (node) => (node as TSESTree.TSIntersectionType).types.some((m) => containsAnyType(m)),
+  TSArrayType: (node) => containsAnyType((node as TSESTree.TSArrayType).elementType),
+  TSTupleType: (node) => (node as TSESTree.TSTupleType).elementTypes.some((e) => containsAnyType(e)),
+  TSTypeReference: (node) => {
+    const ref = node as TSESTree.TSTypeReference;
+    if (ref.typeArguments) return ref.typeArguments.params.some((p) => containsAnyType(p));
+    return false;
+  },
+  TSRestType: (node) => containsAnyType((node as TSESTree.TSRestType).typeAnnotation),
+  TSOptionalType: (node) => containsAnyType((node as TSESTree.TSOptionalType).typeAnnotation),
+  TSIndexedAccessType: (node) => {
+    const acc = node as TSESTree.TSIndexedAccessType;
+    return containsAnyType(acc.objectType) || containsAnyType(acc.indexType);
+  },
+  TSConditionalType: (node) => {
+    const ct = node as TSESTree.TSConditionalType;
+    return (
+      containsAnyType(ct.checkType) ||
+      containsAnyType(ct.extendsType) ||
+      containsAnyType(ct.trueType) ||
+      containsAnyType(ct.falseType)
+    );
+  },
+  TSFunctionType: (node) => {
+    const fn = node as TSESTree.TSFunctionType;
+    return checkFunctionLikeParams(fn.params) || checkFunctionLikeReturnType(fn);
+  },
+  TSConstructorType: (node) => {
+    const fn = node as TSESTree.TSConstructorType;
+    return checkFunctionLikeParams(fn.params) || checkFunctionLikeReturnType(fn);
+  },
+  TSMappedType: (node) => {
+    const mt = node as TSESTree.TSMappedType;
+    return (
+      containsAnyType(mt.constraint) ||
+      (mt.nameType != null && containsAnyType(mt.nameType)) ||
+      (mt.typeAnnotation != null && containsAnyType(mt.typeAnnotation))
+    );
+  },
+  TSImportType: (node) => {
+    const imp = node as TSESTree.TSImportType;
+    if (imp.typeArguments) return imp.typeArguments.params.some((p) => containsAnyType(p));
+    return false;
+  },
+  TSTypeOperator: (node) => {
+    const op = node as TSESTree.TSTypeOperator;
+    if (op.typeAnnotation) return containsAnyType(op.typeAnnotation);
+    return false;
+  },
+  TSTypeLiteral: (node) => checkTypeLiteralMembers((node as TSESTree.TSTypeLiteral).members),
+};
+
 /**
  * Recursively checks whether a type node contains `any`.
  * Unwraps unions, intersections, and other type wrappers.
  */
 export function containsAnyType(node: TSESTree.TypeNode): boolean {
-  if (node.type === "TSAnyKeyword") return true;
-
-  if (node.type === "TSUnionType" || node.type === "TSIntersectionType") {
-    return node.types.some((member) => containsAnyType(member));
-  }
-
-  if (node.type === "TSArrayType") {
-    return containsAnyType(node.elementType);
-  }
-
-  if (node.type === "TSTupleType") {
-    return node.elementTypes.some((element) => containsAnyType(element));
-  }
-
-  if (node.type === "TSTypeReference" && node.typeArguments) {
-    return node.typeArguments.params.some((param) => containsAnyType(param));
-  }
-
-  if (node.type === "TSRestType" || node.type === "TSOptionalType") {
-    return containsAnyType(node.typeAnnotation);
-  }
-
-  if (node.type === "TSIndexedAccessType") {
-    return containsAnyType(node.objectType) || containsAnyType(node.indexType);
-  }
-
-  if (node.type === "TSConditionalType") {
-    return (
-      containsAnyType(node.checkType) ||
-      containsAnyType(node.extendsType) ||
-      containsAnyType(node.trueType) ||
-      containsAnyType(node.falseType)
-    );
-  }
-
-  if (node.type === "TSFunctionType" || node.type === "TSConstructorType") {
-    if (node.params.some((p) => {
-      const typeAnn = getParamTypeAnnotation(p);
-      return typeAnn && containsAnyType(typeAnn);
-    })) {
-      return true;
-    }
-    if (node.returnType?.typeAnnotation) {
-      return containsAnyType(node.returnType.typeAnnotation);
-    }
-    return false;
-  }
-
-  if (node.type === "TSMappedType") {
-    return (
-      containsAnyType(node.constraint) ||
-      (node.nameType != null && containsAnyType(node.nameType)) ||
-      (node.typeAnnotation != null && containsAnyType(node.typeAnnotation))
-    );
-  }
-
-  if (node.type === "TSImportType" && node.typeArguments) {
-    return node.typeArguments.params.some((param) => containsAnyType(param));
-  }
-
-  if (node.type === "TSTypeOperator" && node.typeAnnotation) {
-    return containsAnyType(node.typeAnnotation);
-  }
-
-  if (node.type === "TSTypeLiteral") {
-    return node.members.some((member) => {
-      if (member.type === "TSPropertySignature" && member.typeAnnotation?.typeAnnotation) {
-        return containsAnyType(member.typeAnnotation.typeAnnotation);
-      }
-      if (member.type === "TSCallSignatureDeclaration" || member.type === "TSConstructSignatureDeclaration") {
-        if (member.params.some((p) => {
-          const typeAnn = getParamTypeAnnotation(p);
-          return typeAnn && containsAnyType(typeAnn);
-        })) return true;
-        if (member.returnType?.typeAnnotation) {
-          return containsAnyType(member.returnType.typeAnnotation);
-        }
-      }
-      return false;
-    });
-  }
-
-  return false;
+  const handler = typeHandlers[node.type];
+  return handler ? handler(node) : false;
 }
 
 function shouldSkipParam(param: TSESTree.Parameter, typeNode: TSESTree.TypeNode | undefined): boolean {
