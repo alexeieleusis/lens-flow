@@ -232,6 +232,82 @@ function isScopeBoundary(node: TSESTree.Node): boolean {
   );
 }
 
+function isFunctionNode(node: TSESTree.Node): boolean {
+  return (
+    node.type === "FunctionDeclaration" ||
+    node.type === "FunctionExpression" ||
+    node.type === "ArrowFunctionExpression"
+  );
+}
+
+function getMemberName(property: TSESTree.Node): string {
+  if (property.type === "Identifier") return (property as TSESTree.Identifier).name;
+  if (property.type === "Literal") return String((property as TSESTree.Literal).value);
+  return "";
+}
+
+function isNodeInsideTestPosition(
+  memberNode: TSESTree.Node,
+  ancestors: TSESTree.Node[],
+): boolean {
+  for (const anc of ancestors) {
+    if (isScopeBoundary(anc)) break;
+    if (
+      anc.type === "IfStatement" &&
+      walkNodes(anc.test, (n) => n === memberNode, { skipTypeAnnotations: true })
+    ) return true;
+    if (
+      anc.type === "ConditionalExpression" &&
+      walkNodes(anc.test, (n) => n === memberNode, { skipTypeAnnotations: true })
+    ) return true;
+  }
+  return false;
+}
+
+function hasGuardBeforeMemberInBlock(
+  blockBody: TSESTree.Statement[],
+  memberNode: TSESTree.Node,
+  varName: string,
+): "guarded" | "unguarded" | "not-found" {
+  let foundGuard = false;
+  for (const stmt of blockBody) {
+    if (
+      stmt.type === "IfStatement" &&
+      testContainsIsNullGuard(stmt.test, varName) &&
+      isTerminatingStatement(stmt.consequent)
+    ) {
+      foundGuard = true;
+    }
+    if (walkNodes(stmt, (n) => n === memberNode, { skipTypeAnnotations: true })) {
+      return foundGuard ? "guarded" : "unguarded";
+    }
+  }
+  return "not-found";
+}
+
+function isAfterSiblingThrowGuard(
+  ancestors: TSESTree.Node[],
+  memberNode: TSESTree.MemberExpression,
+  varName: string,
+): boolean {
+  for (const anc of ancestors) {
+    if (isFunctionNode(anc)) break;
+    if (
+      (anc.type === "BlockStatement" || anc.type === "Program") &&
+      !memberNode.optional
+    ) {
+      const blockBody =
+        anc.type === "BlockStatement"
+          ? (anc as TSESTree.BlockStatement).body
+          : (anc as TSESTree.Program).body;
+      const result = hasGuardBeforeMemberInBlock(blockBody, memberNode, varName);
+      if (result === "guarded") return true;
+      if (result === "unguarded") break;
+    }
+  }
+  return false;
+}
+
 function isFoundGuard(
   current: TSESTree.Node,
   node: TSESTree.Node,
@@ -280,8 +356,7 @@ function isInsideGuard(
   // getAncestors returns from root to immediate parent, so reverse for
   // leaf-to-root traversal.
   const ancestors = [...sourceCode.getAncestors(node)].reverse();
-  for (let i = 0; i < ancestors.length; i++) {
-    const current = ancestors[i];
+  for (const current of ancestors) {
     if (isScopeBoundary(current)) break;
 
     const result = checkNodeInGuard(current, node, varName);
