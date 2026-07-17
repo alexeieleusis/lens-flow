@@ -21,6 +21,37 @@ export type FnGroup = {
   overloads: FnLikeNode[];
 };
 
+function processGroups(
+  allFns: FnLikeNode[],
+  onGroup: (group: FnGroup) => void,
+): void {
+  const byName = new Map<string, FnLikeNode[]>();
+  for (const fn of allFns) {
+    const name = fn.id?.name;
+    if (name === undefined) continue;
+    if (!byName.has(name)) byName.set(name, []);
+    const group = byName.get(name);
+    if (group) group.push(fn);
+  }
+
+  for (const declarations of byName.values()) {
+    let impl = declarations.find(isImpl);
+    let overloads: FnLikeNode[];
+
+    if (impl) {
+      overloads = declarations.filter((n) => !isImpl(n));
+      if (overloads.length === 0) continue;
+    } else if (declarations.length >= 2) {
+      impl = declarations[0];
+      overloads = declarations;
+    } else {
+      continue;
+    }
+
+    onGroup({ all: declarations, impl, overloads });
+  }
+}
+
 export function createOverloadGroupVisitor(
   onGroup: (group: FnGroup) => void,
 ): {
@@ -39,32 +70,7 @@ export function createOverloadGroupVisitor(
     },
     "Program:exit"() {
       if (allFns.length === 0) return;
-
-      const byName = new Map<string, FnLikeNode[]>();
-      for (const fn of allFns) {
-        const name = fn.id?.name;
-        if (name === undefined) continue;
-        if (!byName.has(name)) byName.set(name, []);
-        const group = byName.get(name);
-        if (group) group.push(fn);
-      }
-
-      for (const declarations of byName.values()) {
-        let impl = declarations.find(isImpl);
-        let overloads: FnLikeNode[];
-
-        if (impl) {
-          overloads = declarations.filter((n) => !isImpl(n));
-          if (overloads.length === 0) continue;
-        } else if (declarations.length >= 2) {
-          impl = declarations[0];
-          overloads = declarations;
-        } else {
-          continue;
-        }
-
-        onGroup({ all: declarations, impl, overloads });
-      }
+      processGroups(allFns, onGroup);
     },
   };
 }
