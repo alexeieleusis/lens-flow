@@ -331,11 +331,9 @@ function collectNestedStatementArrays(stmt: TSESTree.Statement): TSESTree.Statem
     if (Array.isArray(stmts)) {
       results.push(stmts);
       for (const s of stmts) extractNested(s);
-    } else {
-      if (stmts.type === "BlockStatement") {
-        results.push(stmts.body);
-        for (const s of stmts.body) extractNested(s);
-      }
+    } else if (stmts.type === "BlockStatement") {
+      results.push(stmts.body);
+      for (const s of stmts.body) extractNested(s);
     }
   }
 
