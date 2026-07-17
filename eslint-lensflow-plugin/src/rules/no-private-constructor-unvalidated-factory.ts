@@ -182,12 +182,14 @@ export default createRule({
           if (method.kind === "constructor") continue;
           if (!method.value?.body) continue;
 
+          const fallbackName =
+            method.key.type === AST_NODE_TYPES.Literal
+              ? String(method.key.value)
+              : "unknown";
           const methodName =
             method.key.type === AST_NODE_TYPES.Identifier
               ? method.key.name
-              : method.key.type === AST_NODE_TYPES.Literal
-                ? String(method.key.value)
-                : "unknown";
+              : fallbackName;
           const body = method.value.body;
 
           const hasValidation =
