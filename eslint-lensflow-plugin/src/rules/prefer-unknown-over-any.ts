@@ -7,12 +7,14 @@ function findAnyParams(
   const results: Array<{ name: string; anyNode: TSESTree.TSAnyKeyword; paramNode: TSESTree.Node }> = [];
 
   for (const param of params) {
-    const base =
-      param.type === "TSParameterProperty"
-        ? param.parameter
-        : param.type === "AssignmentPattern"
-          ? param.left
-          : param;
+    let base: TSESTree.Node;
+    if (param.type === "TSParameterProperty") {
+      base = param.parameter;
+    } else if (param.type === "AssignmentPattern") {
+      base = param.left;
+    } else {
+      base = param;
+    }
 
     const typeAnn = (base as TSESTree.Identifier | TSESTree.ObjectPattern | TSESTree.ArrayPattern)
       .typeAnnotation?.typeAnnotation;
