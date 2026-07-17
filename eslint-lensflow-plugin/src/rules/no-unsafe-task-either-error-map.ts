@@ -127,7 +127,7 @@ export default createRule({
         if (node.arguments.length < 2) return;
 
         const ctx = fnStack[fnStack.length - 1];
-        if (!ctx || !ctx.errorTypeStr) return;
+        if (!ctx?.errorTypeStr) return;
 
         const [tryFn, catchFn] = node.arguments;
 
