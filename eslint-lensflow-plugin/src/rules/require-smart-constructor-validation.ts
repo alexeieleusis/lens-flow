@@ -64,7 +64,7 @@ function unwrapToCast(node: TSESTree.Node): TSESTree.Node {
 function isBrandedCast(node: TSESTree.Node): string | null {
   const castNode = node.type === "TSAsExpression" || node.type === "TSSatisfiesExpression" ? node : null;
   if (!castNode) return null;
-  const t = (castNode as TSESTree.TSAsExpression | TSESTree.TSSatisfiesExpression).typeAnnotation;
+  const t = castNode.typeAnnotation;
   if (t.type !== "TSTypeReference" || !isBrandedTypeName(t)) return null;
   const name = getBrandName(t.typeName);
   return name ?? null;
