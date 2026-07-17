@@ -93,6 +93,38 @@ function collectFunctionParamTypes(
   return children;
 }
 
+function collectMappedTypeChildren(type: TSESTree.TSMappedType): TSESTree.TypeNode[] {
+  return [type.typeAnnotation, type.constraint, type.nameType].filter(
+    (n): n is TSESTree.TypeNode => n !== undefined && n !== null,
+  );
+}
+
+function collectInferTypeChildren(type: TSESTree.TSInferType): TSESTree.TypeNode[] {
+  return type.typeParameter.constraint
+    ? [type.typeParameter.constraint]
+    : [];
+}
+
+function collectTypeOperatorChildren(type: TSESTree.TSTypeOperator): TSESTree.TypeNode[] {
+  return type.typeAnnotation ? [type.typeAnnotation] : [];
+}
+
+function collectTypeReferenceChildren(type: TSESTree.TSTypeReference): TSESTree.TypeNode[] {
+  return type.typeArguments ? [...type.typeArguments.params] : [];
+}
+
+function collectTypeLiteralChildren(type: TSESTree.TSTypeLiteral): TSESTree.TypeNode[] {
+  const children: TSESTree.TypeNode[] = [];
+  for (const member of type.members) {
+    if (member.type === "TSPropertySignature" && member.typeAnnotation) {
+      children.push(member.typeAnnotation.typeAnnotation);
+    } else if (member.type === "TSIndexSignature" && member.typeAnnotation) {
+      children.push(member.typeAnnotation.typeAnnotation);
+    }
+  }
+  return children;
+}
+
 export function collectChildTypes(type: TSESTree.TypeNode): TSESTree.TypeNode[] {
   switch (type.type) {
     case "TSUnionType":
@@ -105,39 +137,28 @@ export function collectChildTypes(type: TSESTree.TypeNode): TSESTree.TypeNode[] 
     case "TSIndexedAccessType":
       return [type.objectType, type.indexType];
     case "TSMappedType":
-      return [type.typeAnnotation, type.constraint, type.nameType].filter(Boolean) as TSESTree.TypeNode[];
+      return collectMappedTypeChildren(type);
     case "TSConditionalType":
       return [type.checkType, type.extendsType, type.trueType, type.falseType];
     case "TSRestType":
       return [type.typeAnnotation];
     case "TSInferType":
-      return type.typeParameter.constraint
-        ? [type.typeParameter.constraint]
-        : [];
+      return collectInferTypeChildren(type);
     case "TSFunctionType":
     case "TSConstructorType":
       return collectFunctionParamTypes(type);
     case "TSTypeQuery":
       return [];
     case "TSTypeOperator":
-      return type.typeAnnotation ? [type.typeAnnotation] : [];
+      return collectTypeOperatorChildren(type);
     case "TSTypeReference":
-      return type.typeArguments ? [...type.typeArguments.params] : [];
+      return collectTypeReferenceChildren(type);
     case "TSTemplateLiteralType":
       return [...type.types];
     case "TSOptionalType":
       return [type.typeAnnotation];
-    case "TSTypeLiteral": {
-      const children: TSESTree.TypeNode[] = [];
-      for (const member of type.members) {
-        if (member.type === "TSPropertySignature" && member.typeAnnotation) {
-          children.push(member.typeAnnotation.typeAnnotation);
-        } else if (member.type === "TSIndexSignature" && member.typeAnnotation) {
-          children.push(member.typeAnnotation.typeAnnotation);
-        }
-      }
-      return children;
-    }
+    case "TSTypeLiteral":
+      return collectTypeLiteralChildren(type);
     default: {
       const maybeParenthesized = type as unknown as { type: string; typeAnnotation?: TSESTree.TypeNode };
       if (maybeParenthesized.type === "TSParenthesizedType" && maybeParenthesized.typeAnnotation) {
