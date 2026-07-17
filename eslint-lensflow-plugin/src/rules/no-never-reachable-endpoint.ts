@@ -5,6 +5,34 @@ function isLiteralTrue(node: TSESTree.Expression | null | undefined): boolean {
   return node?.type === "Literal" && node.value === true;
 }
 
+function isTerminatingNeverCall(
+  expr: TSESTree.Expression,
+  neverFunctions: Set<string>,
+): boolean {
+  return (
+    expr.type === "CallExpression" &&
+    expr.callee.type === "Identifier" &&
+    neverFunctions.has(expr.callee.name)
+  );
+}
+
+function allSwitchCasesTerminate(
+  stmt: TSESTree.SwitchStatement,
+  neverFunctions: Set<string>,
+): boolean {
+  const cases = stmt.cases;
+  const caseTerminates = cases.map((c) => {
+    const last = c.consequent[c.consequent.length - 1];
+    return last ? isTerminating(last, neverFunctions) : false;
+  });
+  let nextTerminates = false;
+  for (let i = cases.length - 1; i >= 0; i--) {
+    if (!caseTerminates[i] && !nextTerminates) return false;
+    nextTerminates = caseTerminates[i] || nextTerminates;
+  }
+  return true;
+}
+
 function isTerminating(
   stmt: TSESTree.Statement,
   neverFunctions: Set<string>,
@@ -30,38 +58,19 @@ function isTerminating(
         isTerminating(stmt.consequent, neverFunctions) &&
         isTerminating(stmt.alternate, neverFunctions)
       );
-    case "SwitchStatement": {
-      const hasDefault = stmt.cases.some((c) => c.test === null);
-      if (!hasDefault) return false;
-      const cases = stmt.cases;
-      const caseTerminates = cases.map((c) => {
-        const last = c.consequent[c.consequent.length - 1];
-        return last ? isTerminating(last, neverFunctions) : false;
-      });
-      let nextTerminates = false;
-      for (let i = cases.length - 1; i >= 0; i--) {
-        if (!caseTerminates[i] && !nextTerminates) return false;
-        nextTerminates = caseTerminates[i] || nextTerminates;
-      }
-      return true;
-    }
+    case "SwitchStatement":
+      return (
+        stmt.cases.some((c) => c.test === null) &&
+        allSwitchCasesTerminate(stmt, neverFunctions)
+      );
     case "LabeledStatement":
       return isTerminating(stmt.body, neverFunctions);
     case "BlockStatement": {
       const last = stmt.body[stmt.body.length - 1];
       return last ? isTerminating(last, neverFunctions) : false;
     }
-    case "ExpressionStatement": {
-      const expr = stmt.expression;
-      if (
-        expr.type === "CallExpression" &&
-        expr.callee.type === "Identifier" &&
-        neverFunctions.has(expr.callee.name)
-      ) {
-        return true;
-      }
-      return false;
-    }
+    case "ExpressionStatement":
+      return isTerminatingNeverCall(stmt.expression, neverFunctions);
     default:
       return false;
   }
