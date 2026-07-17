@@ -70,7 +70,7 @@ export default createRule({
         const callSignatures = innerCalleeType.getCallSignatures();
         const hasGenericTypeParams = callSignatures.some((sig) => {
           const decl = sig.getDeclaration();
-          return decl?.typeParameters?.length ?? 0 > 0;
+          return (decl?.typeParameters?.length ?? 0) > 0;
         });
         if (!hasGenericTypeParams) return;
 
