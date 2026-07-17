@@ -53,7 +53,7 @@ function checkConstraintIsLiteralUnion(param: TSESTree.TSTypeParameter): boolean
 }
 
 function isTypeRefToParam(node: TSESTree.Node | undefined, paramName: string): boolean {
-  if (!node || node.type !== AST_NODE_TYPES.TSTypeReference) return false;
+  if (node?.type !== AST_NODE_TYPES.TSTypeReference) return false;
   if (node.typeName.type === AST_NODE_TYPES.Identifier) {
     return node.typeName.name === paramName;
   }
