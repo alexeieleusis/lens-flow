@@ -88,40 +88,37 @@ export default createRule({
 
       const bothFound = () => hasRuntimeGuard && hasPropertyAccess;
 
+      function isAnyParamIdent(ident: TSESTree.Identifier): boolean {
+        for (const binding of anyParamBindings) {
+          if (isSameVariable(ident, binding)) return true;
+        }
+        return false;
+      }
+
       walk(body, (n) => {
         if (bothFound()) return;
 
-        if (n.type === "UnaryExpression" && n.operator === "typeof") {
-          if (n.argument.type === "Identifier") {
-            for (const binding of anyParamBindings) {
-              if (isSameVariable(n.argument, binding)) {
-                hasRuntimeGuard = true;
-                break;
-              }
-            }
-          }
+        if (n.type === "UnaryExpression"
+          && n.operator === "typeof"
+          && n.argument.type === "Identifier"
+          && isAnyParamIdent(n.argument)) {
+          hasRuntimeGuard = true;
+          return;
         }
 
-        if (n.type === "BinaryExpression" && n.operator === "instanceof") {
-          if (n.left.type === "Identifier") {
-            for (const binding of anyParamBindings) {
-              if (isSameVariable(n.left, binding)) {
-                hasRuntimeGuard = true;
-                break;
-              }
-            }
-          }
+        if (n.type === "BinaryExpression"
+          && n.operator === "instanceof"
+          && n.left.type === "Identifier"
+          && isAnyParamIdent(n.left)) {
+          hasRuntimeGuard = true;
+          return;
         }
 
-        if (n.type === "MemberExpression") {
-          if (n.object.type === "Identifier") {
-            for (const binding of anyParamBindings) {
-              if (isSameVariable(n.object, binding)) {
-                hasPropertyAccess = true;
-                break;
-              }
-            }
-          }
+        if (n.type === "MemberExpression"
+          && n.object.type === "Identifier"
+          && isAnyParamIdent(n.object)) {
+          hasPropertyAccess = true;
+          return;
         }
       });
 
