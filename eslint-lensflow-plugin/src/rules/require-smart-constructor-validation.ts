@@ -56,7 +56,7 @@ function unwrapToCast(node: TSESTree.Node): TSESTree.Node {
     node.type === "TSNonNullExpression" ||
     node.type === "ChainExpression"
   ) {
-    node = (node as TSESTree.TSNonNullExpression | TSESTree.ChainExpression).expression;
+    node = node.expression;
   }
   return node;
 }
