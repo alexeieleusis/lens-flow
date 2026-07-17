@@ -13,6 +13,26 @@ const ASYNC_FN_NAMES = new Set([
 
 const ASYNC_MEMBER_METHODS = new Set(["then", "catch", "finally"]);
 
+function isNullishNode(node: TSESTree.Node): boolean {
+  return (
+    (node.type === "Identifier" && node.name === "undefined") ||
+    (node.type === "Literal" && node.value === null)
+  );
+}
+
+function handleEqualityNarrowing(
+  left: TSESTree.Node,
+  right: TSESTree.Node,
+): { varName: string; varNode: TSESTree.Identifier } | null {
+  if (isNullishNode(left) && right.type === "Identifier") {
+    return { varName: right.name, varNode: right };
+  }
+  if (isNullishNode(right) && left.type === "Identifier") {
+    return { varName: left.name, varNode: left };
+  }
+  return null;
+}
+
 function isNarrowingTest(node: TSESTree.Node): {
   varName: string;
   varNode: TSESTree.Identifier;
@@ -21,33 +41,15 @@ function isNarrowingTest(node: TSESTree.Node): {
 
   const { left, right, operator } = node;
 
-  // Handle != and !==: var != null, var !== undefined (literal on right)
   if (operator === "!=" || operator === "!==") {
-    const nullishRight =
-      (right.type === "Identifier" && right.name === "undefined") ||
-      (right.type === "Literal" && right.value === null);
-    if (nullishRight && left.type === "Identifier") {
+    if (isNullishNode(right) && left.type === "Identifier") {
       return { varName: left.name, varNode: left };
     }
     return null;
   }
 
-  // Handle == and ===: var == null, null == var, var === undefined, undefined === var
   if (operator === "==" || operator === "===") {
-    const leftIsNullish =
-      (left.type === "Identifier" && left.name === "undefined") ||
-      (left.type === "Literal" && left.value === null);
-    const rightIsNullish =
-      (right.type === "Identifier" && right.name === "undefined") ||
-      (right.type === "Literal" && right.value === null);
-
-    if (leftIsNullish && right.type === "Identifier") {
-      return { varName: right.name, varNode: right };
-    }
-    if (rightIsNullish && left.type === "Identifier") {
-      return { varName: left.name, varNode: left };
-    }
-    return null;
+    return handleEqualityNarrowing(left, right);
   }
 
   return null;
