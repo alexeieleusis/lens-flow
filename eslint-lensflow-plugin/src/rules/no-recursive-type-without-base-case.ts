@@ -62,7 +62,12 @@ function hasStructuralReduction(
 
   if (current.type === "TSTypeReference") {
     const name = current.typeName;
-    const identName = name.type === "Identifier" ? name.name : name.type === "TSQualifiedName" ? name.right.name : null;
+    let identName: string | null = null;
+    if (name.type === "Identifier") {
+      identName = name.name;
+    } else if (name.type === "TSQualifiedName") {
+      identName = name.right.name;
+    }
     if (identName) {
       if (inferNames.has(identName)) return true;
       if (genericParams.includes(identName)) return false;
