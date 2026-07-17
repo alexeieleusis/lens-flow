@@ -73,6 +73,7 @@ function containsTypeReference(node: TSESTree.TypeNode, paramName: string): bool
       );
 
     case "TSMappedType":
+    case "TSTypeOperator":
       if (node.typeAnnotation) return containsTypeReference(node.typeAnnotation, paramName);
       return false;
 
@@ -91,10 +92,6 @@ function containsTypeReference(node: TSESTree.TypeNode, paramName: string): bool
       return false;
 
     case "TSTypeQuery":
-      return false;
-
-    case "TSTypeOperator":
-      if (node.typeAnnotation) return containsTypeReference(node.typeAnnotation, paramName);
       return false;
 
     case "TSNamedTupleMember": {
