@@ -146,8 +146,7 @@ export default createRule({
         if (returnType && isNeverReturnType(returnType)) {
           const parent = node.parent;
           if (
-            parent &&
-            parent.type === "VariableDeclarator" &&
+            parent?.type === "VariableDeclarator" &&
             parent.id.type === "Identifier"
           ) {
             neverFunctions.add(parent.id.name);
