@@ -93,62 +93,80 @@ function testContainsIsNullGuard(
   varName: string,
 ): boolean {
   if (test.type === "BinaryExpression") {
-    const bin = test as TSESTree.BinaryExpression;
-    const { left, right, operator } = bin;
-    const isGuardOperator = ["!=", "==", "===", "!=="].includes(operator);
-    if (!isGuardOperator) return false;
-
-    const leftIsVar = left.type === "Identifier" && left.name === varName;
-    const rightIsVar = right.type === "Identifier" && right.name === varName;
-    if (!(leftIsVar || rightIsVar)) return false;
-
-    const other = leftIsVar ? right : left;
-    const isNullCheck =
-      other.type === "Literal" &&
-      (other.value === null || other.value === undefined);
-    const isUndefinedId =
-      other.type === "Identifier" && other.name === "undefined";
-
-    if (isNullCheck || isUndefinedId) {
-      if (operator === "===" || operator === "==") return true;
-      return false;
-    }
-
-    const leftIsTypeofVar =
-      left.type === "UnaryExpression" &&
-      left.operator === "typeof" &&
-      left.argument.type === "Identifier" &&
-      left.argument.name === varName;
-    const rightIsStringLiteral =
-      right.type === "Literal" && typeof right.value === "string";
-    if (leftIsTypeofVar && rightIsStringLiteral) {
-      return operator === "===" || operator === "==";
-    }
-    const rightIsTypeofVar =
-      right.type === "UnaryExpression" &&
-      right.operator === "typeof" &&
-      right.argument.type === "Identifier" &&
-      right.argument.name === varName;
-    const leftIsStringLiteral =
-      left.type === "Literal" && typeof left.value === "string";
-    if (rightIsTypeofVar && leftIsStringLiteral) {
-      return operator === "===" || operator === "==";
-    }
+    return isBinaryIsNullGuard(test as TSESTree.BinaryExpression, varName);
   }
-
   if (test.type === "LogicalExpression") {
     return testContainsIsNullGuard(test.left, varName);
   }
-
   if (test.type === "UnaryExpression") {
-    const unary = test as TSESTree.UnaryExpression;
-    if (unary.operator === "!" && unary.argument.type === "Identifier" && unary.argument.name === varName) {
-      return true;
-    }
-    return testContainsIsNullGuard(unary.argument, varName);
+    return isUnaryIsNullGuard(test as TSESTree.UnaryExpression, varName);
   }
-
   return false;
+}
+
+function isBinaryIsNullGuard(
+  bin: TSESTree.BinaryExpression,
+  varName: string,
+): boolean {
+  const { left, right, operator } = bin;
+  if (!["!=", "==", "===", "!=="].includes(operator)) return false;
+
+  const leftIsVar = left.type === "Identifier" && left.name === varName;
+  const rightIsVar = right.type === "Identifier" && right.name === varName;
+  if (!(leftIsVar || rightIsVar)) return false;
+
+  const other = leftIsVar ? right : left;
+  if (isNullOrUndefinedLiteral(other)) {
+    return operator === "===" || operator === "==";
+  }
+  return isTypeofUndefinedCheck(left, right, varName, operator);
+}
+
+function isNullOrUndefinedLiteral(node: TSESTree.Node): boolean {
+  if (node.type === "Literal" && (node.value === null || node.value === undefined)) {
+    return true;
+  }
+  return node.type === "Identifier" && node.name === "undefined";
+}
+
+function isTypeofUndefinedCheck(
+  left: TSESTree.Node,
+  right: TSESTree.Node,
+  varName: string,
+  operator: string,
+): boolean {
+  if (!isEqualityOperator(operator)) return false;
+  return (
+    isTypeofVar(left, varName) && isStringLiteral(right) ||
+    isTypeofVar(right, varName) && isStringLiteral(left)
+  );
+}
+
+function isEqualityOperator(op: string): boolean {
+  return op === "===" || op === "==";
+}
+
+function isTypeofVar(node: TSESTree.Node, varName: string): boolean {
+  return (
+    node.type === "UnaryExpression" &&
+    (node as TSESTree.UnaryExpression).operator === "typeof" &&
+    (node as TSESTree.UnaryExpression).argument.type === "Identifier" &&
+    ((node as TSESTree.UnaryExpression).argument as TSESTree.Identifier).name === varName
+  );
+}
+
+function isStringLiteral(node: TSESTree.Node): boolean {
+  return node.type === "Literal" && typeof (node as TSESTree.Literal).value === "string";
+}
+
+function isUnaryIsNullGuard(
+  unary: TSESTree.UnaryExpression,
+  varName: string,
+): boolean {
+  if (unary.operator === "!" && unary.argument.type === "Identifier" && unary.argument.name === varName) {
+    return true;
+  }
+  return testContainsIsNullGuard(unary.argument, varName);
 }
 
 function isInsideIfGuard(
