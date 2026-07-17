@@ -11,7 +11,7 @@ function getUnionFingerprint(
 ): string {
   return node.types
     .map((t) => sourceCode.getText(t).replace(/\s+/g, " ").trim())
-    .sort()
+    .sort((a, b) => a.localeCompare(b))
     .join("|");
 }
 
