@@ -156,6 +156,16 @@ function checkBlockForGuard(body: unknown, node: unknown, objName: string, propN
   return true;
 }
 
+function ifAncestorHasNullGuard(stmt: unknown, node: unknown, objName: string, propName: string): boolean {
+  const s = stmt as { test?: unknown; consequent?: unknown; alternate?: unknown };
+  if (matchesNullCheck(s.test, objName, propName) && s.consequent && bodyOfBlockContains(s.consequent, node)) {
+    return true;
+  }
+  const body = s.consequent;
+  if (!checkBlockForGuard(body, node, objName, propName)) return true;
+  return false;
+}
+
 function hasNullGuardBefore(ancestors: unknown[], node: unknown, objName: string, propName: string): boolean {
   for (let i = ancestors.length - 1; i >= 0; i--) {
     const current = ancestors[i];
@@ -163,12 +173,7 @@ function hasNullGuardBefore(ancestors: unknown[], node: unknown, objName: string
     const cur = current as { type: string; consequent?: unknown };
     if (isBoundaryType(cur.type)) break;
     if (cur.type === "IfStatement") {
-      const s = cur as { test?: unknown; consequent?: unknown; alternate?: unknown };
-      if (matchesNullCheck(s.test, objName, propName) && s.consequent && bodyOfBlockContains(s.consequent, node)) {
-        return true;
-      }
-      const body = s.consequent;
-      if (!checkBlockForGuard(body, node, objName, propName)) return true;
+      if (ifAncestorHasNullGuard(cur, node, objName, propName)) return true;
     } else if (cur.type === "BlockStatement") {
       if (!checkBlockForGuard(current, node, objName, propName)) return true;
     }
