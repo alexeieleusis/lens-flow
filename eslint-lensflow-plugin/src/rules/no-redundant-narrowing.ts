@@ -1,24 +1,31 @@
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
+const SKIPPED_KEYS = new Set(["type", "loc", "range", "parent"]);
+
+function visitChildValue(child: unknown, out: TSESTree.Identifier[]): void {
+  if (Array.isArray(child)) {
+    for (const item of child) {
+      if (item && typeof item === "object") collectIdentifiers(item as TSESTree.Node, out);
+    }
+  } else if (child && typeof child === "object") {
+    collectIdentifiers(child as TSESTree.Node, out);
+  }
+}
+
 function collectIdentifiers(
   node: TSESTree.Node,
   out: TSESTree.Identifier[] = [],
 ): TSESTree.Identifier[] {
   if (node.type === "Identifier") {
     out.push(node);
-  } else if ("type" in node && typeof (node as any).type === "string") {
-    for (const key of Object.keys(node)) {
-      if (key === "type" || key === "loc" || key === "range" || key === "parent") continue;
-      const child = (node as any)[key];
-      if (Array.isArray(child)) {
-        for (const item of child) {
-          if (item && typeof item === "object") collectIdentifiers(item, out);
-        }
-      } else if (child && typeof child === "object") {
-        collectIdentifiers(child, out);
-      }
-    }
+    return out;
+  }
+  if (!("type" in node) || typeof (node as any).type !== "string") return out;
+
+  for (const key of Object.keys(node)) {
+    if (SKIPPED_KEYS.has(key)) continue;
+    visitChildValue((node as any)[key], out);
   }
   return out;
 }
