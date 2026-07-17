@@ -153,10 +153,7 @@ export default createRule({
               const symbol = checker.getSymbolAtLocation(tsNode);
               const decl = symbol?.declarations?.[0];
 
-              if (
-                decl &&
-                decl.kind === ts.SyntaxKind.TypeAliasDeclaration
-              ) {
+              if (decl?.kind === ts.SyntaxKind.TypeAliasDeclaration) {
                 const declType = (decl as ts.TypeAliasDeclaration).type;
                 if (declType) {
                   processRuntimeType(tsNode, propMap);
