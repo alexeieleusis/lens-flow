@@ -9,7 +9,7 @@ function createTypeCheckers(checker: ts.TypeChecker) {
 
   function isMutableArray(type: ts.Type) {
     const pushProp = type.getProperty("push");
-    if (!pushProp || !pushProp.valueDeclaration) return false;
+    if (!pushProp?.valueDeclaration) return false;
     const pushType = checker.getTypeOfSymbolAtLocation(pushProp, pushProp.valueDeclaration);
     return pushType.getCallSignatures().length > 0;
   }
