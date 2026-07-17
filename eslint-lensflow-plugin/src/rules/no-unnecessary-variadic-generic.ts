@@ -216,6 +216,60 @@ export default createRule({
       return undefined;
     }
 
+    function collectArrayConstrainedParams(
+      typeParams: TSESTree.TSTypeParameterDeclaration,
+    ): Map<string, { node: TSESTree.TSTypeParameter; constraintText: string }> {
+      const result = new Map<
+        string,
+        { node: TSESTree.TSTypeParameter; constraintText: string }
+      >();
+
+      for (const tp of typeParams.params) {
+        if (!tp.constraint || tp.name.type !== AST_NODE_TYPES.Identifier)
+          continue;
+
+        const constraintText = getArrayConstraintText(tp.constraint);
+        if (constraintText) {
+          result.set(tp.name.name, { node: tp, constraintText });
+        }
+      }
+
+      return result;
+    }
+
+    function matchParamsToGenerics(
+      node:
+        | TSESTree.FunctionDeclaration
+        | TSESTree.FunctionExpression
+        | TSESTree.ArrowFunctionExpression,
+      generics: Map<
+        string,
+        {
+          node: TSESTree.TSTypeParameter;
+          constraintText: string;
+          paramBinding: TSESLint.Scope.Variable | undefined;
+          destructuredIds: Set<string>;
+          calls: string[];
+        }
+      >,
+    ) {
+      if (!node.body) return;
+
+      const fnScope = context.sourceCode.getScope(node);
+      for (const param of node.params) {
+        const match = matchParamToGeneric(param, generics);
+        if (!match) continue;
+
+        const genData = generics.get(match.genName);
+        if (!genData) continue;
+
+        if (param.type === AST_NODE_TYPES.Identifier) {
+          genData.paramBinding = fnScope.set.get(param.name);
+        }
+        genData.destructuredIds = new Set(match.destructuredIds);
+      }
+    }
+
     function enterFn(
       node:
         | TSESTree.FunctionDeclaration
@@ -228,23 +282,8 @@ export default createRule({
         return;
       }
 
-      // Find array-constrained type parameters
-      const arrayConstrained = new Map<
-        string,
-        { node: TSESTree.TSTypeParameter; constraintText: string }
-      >();
+      const arrayConstrained = collectArrayConstrainedParams(typeParams);
 
-      for (const tp of typeParams.params) {
-        if (!tp.constraint || tp.name.type !== AST_NODE_TYPES.Identifier)
-          continue;
-
-        const constraintText = getArrayConstraintText(tp.constraint);
-        if (constraintText) {
-          arrayConstrained.set(tp.name.name, { node: tp, constraintText });
-        }
-      }
-
-      // Map generic names to function parameter names
       const generics = new Map<
         string,
         {
@@ -257,26 +296,15 @@ export default createRule({
       >();
 
       for (const [genName, info] of arrayConstrained) {
-        generics.set(genName, { ...info, paramBinding: undefined, destructuredIds: new Set(), calls: [] });
+        generics.set(genName, {
+          ...info,
+          paramBinding: undefined,
+          destructuredIds: new Set(),
+          calls: [],
+        });
       }
 
-      // Match function parameters to generics by type annotation
-      if (node.body) {
-        const fnScope = context.sourceCode.getScope(node);
-        for (const param of node.params) {
-          const match = matchParamToGeneric(param, generics);
-          if (match) {
-            const genData = generics.get(match.genName);
-            if (genData) {
-              if (param.type === AST_NODE_TYPES.Identifier) {
-                genData.paramBinding = fnScope.set.get(param.name);
-              }
-              genData.destructuredIds = new Set(match.destructuredIds);
-            }
-          }
-        }
-      }
-
+      matchParamsToGenerics(node, generics);
       fnStack.push(generics);
     }
 
