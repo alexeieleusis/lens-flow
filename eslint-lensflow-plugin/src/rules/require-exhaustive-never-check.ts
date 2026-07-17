@@ -73,20 +73,11 @@ export default createRule({
         if (!funcInfo) return;
 
         const ifAncestor = findIfAncestorInBody(node, funcInfo.body);
-        if (ifAncestor) {
-          if (funcInfo.body.body[funcInfo.body.body.length - 1] !== ifAncestor) return;
-        } else if (funcInfo.body.body[funcInfo.body.body.length - 1] !== node) {
-          return;
-        }
+        if (!isLastStatementInBody(ifAncestor ?? node, funcInfo.body)) return;
 
         const info = collectSiblingIfChain(node);
         if (!info) return;
-
-        if (info.handledValues.length === 0) return;
-
-        if (nodeHasAssertNeverOrThrow(node)) return;
-
-        if (ifAncestor && hasGuardElse(ifAncestor)) return;
+        if (shouldSkipIfChainAnalysis(node, ifAncestor, info)) return;
 
         const allValues = getAllDiscriminantValues(
           node,
@@ -417,6 +408,24 @@ function extractFromArrayPattern(
     }
   }
   return null;
+}
+
+function isLastStatementInBody(
+  node: TSESTree.Node,
+  funcBody: TSESTree.BlockStatement,
+): boolean {
+  return funcBody.body[funcBody.body.length - 1] === node;
+}
+
+function shouldSkipIfChainAnalysis(
+  node: TSESTree.ReturnStatement,
+  ifAncestor: TSESTree.IfStatement | null,
+  info: IfChainInfo,
+): boolean {
+  if (info.handledValues.length === 0) return true;
+  if (nodeHasAssertNeverOrThrow(node)) return true;
+  if (ifAncestor && hasGuardElse(ifAncestor)) return true;
+  return false;
 }
 
 function findIfAncestorInBody(
