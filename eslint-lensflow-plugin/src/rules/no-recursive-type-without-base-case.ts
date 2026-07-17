@@ -78,7 +78,7 @@ function hasStructuralReduction(
   }
 
   if (current.type === "TSTupleType") {
-    const elements = (current as TSESTree.TSTupleType).elementTypes;
+    const elements = current.elementTypes;
     for (const element of elements) {
       if (hasStructuralReduction(element, genericParams, inferNames)) return true;
     }
