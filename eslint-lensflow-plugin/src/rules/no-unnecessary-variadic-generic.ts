@@ -129,6 +129,82 @@ export default createRule({
       return identifiers;
     }
 
+    function findGenericInTypeLiteral(
+      typeNode: TSESTree.TSTypeLiteral,
+      generics: Map<string, unknown>,
+    ): string | undefined {
+      for (const member of typeNode.members) {
+        if (
+          member.type === AST_NODE_TYPES.TSPropertySignature &&
+          member.typeAnnotation
+        ) {
+          const found = findGenericReference(
+            member.typeAnnotation.typeAnnotation,
+            generics,
+          );
+          if (found) return found;
+        } else if (
+          member.type === AST_NODE_TYPES.TSCallSignatureDeclaration &&
+          member.returnType
+        ) {
+          const found = findGenericReference(
+            member.returnType.typeAnnotation,
+            generics,
+          );
+          if (found) return found;
+        }
+      }
+      return undefined;
+    }
+
+    function findGenericInUnionOrIntersection(
+      typeNode: TSESTree.TSUnionType | TSESTree.TSIntersectionType,
+      generics: Map<string, unknown>,
+    ): string | undefined {
+      for (const type of typeNode.types) {
+        const found = findGenericReference(type, generics);
+        if (found) return found;
+      }
+      return undefined;
+    }
+
+    function findGenericInIndexedAccess(
+      typeNode: TSESTree.TSIndexedAccessType,
+      generics: Map<string, unknown>,
+    ): string | undefined {
+      const foundInType = findGenericReference(typeNode.objectType, generics);
+      if (foundInType) return foundInType;
+      return findGenericReference(typeNode.indexType, generics);
+    }
+
+    function findGenericReference(
+      typeNode: TSESTree.TypeNode,
+      generics: Map<string, unknown>,
+    ): string | undefined {
+      if (
+        typeNode.type === AST_NODE_TYPES.TSTypeReference &&
+        typeNode.typeName.type === AST_NODE_TYPES.Identifier &&
+        generics.has(typeNode.typeName.name)
+      ) {
+        return typeNode.typeName.name;
+      }
+
+      if (
+        typeNode.type === AST_NODE_TYPES.TSIntersectionType ||
+        typeNode.type === AST_NODE_TYPES.TSUnionType
+      ) {
+        return findGenericInUnionOrIntersection(typeNode, generics);
+      }
+      if (typeNode.type === AST_NODE_TYPES.TSTypeLiteral) {
+        return findGenericInTypeLiteral(typeNode, generics);
+      }
+      if (typeNode.type === AST_NODE_TYPES.TSIndexedAccessType) {
+        return findGenericInIndexedAccess(typeNode, generics);
+      }
+
+      return undefined;
+    }
+
     function matchParamToGeneric(
       param: TSESTree.Parameter,
       generics: Map<string, unknown>,
@@ -154,53 +230,7 @@ export default createRule({
         param.type === AST_NODE_TYPES.ArrayPattern
       ) {
         const typeAnn = param.typeAnnotation.typeAnnotation;
-
-        // Recursively search the type annotation for a reference to a generic
-        function findGenericReference(
-          typeNode: TSESTree.TypeNode,
-        ): string | undefined {
-          if (
-            typeNode.type === AST_NODE_TYPES.TSTypeReference &&
-            typeNode.typeName.type === AST_NODE_TYPES.Identifier &&
-            generics.has(typeNode.typeName.name)
-          ) {
-            return typeNode.typeName.name;
-          }
-
-          // Recurse into nested types
-          if (
-            typeNode.type === AST_NODE_TYPES.TSIntersectionType ||
-            typeNode.type === AST_NODE_TYPES.TSUnionType
-          ) {
-            for (const left of typeNode.types) {
-              const found = findGenericReference(left);
-              if (found) return found;
-            }
-          } else if (
-            typeNode.type === AST_NODE_TYPES.TSTypeLiteral
-          ) {
-            for (const member of typeNode.members) {
-              if (member.type === AST_NODE_TYPES.TSPropertySignature && member.typeAnnotation) {
-                const found = findGenericReference(member.typeAnnotation.typeAnnotation);
-                if (found) return found;
-              } else if (member.type === AST_NODE_TYPES.TSCallSignatureDeclaration && member.returnType) {
-                const found = findGenericReference(member.returnType.typeAnnotation);
-                if (found) return found;
-              }
-            }
-          } else if (
-            typeNode.type === AST_NODE_TYPES.TSIndexedAccessType
-          ) {
-            const foundInType = findGenericReference(typeNode.objectType);
-            if (foundInType) return foundInType;
-            const foundInIndex = findGenericReference(typeNode.indexType);
-            if (foundInIndex) return foundInIndex;
-          }
-
-          return undefined;
-        }
-
-        const genName = findGenericReference(typeAnn);
+        const genName = findGenericReference(typeAnn, generics);
         if (genName) {
           const destructuredIds = collectDestructuredIdentifiers(param);
           return { genName, destructuredIds };
