@@ -104,6 +104,17 @@ function getAllParamNames(node: unknown): string[] {
   return result;
 }
 
+function getBaseIdentifier(node: TSESTree.MemberExpression): TSESTree.Identifier | null {
+  let current: TSESTree.Expression = node;
+  while (current.type === "MemberExpression") {
+    current = (current as TSESTree.MemberExpression).object;
+  }
+  if (current.type === "Identifier") {
+    return current;
+  }
+  return null;
+}
+
 export default createRule({
   name: "no-runtime-generic-assumption",
   meta: {
@@ -171,17 +182,6 @@ export default createRule({
         }
       }
       return false;
-    }
-
-    function getBaseIdentifier(node: TSESTree.MemberExpression): TSESTree.Identifier | null {
-      let current: TSESTree.Expression = node;
-      while (current.type === "MemberExpression") {
-        current = (current as TSESTree.MemberExpression).object;
-      }
-      if (current.type === "Identifier") {
-        return current;
-      }
-      return null;
     }
 
     function enterFn(node: unknown) {
