@@ -5,6 +5,221 @@ function hasVarianceAnnotation(tp: TSESTree.TSTypeParameter): boolean {
   return !!(tp as TSESTree.TSTypeParameter & { out?: boolean; in?: boolean }).out || !!(tp as TSESTree.TSTypeParameter & { out?: boolean; in?: boolean }).in;
 }
 
+function extractTypeName(node: TSESTree.TSTypeReference): string | null {
+  if (node.typeName.type === "Identifier") return node.typeName.name;
+  if (node.typeName.type === "TSQualifiedName" && node.typeName.right.type === "Identifier")
+    return node.typeName.right.name;
+  return null;
+}
+
+function handleTypeReference(
+  node: TSESTree.TSTypeReference,
+  paramName: string,
+  covariant: boolean,
+  result: { covariant: boolean; contravariant: boolean },
+): void {
+  const name = extractTypeName(node);
+  if (name === paramName) {
+    if (covariant) result.covariant = true;
+    else result.contravariant = true;
+  }
+}
+
+// TSParenthesizedType isn't in AST_NODE_TYPES enum in this version of @typescript-eslint,
+// so we handle it before the switch with a raw string check and typed cast.
+function handleParenthesizedType(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  node: any,
+  paramName: string,
+  covariant: boolean,
+  result: { covariant: boolean; contravariant: boolean },
+): void {
+  findTypeParamUsage(node.typeAnnotation, paramName, covariant, result);
+}
+
+function handleFunctionType(
+  node: TSESTree.TSFunctionType | TSESTree.TSConstructorType,
+  paramName: string,
+  result: { covariant: boolean; contravariant: boolean },
+): void {
+  node.params.forEach((p) => {
+    if ("typeAnnotation" in p && p.typeAnnotation)
+      findTypeParamUsage(p.typeAnnotation, paramName, false, result);
+  });
+  findTypeParamUsage(node.returnType, paramName, true, result);
+}
+
+function handleArrayType(
+  node: TSESTree.TSArrayType,
+  paramName: string,
+  covariant: boolean,
+  result: { covariant: boolean; contravariant: boolean },
+): void {
+  findTypeParamUsage(node.elementType, paramName, covariant, result);
+}
+
+function handleTupleType(
+  node: TSESTree.TSTupleType,
+  paramName: string,
+  covariant: boolean,
+  result: { covariant: boolean; contravariant: boolean },
+): void {
+  node.elementTypes.forEach((el) =>
+    findTypeParamUsage(el, paramName, covariant, result),
+  );
+}
+
+function handleUnionOrIntersectionType(
+  node: TSESTree.TSUnionType | TSESTree.TSIntersectionType,
+  paramName: string,
+  covariant: boolean,
+  result: { covariant: boolean; contravariant: boolean },
+): void {
+  node.types.forEach((m) =>
+    findTypeParamUsage(m, paramName, covariant, result),
+  );
+}
+
+function handleTypeLiteral(
+  node: TSESTree.TSTypeLiteral,
+  paramName: string,
+  covariant: boolean,
+  result: { covariant: boolean; contravariant: boolean },
+): void {
+  node.members.forEach((m) =>
+    findTypeParamUsage(m, paramName, covariant, result),
+  );
+}
+
+function handleConditionalType(
+  node: TSESTree.TSConditionalType,
+  paramName: string,
+  result: { covariant: boolean; contravariant: boolean },
+): void {
+  findTypeParamUsage(node.checkType, paramName, false, result);
+  findTypeParamUsage(node.falseType, paramName, false, result);
+  findTypeParamUsage(node.trueType, paramName, true, result);
+}
+
+function handleIndexedAccessType(
+  node: TSESTree.TSIndexedAccessType,
+  paramName: string,
+  result: { covariant: boolean; contravariant: boolean },
+): void {
+  findTypeParamUsage(node.objectType, paramName, false, result);
+  findTypeParamUsage(node.indexType, paramName, false, result);
+}
+
+function handlePropertySignature(
+  node: TSESTree.TSPropertySignature,
+  paramName: string,
+  result: { covariant: boolean; contravariant: boolean },
+): void {
+  if (node.typeAnnotation) {
+    findTypeParamUsage(node.typeAnnotation, paramName, true, result);
+  }
+}
+
+function handleCallSignature(
+  node: TSESTree.TSCallSignatureDeclaration,
+  paramName: string,
+  result: { covariant: boolean; contravariant: boolean },
+): void {
+  (node.params || []).forEach((p) => {
+    if ("typeAnnotation" in p && p.typeAnnotation)
+      findTypeParamUsage(p.typeAnnotation, paramName, false, result);
+  });
+  if (node.returnType) findTypeParamUsage(node.returnType.typeAnnotation, paramName, true, result);
+}
+
+function handleConstructSignature(
+  node: TSESTree.TSConstructSignatureDeclaration,
+  paramName: string,
+  result: { covariant: boolean; contravariant: boolean },
+): void {
+  (node.params || []).forEach((p) => {
+    if ("typeAnnotation" in p && p.typeAnnotation)
+      findTypeParamUsage(p.typeAnnotation, paramName, false, result);
+  });
+  if (node.returnType) findTypeParamUsage(node.returnType.typeAnnotation, paramName, true, result);
+}
+
+function handleMethodSignature(
+  node: TSESTree.TSMethodSignature,
+  paramName: string,
+  result: { covariant: boolean; contravariant: boolean },
+): void {
+  (node.params || []).forEach((p) => {
+    if ("typeAnnotation" in p && p.typeAnnotation)
+      findTypeParamUsage(p.typeAnnotation, paramName, false, result);
+  });
+  if (node.returnType) findTypeParamUsage(node.returnType.typeAnnotation, paramName, true, result);
+}
+
+function handleTypeAnnotation(
+  node: TSESTree.TSTypeAnnotation,
+  paramName: string,
+  covariant: boolean,
+  result: { covariant: boolean; contravariant: boolean },
+): void {
+  findTypeParamUsage(node.typeAnnotation, paramName, covariant, result);
+}
+
+function handleTypeQuery(
+  node: TSESTree.TSTypeQuery,
+  paramName: string,
+  result: { covariant: boolean; contravariant: boolean },
+): void {
+  // typeof X<T> — variance depends on how the queried type uses its parameters.
+  // Treating as invariant to avoid silent false negatives.
+  findTypeParamUsage(node.exprName, paramName, true, result);
+  findTypeParamUsage(node.exprName, paramName, false, result);
+}
+
+function handleTypeOperator(
+  node: TSESTree.TSTypeOperator,
+  paramName: string,
+  covariant: boolean,
+  result: { covariant: boolean; contravariant: boolean },
+): void {
+  if (node.operator === "keyof") {
+    // keyof T — the operand is used contravariantly
+    findTypeParamUsage(node.typeAnnotation, paramName, false, result);
+  } else {
+    // readonly preserves the original variance
+    findTypeParamUsage(node.typeAnnotation, paramName, covariant, result);
+  }
+}
+
+function handleMappedType(
+  node: TSESTree.TSMappedType,
+  paramName: string,
+  result: { covariant: boolean; contravariant: boolean },
+): void {
+  // constraint (e.g., "K in keyof T") — bound is contravariant
+  findTypeParamUsage(node.constraint, paramName, false, result);
+  // typeAnnotation uses T covariantly
+  if (node.typeAnnotation) {
+    findTypeParamUsage(node.typeAnnotation, paramName, true, result);
+  }
+}
+
+function handleImportType(
+  node: TSESTree.TSImportType,
+  paramName: string,
+  covariant: boolean,
+  result: { covariant: boolean; contravariant: boolean },
+): void {
+  // import("mod").Foo<T> — check type arguments
+  if (node.typeArguments) {
+    node.typeArguments.params.forEach((arg) =>
+      findTypeParamUsage(arg, paramName, covariant, result),
+    );
+  }
+  // qualName may also reference the parameter
+  findTypeParamUsage(node.qualifier, paramName, covariant, result);
+}
+
 function findTypeParamUsage(
   node: TSESTree.Node | null | undefined,
   paramName: string,
@@ -14,139 +229,68 @@ function findTypeParamUsage(
   if (!node) return;
 
   if (node.type === "TSTypeReference") {
-    let name: string | null = null;
-    if (node.typeName.type === "Identifier") {
-      name = node.typeName.name;
-    } else if (node.typeName.type === "TSQualifiedName" && node.typeName.right.type === "Identifier") {
-      name = node.typeName.right.name;
-    }
-    if (name === paramName) {
-      if (covariant) result.covariant = true;
-      else result.contravariant = true;
-      return;
-    }
+    handleTypeReference(node, paramName, covariant, result);
+    return;
   }
 
-  // TSParenthesizedType isn't in AST_NODE_TYPES enum in this version of @typescript-eslint,
-  // so we handle it before the switch with a raw string check and typed cast.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (node.type === ("TSParenthesizedType" as any)) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pn = node as any;
-    findTypeParamUsage(pn.typeAnnotation, paramName, covariant, result);
+    handleParenthesizedType(node as any, paramName, covariant, result);
     return;
   }
 
   switch (node.type) {
     case "TSFunctionType":
-    case "TSConstructorType": {
-      node.params.forEach((p) => {
-        if ("typeAnnotation" in p && p.typeAnnotation)
-          findTypeParamUsage(p.typeAnnotation, paramName, false, result);
-      });
-      findTypeParamUsage(node.returnType, paramName, true, result);
+    case "TSConstructorType":
+      handleFunctionType(node, paramName, result);
       break;
-    }
     case "TSArrayType":
-      findTypeParamUsage(node.elementType, paramName, covariant, result);
+      handleArrayType(node, paramName, covariant, result);
       break;
     case "TSTupleType":
-      node.elementTypes.forEach((el) =>
-        findTypeParamUsage(el, paramName, covariant, result),
-      );
+      handleTupleType(node, paramName, covariant, result);
       break;
     case "TSUnionType":
     case "TSIntersectionType":
-      node.types.forEach((m) =>
-        findTypeParamUsage(m, paramName, covariant, result),
-      );
+      handleUnionOrIntersectionType(node, paramName, covariant, result);
       break;
     case "TSTypeLiteral":
-      node.members.forEach((m) =>
-        findTypeParamUsage(m, paramName, covariant, result),
-      );
+      handleTypeLiteral(node, paramName, covariant, result);
       break;
-    case "TSConditionalType": {
-      findTypeParamUsage(node.checkType, paramName, false, result);
-      findTypeParamUsage(node.falseType, paramName, false, result);
-      findTypeParamUsage(node.trueType, paramName, true, result);
+    case "TSConditionalType":
+      handleConditionalType(node, paramName, result);
       break;
-    }
-    case "TSIndexedAccessType": {
-      findTypeParamUsage(node.objectType, paramName, false, result);
-      findTypeParamUsage(node.indexType, paramName, false, result);
+    case "TSIndexedAccessType":
+      handleIndexedAccessType(node, paramName, result);
       break;
-    }
-    case "TSPropertySignature": {
-      if (node.typeAnnotation) {
-        findTypeParamUsage(node.typeAnnotation, paramName, true, result);
-      }
+    case "TSPropertySignature":
+      handlePropertySignature(node, paramName, result);
       break;
-    }
-    case "TSCallSignatureDeclaration": {
-      (node.params || []).forEach((p) => {
-        if ("typeAnnotation" in p && p.typeAnnotation)
-          findTypeParamUsage(p.typeAnnotation, paramName, false, result);
-      });
-      if (node.returnType) findTypeParamUsage(node.returnType.typeAnnotation, paramName, true, result);
+    case "TSCallSignatureDeclaration":
+      handleCallSignature(node, paramName, result);
       break;
-    }
-    case "TSConstructSignatureDeclaration": {
-      (node.params || []).forEach((p) => {
-        if ("typeAnnotation" in p && p.typeAnnotation)
-          findTypeParamUsage(p.typeAnnotation, paramName, false, result);
-      });
-      if (node.returnType) findTypeParamUsage(node.returnType.typeAnnotation, paramName, true, result);
+    case "TSConstructSignatureDeclaration":
+      handleConstructSignature(node, paramName, result);
       break;
-    }
-    case "TSMethodSignature": {
-      const ms = node as TSESTree.TSMethodSignature;
-      (ms.params || []).forEach((p) => {
-        if ("typeAnnotation" in p && p.typeAnnotation)
-          findTypeParamUsage(p.typeAnnotation, paramName, false, result);
-      });
-      if (ms.returnType) findTypeParamUsage(ms.returnType.typeAnnotation, paramName, true, result);
+    case "TSMethodSignature":
+      handleMethodSignature(node, paramName, result);
       break;
-    }
     case "TSTypeAnnotation":
-      findTypeParamUsage(node.typeAnnotation, paramName, covariant, result);
+      handleTypeAnnotation(node, paramName, covariant, result);
       break;
     case "TSTypeQuery":
-      // typeof X<T> — variance depends on how the queried type uses its parameters.
-      // Treating as invariant to avoid silent false negatives.
-      findTypeParamUsage(node.exprName, paramName, true, result);
-      findTypeParamUsage(node.exprName, paramName, false, result);
+      handleTypeQuery(node, paramName, result);
       break;
-    case "TSTypeOperator": {
-      if (node.operator === "keyof") {
-        // keyof T — the operand is used contravariantly
-        findTypeParamUsage(node.typeAnnotation, paramName, false, result);
-      } else {
-        // readonly preserves the original variance
-        findTypeParamUsage(node.typeAnnotation, paramName, covariant, result);
-      }
+    case "TSTypeOperator":
+      handleTypeOperator(node, paramName, covariant, result);
       break;
-    }
-    case "TSMappedType": {
-      // constraint (e.g., "K in keyof T") — bound is contravariant
-      findTypeParamUsage(node.constraint, paramName, false, result);
-      // typeAnnotation uses T covariantly
-      if (node.typeAnnotation) {
-        findTypeParamUsage(node.typeAnnotation, paramName, true, result);
-      }
+    case "TSMappedType":
+      handleMappedType(node, paramName, result);
       break;
-    }
-    case "TSImportType": {
-      // import("mod").Foo<T> — check type arguments
-      if (node.typeArguments) {
-        node.typeArguments.params.forEach((arg) =>
-          findTypeParamUsage(arg, paramName, covariant, result),
-        );
-      }
-      // qualName may also reference the parameter
-      findTypeParamUsage(node.qualifier, paramName, covariant, result);
+    case "TSImportType":
+      handleImportType(node, paramName, covariant, result);
       break;
-    }
     case "TSInferType":
       // infer U inside conditionals doesn't reference the outer type parameter
       break;
