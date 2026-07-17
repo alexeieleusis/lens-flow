@@ -83,7 +83,9 @@ function isParamTypeNarrow(
     }
   } else {
     const tsNode = esTreeNodeToTSNodeMap.get(implTyped);
-    if (!tsNode) {
+    if (tsNode) {
+      implParamType = checker.getTypeFromTypeNode(tsNode as ts.TypeNode);
+    } else {
       const implParamId = getParamIdentifier(impl, index);
       if (implParamId) {
         implParamType = checker.getTypeAtLocation(
@@ -92,8 +94,6 @@ function isParamTypeNarrow(
       } else {
         implParamType = checker.getAnyType();
       }
-    } else {
-      implParamType = checker.getTypeFromTypeNode(tsNode as ts.TypeNode);
     }
   }
 
