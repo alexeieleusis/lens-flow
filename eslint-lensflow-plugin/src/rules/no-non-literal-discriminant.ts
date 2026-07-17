@@ -121,12 +121,12 @@ export default createRule({
               const typeAnn = member.typeAnnotation?.typeAnnotation;
               if (!typeAnn) continue;
 
-              const widened: "string" | "number" | null =
-                typeAnn.type === "TSStringKeyword"
-                  ? "string"
-                  : typeAnn.type === "TSNumberKeyword"
-                    ? "number"
-                    : null;
+              let widened: "string" | "number" | null = null;
+              if (typeAnn.type === "TSStringKeyword") {
+                widened = "string";
+              } else if (typeAnn.type === "TSNumberKeyword") {
+                widened = "number";
+              }
 
               const existing = propMap.get(propName);
               if (existing) {
