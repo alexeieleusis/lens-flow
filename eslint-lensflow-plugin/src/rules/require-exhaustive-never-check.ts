@@ -373,43 +373,47 @@ function extractParamIdentifier(
   node: PatternLike,
   name: string,
 ): TSESTree.Identifier | null {
-  if (node.type === "Identifier") {
-    return node.name === name ? node : null;
-  }
-  if (node.type === "AssignmentPattern") {
-    return extractParamIdentifier(node.left, name);
-  }
-  if (node.type === "RestElement") {
-    return extractParamIdentifier(node.argument, name);
-  }
-  if (node.type === "TSParameterProperty") {
-    return extractParamIdentifier(node.parameter, name);
-  }
-  if (node.type === "ObjectPattern") {
-    for (const prop of node.properties) {
-      if (prop.type === "Property") {
-        if (prop.key.type === "Identifier" && prop.key.name === name) {
-          if (prop.value.type === "Identifier") return prop.value;
-          if (isPatternLike(prop.value)) return extractParamIdentifier(prop.value, name);
-        }
-      } else if (prop.type === "RestElement") {
-        if (prop.argument.type === "Identifier" && prop.argument.name === name) {
-          return prop.argument;
-        }
+  if (node.type === "Identifier") return node.name === name ? node : null;
+  if (node.type === "AssignmentPattern") return extractParamIdentifier(node.left, name);
+  if (node.type === "RestElement") return extractParamIdentifier(node.argument, name);
+  if (node.type === "TSParameterProperty") return extractParamIdentifier(node.parameter, name);
+  if (node.type === "ObjectPattern") return extractFromObjectPattern(node, name);
+  if (node.type === "ArrayPattern") return extractFromArrayPattern(node, name);
+  return null;
+}
+
+function extractFromObjectPattern(
+  node: TSESTree.ObjectPattern,
+  name: string,
+): TSESTree.Identifier | null {
+  for (const prop of node.properties) {
+    if (prop.type === "Property") {
+      if (prop.key.type === "Identifier" && prop.key.name === name) {
+        if (prop.value.type === "Identifier") return prop.value;
+        if (isPatternLike(prop.value)) return extractParamIdentifier(prop.value, name);
+      }
+    } else if (prop.type === "RestElement") {
+      if (prop.argument.type === "Identifier" && prop.argument.name === name) {
+        return prop.argument;
       }
     }
   }
-  if (node.type === "ArrayPattern") {
-    for (const element of node.elements) {
-      if (!element) continue;
-      if (element.type === "Identifier" && element.name === name) return element;
-      if (element.type === "RestElement" && element.argument.type === "Identifier" && element.argument.name === name) {
-        return element.argument;
-      }
-      if (isPatternLike(element)) {
-        const nested = extractParamIdentifier(element, name);
-        if (nested) return nested;
-      }
+  return null;
+}
+
+function extractFromArrayPattern(
+  node: TSESTree.ArrayPattern,
+  name: string,
+): TSESTree.Identifier | null {
+  for (const element of node.elements) {
+    if (!element) continue;
+    if (element.type === "Identifier" && element.name === name) return element;
+    if (element.type === "RestElement" && element.argument.type === "Identifier" && element.argument.name === name) {
+      return element.argument;
+    }
+    if (isPatternLike(element)) {
+      const nested = extractParamIdentifier(element, name);
+      if (nested) return nested;
     }
   }
   return null;
