@@ -53,12 +53,12 @@ export default createRule({
 
         for (const t of node.types) {
           if (t.type === "TSTypeReference") {
-            const typeName =
-              t.typeName.type === "Identifier"
-                ? t.typeName.name
-                : t.typeName.type === "TSQualifiedName"
-                  ? t.typeName.right.name
-                  : null;
+            let typeName: string | null = null;
+            if (t.typeName.type === "Identifier") {
+              typeName = t.typeName.name;
+            } else if (t.typeName.type === "TSQualifiedName") {
+              typeName = t.typeName.right.name;
+            }
             if (typeName && typeAliasMap.has(typeName)) {
               counts.push(typeAliasMap.get(typeName)!);
             }
