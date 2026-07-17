@@ -95,7 +95,7 @@ function astEquals(
     }
   }
 
-  for (const key of Object.getOwnPropertyNames(bProps).sort()) {
+  for (const key of Object.getOwnPropertyNames(bProps).sort((a, b) => a.localeCompare(b))) {
     if (SKIP_KEYS.has(key)) continue;
     if (Object.prototype.hasOwnProperty.call(aProps, key)) continue;
     return false;
