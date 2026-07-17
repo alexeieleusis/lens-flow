@@ -14,11 +14,12 @@ function findTypeParamUsage(
   if (!node) return;
 
   if (node.type === "TSTypeReference") {
-    const name = node.typeName.type === "Identifier"
-      ? node.typeName.name
-      : node.typeName.type === "TSQualifiedName" && node.typeName.right.type === "Identifier"
-        ? node.typeName.right.name
-        : null;
+    let name: string | null = null;
+    if (node.typeName.type === "Identifier") {
+      name = node.typeName.name;
+    } else if (node.typeName.type === "TSQualifiedName" && node.typeName.right.type === "Identifier") {
+      name = node.typeName.right.name;
+    }
     if (name === paramName) {
       if (covariant) result.covariant = true;
       else result.contravariant = true;
