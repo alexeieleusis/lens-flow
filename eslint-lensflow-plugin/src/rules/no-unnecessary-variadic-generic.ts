@@ -169,13 +169,7 @@ export default createRule({
 
           // Recurse into nested types
           if (
-            typeNode.type === AST_NODE_TYPES.TSIntersectionType
-          ) {
-            for (const left of typeNode.types) {
-              const found = findGenericReference(left);
-              if (found) return found;
-            }
-          } else if (
+            typeNode.type === AST_NODE_TYPES.TSIntersectionType ||
             typeNode.type === AST_NODE_TYPES.TSUnionType
           ) {
             for (const left of typeNode.types) {
