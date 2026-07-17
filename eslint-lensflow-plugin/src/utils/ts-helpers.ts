@@ -3,158 +3,17 @@ import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 export type LiteralValue = string | number | boolean;
 
+function containsTypeByKeyword(typeNode: TSESTree.TypeNode, keyword: string): boolean {
+  if (typeNode.type === keyword) return true;
+  return collectChildTypes(typeNode).some((child) => containsTypeByKeyword(child, keyword));
+}
+
 export function containsAny(typeNode: TSESTree.TypeNode): boolean {
-  if (typeNode.type === "TSAnyKeyword") return true;
-  if (typeNode.type === "TSUnionType" || typeNode.type === "TSIntersectionType") {
-    return typeNode.types.some(containsAny);
-  }
-  if (typeNode.type === "TSArrayType") {
-    return containsAny(typeNode.elementType);
-  }
-  if (typeNode.type === "TSTypeReference") {
-    return (typeNode.typeArguments?.params ?? []).some(containsAny);
-  }
-  if (typeNode.type === "TSTupleType") {
-    return typeNode.elementTypes.some((elem) => {
-      if (elem.type === "TSNamedTupleMember") return containsAny(elem.elementType);
-      if (elem.type === "TSRestType") return containsAny(elem.typeAnnotation);
-      return containsAny(elem);
-    });
-  }
-  if (typeNode.type === "TSTypeLiteral") {
-    return typeNode.members.some((member) => {
-      if (member.type === "TSPropertySignature") {
-        return member.typeAnnotation
-          ? containsAny(member.typeAnnotation.typeAnnotation)
-          : false;
-      }
-      if (member.type === "TSIndexSignature") {
-        return member.typeAnnotation
-          ? containsAny(member.typeAnnotation.typeAnnotation)
-          : false;
-      }
-      return false;
-    });
-  }
-  if (typeNode.type === "TSFunctionType" || typeNode.type === "TSConstructorType") {
-    const paramAny = typeNode.params.some((p) => {
-      const inner = p.type === "TSParameterProperty" ? p.parameter : p;
-      return inner.typeAnnotation ? containsAny(inner.typeAnnotation.typeAnnotation) : false;
-    });
-    if (paramAny) return true;
-    if (typeNode.returnType) return containsAny(typeNode.returnType.typeAnnotation);
-  }
-  if (typeNode.type === "TSConditionalType") {
-    return (
-      containsAny(typeNode.checkType) ||
-      containsAny(typeNode.extendsType) ||
-      containsAny(typeNode.trueType) ||
-      containsAny(typeNode.falseType)
-    );
-  }
-  if (typeNode.type === "TSMappedType") {
-    return typeNode.typeAnnotation ? containsAny(typeNode.typeAnnotation) : false;
-  }
-  if (typeNode.type === "TSIndexedAccessType") {
-    return containsAny(typeNode.objectType) || containsAny(typeNode.indexType);
-  }
-  if (typeNode.type === "TSRestType") {
-    return containsAny(typeNode.typeAnnotation);
-  }
-  if (typeNode.type === "TSInferType") {
-    return typeNode.typeParameter.constraint
-      ? containsAny(typeNode.typeParameter.constraint)
-      : false;
-  }
-  if (typeNode.type === "TSTypeOperator") {
-    return typeNode.typeAnnotation ? containsAny(typeNode.typeAnnotation) : false;
-  }
-  if (typeNode.type === "TSOptionalType") {
-    return containsAny(typeNode.typeAnnotation);
-  }
-  // TSParenthesizedType can appear at runtime but isn't in @typescript-eslint types
-  {
-    const maybe = typeNode as unknown as { type: string; typeAnnotation: TSESTree.TypeNode };
-    if (maybe.type === "TSParenthesizedType") return containsAny(maybe.typeAnnotation);
-  }
-  return false;
+  return containsTypeByKeyword(typeNode, "TSAnyKeyword");
 }
 
 export function containsUnknown(typeNode: TSESTree.TypeNode): boolean {
-  if (typeNode.type === "TSUnknownKeyword") return true;
-  if (typeNode.type === "TSUnionType" || typeNode.type === "TSIntersectionType") {
-    return typeNode.types.some(containsUnknown);
-  }
-  if (typeNode.type === "TSArrayType") {
-    return containsUnknown(typeNode.elementType);
-  }
-  if (typeNode.type === "TSTypeReference") {
-    return (typeNode.typeArguments?.params ?? []).some(containsUnknown);
-  }
-  if (typeNode.type === "TSTupleType") {
-    return typeNode.elementTypes.some((elem) => {
-      if (elem.type === "TSNamedTupleMember") return containsUnknown(elem.elementType);
-      if (elem.type === "TSRestType") return containsUnknown(elem.typeAnnotation);
-      return containsUnknown(elem);
-    });
-  }
-  if (typeNode.type === "TSTypeLiteral") {
-    return typeNode.members.some((member) => {
-      if (member.type === "TSPropertySignature") {
-        return member.typeAnnotation
-          ? containsUnknown(member.typeAnnotation.typeAnnotation)
-          : false;
-      }
-      if (member.type === "TSIndexSignature") {
-        return member.typeAnnotation
-          ? containsUnknown(member.typeAnnotation.typeAnnotation)
-          : false;
-      }
-      return false;
-    });
-  }
-  if (typeNode.type === "TSFunctionType" || typeNode.type === "TSConstructorType") {
-    const paramUnknown = typeNode.params.some((p) => {
-      const inner = p.type === "TSParameterProperty" ? p.parameter : p;
-      return inner.typeAnnotation ? containsUnknown(inner.typeAnnotation.typeAnnotation) : false;
-    });
-    if (paramUnknown) return true;
-    if (typeNode.returnType) return containsUnknown(typeNode.returnType.typeAnnotation);
-  }
-  if (typeNode.type === "TSConditionalType") {
-    return (
-      containsUnknown(typeNode.checkType) ||
-      containsUnknown(typeNode.extendsType) ||
-      containsUnknown(typeNode.trueType) ||
-      containsUnknown(typeNode.falseType)
-    );
-  }
-  if (typeNode.type === "TSMappedType") {
-    return typeNode.typeAnnotation ? containsUnknown(typeNode.typeAnnotation) : false;
-  }
-  if (typeNode.type === "TSIndexedAccessType") {
-    return containsUnknown(typeNode.objectType) || containsUnknown(typeNode.indexType);
-  }
-  if (typeNode.type === "TSRestType") {
-    return containsUnknown(typeNode.typeAnnotation);
-  }
-  if (typeNode.type === "TSInferType") {
-    return typeNode.typeParameter.constraint
-      ? containsUnknown(typeNode.typeParameter.constraint)
-      : false;
-  }
-  if (typeNode.type === "TSTypeOperator") {
-    return typeNode.typeAnnotation ? containsUnknown(typeNode.typeAnnotation) : false;
-  }
-  if (typeNode.type === "TSOptionalType") {
-    return containsUnknown(typeNode.typeAnnotation);
-  }
-  // TSParenthesizedType can appear at runtime but isn't in @typescript-eslint types
-  {
-    const maybe = typeNode as unknown as { type: string; typeAnnotation: TSESTree.TypeNode };
-    if (maybe.type === "TSParenthesizedType") return containsUnknown(maybe.typeAnnotation);
-  }
-  return false;
+  return containsTypeByKeyword(typeNode, "TSUnknownKeyword");
 }
 import {
   defaultHasNeverAssertion,
@@ -268,6 +127,17 @@ export function collectChildTypes(type: TSESTree.TypeNode): TSESTree.TypeNode[] 
       return [...type.types];
     case "TSOptionalType":
       return [type.typeAnnotation];
+    case "TSTypeLiteral": {
+      const children: TSESTree.TypeNode[] = [];
+      for (const member of type.members) {
+        if (member.type === "TSPropertySignature" && member.typeAnnotation) {
+          children.push(member.typeAnnotation.typeAnnotation);
+        } else if (member.type === "TSIndexSignature" && member.typeAnnotation) {
+          children.push(member.typeAnnotation.typeAnnotation);
+        }
+      }
+      return children;
+    }
     default: {
       const maybeParenthesized = type as unknown as { type: string; typeAnnotation?: TSESTree.TypeNode };
       if (maybeParenthesized.type === "TSParenthesizedType" && maybeParenthesized.typeAnnotation) {
