@@ -278,63 +278,64 @@ export function collectChildTypes(type: TSESTree.TypeNode): TSESTree.TypeNode[] 
   }
 }
 
-export function extractLiteralValues(tsType: ts.Type, checker?: ts.TypeChecker): (LiteralValue)[] {
-  const values = new Set<LiteralValue>();
+function extractBooleanFromType(t: ts.Type, checker?: ts.TypeChecker): boolean | undefined {
+  const val = (t as ts.Type & { value?: boolean }).value;
+  if (val !== undefined) return val;
+  if (checker) {
+    const str = checker.typeToString(t);
+    if (str === "true") return true;
+    if (str === "false") return false;
+  }
+}
 
-  function extractBooleanLiteral(t: ts.Type): boolean | undefined {
-    const val = (t as ts.Type & { value?: boolean }).value;
-    if (val !== undefined) return val;
-    if (checker) {
-      const str = checker.typeToString(t);
-      if (str === "true") return true;
-      if (str === "false") return false;
+function processTypeFlags(t: ts.Type, values: Set<LiteralValue>, checker?: ts.TypeChecker) {
+  if ((t.flags & ts.TypeFlags.StringLiteral) !== 0) {
+    values.add((t as ts.StringLiteralType).value);
+    return;
+  }
+  if ((t.flags & ts.TypeFlags.NumberLiteral) !== 0) {
+    values.add((t as ts.NumberLiteralType).value);
+    return;
+  }
+  if ((t.flags & ts.TypeFlags.BooleanLiteral) !== 0) {
+    const val = extractBooleanFromType(t, checker);
+    if (val !== undefined) values.add(val);
+    return;
+  }
+  if ((t.flags & ts.TypeFlags.Boolean) !== 0) {
+    values.add(true);
+    values.add(false);
+  }
+}
+
+function fallbackExtractUnionBooleans(tsType: ts.Type, values: Set<LiteralValue>, checker?: ts.TypeChecker) {
+  if (!tsType.isUnion()) return;
+  for (const member of tsType.types) {
+    if ((member.flags & ts.TypeFlags.BooleanLiteral) !== 0) {
+      const val = extractBooleanFromType(member, checker);
+      if (val !== undefined) values.add(val);
+    } else if ((member.flags & ts.TypeFlags.Boolean) !== 0) {
+      values.add(true);
+      values.add(false);
     }
   }
+}
+
+export function extractLiteralValues(tsType: ts.Type, checker?: ts.TypeChecker): (LiteralValue)[] {
+  const values = new Set<LiteralValue>();
 
   function visit(t: ts.Type) {
     if (t.isUnion() || t.isIntersection()) {
       for (const member of t.types) visit(member);
       return;
     }
-    if ((t.flags & ts.TypeFlags.StringLiteral) !== 0) {
-      values.add((t as ts.StringLiteralType).value);
-      return;
-    }
-    if ((t.flags & ts.TypeFlags.NumberLiteral) !== 0) {
-      values.add((t as ts.NumberLiteralType).value);
-      return;
-    }
-    if ((t.flags & ts.TypeFlags.BooleanLiteral) !== 0) {
-      const val = extractBooleanLiteral(t);
-      if (val !== undefined) values.add(val);
-      return;
-    }
-    // Handle boolean keyword type (true | false widens to boolean)
-    if ((t.flags & ts.TypeFlags.Boolean) !== 0) {
-      values.add(true);
-      values.add(false);
-    }
+    processTypeFlags(t, values, checker);
   }
 
   visit(tsType);
 
-  // Fallback: if type has boolean members in a union, extract them
-  if (values.size === 0 && tsType.isUnion()) {
-    for (const member of tsType.types) {
-      if ((member.flags & ts.TypeFlags.BooleanLiteral) !== 0) {
-        const val = (member as ts.Type & { value?: boolean }).value;
-        if (val !== undefined) {
-          values.add(val);
-        } else if (checker) {
-          const str = checker.typeToString(member);
-          if (str === "true") values.add(true);
-          else if (str === "false") values.add(false);
-        }
-      } else if ((member.flags & ts.TypeFlags.Boolean) !== 0) {
-        values.add(true);
-        values.add(false);
-      }
-    }
+  if (values.size === 0) {
+    fallbackExtractUnionBooleans(tsType, values, checker);
   }
 
   return [...values];
