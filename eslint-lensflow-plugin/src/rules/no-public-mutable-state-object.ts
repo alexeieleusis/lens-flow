@@ -85,6 +85,12 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"mutableStateObject", []>) {
+    function getKeyLabel(key: TSESTree.Expression | TSESTree.PrivateIdentifier): string {
+      if (key.type === "Identifier") return key.name;
+      if (key.type === "Literal") return String(key.value);
+      return "?";
+    }
+
     function checkNode(
       members: TSESTree.TypeElement[],
       parent: TSESTree.TSInterfaceDeclaration | TSESTree.TSTypeAliasDeclaration,
@@ -111,15 +117,7 @@ export default createRule({
           data: {
             name,
             kind,
-            props: mutableProps
-              .map((m) =>
-                m.key.type === "Identifier"
-                  ? m.key.name
-                  : m.key.type === "Literal"
-                    ? String(m.key.value)
-                    : "?",
-              )
-              .join(", "),
+            props: mutableProps.map((m) => getKeyLabel(m.key)).join(", "),
           },
         });
       }
