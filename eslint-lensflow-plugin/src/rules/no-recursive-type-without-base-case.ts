@@ -47,6 +47,23 @@ function collectInferNames(node: TypeNode): Set<string> {
   return names;
 }
 
+function extractIdentName(typeName: TSESTree.EntityName): string | null {
+  if (typeName.type === "Identifier") return typeName.name;
+  if (typeName.type === "TSQualifiedName") return typeName.right.name;
+  return null;
+}
+
+function hasCollectionReduction(
+  elements: TypeNode[],
+  genericParams: string[],
+  inferNames: Set<string>,
+): boolean {
+  for (const element of elements) {
+    if (hasStructuralReduction(element, genericParams, inferNames)) return true;
+  }
+  return false;
+}
+
 function hasStructuralReduction(
   typeParam: TypeNode,
   genericParams: string[],
@@ -61,33 +78,17 @@ function hasStructuralReduction(
   if (current.type === "TSInferType") return true;
 
   if (current.type === "TSTypeReference") {
-    const name = current.typeName;
-    let identName: string | null = null;
-    if (name.type === "Identifier") {
-      identName = name.name;
-    } else if (name.type === "TSQualifiedName") {
-      identName = name.right.name;
-    }
-    if (identName) {
-      if (inferNames.has(identName)) return true;
-      if (genericParams.includes(identName)) return false;
-    }
+    const identName = extractIdentName(current.typeName);
+    if (identName && inferNames.has(identName)) return true;
+    if (identName && genericParams.includes(identName)) return false;
   }
 
   if (current.type === "TSIntersectionType") {
-    const members = current.types;
-    for (const member of members) {
-      if (hasStructuralReduction(member, genericParams, inferNames)) return true;
-    }
-    return false;
+    return hasCollectionReduction(current.types, genericParams, inferNames);
   }
 
   if (current.type === "TSTupleType") {
-    const elements = current.elementTypes;
-    for (const element of elements) {
-      if (hasStructuralReduction(element, genericParams, inferNames)) return true;
-    }
-    return false;
+    return hasCollectionReduction(current.elementTypes, genericParams, inferNames);
   }
 
   return false;
