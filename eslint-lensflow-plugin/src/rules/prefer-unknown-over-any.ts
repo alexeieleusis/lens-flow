@@ -19,7 +19,7 @@ function findAnyParams(
 
     if (typeAnn?.type === "TSAnyKeyword") {
       const name = (base as TSESTree.Identifier).name ?? "unnamed";
-      results.push({ name, anyNode: typeAnn as TSESTree.TSAnyKeyword, paramNode: base });
+      results.push({ name, anyNode: typeAnn, paramNode: base });
     }
   }
 
