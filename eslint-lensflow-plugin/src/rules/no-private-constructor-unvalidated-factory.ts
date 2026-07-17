@@ -111,8 +111,7 @@ function isValidationGuard(
     return true;
   }
   if (
-    node.alternate &&
-    node.alternate.type === AST_NODE_TYPES.ReturnStatement &&
+    node.alternate?.type === AST_NODE_TYPES.ReturnStatement &&
     node.alternate.argument?.type === AST_NODE_TYPES.NewExpression &&
     node.alternate.argument.callee.type === AST_NODE_TYPES.Identifier &&
     node.alternate.argument.callee.name === className
