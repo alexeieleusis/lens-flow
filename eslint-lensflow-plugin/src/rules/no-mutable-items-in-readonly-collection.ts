@@ -2,6 +2,28 @@ import ts from "typescript";
 import { ESLintUtils, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 
+function isDeclarationMutable(decl: ts.Node): boolean {
+  if (decl.kind === ts.SyntaxKind.SetAccessor) {
+    return true;
+  }
+  if (
+    decl.kind === ts.SyntaxKind.MethodSignature ||
+    decl.kind === ts.SyntaxKind.MethodDeclaration
+  ) {
+    return true;
+  }
+  if (
+    decl.kind === ts.SyntaxKind.PropertySignature ||
+    decl.kind === ts.SyntaxKind.PropertyDeclaration
+  ) {
+    const modifiers = ts.getModifiers(decl as ts.HasModifiers);
+    return !modifiers?.some(
+      (m) => m.kind === ts.SyntaxKind.ReadonlyKeyword,
+    );
+  }
+  return false;
+}
+
 function hasMutableMembers(type: ts.Type): boolean {
   if (type.isUnion()) {
     return type.types.some(hasMutableMembers);
@@ -15,26 +37,8 @@ function hasMutableMembers(type: ts.Type): boolean {
     const decls = member.getDeclarations();
     if (!decls) continue;
     for (const decl of decls) {
-      if (decl.kind === ts.SyntaxKind.SetAccessor) {
+      if (isDeclarationMutable(decl)) {
         return true;
-      }
-      if (
-        decl.kind === ts.SyntaxKind.MethodSignature ||
-        decl.kind === ts.SyntaxKind.MethodDeclaration
-      ) {
-        return true;
-      }
-      if (
-        decl.kind === ts.SyntaxKind.PropertySignature ||
-        decl.kind === ts.SyntaxKind.PropertyDeclaration
-      ) {
-        const modifiers = ts.getModifiers(decl as ts.HasModifiers);
-        const isReadonly = modifiers?.some(
-          (m) => m.kind === ts.SyntaxKind.ReadonlyKeyword,
-        );
-        if (!isReadonly) {
-          return true;
-        }
       }
     }
   }
