@@ -93,8 +93,12 @@ export default createRule({
             ) as TSESTree.TSPropertySignature | undefined;
             if (!estreeNode) continue;
 
-            const widened: "string" | "number" | null =
-              isWidenedStr ? "string" : isWidenedNum ? "number" : null;
+            let widened: "string" | "number" | null = null;
+            if (isWidenedStr) {
+              widened = "string";
+            } else if (isWidenedNum) {
+              widened = "number";
+            }
             const hasLiteralFlag = isLiteralStr || isLiteralNum;
 
             const existing = propMap.get(propName);
