@@ -56,7 +56,7 @@ function findEnclosingDeclaration(
     if (
       current.type === "TSTypeAliasDeclaration"
     ) {
-      return current as TSESTree.TSTypeAliasDeclaration;
+      return current;
     }
     if (
       current.type === "TSInterfaceDeclaration"
