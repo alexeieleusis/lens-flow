@@ -135,6 +135,37 @@ function isValidationGuard(
   return false;
 }
 
+function hasTopLevelGuard(
+  body: TSESTree.BlockStatement,
+  className: string,
+): boolean {
+  return body.body.some((stmt) => {
+    if (stmt.type === AST_NODE_TYPES.ThrowStatement) return true;
+    if (
+      stmt.type === AST_NODE_TYPES.IfStatement &&
+      isValidationGuard(stmt, className)
+    )
+      return true;
+    return false;
+  });
+}
+
+function hasReturnNewClass(
+  body: TSESTree.BlockStatement,
+  className: string,
+): boolean {
+  return walkNodes(body, (node) => {
+    if (node.type !== AST_NODE_TYPES.ReturnStatement) return false;
+    if (
+      node.argument?.type === AST_NODE_TYPES.NewExpression &&
+      node.argument.callee.type === AST_NODE_TYPES.Identifier &&
+      node.argument.callee.name === className
+    )
+      return true;
+    return false;
+  });
+}
+
 export default createRule({
   name: "no-private-constructor-unvalidated-factory",
   meta: {
@@ -193,26 +224,9 @@ export default createRule({
           const body = method.value.body;
 
           const hasValidation =
-            body.body.some((stmt) => {
-              if (stmt.type === AST_NODE_TYPES.ThrowStatement) return true;
-              if (
-                stmt.type === AST_NODE_TYPES.IfStatement &&
-                isValidationGuard(stmt, className)
-              )
-                return true;
-              return false;
-            }) || hasValidCall(body);
+            hasTopLevelGuard(body, className) || hasValidCall(body);
 
-          const hasDirectNew = walkNodes(body, (node) => {
-            if (node.type !== AST_NODE_TYPES.ReturnStatement) return false;
-            if (
-              node.argument?.type === AST_NODE_TYPES.NewExpression &&
-              node.argument.callee.type === AST_NODE_TYPES.Identifier &&
-              node.argument.callee.name === className
-            )
-              return true;
-            return false;
-          });
+          const hasDirectNew = hasReturnNewClass(body, className);
 
           if (!hasValidation && hasDirectNew) {
             context.report({
