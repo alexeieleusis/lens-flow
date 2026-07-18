@@ -138,19 +138,21 @@ function stmtIsTerminatingGuard(stmt: unknown, node: unknown, objName: string, p
     || loopHasTerminatingGuard(stmt, objName, propName);
 }
 
+function childPassesGuard(child: unknown, node: unknown, objName: string, propName: string): boolean {
+  if (child == null) return true;
+  return checkBlockForGuard(child, node, objName, propName);
+}
+
 function checkNestedStmt(stmt: unknown, node: unknown, objName: string, propName: string): boolean {
   if (typeof stmt !== "object" || stmt == null || !("type" in stmt)) return true;
   const s = stmt as { type: string; consequent?: unknown; alternate?: unknown; body?: unknown };
 
   if (s.type === "IfStatement") {
-    if (s.consequent && !checkBlockForGuard(s.consequent, node, objName, propName)) return false;
-    if (s.alternate && !checkBlockForGuard(s.alternate, node, objName, propName)) return false;
+    if (!childPassesGuard(s.consequent, node, objName, propName)) return false;
+    if (!childPassesGuard(s.alternate, node, objName, propName)) return false;
   }
-  if (LOOP_TYPES.has(s.type) && s.body) {
-    if (!checkBlockForGuard(s.body, node, objName, propName)) return false;
-  }
-  if (s.type === "SwitchStatement" && s.body) {
-    if (!checkBlockForGuard(s.body, node, objName, propName)) return false;
+  if (LOOP_TYPES.has(s.type) || s.type === "SwitchStatement") {
+    if (!childPassesGuard(s.body, node, objName, propName)) return false;
   }
   return true;
 }
