@@ -24,6 +24,23 @@ function normalizeParam(
   return null;
 }
 
+function findAnyParamVariable(
+  param: TSESTree.Parameter,
+  scopeManager: TSESLint.Scope.ScopeManager,
+  node:
+    | TSESTree.FunctionDeclaration
+    | TSESTree.FunctionExpression
+    | TSESTree.ArrowFunctionExpression,
+): TSESLint.Scope.Variable | null {
+  const id = normalizeParam(param);
+  if (!id || id.typeAnnotation?.typeAnnotation.type !== "TSAnyKeyword") {
+    return null;
+  }
+  return scopeManager
+    .getDeclaredVariables(node)
+    .find((v) => v.identifiers.includes(id)) ?? null;
+}
+
 export default createRule({
   name: "prefer-constraint-over-runtime-guard",
   meta: {
@@ -62,20 +79,12 @@ export default createRule({
         | TSESTree.ArrowFunctionExpression,
     ): void {
       const anyParamBindings = new Set<TSESLint.Scope.Variable>();
+      const scopeManager = context.sourceCode.scopeManager;
 
       for (const param of node.params) {
-        const id = normalizeParam(param);
-        if (id && id.typeAnnotation?.typeAnnotation.type === "TSAnyKeyword") {
-          const scopeManager = context.sourceCode.scopeManager;
-          if (scopeManager) {
-            for (const variable of scopeManager.getDeclaredVariables(node)) {
-              if (variable.identifiers.includes(id)) {
-                anyParamBindings.add(variable);
-                break;
-              }
-            }
-          }
-        }
+        if (!scopeManager) continue;
+        const variable = findAnyParamVariable(param, scopeManager, node);
+        if (variable) anyParamBindings.add(variable);
       }
 
       if (anyParamBindings.size === 0) return;
@@ -95,28 +104,35 @@ export default createRule({
         return false;
       }
 
-      walk(body, (n) => {
-        if (bothFound()) return;
-
+      function isRuntimeGuard(n: TSESTree.Node): boolean {
         if (n.type === "UnaryExpression"
           && n.operator === "typeof"
           && n.argument.type === "Identifier"
           && isAnyParamIdent(n.argument)) {
-          hasRuntimeGuard = true;
-          return;
+          return true;
         }
-
         if (n.type === "BinaryExpression"
           && n.operator === "instanceof"
           && n.left.type === "Identifier"
           && isAnyParamIdent(n.left)) {
+          return true;
+        }
+        return false;
+      }
+
+      function isPropertyAccess(n: TSESTree.Node): boolean {
+        return n.type === "MemberExpression"
+          && n.object.type === "Identifier"
+          && isAnyParamIdent(n.object);
+      }
+
+      walk(body, (n) => {
+        if (bothFound()) return;
+        if (isRuntimeGuard(n)) {
           hasRuntimeGuard = true;
           return;
         }
-
-        if (n.type === "MemberExpression"
-          && n.object.type === "Identifier"
-          && isAnyParamIdent(n.object)) {
+        if (isPropertyAccess(n)) {
           hasPropertyAccess = true;
         }
       });
