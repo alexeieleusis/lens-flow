@@ -24,17 +24,23 @@ function containsInfer(node: TSESTree.TypeNode): boolean {
   if (node.type === "TSTypeOperator") {
     return node.typeAnnotation ? containsInfer(node.typeAnnotation) : false;
   }
+  return checkGenericProperties(node);
+}
+
+function checkGenericProperties(node: TSESTree.TypeNode): boolean {
   for (const prop of ["types", "typeAnnotation", "elementType"]) {
-    if (prop in node) {
-      const child = (node as unknown as Record<string, unknown>)[prop];
-      if (child) {
-        if (Array.isArray(child)) {
-          if (child.some(containsInfer)) return true;
-        } else if (typeof child === "object" && "type" in child) {
-          if (containsInfer(child as TSESTree.TypeNode)) return true;
-        }
-      }
-    }
+    if (!(prop in node)) continue;
+    const child = (node as unknown as Record<string, unknown>)[prop];
+    if (checkChildForInfer(child)) return true;
+  }
+  return false;
+}
+
+function checkChildForInfer(child: unknown): boolean {
+  if (!child) return false;
+  if (Array.isArray(child)) return child.some(containsInfer);
+  if (typeof child === "object" && "type" in child) {
+    return containsInfer(child as TSESTree.TypeNode);
   }
   return false;
 }
