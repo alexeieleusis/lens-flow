@@ -91,6 +91,19 @@ function isOpenUnion(tsType: ts.Type): boolean {
   return hasLiteral && hasBroad;
 }
 
+function declHasOpenUnionType(decl: ts.Node): boolean {
+  let typeNode: ts.TypeNode | undefined;
+  if (
+    ts.isParameter(decl) ||
+    ts.isVariableDeclaration(decl) ||
+    ts.isPropertyDeclaration(decl) ||
+    ts.isPropertySignature(decl)
+  ) {
+    typeNode = decl.type;
+  }
+  return typeNode != null && isOpenUnionFromSyntax(typeNode);
+}
+
 export default createRule({
   name: "no-exhaustiveness-on-open-union",
   meta: {
