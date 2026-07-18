@@ -77,12 +77,7 @@ export function containsTypeRef(
       return (
         (node.typeAnnotation ? containsTypeRef(node.typeAnnotation, paramName, depth + 1) : false) ||
         (node.nameType ? containsTypeRef(node.nameType, paramName, depth + 1) : false) ||
-        (node.typeParameter.constraint
-          ? containsTypeRef(node.typeParameter.constraint, paramName, depth + 1)
-          : false) ||
-        (node.typeParameter.default
-          ? containsTypeRef(node.typeParameter.default, paramName, depth + 1)
-          : false)
+        (node.constraint ? containsTypeRef(node.constraint, paramName, depth + 1) : false)
       );
     }
     case AST_NODE_TYPES.TSTypeOperator: {
@@ -213,11 +208,8 @@ export function containsTypeRefInOutput(
         (node.typeAnnotation
           ? containsTypeRefInOutput(node.typeAnnotation, paramName, depth + 1)
           : false) ||
-        (node.typeParameter.constraint
-          ? containsTypeRefInOutput(node.typeParameter.constraint, paramName, depth + 1)
-          : false) ||
-        (node.typeParameter.default
-          ? containsTypeRefInOutput(node.typeParameter.default, paramName, depth + 1)
+        (node.constraint
+          ? containsTypeRefInOutput(node.constraint, paramName, depth + 1)
           : false)
       );
     }
