@@ -101,13 +101,13 @@ export default createRule({
 
         const letToken = context.sourceCode.getFirstToken(node);
         if (!letToken) {
-          for (let i = 0; i < violatingDeclarators.length; i++) {
+          for (const decl of violatingDeclarators) {
             context.report({
-              node: violatingDeclarators[i].id,
+              node: decl.id,
               messageId: "preferConst",
               data: {
-                literalType: String(violatingDeclarators[i].literalType),
-                widenedType: violatingDeclarators[i].widenedType,
+                literalType: String(decl.literalType),
+                widenedType: decl.widenedType,
               },
             });
           }
