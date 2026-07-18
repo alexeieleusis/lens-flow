@@ -96,8 +96,7 @@ export default createRule({
             .map(getParamIdentifier)
             .filter(
               (id): id is TSESTree.Identifier =>
-                 id !== null &&
-                 id.typeAnnotation?.typeAnnotation != null &&
+                  id?.typeAnnotation?.typeAnnotation != null &&
                  unwrapTSType(id.typeAnnotation.typeAnnotation).type === "TSStringKeyword",
             )
             .map((id) => id.name),
