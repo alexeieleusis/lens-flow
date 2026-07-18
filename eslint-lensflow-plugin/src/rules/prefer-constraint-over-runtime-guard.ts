@@ -118,7 +118,6 @@ export default createRule({
           && n.object.type === "Identifier"
           && isAnyParamIdent(n.object)) {
           hasPropertyAccess = true;
-          return;
         }
       });
 
