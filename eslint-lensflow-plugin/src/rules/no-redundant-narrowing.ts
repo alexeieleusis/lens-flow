@@ -41,7 +41,6 @@ function resolveBinding(
     if (binding) return binding;
     scope = scope.upper;
   }
-  return;
 }
 
 function testsEqual(
