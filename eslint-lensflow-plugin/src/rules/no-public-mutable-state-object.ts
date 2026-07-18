@@ -48,6 +48,12 @@ function hasMutableStateType(typeAnnotation: TSESTree.TypeNode): boolean {
   return false;
 }
 
+function getKeyLabel(key: TSESTree.Expression | TSESTree.PrivateIdentifier): string {
+  if (key.type === "Identifier") return key.name;
+  if (key.type === "Literal") return String(key.value);
+  return "?";
+}
+
 function findEnclosingDeclaration(
   node: TSESTree.Node,
 ): TSESTree.TSTypeAliasDeclaration | TSESTree.TSInterfaceDeclaration | null {
@@ -85,12 +91,6 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"mutableStateObject", []>) {
-    function getKeyLabel(key: TSESTree.Expression | TSESTree.PrivateIdentifier): string {
-      if (key.type === "Identifier") return key.name;
-      if (key.type === "Literal") return String(key.value);
-      return "?";
-    }
-
     function checkNode(
       members: TSESTree.TypeElement[],
       parent: TSESTree.TSInterfaceDeclaration | TSESTree.TSTypeAliasDeclaration,
