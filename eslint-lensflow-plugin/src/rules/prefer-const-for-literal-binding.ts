@@ -58,6 +58,85 @@ export default createRule({
       return variable?.references.some((ref) => ref.isWrite() && !ref.init) ?? false;
     }
 
+    function isViolatingDeclarator(declarator: TSESTree.VariableDeclarator) {
+      if (
+        declarator.init?.type !== "Literal" &&
+        declarator.init?.type !== "TemplateLiteral"
+      )
+        return null;
+      if (declarator.id.typeAnnotation) return null;
+      if (declarator.id.type !== "Identifier") return null;
+      if (isReassigned(declarator, declarator.id.name)) return null;
+
+      const info = getLiteralInfo(declarator.init);
+      if (!info) return null;
+
+      return {
+        ...declarator,
+        literalType: info.literalType,
+        widenedType: info.widenedType,
+      } as TSESTree.VariableDeclarator & {
+        literalType: string | number;
+        widenedType: WidenedPrimitive;
+      };
+    }
+
+    function reportViolations(
+      node: TSESTree.VariableDeclaration,
+      violatingDeclarators: (TSESTree.VariableDeclarator & {
+        literalType: string | number;
+        widenedType: WidenedPrimitive;
+      })[]
+    ) {
+      const letToken = context.sourceCode.getFirstToken(node);
+
+      if (!letToken) {
+        for (const decl of violatingDeclarators) {
+          context.report({
+            node: decl.id,
+            messageId: "preferConst",
+            data: {
+              literalType: String(decl.literalType),
+              widenedType: decl.widenedType,
+            },
+          });
+        }
+        return;
+      }
+
+      reportWithFix(node, letToken, violatingDeclarators);
+    }
+
+    function reportWithFix(
+      node: TSESTree.VariableDeclaration,
+      letToken: TSESTree.Token,
+      violatingDeclarators: (TSESTree.VariableDeclarator & {
+        literalType: string | number;
+        widenedType: WidenedPrimitive;
+      })[]
+    ) {
+      const hasFix = letToken.value === "let";
+
+      for (let i = 0; i < violatingDeclarators.length; i++) {
+        const decl = violatingDeclarators[i];
+        context.report({
+          node: decl.id,
+          messageId: "preferConst",
+          data: {
+            literalType: String(decl.literalType),
+            widenedType: decl.widenedType,
+          },
+          ...(i === 0 && hasFix
+            ? {
+                fix(fixer: TSESLint.RuleFixer) {
+                  return fixer.replaceText(letToken, "const");
+                },
+              }
+            : {}),
+        });
+      }
+    }
+
     return {
       VariableDeclaration(node) {
         if (node.kind !== "let") {
@@ -68,73 +147,21 @@ export default createRule({
           return;
         }
 
-        const violatingDeclarators: (TSESTree.VariableDeclarator & {
-          literalType: string | number;
-          widenedType: WidenedPrimitive;
-        })[] = [];
-
-        for (const declarator of node.declarations) {
-          if (
-            declarator.init?.type !== "Literal" &&
-            declarator.init?.type !== "TemplateLiteral"
-          )
-            continue;
-          if (declarator.id.typeAnnotation) continue;
-          if (declarator.id.type !== "Identifier") continue;
-          if (isReassigned(declarator, declarator.id.name)) continue;
-
-          const info = getLiteralInfo(declarator.init);
-          if (!info) continue;
-
-          violatingDeclarators.push({
-            ...declarator,
-            literalType: info.literalType,
-            widenedType: info.widenedType,
-          });
-        }
+        const violatingDeclarators = node.declarations
+          .map(isViolatingDeclarator)
+          .filter(
+            (d): d is TSESTree.VariableDeclarator & {
+              literalType: string | number;
+              widenedType: WidenedPrimitive;
+            } => d !== null
+          );
 
         if (violatingDeclarators.length === 0) {
           return;
         }
 
         reportedDeclarations.add(node.range[0]);
-
-        const letToken = context.sourceCode.getFirstToken(node);
-        if (!letToken) {
-          for (const decl of violatingDeclarators) {
-            context.report({
-              node: decl.id,
-              messageId: "preferConst",
-              data: {
-                literalType: String(decl.literalType),
-                widenedType: decl.widenedType,
-              },
-            });
-          }
-          return;
-        }
-        const hasFix = letToken.value === "let";
-
-        for (let i = 0; i < violatingDeclarators.length; i++) {
-          const decl = violatingDeclarators[i];
-          context.report({
-            node: decl.id,
-            messageId: "preferConst",
-            data: {
-              literalType: String(decl.literalType),
-              widenedType: decl.widenedType,
-            },
-            // Only attach the fix to the first report to avoid overlapping
-            // fix ranges when multiple declarators share the same `let` token.
-            ...(i === 0 && hasFix
-              ? {
-                  fix(fixer: TSESLint.RuleFixer) {
-                    return fixer.replaceText(letToken, "const");
-                  },
-                }
-              : {}),
-          });
-        }
+        reportViolations(node, violatingDeclarators);
       },
     };
   },
