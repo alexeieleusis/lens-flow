@@ -59,6 +59,45 @@ function isGuardIf(node: TSESTree.Node): node is TSESTree.IfStatement {
   );
 }
 
+function containsValidation(node: TSESTree.Node): boolean {
+  if (node.type === "ThrowStatement") return true;
+  if (node.type === "BlockStatement") {
+    return node.body.some(containsValidation);
+  }
+  if (node.type === "IfStatement") {
+    if (containsEarlyExitOrBlock(node.consequent)) return true;
+    return (
+      containsValidation(node.consequent) ||
+      (node.alternate ? containsValidation(node.alternate) : false)
+    );
+  }
+  if (node.type === "LabeledStatement") {
+    return containsValidation(node.body);
+  }
+  if (node.type === "WithStatement") {
+    return containsValidation(node.body);
+  }
+  if (node.type === "SwitchStatement") {
+    return node.cases.some((c) =>
+      c.consequent.some(containsValidation),
+    );
+  }
+  if (
+    node.type === "ForStatement" ||
+    node.type === "ForInStatement" ||
+    node.type === "ForOfStatement"
+  ) {
+    return containsValidation(node.body);
+  }
+  if (node.type === "WhileStatement" || node.type === "DoWhileStatement") {
+    return containsValidation(node.body);
+  }
+  if (node.type === "TryStatement") {
+    return containsValidationInTry(node, containsValidation);
+  }
+  return false;
+}
+
 export default createRule({
   name: "no-blind-as-any-cast",
   meta: {
@@ -76,46 +115,6 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"blindAsAnyCast", []>) {
-
-    function containsValidation(node: TSESTree.Node): boolean {
-      if (node.type === "ThrowStatement") return true;
-      if (node.type === "BlockStatement") {
-        return node.body.some(containsValidation);
-      }
-      if (node.type === "IfStatement") {
-        if (containsEarlyExitOrBlock(node.consequent)) return true;
-        return (
-          containsValidation(node.consequent) ||
-          (node.alternate ? containsValidation(node.alternate) : false)
-        );
-      }
-      if (node.type === "LabeledStatement") {
-        return containsValidation(node.body);
-      }
-      if (node.type === "WithStatement") {
-        return containsValidation(node.body);
-      }
-      if (node.type === "SwitchStatement") {
-        return node.cases.some((c) =>
-          c.consequent.some(containsValidation),
-        );
-      }
-      if (
-        node.type === "ForStatement" ||
-        node.type === "ForInStatement" ||
-        node.type === "ForOfStatement"
-      ) {
-        return containsValidation(node.body);
-      }
-      if (node.type === "WhileStatement" || node.type === "DoWhileStatement") {
-        return containsValidation(node.body);
-      }
-      if (node.type === "TryStatement") {
-        return containsValidationInTry(node, containsValidation);
-      }
-      return false;
-    }
-
     const reportedNodes = new Set<string>();
 
     function reportBlindCast(node: TSESTree.TSAsExpression) {
