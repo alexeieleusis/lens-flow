@@ -6,7 +6,7 @@ const checkDeclarator = (
   node: TSESTree.VariableDeclaration,
   context: TSESLint.RuleContext<"requireDeclareBrand" | "symbolTypedBrand", []>,
 ) => {
-  if (!decl.init || decl.init.type !== "CallExpression") return false;
+  if (decl.init?.type !== "CallExpression") return false;
 
   const callee = decl.init.callee;
   if (callee.type !== "Identifier" || callee.name !== "Symbol") return false;
