@@ -96,22 +96,6 @@ export default createRule({
       }
     }
 
-    function getArrowFunctionName(node: TSESTree.ArrowFunctionExpression): string | null {
-      const parent = node.parent;
-      if (!parent) return null;
-
-      if (parent.type === "VariableDeclarator" && parent.id.type === "Identifier") {
-        return parent.id.name;
-      }
-      if (parent.type === "PropertyDefinition" && parent.key.type === "Identifier") {
-        return parent.key.name;
-      }
-      if (parent.type === "Property" && parent.key.type === "Identifier") {
-        return parent.key.name;
-      }
-      return null;
-    }
-
     return {
       FunctionDeclaration: checkFunction,
       FunctionExpression: checkFunction,
