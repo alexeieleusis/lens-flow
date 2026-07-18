@@ -81,6 +81,13 @@ function getNullableTypeSignature(typeAnn: TSESTree.TypeNode): string | null {
   return "other-nullable";
 }
 
+function pushNodeArrayChildren(value: unknown[], children: TSESTree.Node[]): void {
+  for (const item of value) {
+    if (item && typeof item === "object" && "type" in item)
+      children.push(item as TSESTree.Node);
+  }
+}
+
 function collectChildNodes(node: TSESTree.Node): TSESTree.Node[] {
   const children: TSESTree.Node[] = [];
   const skipProps = new Set(["loc", "range", "parent", "start", "end"]);
@@ -88,10 +95,7 @@ function collectChildNodes(node: TSESTree.Node): TSESTree.Node[] {
     if (skipProps.has(key) || !value || typeof value !== "object") continue;
     if ("type" in value) {
       if (Array.isArray(value)) {
-        for (const item of value) {
-          if (item && typeof item === "object" && "type" in item)
-            children.push(item as TSESTree.Node);
-        }
+        pushNodeArrayChildren(value, children);
       } else {
         children.push(value as TSESTree.Node);
       }
