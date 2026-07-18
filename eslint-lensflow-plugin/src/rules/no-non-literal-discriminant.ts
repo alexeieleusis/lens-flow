@@ -140,12 +140,12 @@ export default createRule({
           const typeAnn = member.typeAnnotation?.typeAnnotation;
           if (!typeAnn) return null;
 
-          const widened: WidenedKind =
-            typeAnn.type === "TSStringKeyword"
-              ? "string"
-              : typeAnn.type === "TSNumberKeyword"
-                ? "number"
-                : null;
+          let widened: WidenedKind = null;
+          if (typeAnn.type === "TSStringKeyword") {
+            widened = "string";
+          } else if (typeAnn.type === "TSNumberKeyword") {
+            widened = "number";
+          }
 
           return {
             propName,
