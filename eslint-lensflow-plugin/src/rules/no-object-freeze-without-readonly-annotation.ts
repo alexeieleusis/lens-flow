@@ -77,6 +77,13 @@ function isFunctionAncestor(ancestor: TSESTree.Node): boolean {
   );
 }
 
+function isPerAncestor(ancestor: TSESTree.Node): boolean {
+  return (
+    ancestor.type === AST_NODE_TYPES.Property ||
+    ancestor.type === AST_NODE_TYPES.ArrayExpression
+  );
+}
+
 export default createRule({
   name: "no-object-freeze-without-readonly-annotation",
   meta: {
@@ -99,13 +106,6 @@ export default createRule({
         if (ancestor.type === AST_NODE_TYPES.VariableDeclarator) return ancestor;
       }
       return null;
-    }
-
-    function isPerAncestor(ancestor: TSESTree.Node): boolean {
-      return (
-        ancestor.type === AST_NODE_TYPES.Property ||
-        ancestor.type === AST_NODE_TYPES.ArrayExpression
-      );
     }
 
     function handleIndirectInit(declarator: TSESTree.VariableDeclarator, node: TSESTree.CallExpression): void {
