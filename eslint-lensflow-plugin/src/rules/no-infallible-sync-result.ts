@@ -43,6 +43,10 @@ function isAsyncNamedFunction(
   );
 }
 
+function hasAsyncArrowBody(node: TSESTree.ArrowFunctionExpression): boolean {
+  return node.body.type === "AwaitExpression";
+}
+
 export default createRule({
   name: "no-infallible-sync-result",
   meta: {
@@ -108,9 +112,11 @@ export default createRule({
       }
 
       if (isAsyncNamedFunction(node)) return;
-      if (node.type === "ArrowFunctionExpression") {
-        const body = node.body;
-        if (body.type === "AwaitExpression") return;
+      if (
+        node.type === "ArrowFunctionExpression" &&
+        hasAsyncArrowBody(node)
+      ) {
+        return;
       }
 
       if (!node.body) return;
