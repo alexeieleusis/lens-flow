@@ -235,33 +235,49 @@ function walkChildStatements(
   return null;
 }
 
+const SIMPLE_BODY_TYPES = new Set([
+  "ForStatement",
+  "ForInStatement",
+  "ForOfStatement",
+  "WhileStatement",
+  "DoWhileStatement",
+  "WithStatement",
+  "LabeledStatement",
+]);
+
+function hasBody(stmt: TSESTree.Statement): stmt is TSESTree.Statement & { body: TSESTree.Statement } {
+  return SIMPLE_BODY_TYPES.has(stmt.type) && (stmt as unknown as { body?: unknown }).body !== undefined;
+}
+
+function getSwitchStatements(stmt: TSESTree.SwitchStatement): TSESTree.Statement[] {
+  const result: TSESTree.Statement[] = [];
+  for (const caseClause of stmt.cases) {
+    if (caseClause.consequent) {
+      result.push(...caseClause.consequent);
+    }
+  }
+  return result;
+}
+
+function getTryStatements(stmt: TSESTree.TryStatement): TSESTree.Statement[] {
+  const result: TSESTree.Statement[] = [];
+  if (stmt.block?.body) result.push(...stmt.block.body);
+  if (stmt.handler?.body?.body) result.push(...stmt.handler.body.body);
+  if (stmt.finalizer?.body) result.push(...stmt.finalizer.body);
+  return result;
+}
+
 function getChildStatements(stmt: TSESTree.Statement): TSESTree.Statement[] {
-  const loopTypes = new Set(["ForStatement", "ForInStatement", "ForOfStatement"]);
-  if (loopTypes.has(stmt.type) && stmt.body) return [stmt.body];
-
-  const whileTypes = new Set(["WhileStatement", "DoWhileStatement"]);
-  if (whileTypes.has(stmt.type) && stmt.body) return [stmt.body];
-
-  if (stmt.type === "WithStatement" && stmt.body) return [stmt.body];
-
-  if (stmt.type === "LabeledStatement" && stmt.body) return [stmt.body];
+  if (hasBody(stmt)) {
+    return [stmt.body];
+  }
 
   if (stmt.type === "SwitchStatement" && stmt.cases) {
-    const result: TSESTree.Statement[] = [];
-    for (const caseClause of stmt.cases) {
-      if (caseClause.consequent) {
-        result.push(...caseClause.consequent);
-      }
-    }
-    return result;
+    return getSwitchStatements(stmt);
   }
 
   if (stmt.type === "TryStatement") {
-    const result: TSESTree.Statement[] = [];
-    if (stmt.block?.body) result.push(...stmt.block.body);
-    if (stmt.handler?.body?.body) result.push(...stmt.handler.body.body);
-    if (stmt.finalizer?.body) result.push(...stmt.finalizer.body);
-    return result;
+    return getTryStatements(stmt);
   }
 
   return [];
