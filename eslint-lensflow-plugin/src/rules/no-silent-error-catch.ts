@@ -87,7 +87,7 @@ export default createRule({
         // include the caught error parameter in its arguments.
         const hasGenericThrow = throwStmts.some((stmt) => {
           const arg = stmt.argument;
-          if (!(arg?.type === "NewExpression")) return false;
+          if (arg?.type !== "NewExpression") return false;
           if (
             arg.callee.type !== "Identifier" ||
             arg.callee.name !== "Error"
