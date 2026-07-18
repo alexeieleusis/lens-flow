@@ -69,6 +69,14 @@ function isDirectInit(declarator: TSESTree.VariableDeclarator, target: TSESTree.
   return unwrapped === target;
 }
 
+function isFunctionAncestor(ancestor: TSESTree.Node): boolean {
+  return (
+    ancestor.type === AST_NODE_TYPES.FunctionDeclaration ||
+    ancestor.type === AST_NODE_TYPES.FunctionExpression ||
+    ancestor.type === AST_NODE_TYPES.ArrowFunctionExpression
+  );
+}
+
 export default createRule({
   name: "no-object-freeze-without-readonly-annotation",
   meta: {
@@ -97,14 +105,6 @@ export default createRule({
       return (
         ancestor.type === AST_NODE_TYPES.Property ||
         ancestor.type === AST_NODE_TYPES.ArrayExpression
-      );
-    }
-
-    function isFunctionAncestor(ancestor: TSESTree.Node): boolean {
-      return (
-        ancestor.type === AST_NODE_TYPES.FunctionDeclaration ||
-        ancestor.type === AST_NODE_TYPES.FunctionExpression ||
-        ancestor.type === AST_NODE_TYPES.ArrowFunctionExpression
       );
     }
 
