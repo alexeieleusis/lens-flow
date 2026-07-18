@@ -41,7 +41,12 @@ function classifyTypeFlags(propType: ts.Type): {
   const isLiteralStr = (propType.flags & ts.TypeFlags.StringLiteral) !== 0;
   const isLiteralNum = (propType.flags & ts.TypeFlags.NumberLiteral) !== 0;
 
-  const widened = isWidenedStr ? "string" : isWidenedNum ? "number" : null;
+  let widened: WidenedKind = null;
+  if (isWidenedStr) {
+    widened = "string";
+  } else if (isWidenedNum) {
+    widened = "number";
+  }
   return { widened, hasLiteral: isLiteralStr || isLiteralNum };
 }
 
