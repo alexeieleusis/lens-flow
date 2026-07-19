@@ -1,5 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T17-macros-metaprogramming.md");
 
 function isClassDecoratorContextParam(param: TSESTree.Parameter): boolean {
   const inner = param.type === "TSParameterProperty" ? param.parameter : param;
@@ -181,9 +184,9 @@ export default createRule({
     },
     messages: {
       decoratorModifiesInferredType:
-        "Decorator adds property '{{property}}' via Object.defineProperty that TypeScript cannot infer. Declare the property on the class instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T17-macros-metaprogramming.md",
+        "Decorator adds property '{{property}}' via Object.defineProperty that TypeScript cannot infer. Declare the property on the class instead. See: {{url}}",
       decoratorModifiesMultipleProperties:
-        "Decorator adds properties {{properties}} via Object.defineProperty that TypeScript cannot infer. Declare them on the class instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T17-macros-metaprogramming.md",
+        "Decorator adds properties {{properties}} via Object.defineProperty that TypeScript cannot infer. Declare them on the class instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -216,6 +219,7 @@ export default createRule({
         data: {
           property: undeclared[0],
           properties: `"${undeclared.join('", "')}"`,
+          url: URL,
         },
       });
     }
