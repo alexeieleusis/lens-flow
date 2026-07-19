@@ -1,9 +1,9 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 import { containsAny } from "../utils/ts-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const KNOWLEDGE_URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T05-type-classes.md";
+const URL = knowledgeUrl("catalog/T05-type-classes.md");
 
 export default createRule({
   name: "no-any-in-interface",
@@ -15,7 +15,7 @@ export default createRule({
     },
     messages: {
       anyProperty:
-        "Property \"{{name}}\" uses `any` type, defeating structural typing. Replace with a specific type. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T05-type-classes.md",
+        "Property \"{{name}}\" uses `any` type, defeating structural typing. Replace with a specific type. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -37,7 +37,7 @@ export default createRule({
           context.report({
             node,
             messageId: "anyProperty",
-            data: { name, url: KNOWLEDGE_URL },
+            data: { name, url: URL },
           });
         }
       },
