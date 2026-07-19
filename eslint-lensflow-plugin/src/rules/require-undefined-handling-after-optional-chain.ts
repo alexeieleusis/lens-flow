@@ -314,7 +314,7 @@ function isAfterSiblingThrowGuard(
       const blockBody =
         anc.type === "BlockStatement"
           ? (anc as TSESTree.BlockStatement).body
-          : (anc as TSESTree.Program).body;
+          : anc.body;
       const result = hasGuardBeforeMemberInBlock(blockBody, memberNode, varName);
       if (result === "guarded") return true;
       if (result === "unguarded") break;
