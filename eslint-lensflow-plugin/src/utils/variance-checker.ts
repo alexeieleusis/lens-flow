@@ -5,7 +5,7 @@ function getTypeNameRightmost(typeName: TSESTree.EntityName): string | null {
   while (current && current.type === AST_NODE_TYPES.TSQualifiedName) {
     current = current.right;
   }
-  if (current && current.type === AST_NODE_TYPES.Identifier) {
+  if (current?.type === AST_NODE_TYPES.Identifier) {
     return current.name;
   }
   return null;
