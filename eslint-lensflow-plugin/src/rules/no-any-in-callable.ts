@@ -1,10 +1,13 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import {
   containsAnyType,
   createNoAnyParamChecker,
   createNoAnyParamTypeChecker,
 } from "../utils/no-any-param-checker.js";
+
+const URL = knowledgeUrl("catalog/T22-callable-typing.md");
 
 export default createRule({
   name: "no-any-in-callable",
@@ -16,9 +19,9 @@ export default createRule({
     },
     messages: {
       anyParam:
-        "Parameter '{{name}}' is typed as `any`. Use a generic or explicit type to preserve type information. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T22-callable-typing.md",
+        "Parameter '{{name}}' is typed as `any`. Use a generic or explicit type to preserve type information. See: {{url}}",
       anyReturn:
-        "Return type is `any`. Use a generic or explicit return type to preserve type information. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T22-callable-typing.md",
+        "Return type is `any`. Use a generic or explicit return type to preserve type information. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -38,12 +41,12 @@ export default createRule({
     ) {
       if ("declare" in node && node.declare) return;
       if (node.returnType?.typeAnnotation && containsAnyType(node.returnType.typeAnnotation)) {
-        context.report({ node: node.returnType, messageId: "anyReturn" });
+        context.report({ node: node.returnType, messageId: "anyReturn", data: { url: URL } });
       }
     }
 
-    const paramChecker = createNoAnyParamChecker("anyParam")(context);
-    const typeParamChecker = createNoAnyParamTypeChecker("anyParam")(context);
+    const paramChecker = createNoAnyParamChecker("anyParam", { url: URL })(context);
+    const typeParamChecker = createNoAnyParamTypeChecker("anyParam", { url: URL })(context);
 
     return {
       ...typeParamChecker,
