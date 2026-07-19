@@ -70,8 +70,7 @@ export default createRule({
     },
     messages: {
       castToConcreteImpl:
-        "Casting an interface-typed value to a concrete implementing class bypasses the existential abstraction. Only use members declared on the interface. See: " +
-        URL,
+        "Casting an interface-typed value to a concrete implementing class bypasses the existential abstraction. Only use members declared on the interface. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -108,6 +107,7 @@ export default createRule({
         context.report({
           node,
           messageId: "castToConcreteImpl",
+          data: { url: URL },
         });
       },
     };
