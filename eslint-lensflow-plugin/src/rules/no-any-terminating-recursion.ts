@@ -1,6 +1,9 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { getChildren } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T61-recursive-types.md");
 
 type AnyOrUnknownNode = TSESTree.TSAnyKeyword | TSESTree.TSUnknownKeyword | null;
 
@@ -144,7 +147,7 @@ export default createRule({
       description: "Disallow `any` or `unknown` inside self-referential recursive types, which defeats type-safe recursion.",
     },
     messages: {
-      anyInRecursive: "Found `{{keyword}}` inside a self-referential recursive type. Replace with a concrete type to preserve type safety. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T61-recursive-types.md",
+      anyInRecursive: "Found `{{keyword}}` inside a self-referential recursive type. Replace with a concrete type to preserve type safety. See: {{url}}",
     },
     fixable: undefined,
     schema: [],
@@ -162,7 +165,7 @@ export default createRule({
           context.report({
             node: found,
             messageId: "anyInRecursive",
-            data: { keyword },
+            data: { keyword, url: URL },
           });
         }
       },
@@ -177,7 +180,7 @@ export default createRule({
           context.report({
             node: f,
             messageId: "anyInRecursive",
-            data: { keyword },
+            data: { keyword, url: URL },
           });
         }
       },
