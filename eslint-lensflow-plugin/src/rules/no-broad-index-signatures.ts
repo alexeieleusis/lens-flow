@@ -1,6 +1,9 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 import { containsAny, containsUnknown } from "../utils/ts-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T07-structural-typing.md");
 
 export default createRule({
   name: "no-broad-index-signatures",
@@ -12,7 +15,7 @@ export default createRule({
     },
     messages: {
       broadIndexSignature:
-        "Index signature uses `{{type}}` which eliminates structural type safety. Use explicit properties or a narrower index type instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T07-structural-typing.md",
+        "Index signature uses `{{type}}` which eliminates structural type safety. Use explicit properties or a narrower index type instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -27,13 +30,13 @@ export default createRule({
           context.report({
             node,
             messageId: "broadIndexSignature",
-            data: { type: "any" },
+            data: { type: "any", url: URL },
           });
         } else if (containsUnknown(typeAnnotation)) {
           context.report({
             node,
             messageId: "broadIndexSignature",
-            data: { type: "unknown" },
+            data: { type: "unknown", url: URL },
           });
         }
       },
