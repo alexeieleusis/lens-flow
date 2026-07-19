@@ -1,5 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC13-state-machines.md");
 
 function containsEarlyExitOrBlock(node: TSESTree.Node): boolean {
   if (
@@ -106,9 +109,9 @@ export default createRule({
       description:
         "Disallow bare `as any` casts in function returns without preceding runtime validation",
     },
-    messages: {
+   messages: {
       blindAsAnyCast:
-        "Returning a bare `as any` cast without runtime validation makes the type assertion an unchecked lie. Add a guard check before the cast, or use `as unknown as TargetType` instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC13-state-machines.md",
+        "Returning a bare `as any` cast without runtime validation makes the type assertion an unchecked lie. Add a guard check before the cast, or use `as unknown as TargetType` instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -124,6 +127,9 @@ export default createRule({
         context.report({
           node,
           messageId: "blindAsAnyCast",
+          data: {
+            url: URL,
+          },
         });
       }
     }
