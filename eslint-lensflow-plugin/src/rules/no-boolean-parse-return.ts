@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC08-error-handling.md");
 
 export default createRule({
   name: "no-boolean-parse-return",
@@ -11,7 +14,7 @@ export default createRule({
     },
     messages: {
       booleanParseReturn:
-        "Function `{{name}}` returns `boolean` instead of a typed `Result<T, E>`. Callers can't distinguish failure reasons or recover the parsed value. Return `Result<T, E>` instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC08-error-handling.md",
+        "Function `{{name}}` returns `boolean` instead of a typed `Result<T, E>`. Callers can't distinguish failure reasons or recover the parsed value. Return `Result<T, E>` instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -45,7 +48,7 @@ export default createRule({
         context.report({
           node: nameNode,
           messageId: "booleanParseReturn",
-          data: { name: nameNode.name },
+          data: { name: nameNode.name, url: URL },
         });
       }
     }
@@ -62,7 +65,7 @@ export default createRule({
         context.report({
           node: nameNode,
           messageId: "booleanParseReturn",
-          data: { name },
+          data: { name, url: URL },
         });
       }
     }
