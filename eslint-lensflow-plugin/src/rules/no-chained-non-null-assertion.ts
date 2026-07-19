@@ -1,5 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC16-nullability.md");
 
 function getChain(
   node: TSESTree.TSNonNullExpression
@@ -39,7 +42,7 @@ export default createRule({
     },
     messages: {
       chainedNonNull:
-        "Found {{count}} chained non-null assertion operators (!). Use optional chaining (?.) with an explicit null check instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC16-nullability.md",
+        "Found {{count}} chained non-null assertion operators (!). Use optional chaining (?.) with an explicit null check instead. See: {{url}}",
     },
     schema: [
       {
@@ -76,6 +79,7 @@ export default createRule({
             messageId: "chainedNonNull",
             data: {
               count: String(count),
+              url: URL,
             },
           });
         }
