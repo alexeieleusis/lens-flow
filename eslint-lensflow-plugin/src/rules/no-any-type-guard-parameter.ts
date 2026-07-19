@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T47-gradual-typing.md");
 
 type FunctionLikeNode =
   | TSESTree.FunctionDeclaration
@@ -49,6 +52,7 @@ function checkTypeGuardParam(
       context.report({
         node: typeAnnotation,
         messageId: "anyTypeGuardParam",
+        data: { url: URL },
       });
     }
   }
@@ -64,7 +68,7 @@ export default createRule({
     },
     messages: {
       anyTypeGuardParam:
-        "Type guard parameter should be `unknown` not `any`. Using `any` bypasses narrowing even after the guard passes. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T47-gradual-typing.md",
+        "Type guard parameter should be `unknown` not `any`. Using `any` bypasses narrowing even after the guard passes. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
