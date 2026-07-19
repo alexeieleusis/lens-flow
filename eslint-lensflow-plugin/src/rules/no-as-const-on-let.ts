@@ -1,6 +1,9 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T32-immutability-markers.md");
 
 function isAsConst(node: TSESTree.Node): boolean {
   return (
@@ -43,7 +46,7 @@ export default createRule({
       description: "Disallow `as const` on `let` bindings, as the narrowed type is lost on reassignment",
     },
     messages: {
-      asConstOnLet: "`as const` on a `let` binding is pointless — the literal type is lost on any reassignment. Use `const` instead, or a regular `let` with an explicit type. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T32-immutability-markers.md",
+      asConstOnLet: "`as const` on a `let` binding is pointless — the literal type is lost on any reassignment. Use `const` instead, or a regular `let` with an explicit type. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -60,6 +63,7 @@ export default createRule({
             context.report({
               node: asConst,
               messageId: "asConstOnLet",
+              data: { url: URL },
             });
           }
         }
