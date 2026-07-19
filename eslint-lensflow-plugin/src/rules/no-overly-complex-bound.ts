@@ -120,12 +120,13 @@ export default createRule({
       maxNestingDepth: 2,
     },
   ],
-  create(context: TSESLint.RuleContext<"complexTypeLiteral" | "deepNesting" | "complexIntersection" | "complexInterfaceBound", [{ maxIntersectionMembers: number; maxProperties: number; maxNestingDepth: number; }]>) {
-    const options = context.options[0] ?? {
+  create(context: TSESLint.RuleContext<"complexTypeLiteral" | "deepNesting" | "complexIntersection" | "complexInterfaceBound", [{ maxIntersectionMembers?: number; maxProperties?: number; maxNestingDepth?: number; }]>) {
+    const defaults = {
       maxIntersectionMembers: 3,
       maxProperties: 3,
       maxNestingDepth: 2,
     };
+    const options = { ...defaults, ...context.options[0] };
 
     function checkTypeLiteral(
       literal: TSESTree.TSTypeLiteral,

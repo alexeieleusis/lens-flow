@@ -168,8 +168,7 @@ ruleTester.run("no-god-interface", rule, {
       }) {}`,
       errors: [
         {
-          message:
-            "Type 'anonymous' has 6 optional properties (max 5). Consider splitting into smaller, focused types. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC05-structural-contracts.md",
+          messageId: "tooManyOptional",
         },
       ],
     },
