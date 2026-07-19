@@ -1,6 +1,9 @@
 import type { TSESTree } from "@typescript-eslint/types";
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T36-trait-objects.md");
 
 export default createRule({
   name: "no-deep-inheritance-chain",
@@ -12,7 +15,7 @@ export default createRule({
     },
     messages: {
       deepChain:
-        "Class \"{{name}}\" has an inheritance chain of depth {{depth}} (threshold: {{maxDepth}}). Consider using composition via interfaces instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T36-trait-objects.md",
+        "Class \"{{name}}\" has an inheritance chain of depth {{depth}} (threshold: {{maxDepth}}). Consider using composition via interfaces instead. See: {{url}}",
     },
     schema: [
       {
@@ -64,6 +67,7 @@ export default createRule({
                   name: className,
                   depth: String(depth),
                   maxDepth: String(maxDepth),
+                  url: URL,
                 },
               });
             }
