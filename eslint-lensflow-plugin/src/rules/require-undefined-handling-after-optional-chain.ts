@@ -66,10 +66,7 @@ function isNodeAfterInSameBlock(
     parent &&
     (parent.type === "BlockStatement" || parent.type === "Program")
   ) {
-    const body =
-      parent.type === "BlockStatement"
-        ? parent.body
-        : parent.body;
+    const body = parent.body;
     const ifIndex = body.indexOf(ifStatement as any);
     if (ifIndex < 0) return false;
     for (let i = ifIndex + 1; i < body.length; i++) {
