@@ -1,5 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC06-immutability.md");
 
 /**
  * Recursively checks whether an expression contains runtime-computed values.
@@ -67,7 +70,7 @@ export default createRule({
     },
     messages: {
       dynamicAsConst:
-        "`as const` on a value with runtime-computed properties. The type system will treat these values as compile-time literals, which is misleading. Provide an explicit type annotation instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC06-immutability.md",
+        "`as const` on a value with runtime-computed properties. The type system will treat these values as compile-time literals, which is misleading. Provide an explicit type annotation instead. See: {{url}}",
     },
     schema: [],
   },
@@ -93,6 +96,7 @@ export default createRule({
           context.report({
             node,
             messageId: "dynamicAsConst",
+            data: { url: URL },
           });
         }
       },
