@@ -1,8 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const KNOWLEDGE_URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/66eaf514cd2bd8bf79b2c3c64d9d43786b3dc174/plugin/skills/typescript/usecases/UC04-generic-constraints.md";
+const URL = knowledgeUrl("usecases/UC04-generic-constraints.md");
 
 function isAnyType(node: { type: string }): boolean {
   return node.type === "TSAnyKeyword";
@@ -124,7 +124,7 @@ export default createRule({
           context.report({
             node: param as never,
             messageId: "anyParam",
-            data: { name: typeName, url: KNOWLEDGE_URL },
+            data: { name: typeName, url: URL },
           });
         }
       }
@@ -133,7 +133,7 @@ export default createRule({
         context.report({
           node: node.returnType as never,
           messageId: "anyReturn",
-          data: { url: KNOWLEDGE_URL },
+          data: { url: URL },
         });
       }
     }
