@@ -1,9 +1,9 @@
 import { AST_NODE_TYPES, TSESLint } from "@typescript-eslint/utils";
 import type { TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const KB_URL =
-  "See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC14-extensibility.md";
+const URL = knowledgeUrl("usecases/UC14-extensibility.md");
 
 function hasParamTypeAnnotation(
   p: TSESTree.Parameter,
@@ -62,9 +62,9 @@ export default createRule({
         "Disallows 'any' as parameter or return type in interface methods and function-typed properties, which defeats structural typing at extension points.",
     },
     messages: {
-      anyParam: `Do not use 'any' as a parameter type in interface methods or function-typed properties. Use a specific type to preserve structural typing and type safety at extension points. ${KB_URL}`,
-      anyReturn: `Do not use 'any' as a return type in interface methods or function-typed properties. Use a specific return type to preserve type safety at extension points. ${KB_URL}`,
-      anyParamAndReturn: `Do not use 'any' as parameter or return type in interface methods or function-typed properties. Use specific types to preserve structural typing and type safety at extension points. ${KB_URL}`,
+      anyParam: "Do not use 'any' as a parameter type in interface methods or function-typed properties. Use a specific type to preserve structural typing and type safety at extension points. See: {{url}}",
+      anyReturn: "Do not use 'any' as a return type in interface methods or function-typed properties. Use a specific return type to preserve type safety at extension points. See: {{url}}",
+      anyParamAndReturn: "Do not use 'any' as parameter or return type in interface methods or function-typed properties. Use specific types to preserve structural typing and type safety at extension points. See: {{url}}",
     },
     schema: [],
   },
@@ -79,6 +79,7 @@ export default createRule({
           context.report({
             node: result.targetNode,
             messageId: selectMessageId(result.anyParam, result.anyReturn),
+            data: { url: URL },
           });
         }
       },
