@@ -1,6 +1,9 @@
 import { ESLintUtils } from "@typescript-eslint/utils";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T59-existential-types.md");
 
 export default createRule({
   name: "no-as-any-capability-check-t59",
@@ -11,8 +14,8 @@ export default createRule({
         "Disallow `(x as any).property` capability checks on union-typed values",
     },
     messages: {
-      capabilityProbe:
-        "Using `as any` to check for a property or method instead of enforcing capability through a proper interface. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T59-existential-types.md",
+     capabilityProbe:
+         "Using `as any` to check for a property or method instead of enforcing capability through a proper interface. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -49,7 +52,7 @@ export default createRule({
         const exprType = checker.getTypeAtLocation(tsNode);
         if (!exprType.isUnion()) return;
 
-        context.report({ node, messageId: "capabilityProbe" });
+        context.report({ node, messageId: "capabilityProbe", data: { url: URL } });
       },
     };
   },
