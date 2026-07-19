@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T61-recursive-types.md");
 
 export default createRule({
   name: "no-any-array-for-children",
@@ -10,8 +13,8 @@ export default createRule({
         "Disallow `any[]` on children/nested elements properties — use a self-referential type instead.",
     },
     messages: {
-      anyArrayChildren:
-        "Property \"{{propName}}\" uses `any[]` for a nested structure. Use a self-referential type (e.g. `{{parentName}}[]`) for structural type safety. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T61-recursive-types.md",
+     anyArrayChildren:
+         "Property \"{{propName}}\" uses `any[]` for a nested structure. Use a self-referential type (e.g. `{{parentName}}[]`) for structural type safety. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -57,7 +60,7 @@ export default createRule({
         context.report({
           node,
           messageId: "anyArrayChildren",
-          data: { propName, parentName },
+          data: { propName, parentName, url: URL },
         });
       },
     };
