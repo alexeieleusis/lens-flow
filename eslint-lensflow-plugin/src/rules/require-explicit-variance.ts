@@ -132,24 +132,8 @@ function handleSignatureCommon(
   if (node.returnType) findTypeParamUsage(node.returnType.typeAnnotation, paramName, true, result);
 }
 
-function handleCallSignature(
-  node: TSESTree.TSCallSignatureDeclaration,
-  paramName: string,
-  result: { covariant: boolean; contravariant: boolean },
-): void {
-  handleSignatureCommon(node, paramName, result);
-}
-
-function handleConstructSignature(
-  node: TSESTree.TSConstructSignatureDeclaration,
-  paramName: string,
-  result: { covariant: boolean; contravariant: boolean },
-): void {
-  handleSignatureCommon(node, paramName, result);
-}
-
-function handleMethodSignature(
-  node: TSESTree.TSMethodSignature,
+function handleSignature(
+  node: TSESTree.TSCallSignatureDeclaration | TSESTree.TSConstructSignatureDeclaration | TSESTree.TSMethodSignature,
   paramName: string,
   result: { covariant: boolean; contravariant: boolean },
 ): void {
@@ -268,13 +252,9 @@ function findTypeParamUsage(
       handlePropertySignature(node, paramName, result);
       break;
     case "TSCallSignatureDeclaration":
-      handleCallSignature(node, paramName, result);
-      break;
     case "TSConstructSignatureDeclaration":
-      handleConstructSignature(node, paramName, result);
-      break;
     case "TSMethodSignature":
-      handleMethodSignature(node, paramName, result);
+      handleSignature(node, paramName, result);
       break;
     case "TSTypeAnnotation":
       handleTypeAnnotation(node, paramName, covariant, result);
