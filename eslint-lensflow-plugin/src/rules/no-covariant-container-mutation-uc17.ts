@@ -1,5 +1,6 @@
 import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import {
   containsTypeRef,
   paramTypeAnnotation,
@@ -7,8 +8,7 @@ import {
   paramsContainAnyTypeRef,
 } from "../utils/variance-checker.js";
 
-const KNOWLEDGE_URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC17-variance.md";
+const URL = knowledgeUrl("usecases/UC17-variance.md");
 
 function findMatchedCovariantParam(
   params: TSESTree.Parameter[],
@@ -60,7 +60,7 @@ function checkMethodSignature(
     data: {
       methodName: extractKeyName(member.key),
       paramName: paramText(match, context),
-      url: KNOWLEDGE_URL,
+      url: URL,
     },
   });
 }
@@ -83,7 +83,7 @@ function checkPropertySignature(
     data: {
       propName: extractKeyName(member.key),
       paramName: paramText(match, context),
-      url: KNOWLEDGE_URL,
+      url: URL,
     },
   });
 }
@@ -104,7 +104,7 @@ function checkSignatureWithParams(
     messageId,
     data: {
       paramName: paramText(match, context),
-      url: KNOWLEDGE_URL,
+      url: URL,
     },
   });
 }
