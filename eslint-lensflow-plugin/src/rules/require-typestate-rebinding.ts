@@ -181,6 +181,42 @@ export default createRule({
       return null;
     }
 
+    function resolveScopeCheckParams(
+      constNode: TSESTree.Node,
+      foundBinding: LetBinding,
+      letScopeIdx: number,
+      currentScope: ScopeFrame,
+      idx: number,
+    ): { letScopeBody: TSESTree.Statement[]; startCheckIdx: number; constDeclBlock: TSESTree.Node | null } | null {
+      if (currentScope.stmtBody === foundBinding.scopeBody) {
+        if (foundBinding.letIdx >= idx) return null;
+        return {
+          letScopeBody: foundBinding.scopeBody,
+          startCheckIdx: idx + 1,
+          constDeclBlock: null,
+        };
+      }
+
+      if (letScopeIdx < scopeStack.length - 1) {
+        let constDeclBlock: TSESTree.Node | null = null;
+        let p: TSESTree.Node | undefined = constNode.parent;
+        while (p) {
+          if (foundBinding.scopeBody.includes(p as TSESTree.Statement)) {
+            constDeclBlock = p;
+            break;
+          }
+          p = p.parent;
+        }
+        return {
+          letScopeBody: foundBinding.scopeBody,
+          startCheckIdx: foundBinding.letIdx + 1,
+          constDeclBlock,
+        };
+      }
+
+      return null;
+    }
+
     function processConstDeclarations(
       node: TSESTree.VariableDeclaration,
       currentScope: ScopeFrame,
@@ -198,36 +234,10 @@ export default createRule({
         if (!found) continue;
 
         const { binding: foundBinding, scopeIdx: letScopeIdx } = found;
-        const currentScopeIdx = scopeStack.length - 1;
+        const params = resolveScopeCheckParams(node, foundBinding, letScopeIdx, currentScope, idx);
+        if (!params) continue;
 
-        let letScopeBody: TSESTree.Statement[];
-        let startCheckIdx: number;
-        let constDeclBlock: TSESTree.Node | null = null;
-
-        if (currentScope.stmtBody === foundBinding.scopeBody) {
-          // Same scope: const must appear after the let
-          if (foundBinding.letIdx >= idx) continue;
-          letScopeBody = foundBinding.scopeBody;
-          startCheckIdx = idx + 1;
-        } else if (letScopeIdx < currentScopeIdx) {
-          // Cross-scope: let is in an outer scope, const is in a nested block
-          letScopeBody = foundBinding.scopeBody;
-          startCheckIdx = foundBinding.letIdx + 1;
-          // Find the block in the outer scope's body that contains this const
-          // so we can skip it when scanning for subsequent uses.
-          let p: TSESTree.Node | undefined = node.parent;
-          while (p) {
-            if (foundBinding.scopeBody.includes(p as TSESTree.Statement)) {
-              constDeclBlock = p;
-              break;
-            }
-            p = p.parent;
-          }
-        } else {
-          continue;
-        }
-
-        if (hasSubsequentUse(letScopeBody, startCheckIdx, objId.name, constDeclBlock)) {
+        if (hasSubsequentUse(params.letScopeBody, params.startCheckIdx, objId.name, params.constDeclBlock)) {
           context.report({
             node: declarator,
             messageId: "staleStateRef",
