@@ -1,6 +1,9 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T13-null-safety.md");
 
 export default createRule({
   name: "no-any-json-parse-return",
@@ -12,7 +15,7 @@ export default createRule({
     },
     messages: {
       anyJsonParseReturn:
-        "Function returns `any` from `JSON.parse`. Use a concrete return type and validate the parsed data. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T13-null-safety.md",
+        "Function returns `any` from `JSON.parse`. Use a concrete return type and validate the parsed data. See: {{url}}",
     },
     schema: [],
   },
@@ -58,7 +61,7 @@ export default createRule({
           ce.callee.object.name === "JSON"
         );
       })) {
-        context.report({ node, messageId: "anyJsonParseReturn" });
+        context.report({ node, messageId: "anyJsonParseReturn", data: { url: URL } });
       }
     }
 
