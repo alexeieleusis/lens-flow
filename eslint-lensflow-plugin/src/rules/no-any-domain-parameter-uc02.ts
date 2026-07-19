@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC02-domain-modeling.md");
 
 function findAnyInTypeList(
   types: TSESTree.TypeNode[],
@@ -120,9 +123,9 @@ export default createRule({
     },
     messages: {
       anyParam:
-        "Function parameter '{{name}}' is typed as `any`. Use a typed domain shape instead of `any` to ensure compile-time structure checking. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC02-domain-modeling.md",
+        "Function parameter '{{name}}' is typed as `any`. Use a typed domain shape instead of `any` to ensure compile-time structure checking. See: {{url}}",
       anyArrayParam:
-        "Function parameter '{{name}}' is typed as `any[]`. Use a typed array like `Item[]` instead of `any[]` to ensure compile-time structure checking. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC02-domain-modeling.md",
+        "Function parameter '{{name}}' is typed as `any[]`. Use a typed array like `Item[]` instead of `any[]` to ensure compile-time structure checking. See: {{url}}",
     },
     schema: [],
   },
@@ -144,6 +147,7 @@ export default createRule({
               parentType === "TSArrayType" ? "anyArrayParam" : "anyParam",
             data: {
               name: info.name,
+              url: URL,
             },
           });
         }
