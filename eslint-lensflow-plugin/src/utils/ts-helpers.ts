@@ -116,9 +116,7 @@ function collectTypeReferenceChildren(type: TSESTree.TSTypeReference): TSESTree.
 function collectTypeLiteralChildren(type: TSESTree.TSTypeLiteral): TSESTree.TypeNode[] {
   const children: TSESTree.TypeNode[] = [];
   for (const member of type.members) {
-    if (member.type === "TSPropertySignature" && member.typeAnnotation) {
-      children.push(member.typeAnnotation.typeAnnotation);
-    } else if (member.type === "TSIndexSignature" && member.typeAnnotation) {
+    if (member.typeAnnotation && (member.type === "TSPropertySignature" || member.type === "TSIndexSignature")) {
       children.push(member.typeAnnotation.typeAnnotation);
     }
   }
