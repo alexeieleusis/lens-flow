@@ -621,10 +621,7 @@ export default createRule({
             (anc.type === "BlockStatement" || anc.type === "Program") &&
             !memberNode.optional
           ) {
-            const blockBody =
-              anc.type === "BlockStatement"
-                ? anc.body
-                : anc.body;
+            const blockBody = anc.body;
             let foundGuard = false;
             for (const stmt of blockBody) {
               if (
