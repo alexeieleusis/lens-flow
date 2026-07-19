@@ -30,7 +30,7 @@ function hasPrimitiveType(node: TSESTree.TypeNode): boolean {
   return PRIMITIVE_KEYWORDS.has(node.type) || isPrimitiveUnion(node);
 }
 
-function getPropertyName(key: TSESTree.ClassElement["key"]): string {
+function getPropertyName(key: TSESTree.Expression | TSESTree.PrivateIdentifier): string {
   if (key.type === "Identifier") return key.name;
   if (key.type === "Literal") return String(key.value);
   return "unknown";

@@ -5,7 +5,7 @@ const MUTABLE_COLLECTIONS = new Set(["Map", "Set", "Array"]);
 const READONLY_COLLECTIONS = new Set(["ReadonlyMap", "ReadonlySet", "ReadonlyArray"]);
 
 function resolveTypeName(
-  typeName: TSESTree.TypeName,
+  typeName: TSESTree.EntityName,
   sourceCode: TSESLint.SourceCode,
 ): string | null {
   if (typeName.type === "Identifier") {
