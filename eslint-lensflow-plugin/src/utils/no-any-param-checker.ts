@@ -131,7 +131,7 @@ function extractParamName(param: TSESTree.Parameter, sourceCode: TSESLint.Source
   let inner: TSESTree.Node = param;
   if (param.type === "AssignmentPattern") inner = param.left;
   if (inner.type === "RestElement") inner = (inner as TSESTree.RestElement).argument;
-  return inner.type === "Identifier" ? (inner as TSESTree.Identifier).name : sourceCode.getText(param);
+  return inner.type === "Identifier" ? inner.name : sourceCode.getText(param);
 }
 
 /**
