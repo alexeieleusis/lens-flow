@@ -91,6 +91,23 @@ function isOpenUnion(tsType: ts.Type): boolean {
   return hasLiteral && hasBroad;
 }
 
+function isDiscriminantOpenUnion(
+  tsNode: ts.Node,
+  checker: ts.TypeChecker,
+): boolean {
+  const symbol = checker.getSymbolAtLocation(tsNode);
+  if (symbol) {
+    const declarations = symbol.getDeclarations();
+    if (declarations) {
+      for (const decl of declarations) {
+        if (declHasOpenUnionType(decl)) return true;
+      }
+    }
+  }
+
+  return isOpenUnion(checker.getTypeAtLocation(tsNode));
+}
+
 function declHasOpenUnionType(decl: ts.Node): boolean {
   let typeNode: ts.TypeNode | undefined;
   if (
@@ -127,27 +144,13 @@ export default createRule({
 
     const checker = program.getTypeChecker();
 
-    function isDiscriminantOpenUnion(tsNode: ts.Node): boolean {
-      const symbol = checker.getSymbolAtLocation(tsNode);
-      if (symbol) {
-        const declarations = symbol.getDeclarations();
-        if (declarations) {
-          for (const decl of declarations) {
-            if (declHasOpenUnionType(decl)) return true;
-          }
-        }
-      }
-
-      return isOpenUnion(checker.getTypeAtLocation(tsNode));
-    }
-
     return {
       SwitchStatement(node) {
         const tsDiscriminant =
           parserServices.esTreeNodeToTSNodeMap.get(node.discriminant);
         if (!tsDiscriminant) return;
 
-        if (!isDiscriminantOpenUnion(tsDiscriminant)) return;
+        if (!isDiscriminantOpenUnion(tsDiscriminant, checker)) return;
 
         const defaultCase = node.cases.find((c) => c.test === null);
         if (!defaultCase) return;
