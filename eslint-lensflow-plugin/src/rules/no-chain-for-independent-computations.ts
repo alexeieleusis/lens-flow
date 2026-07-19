@@ -1,5 +1,8 @@
 import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T54-functor-applicative-monad.md");
 
 function extractIdentifier(
   param: TSESTree.Parameter | TSESTree.Expression,
@@ -31,9 +34,9 @@ export default createRule({
     },
     messages: {
       unusedParamInChain:
-        "The callback parameter '{{param}}' is unused in this chain call. The computation is independent and will be short-circuited if a prior step fails. Use applicative style (ap, sequenceS) for independent validations. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T54-functor-applicative-monad.md",
+        "The callback parameter '{{param}}' is unused in this chain call. The computation is independent and will be short-circuited if a prior step fails. Use applicative style (ap, sequenceS) for independent validations. See: {{url}}",
       noParamInChain:
-        "The chain callback has no parameters. The computation is independent and will be short-circuited if a prior step fails. Use applicative style (ap, sequenceS) for independent validations. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T54-functor-applicative-monad.md",
+        "The chain callback has no parameters. The computation is independent and will be short-circuited if a prior step fails. Use applicative style (ap, sequenceS) for independent validations. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -76,6 +79,7 @@ export default createRule({
         ctx.report({
           node: callback,
           messageId: "noParamInChain",
+          data: { url: URL },
         });
         return;
       }
@@ -107,7 +111,7 @@ export default createRule({
         ctx.report({
           node: callback,
           messageId: "unusedParamInChain",
-          data: { param: ident.name },
+          data: { param: ident.name, url: URL },
         });
       }
     }
