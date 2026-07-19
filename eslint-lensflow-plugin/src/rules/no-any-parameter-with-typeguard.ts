@@ -1,6 +1,9 @@
 import { createRule } from "../utils/rule-creator.js";
 import { getChildren } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T02-union-intersection.md");
 
 type ParamNode =
   | TSESTree.Identifier
@@ -111,7 +114,7 @@ export default createRule({
     },
     messages: {
       anyParamWithTypeguard:
-        "Parameter `{{name}}` is typed as `any` but narrowed with {{checkKind}} inside the function body. Use an explicit union type instead of `any`. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T02-union-intersection.md",
+        "Parameter `{{name}}` is typed as `any` but narrowed with {{checkKind}} inside the function body. Use an explicit union type instead of `any`. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -138,6 +141,7 @@ export default createRule({
               data: {
                 name: tg.paramName,
                 checkKind: tg.kind,
+                url: URL,
               },
             });
           }
