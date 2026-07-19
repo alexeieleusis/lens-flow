@@ -144,6 +144,32 @@ function memberContainsTypeRef(
   return false;
 }
 
+function conditionalTypeOutputRef(
+  node: TSESTree.TSConditionalType,
+  paramName: string,
+  depth: number,
+): boolean {
+  return (
+    (node.trueType ? containsTypeRefInOutput(node.trueType, paramName, depth + 1) : false) ||
+    (node.falseType ? containsTypeRefInOutput(node.falseType, paramName, depth + 1) : false)
+  );
+}
+
+function mappedTypeOutputRef(
+  node: TSESTree.TSMappedType,
+  paramName: string,
+  depth: number,
+): boolean {
+  return (
+    (node.typeAnnotation
+      ? containsTypeRefInOutput(node.typeAnnotation, paramName, depth + 1)
+      : false) ||
+    (node.constraint
+      ? containsTypeRefInOutput(node.constraint, paramName, depth + 1)
+      : false)
+  );
+}
+
 /** Check if paramName appears in output (contravariant-safe) positions within a type. */
 export function containsTypeRefInOutput(
   node: TSESTree.Node,
@@ -190,25 +216,12 @@ export function containsTypeRefInOutput(
         ? containsTypeRefInOutput(node.returnType.typeAnnotation, paramName, depth + 1)
         : false;
     }
-    case AST_NODE_TYPES.TSConditionalType: {
-      return (
-        (node.trueType ? containsTypeRefInOutput(node.trueType, paramName, depth + 1) : false) ||
-        (node.falseType ? containsTypeRefInOutput(node.falseType, paramName, depth + 1) : false)
-      );
-    }
-    case AST_NODE_TYPES.TSIndexedAccessType: {
+    case AST_NODE_TYPES.TSConditionalType:
+      return conditionalTypeOutputRef(node, paramName, depth);
+    case AST_NODE_TYPES.TSIndexedAccessType:
       return containsTypeRefInOutput(node.objectType, paramName, depth + 1);
-    }
-    case AST_NODE_TYPES.TSMappedType: {
-      return (
-        (node.typeAnnotation
-          ? containsTypeRefInOutput(node.typeAnnotation, paramName, depth + 1)
-          : false) ||
-        (node.constraint
-          ? containsTypeRefInOutput(node.constraint, paramName, depth + 1)
-          : false)
-      );
-    }
+    case AST_NODE_TYPES.TSMappedType:
+      return mappedTypeOutputRef(node, paramName, depth);
     case AST_NODE_TYPES.TSTypeOperator: {
       if (node.operator === "keyof") {
         return false;
