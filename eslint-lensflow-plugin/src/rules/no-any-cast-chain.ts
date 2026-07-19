@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T07-structural-typing.md");
 
 /**
  * @deprecated Use `no-double-cast-any` instead.
@@ -15,7 +18,7 @@ export default createRule({
     },
     messages: {
       doubleCastAny:
-        "Chaining `as any` in a type assertion bypasses type safety. Remove the `as any` intermediate cast. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T07-structural-typing.md",
+        "Chaining `as any` in a type assertion bypasses type safety. Remove the `as any` intermediate cast. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -30,7 +33,7 @@ export default createRule({
             inner.typeAnnotation.type === "TSAnyKeyword" ||
             node.typeAnnotation.type === "TSAnyKeyword"
           ) {
-            context.report({ node, messageId: "doubleCastAny" });
+            context.report({ node, messageId: "doubleCastAny", data: { url: URL } });
           }
         }
       },
