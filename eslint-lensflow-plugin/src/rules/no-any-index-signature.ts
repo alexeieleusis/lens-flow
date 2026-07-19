@@ -1,6 +1,9 @@
 import type { TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { containsAny } from "../utils/ts-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T31-record-types.md");
 
 export default createRule({
   name: "no-any-index-signature",
@@ -14,7 +17,7 @@ export default createRule({
     },
     messages: {
       anyIndexSignature:
-        "Index signature uses `any` as the value type, losing all type safety for dynamically keyed properties. Use a specific union type instead (e.g., `string | number | boolean`). See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T31-record-types.md",
+        "Index signature uses `any` as the value type, losing all type safety for dynamically keyed properties. Use a specific union type instead (e.g., `string | number | boolean`). See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -28,6 +31,7 @@ export default createRule({
           context.report({
             node,
             messageId: "anyIndexSignature",
+            data: { url: URL },
           });
         }
       },
