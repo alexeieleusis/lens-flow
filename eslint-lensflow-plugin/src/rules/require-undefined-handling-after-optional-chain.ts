@@ -479,6 +479,19 @@ function testContainsGuard(
   return false;
 }
 
+function isUndefinedChainVarAccess(
+  memberNode: TSESTree.MemberExpression,
+  varName: string,
+  sourceCode: TSESLint.SourceCode,
+  undefinedChainVars: Set<TSESLint.Scope.Variable>,
+): boolean {
+  const binding = findBindingInScope(
+    sourceCode.getScope(memberNode),
+    varName,
+  );
+  return binding !== null && undefinedChainVars.has(binding);
+}
+
 function findBindingInScope(
   scope: TSESLint.Scope.Scope | null,
   name: string,
@@ -586,76 +599,21 @@ export default createRule({
         if (memberNode.object.type !== "Identifier") return;
 
         const varName = memberNode.object.name;
-        const binding = findBindingInScope(
-          context.sourceCode.getScope(memberNode),
-          varName,
-        );
-        if (!binding || !undefinedChainVars.has(binding)) return;
-
-        // Skip if this MemberExpression itself is part of an optional chain
-        // (it's already safe)
+        if (!isUndefinedChainVarAccess(memberNode, varName, context.sourceCode, undefinedChainVars)) return;
         if (memberNode.optional) return;
 
-        // getAncestors returns from root to immediate parent, so reverse for
-        // leaf-to-root traversal.
         const ancestors = [...context.sourceCode.getAncestors(memberNode)].reverse();
 
-        // Skip if inside an IfStatement's test or ConditionalExpression's test
-        // — the guard short-circuits before evaluating.
-        for (const anc of ancestors) {
-          if (isScopeBoundary(anc)) break;
-          if (
-            anc.type === "IfStatement" &&
-            walkNodes(anc.test, (n) => n === memberNode, { skipTypeAnnotations: true })
-          ) return;
-          if (
-            anc.type === "ConditionalExpression" &&
-            walkNodes(anc.test, (n) => n === memberNode, { skipTypeAnnotations: true })
-          ) return;
-        }
-
-        // Check for sibling throw-guard: if (x === undefined) throw; use after
-        for (const anc of ancestors) {
-          if (anc.type === "FunctionDeclaration" || anc.type === "FunctionExpression" || anc.type === "ArrowFunctionExpression") break;
-          if (
-            (anc.type === "BlockStatement" || anc.type === "Program") &&
-            !memberNode.optional
-          ) {
-            const blockBody = anc.body;
-            let foundGuard = false;
-            for (const stmt of blockBody) {
-              if (
-                stmt.type === "IfStatement" &&
-                testContainsIsNullGuard(stmt.test, varName) &&
-                isTerminatingStatement(stmt.consequent)
-              ) {
-                foundGuard = true;
-              }
-              if (walkNodes(stmt, (n) => n === memberNode, { skipTypeAnnotations: true })) {
-                if (foundGuard) return;
-                break;
-              }
-            }
-          }
-        }
-
-        // Check if this use is inside a guard
+        if (isNodeInsideTestPosition(memberNode, ancestors)) return;
+        if (isAfterSiblingThrowGuard(ancestors, memberNode, varName)) return;
         if (isInsideGuard(memberNode, varName, context.sourceCode)) return;
-
-        // Get the member name for the message
-        let memberName = "";
-        if (memberNode.property.type === "Identifier") {
-          memberName = memberNode.property.name;
-        } else if (memberNode.property.type === "Literal") {
-          memberName = String(memberNode.property.value);
-        }
 
         context.report({
           node: memberNode,
           messageId: "unguardedAccess",
           data: {
             name: varName,
-            member: memberName,
+            member: getMemberName(memberNode.property),
           },
         });
       },
