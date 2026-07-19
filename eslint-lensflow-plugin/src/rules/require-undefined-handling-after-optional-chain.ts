@@ -256,7 +256,7 @@ function isFunctionNode(node: TSESTree.Node): boolean {
 }
 
 function getMemberName(property: TSESTree.Node): string {
-  if (property.type === "Identifier") return (property as TSESTree.Identifier).name;
+  if (property.type === "Identifier") return property.name;
   if (property.type === "Literal") return String((property as TSESTree.Literal).value);
   return "";
 }
