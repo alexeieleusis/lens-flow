@@ -130,7 +130,7 @@ function shouldSkipParam(param: TSESTree.Parameter, typeNode: TSESTree.TypeNode 
 function extractParamName(param: TSESTree.Parameter, sourceCode: TSESLint.SourceCode): string {
   let inner: TSESTree.Node = param;
   if (param.type === "AssignmentPattern") inner = param.left;
-  if (inner.type === "RestElement") inner = (inner as TSESTree.RestElement).argument;
+  if (inner.type === "RestElement") inner = inner.argument;
   return inner.type === "Identifier" ? inner.name : sourceCode.getText(param);
 }
 
