@@ -1,5 +1,8 @@
 import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T02-union-intersection.md");
 
 const PRIMITIVE_TYPES = new Set([
   "TSBooleanKeyword",
@@ -173,7 +176,7 @@ export default createRule({
     },
     messages: {
       conflict:
-        "Property '{{prop}}' has conflicting types in intersection members. This produces `never` for the property. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T02-union-intersection.md",
+        "Property '{{prop}}' has conflicting types in intersection members. This produces `never` for the property. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -199,7 +202,7 @@ export default createRule({
           context.report({
             node,
             messageId: "conflict",
-            data: { prop: conflicts.join(", ") },
+            data: { prop: conflicts.join(", "), url: URL },
           });
         }
       },
