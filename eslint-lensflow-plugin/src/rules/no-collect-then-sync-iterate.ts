@@ -2,11 +2,13 @@ import ts from "typescript";
 import { ESLintUtils, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import type { Definition } from "@typescript-eslint/scope-manager";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import {
-  ASYNC_ITERATION_URL,
   hasAsyncIteratorSignature,
   findVariableByReference,
 } from "../utils/async-iteration.js";
+
+const URL = knowledgeUrl("catalog/T64-async-iteration.md");
 
 function isCollectionArray(type: ts.Type): boolean {
   const props = type.getProperties();
@@ -26,7 +28,7 @@ export default createRule({
      },
     messages: {
       collectThenSyncIterate:
-        `Collecting an AsyncIterable into an array then iterating with synchronous for...of defeats streaming. Use for await...of on the original source instead. See: ${ASYNC_ITERATION_URL}`,
+        "Collecting an AsyncIterable into an array then iterating with synchronous for...of defeats streaming. Use for await...of on the original source instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -106,6 +108,7 @@ export default createRule({
         context.report({
           node,
           messageId: "collectThenSyncIterate",
+          data: { url: URL },
         });
       },
     };
