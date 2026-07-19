@@ -1,5 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T04-generics-bounds.md");
 
 type FunctionLikeNode =
   | TSESTree.FunctionDeclaration
@@ -129,9 +132,9 @@ export default createRule({
     },
     messages: {
       anyParam:
-        "Utility function uses `any` for parameter '{{name}}'. Use a generic type parameter to preserve type safety. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+        "Utility function uses `any` for parameter '{{name}}'. Use a generic type parameter to preserve type safety. See: {{url}}",
       anyReturn:
-        "Utility function uses `any` for return type. Use a generic type parameter to preserve type safety. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+        "Utility function uses `any` for return type. Use a generic type parameter to preserve type safety. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -148,7 +151,7 @@ export default createRule({
           context.report({
             node: param,
             messageId: "anyParam",
-            data: { name: getParamName(param, context.sourceCode) },
+            data: { name: getParamName(param, context.sourceCode), url: URL },
           });
         }
       }
@@ -157,6 +160,7 @@ export default createRule({
         context.report({
           node: node.returnType.typeAnnotation,
           messageId: "anyReturn",
+          data: { url: URL },
         });
       }
     }
