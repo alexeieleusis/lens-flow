@@ -1,6 +1,9 @@
 import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T59-existential-types.md");
 
 type FunctionNode =
   | TSESTree.FunctionDeclaration
@@ -108,7 +111,7 @@ export default createRule({
     },
     messages: {
       capturedGenericCallback:
-        "Generic callback parameter '{{paramName}}' is captured into an outer-scope variable '{{targetName}}', leaking the existential type witness. Keep the callback within its declaring scope. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T59-existential-types.md",
+        "Generic callback parameter '{{paramName}}' is captured into an outer-scope variable '{{targetName}}', leaking the existential type witness. Keep the callback within its declaring scope. See: {{url}}",
     },
     schema: [],
   },
@@ -145,7 +148,7 @@ export default createRule({
       context.report({
         node: sourceNode,
         messageId: "capturedGenericCallback",
-        data: { paramName: result.paramName, targetName },
+        data: { paramName: result.paramName, targetName, url: URL },
       });
     }
 
@@ -172,7 +175,7 @@ export default createRule({
       context.report({
         node: sourceNode,
         messageId: "capturedGenericCallback",
-        data: { paramName: result.paramName, targetName },
+        data: { paramName: result.paramName, targetName, url: URL },
       });
     }
 
