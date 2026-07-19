@@ -1,6 +1,8 @@
-// eslint-plugin/src/rules/no-abstract-class-without-concrete-methods.ts
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T05-type-classes.md");
 
 export default createRule({
   name: "no-abstract-class-without-concrete-methods",
@@ -12,7 +14,7 @@ export default createRule({
     },
     messages: {
       noConcreteMethods:
-        "Abstract class '{{name}}' has no concrete methods — use an interface instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T05-type-classes.md",
+        "Abstract class '{{name}}' has no concrete methods — use an interface instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -51,6 +53,7 @@ export default createRule({
             messageId: "noConcreteMethods",
             data: {
               name: node.id?.name ?? "<anonymous>",
+              url: URL,
             },
           });
         }
