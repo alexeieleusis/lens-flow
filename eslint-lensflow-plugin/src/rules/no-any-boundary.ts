@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T18-conversions-coercions.md");
 
 const FUNCTION_TYPE_NODES = new Set([
   "FunctionDeclaration",
@@ -64,11 +67,11 @@ export default createRule({
     },
     messages: {
       anyInVarAnnotation:
-        "Using `any` as variable type annotation disables type safety. Use `unknown` for external data boundaries. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T18-conversions-coercions.md",
+        "Using `any` as variable type annotation disables type safety. Use `unknown` for external data boundaries. See: {{url}}",
       anyInAsExpression:
-        "Casting to `any` disables type safety. Use `unknown` for external data boundaries. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T18-conversions-coercions.md",
+        "Casting to `any` disables type safety. Use `unknown` for external data boundaries. See: {{url}}",
       anyInFunctionType:
-        "Using `any` in function parameter or return type disables type safety. Use `unknown` for external data boundaries. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T18-conversions-coercions.md",
+        "Using `any` in function parameter or return type disables type safety. Use `unknown` for external data boundaries. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -81,22 +84,22 @@ export default createRule({
         const grandparent = parent.parent;
 
         if (isAnyInAsExpression(node, parent)) {
-          context.report({ node, messageId: "anyInAsExpression" });
+          context.report({ node, messageId: "anyInAsExpression", data: { url: URL } });
           return;
         }
 
         if (isAnyInVarAnnotation(parent)) {
-          context.report({ node, messageId: "anyInVarAnnotation" });
+          context.report({ node, messageId: "anyInVarAnnotation", data: { url: URL } });
           return;
         }
 
         if (isAnyInFunctionReturnType(parent, grandparent)) {
-          context.report({ node, messageId: "anyInFunctionType" });
+          context.report({ node, messageId: "anyInFunctionType", data: { url: URL } });
           return;
         }
 
         if (isAnyInParameterType(grandparent)) {
-          context.report({ node, messageId: "anyInFunctionType" });
+          context.report({ node, messageId: "anyInFunctionType", data: { url: URL } });
         }
       },
     };
