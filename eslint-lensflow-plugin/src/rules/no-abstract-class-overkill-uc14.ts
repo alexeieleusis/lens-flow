@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("usecases/UC14-extensibility.md");
 
 type Options = [{ maxAbstractMethods?: number }];
 type MessageIds = "abstractOverkill";
@@ -14,7 +17,7 @@ export default createRule<Options, MessageIds>({
     },
     messages: {
       abstractOverkill:
-        "Abstract class '{{name}}' has {{count}} abstract method(s), no instance fields, and no shared behavior. Use an interface instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC14-extensibility.md",
+        "Abstract class '{{name}}' has {{count}} abstract method(s), no instance fields, and no shared behavior. Use an interface instead. See: {{url}}",
     },
     schema: [
       {
@@ -81,6 +84,7 @@ export default createRule<Options, MessageIds>({
           data: {
             name: className,
             count: String(abstractCount),
+            url: URL,
           },
         });
       }
