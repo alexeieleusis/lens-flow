@@ -2,7 +2,7 @@ import { AST_NODE_TYPES, type TSESTree } from "@typescript-eslint/utils";
 
 function getTypeNameRightmost(typeName: TSESTree.EntityName): string | null {
   let current: TSESTree.Identifier | TSESTree.TSQualifiedName | TSESTree.ThisExpression | null = typeName;
-  while (current && current.type === AST_NODE_TYPES.TSQualifiedName) {
+  while (current?.type === AST_NODE_TYPES.TSQualifiedName) {
     current = current.right;
   }
   if (current?.type === AST_NODE_TYPES.Identifier) {
