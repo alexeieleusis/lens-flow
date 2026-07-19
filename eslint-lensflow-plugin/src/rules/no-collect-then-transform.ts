@@ -2,11 +2,13 @@ import ts from "typescript";
 import { ESLintUtils, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import type { Definition } from "@typescript-eslint/scope-manager";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import {
-  ASYNC_ITERATION_URL,
   hasAsyncIteratorSignature,
   findVariableByReference,
 } from "../utils/async-iteration.js";
+
+const URL = knowledgeUrl("catalog/T64-async-iteration.md");
 
 const ARRAY_TRANSFORM_METHODS = new Set([
   "map",
@@ -82,7 +84,7 @@ export default createRule({
      },
     messages: {
       collectThenTransform:
-        `Collecting an AsyncIterable into an array then applying "{{method}}" consumes O(n) memory instead of streaming. Use an async generator pipeline with for await...of instead. See: ${ASYNC_ITERATION_URL}`,
+        `Collecting an AsyncIterable into an array then applying "{{method}}" consumes O(n) memory instead of streaming. Use an async generator pipeline with for await...of instead. See: {{url}}`,
     },
     schema: [],
     fixable: undefined,
@@ -144,7 +146,7 @@ export default createRule({
       context.report({
         node: init,
         messageId: "collectThenTransform",
-        data: { method: methodName },
+        data: { method: methodName, url: URL },
       });
     }
 
@@ -170,7 +172,7 @@ export default createRule({
       context.report({
         node: awaited,
         messageId: "collectThenTransform",
-        data: { method: methodName },
+        data: { method: methodName, url: URL },
       });
     }
 
