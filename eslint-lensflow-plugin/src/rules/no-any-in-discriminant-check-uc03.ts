@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC03-exhaustiveness.md");
 
 const DISCRIMINANT_NAMES = new Set([
   "kind",
@@ -316,6 +319,7 @@ function reportIfCastInDiscriminantCheck(
         data: {
           base: castBase.name,
           discriminant,
+          url: URL,
         },
       });
       return true;
@@ -346,6 +350,7 @@ function reportSwitchCastInDiscriminantCheck(
         data: {
           base: castBase.name,
           discriminant: extractPropName(enclosingSwitch.discriminant),
+          url: URL,
         },
       });
       return true;
@@ -364,9 +369,9 @@ export default createRule({
     },
     messages: {
       ifDiscriminant:
-        "Using `as any` inside a conditional that checks `{{discriminant}}` on `{{base}}`. Use a discriminated union with proper narrowing instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC03-exhaustiveness.md",
+        "Using `as any` inside a conditional that checks `{{discriminant}}` on `{{base}}`. Use a discriminated union with proper narrowing instead. See: {{url}}",
       switchDiscriminant:
-        "Using `as any` inside a `switch` on `{{base}}.{{discriminant}}`. Use a discriminated union with proper narrowing instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC03-exhaustiveness.md",
+        "Using `as any` inside a `switch` on `{{base}}.{{discriminant}}`. Use a discriminated union with proper narrowing instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
