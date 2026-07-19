@@ -120,8 +120,8 @@ function handlePropertySignature(
   }
 }
 
-function handleCallSignature(
-  node: TSESTree.TSCallSignatureDeclaration,
+function handleSignatureCommon(
+  node: TSESTree.TSCallSignatureDeclaration | TSESTree.TSConstructSignatureDeclaration | TSESTree.TSMethodSignature,
   paramName: string,
   result: { covariant: boolean; contravariant: boolean },
 ): void {
@@ -130,6 +130,14 @@ function handleCallSignature(
       findTypeParamUsage(p.typeAnnotation, paramName, false, result);
   });
   if (node.returnType) findTypeParamUsage(node.returnType.typeAnnotation, paramName, true, result);
+}
+
+function handleCallSignature(
+  node: TSESTree.TSCallSignatureDeclaration,
+  paramName: string,
+  result: { covariant: boolean; contravariant: boolean },
+): void {
+  handleSignatureCommon(node, paramName, result);
 }
 
 function handleConstructSignature(
@@ -137,11 +145,7 @@ function handleConstructSignature(
   paramName: string,
   result: { covariant: boolean; contravariant: boolean },
 ): void {
-  (node.params || []).forEach((p) => {
-    if ("typeAnnotation" in p && p.typeAnnotation)
-      findTypeParamUsage(p.typeAnnotation, paramName, false, result);
-  });
-  if (node.returnType) findTypeParamUsage(node.returnType.typeAnnotation, paramName, true, result);
+  handleSignatureCommon(node, paramName, result);
 }
 
 function handleMethodSignature(
@@ -149,11 +153,7 @@ function handleMethodSignature(
   paramName: string,
   result: { covariant: boolean; contravariant: boolean },
 ): void {
-  (node.params || []).forEach((p) => {
-    if ("typeAnnotation" in p && p.typeAnnotation)
-      findTypeParamUsage(p.typeAnnotation, paramName, false, result);
-  });
-  if (node.returnType) findTypeParamUsage(node.returnType.typeAnnotation, paramName, true, result);
+  handleSignatureCommon(node, paramName, result);
 }
 
 function handleTypeAnnotation(
