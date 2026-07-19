@@ -54,7 +54,6 @@ export default createRule({
         const ifaceSym = checker.getSymbolAtLocation(tsAncestor.name);
         if (ifaceSym) return checker.getDeclaredTypeOfSymbol(ifaceSym);
       }
-      return;
     }
 
     function checkTypePredicate(node: TSESTree.Node & { returnType?: TSESTree.TSTypeAnnotation }) {
