@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("usecases/UC04-generic-constraints.md");
 
 const BUILT_IN_REFERENCES = new Set(["Error", "Object", "Record"]);
 
@@ -68,7 +71,7 @@ export default createRule({
     },
     messages: {
       concreteBound:
-        "Generic parameter `{{param}}` is constrained by the concrete type `{{constraint}}` instead of a structural shape. Use an inline interface like `{{suggestion}}` to improve reusability. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC04-generic-constraints.md",
+        "Generic parameter `{{param}}` is constrained by the concrete type `{{constraint}}` instead of a structural shape. Use an inline interface like `{{suggestion}}` to improve reusability. See: {{url}}",
     },
     schema: [
       {
@@ -105,6 +108,7 @@ export default createRule({
             param: paramName,
             constraint: concrete,
             suggestion: "{ /* minimal required shape */ }",
+            url: URL,
           },
         });
       },
