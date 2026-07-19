@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC07-callable-contracts.md");
 
 function getPropertyName(key: TSESTree.PropertyName): string | null {
   if (key.type === "Identifier") return key.name;
@@ -38,6 +41,7 @@ function checkCallableBody(
         internals: underscoreProps
           .map((m) => getPropertyName(m.key))
           .join(", "),
+        url: URL,
       },
     });
   }
@@ -53,7 +57,7 @@ export default createRule({
     },
     messages: {
       leakedInternals:
-        "Interface has a call signature but also exposes {{internals}} — internal state should be moved to a separate interface. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC07-callable-contracts.md",
+        "Interface has a call signature but also exposes {{internals}} — internal state should be moved to a separate interface. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
