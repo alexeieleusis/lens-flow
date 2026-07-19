@@ -379,15 +379,33 @@ function extractFromObjectPattern(
 ): TSESTree.Identifier | null {
   for (const prop of node.properties) {
     if (prop.type === "Property") {
-      if (prop.key.type === "Identifier" && prop.key.name === name) {
-        if (prop.value.type === "Identifier") return prop.value;
-        if (isPatternLike(prop.value)) return extractParamIdentifier(prop.value, name);
-      }
-    } else if (prop.type === "RestElement") {
-      if (prop.argument.type === "Identifier" && prop.argument.name === name) {
-        return prop.argument;
-      }
+      const result = handleObjectPatternProperty(prop, name);
+      if (result) return result;
     }
+    if (prop.type === "RestElement") {
+      const result = handleObjectPatternRest(prop, name);
+      if (result) return result;
+    }
+  }
+  return null;
+}
+
+function handleObjectPatternProperty(
+  prop: TSESTree.Property,
+  name: string,
+): TSESTree.Identifier | null {
+  if (prop.key.type !== "Identifier" || prop.key.name !== name) return null;
+  if (prop.value.type === "Identifier") return prop.value;
+  if (isPatternLike(prop.value)) return extractParamIdentifier(prop.value as PatternLike, name);
+  return null;
+}
+
+function handleObjectPatternRest(
+  prop: TSESTree.RestElement,
+  name: string,
+): TSESTree.Identifier | null {
+  if (isPatternLike(prop.argument)) {
+    return extractParamIdentifier(prop.argument as PatternLike, name);
   }
   return null;
 }
