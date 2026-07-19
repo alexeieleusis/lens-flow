@@ -1,6 +1,9 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { getChildren } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC21-async-concurrency.md");
 
 const isCallback = (node: TSESTree.Node): boolean =>
   node.type === "ArrowFunctionExpression" ||
@@ -123,11 +126,10 @@ export default createRule({
     docs: {
       description:
         "Disallow deeply nested callback pyramid patterns that should use async/await with Promise.all",
-      url: "https://github.com/jpablo/vibe-types/blob/main/plugin/skills/typescript/usecases/UC21-async-concurrency.md",
     },
     messages: {
       callbackPyramid:
-        "Found {{depth}} levels of nested callbacks. Refactor using async/await and Promise.all instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC21-async-concurrency.md",
+        "Found {{depth}} levels of nested callbacks. Refactor using async/await and Promise.all instead. See: {{url}}",
     },
     schema: [
       {
@@ -191,6 +193,7 @@ export default createRule({
             messageId: "callbackPyramid",
             data: {
               depth: String(cc.depth),
+              url: URL,
             },
           });
         }
