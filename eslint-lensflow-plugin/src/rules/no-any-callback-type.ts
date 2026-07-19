@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T22-callable-typing.md");
 
 type CallableNode = TSESTree.TSFunctionType | TSESTree.TSMethodSignature | TSESTree.TSCallSignatureDeclaration;
 
@@ -39,7 +42,7 @@ export default createRule({
     },
     messages: {
       anyCallbackType:
-        "Avoid `(...args: any[]) => any` callback types — they lose all parameter and return type information. Use an explicit callable type with typed parameters instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T22-callable-typing.md",
+        "Avoid `(...args: any[]) => any` callback types — they lose all parameter and return type information. Use an explicit callable type with typed parameters instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -48,7 +51,7 @@ export default createRule({
   create(context: TSESLint.RuleContext<"anyCallbackType", []>) {
     const reportIfAnyCallback = (node: CallableNode) => {
       if (isAnyCallback(node)) {
-        context.report({ node, messageId: "anyCallbackType" });
+        context.report({ node, messageId: "anyCallbackType", data: { url: URL } });
       }
     };
 
