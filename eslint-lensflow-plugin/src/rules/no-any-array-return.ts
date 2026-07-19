@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T45-paramspec-variadic.md");
 
 function unwrapReadonly(node: any): any {
   if (node?.type === "TSTypeOperator" && node.operator === "readonly") {
@@ -36,7 +39,7 @@ export default createRule({
     },
     messages: {
       anyArrayReturn:
-        "Function returns any[] which discards all information about the output element type. Use a generic type parameter for the return array element type instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T45-paramspec-variadic.md",
+        "Function returns any[] which discards all information about the output element type. Use a generic type parameter for the return array element type instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -49,6 +52,9 @@ export default createRule({
         context.report({
           node: returnType,
           messageId: "anyArrayReturn",
+          data: {
+            url: URL,
+          },
         });
       }
     }
