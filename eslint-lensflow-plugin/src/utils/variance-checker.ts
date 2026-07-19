@@ -184,11 +184,7 @@ export function containsTypeRefInOutput(
         paramName,
         depth + 1,
       );
-    case AST_NODE_TYPES.TSFunctionType: {
-      return node.returnType?.typeAnnotation
-        ? containsTypeRefInOutput(node.returnType.typeAnnotation, paramName, depth + 1)
-        : false;
-    }
+    case AST_NODE_TYPES.TSFunctionType:
     case AST_NODE_TYPES.TSConstructorType: {
       return node.returnType?.typeAnnotation
         ? containsTypeRefInOutput(node.returnType.typeAnnotation, paramName, depth + 1)
