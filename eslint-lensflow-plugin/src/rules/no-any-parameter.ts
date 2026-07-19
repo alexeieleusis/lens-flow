@@ -1,6 +1,9 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 import { createNoAnyParamChecker, createNoAnyParamTypeChecker } from "../utils/no-any-param-checker.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T47-gradual-typing.md");
 
 export default createRule({
   name: "no-any-parameter",
@@ -12,7 +15,7 @@ export default createRule({
     },
     messages: {
       anyParam:
-        "Parameter '{{name}}' is typed as `any`. Use a specific type (string, number, etc.) instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T47-gradual-typing.md",
+        "Parameter '{{name}}' is typed as `any`. Use a specific type (string, number, etc.) instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -20,8 +23,8 @@ export default createRule({
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"anyParam", []>) {
     return {
-      ...createNoAnyParamChecker("anyParam")(context),
-      ...createNoAnyParamTypeChecker("anyParam")(context),
+      ...createNoAnyParamChecker("anyParam", { url: URL })(context),
+      ...createNoAnyParamTypeChecker("anyParam", { url: URL })(context),
     };
   },
 });
