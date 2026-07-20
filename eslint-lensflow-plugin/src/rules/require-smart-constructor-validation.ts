@@ -1,8 +1,10 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const BrandedTypePattern = /^[A-Z]/;
+const URL = knowledgeUrl("usecases/UC09-builder-config.md");
 
 function getBrandName(typeName: TSESTree.Identifier | TSESTree.TSQualifiedName | TSESTree.ThisExpression): string | null {
   if (typeName.type === "Identifier") return typeName.name;
@@ -185,7 +187,7 @@ export default createRule({
     },
     messages: {
       noValidation:
-        "Smart constructor casts to {{brand}} without any validation logic. Add input validation before the cast. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC09-builder-config.md",
+        "Smart constructor casts to {{brand}} without any validation logic. Add input validation before the cast. See: {{url}}",
     },
     schema: [],
   },
@@ -210,7 +212,7 @@ export default createRule({
           context.report({
             node,
             messageId: "noValidation",
-            data: { brand: branded },
+            data: { brand: branded, url: URL },
           });
         }
       }
