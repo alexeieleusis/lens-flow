@@ -1,6 +1,9 @@
 import type { TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T23-type-aliases.md");
 
 export default createRule({
   name: "no-typeof-in-type-alias",
@@ -12,7 +15,7 @@ export default createRule({
     },
     messages: {
       typeofInAlias:
-        "Type alias `{{name}}` uses `typeof`, coupling its shape to a runtime declaration. Use an explicit interface or type instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T23-type-aliases.md",
+        "Type alias `{{name}}` uses `typeof`, coupling its shape to a runtime declaration. Use an explicit interface or type instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -27,6 +30,7 @@ export default createRule({
             messageId: "typeofInAlias",
             data: {
               name: node.id.name,
+              url: URL,
             },
           });
         }
