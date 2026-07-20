@@ -1,6 +1,8 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
+const URL = knowledgeUrl("usecases/UC10-encapsulation.md");
 const MUTABLE_COLLECTIONS = new Set(["Map", "Set", "Array"]);
 const READONLY_COLLECTIONS = new Set(["ReadonlyMap", "ReadonlySet", "ReadonlyArray"]);
 
@@ -66,7 +68,7 @@ export default createRule({
     },
     messages: {
       mutableGetterReturn:
-        "Getter '{{name}}' returns a mutable type ({{returnType}}). Callers can mutate encapsulated internal state. Return a snapshot (e.g., Array.from(), [...set], new Map()) or a readonly type instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC10-encapsulation.md",
+        "Getter '{{name}}' returns a mutable type ({{returnType}}). Callers can mutate encapsulated internal state. Return a snapshot (e.g., Array.from(), [...set], new Map()) or a readonly type instead. See: {{url}}",
     },
     schema: [],
   },
@@ -96,6 +98,7 @@ export default createRule({
               data: {
                 name: getterName,
                 returnType,
+                url: URL,
               },
             });
           }
