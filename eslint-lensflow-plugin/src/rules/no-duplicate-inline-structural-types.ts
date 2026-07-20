@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC05-structural-contracts.md");
 
 type Entry = {
   canonical: string;
@@ -194,7 +197,7 @@ export default createRule({
     },
     messages: {
       duplicateInlineType:
-        "Duplicate inline structural type used {{count}} times. Extract this shape into a named interface or type alias.",
+        "Duplicate inline structural type used {{count}} times. Extract this shape into a named interface or type alias. See: {{url}}",
     },
     schema: [
       {
@@ -286,7 +289,7 @@ export default createRule({
               context.report({
                 node: entry.node,
                 messageId: "duplicateInlineType",
-                data: { count: String(group.length) },
+                data: { count: String(group.length), url: URL },
               });
             }
           }
