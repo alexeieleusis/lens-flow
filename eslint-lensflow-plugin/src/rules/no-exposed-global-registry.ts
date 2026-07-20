@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC10-encapsulation.md");
 
 export default createRule({
   name: "no-exposed-global-registry",
@@ -11,7 +14,7 @@ export default createRule({
     },
     messages: {
       exposedRegistry:
-        "Exported {{collection}} instance '{{name}}' creates a global mutable registry. Encapsulate behind a controlled API instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC10-encapsulation.md",
+        "Exported {{collection}} instance '{{name}}' creates a global mutable registry. Encapsulate behind a controlled API instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -86,7 +89,7 @@ export default createRule({
           context.report({
             node: decl,
             messageId: "exposedRegistry",
-            data: { collection: decl.callee.name, name: "<anonymous>" },
+            data: { collection: decl.callee.name, name: "<anonymous>", url: URL },
           });
           return;
         }
@@ -103,7 +106,7 @@ export default createRule({
             context.report({
               node,
               messageId: "exposedRegistry",
-              data: { collection, name },
+              data: { collection, name, url: URL },
             });
           }
         }
