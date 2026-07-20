@@ -1,8 +1,11 @@
 import { type TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { visitorKeys as KEYS } from "@typescript-eslint/visitor-keys";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { FnLikeNode } from "../utils/overload-grouping.js";
 import { createOverloadGroupVisitor } from "../utils/overload-grouping.js";
+
+const URL = knowledgeUrl("catalog/T22-callable-typing.md");
 
 function isNodeLike(v: unknown): v is TSESTree.Node {
   return v != null && typeof v === "object" && "type" in v;
@@ -144,7 +147,7 @@ export default createRule({
     },
     messages: {
       redundantOverload:
-        "Redundant overload signature identical to implementation. Remove the overload and keep only the implementation. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T22-callable-typing.md",
+        "Redundant overload signature identical to implementation. Remove the overload and keep only the implementation. See: {{url}}",
     },
     schema: [],
   },
@@ -157,6 +160,7 @@ export default createRule({
             context.report({
               node: overload,
               messageId: "redundantOverload",
+              data: { url: URL },
             });
           }
         }
