@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T07-structural-typing.md");
 
 function getPropertyKey(
   key: TSESTree.TSPropertySignature["key"],
@@ -19,7 +22,7 @@ export default createRule({
     },
     messages: {
       valueWrapperNominal:
-        "Type {{name}} uses a { value: string } wrapper as a nominal type. Use a branded type instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/f5ab7f35de4cc4e292500398c8b2f6edab96c2db/plugin/skills/typescript/catalog/T07-structural-typing.md",
+        "Type {{name}} uses a { value: string } wrapper as a nominal type. Use a branded type instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -44,7 +47,7 @@ export default createRule({
       context.report({
         node,
         messageId: "valueWrapperNominal",
-        data: { name },
+        data: { name, url: URL },
       });
     }
 
