@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("usecases/UC14-extensibility.md");
 
 function returnTypeReferencesInterface(
   returnType: import("@typescript-eslint/types").TSESTree.TypeNode | null,
@@ -50,8 +53,8 @@ export default createRule({
         "Disallows generic interfaces where multiple methods return the enclosing interface type with substituted parameters, creating deep nesting and uncomposable types.",
     },
     messages: {
-      selfReferencingMethods:
-        "Interface '{{name}}' has {{count}} methods returning itself with substituted generics. Extract high-order operations into separate types to avoid deeply nested generics. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC14-extensibility.md",
+     selfReferencingMethods:
+         "Interface '{{name}}' has {{count}} methods returning itself with substituted generics. Extract high-order operations into separate types to avoid deeply nested generics. See: {{url}}",
     },
     schema: [
       {
@@ -111,6 +114,7 @@ export default createRule({
             data: {
               name: interfaceName,
               count: String(count),
+              url: URL,
             },
           });
         }
