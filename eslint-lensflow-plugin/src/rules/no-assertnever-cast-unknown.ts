@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T34-never-bottom.md");
 
 function containsUnknownCast(node: TSESTree.Node): boolean {
   if (node.type === "TSAsExpression") {
@@ -26,7 +29,7 @@ export default createRule({
     },
     messages: {
       bypassExhaustiveness:
-        "Casting to unknown before assertNever/assertExhaustive bypasses the exhaustiveness check. Remove the `as unknown` cast. See: https://raw.githubusercontent.com/jpablo/vibe-types/f5ab7f35de4cc4e292500398c8b2f6edab96c2db/plugin/skills/typescript/catalog/T34-never-bottom.md",
+        "Casting to unknown before assertNever/assertExhaustive bypasses the exhaustiveness check. Remove the `as unknown` cast. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -44,6 +47,7 @@ export default createRule({
             context.report({
               node: arg,
               messageId: "bypassExhaustiveness",
+              data: { url: URL },
             });
           }
         }
