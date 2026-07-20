@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T21-encapsulation.md");
 
 const PRIMITIVE_KEYWORDS = new Set([
   "TSNumberKeyword",
@@ -46,7 +49,7 @@ export default createRule({
     },
     messages: {
       protectedMutablePrimitive:
-        "Protected mutable primitive '{{name}}' allows subclasses to corrupt state without validation. Use a private field (#name) with a protected setter that validates input. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T21-encapsulation.md",
+        "Protected mutable primitive '{{name}}' allows subclasses to corrupt state without validation. Use a private field (#name) with a protected setter that validates input. See: {{url}}",
     },
     schema: [],
   },
@@ -62,7 +65,7 @@ export default createRule({
             context.report({
               node: member,
               messageId: "protectedMutablePrimitive",
-              data: { name: getPropertyName(member.key) },
+              data: { name: getPropertyName(member.key), url: URL },
             });
           }
         }
