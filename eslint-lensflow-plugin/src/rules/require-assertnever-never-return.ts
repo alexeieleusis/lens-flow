@@ -1,5 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T34-never-bottom.md");
 
 function getActualTypeName(
   node: TSESTree.TypeNode,
@@ -42,9 +45,9 @@ export default createRule({
     },
     messages: {
       missingNeverReturn:
-        "The `{{name}}` function must return `never` to satisfy control flow in exhaustive switch statements. Add a `: never` return type annotation. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T34-never-bottom.md",
+        "The `{{name}}` function must return `never` to satisfy control flow in exhaustive switch statements. Add a `: never` return type annotation. See: {{url}}",
       wrongReturnType:
-        "The `{{name}}` function returns `{{actual}}` but must return `never`. Change the return type to `never`. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T34-never-bottom.md",
+        "The `{{name}}` function returns `{{actual}}` but must return `never`. Change the return type to `never`. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -63,13 +66,13 @@ export default createRule({
         context.report({
           node,
           messageId: "missingNeverReturn",
-          data: { name: funcName },
+          data: { name: funcName, url: URL },
         });
       } else if (returnType.type !== "TSNeverKeyword") {
         context.report({
           node,
           messageId: "wrongReturnType",
-          data: { name: funcName, actual: getActualTypeName(returnType, context.sourceCode) },
+          data: { name: funcName, actual: getActualTypeName(returnType, context.sourceCode), url: URL },
         });
       }
     }
@@ -85,13 +88,13 @@ export default createRule({
         context.report({
           node,
           messageId: "missingNeverReturn",
-          data: { name: funcName },
+          data: { name: funcName, url: URL },
         });
       } else if (returnType.type !== "TSNeverKeyword") {
         context.report({
           node,
           messageId: "wrongReturnType",
-          data: { name: funcName, actual: getActualTypeName(returnType, context.sourceCode) },
+          data: { name: funcName, actual: getActualTypeName(returnType, context.sourceCode), url: URL },
         });
       }
     }
