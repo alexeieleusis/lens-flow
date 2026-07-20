@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T34-never-bottom.md");
 
 export default createRule({
   name: "no-empty-array-never-inference",
@@ -11,7 +14,7 @@ export default createRule({
     },
     messages: {
       emptyArrayNoType:
-        "Empty array literal without type annotation is inferred as never[]. Add an explicit type annotation (e.g. string[]) to avoid cryptic errors on push(). See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T34-never-bottom.md",
+        "Empty array literal without type annotation is inferred as never[]. Add an explicit type annotation (e.g. string[]) to avoid cryptic errors on push(). See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -34,6 +37,7 @@ export default createRule({
           context.report({
             node: node.init,
             messageId: "emptyArrayNoType",
+            data: { url: URL },
           });
         }
       },
@@ -46,6 +50,7 @@ export default createRule({
           context.report({
             node,
             messageId: "emptyArrayNoType",
+            data: { url: URL },
           });
         }
       },
@@ -58,6 +63,7 @@ export default createRule({
           context.report({
             node,
             messageId: "emptyArrayNoType",
+            data: { url: URL },
           });
         }
       },
@@ -71,6 +77,7 @@ export default createRule({
           context.report({
             node,
             messageId: "emptyArrayNoType",
+            data: { url: URL },
           });
         }
       },
