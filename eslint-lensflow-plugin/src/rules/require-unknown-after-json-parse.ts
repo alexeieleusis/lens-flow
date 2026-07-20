@@ -1,8 +1,8 @@
 import { type TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const KNOWLEDGE_URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T47-gradual-typing.md";
+const URL = knowledgeUrl("catalog/T47-gradual-typing.md");
 
 function getMemberCallee(node: TSESTree.CallExpression): TSESTree.MemberExpression | null {
   let callee = node.callee;
@@ -37,8 +37,7 @@ export default createRule({
     },
     messages: {
       missingUnknownCast:
-        "JSON.parse returns `any`. Cast the result to `unknown` to establish a trust boundary before narrowing. See: " +
-        KNOWLEDGE_URL,
+        "JSON.parse returns `any`. Cast the result to `unknown` to establish a trust boundary before narrowing. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -75,6 +74,7 @@ export default createRule({
         context.report({
           node,
           messageId: "missingUnknownCast",
+          data: { url: URL },
         });
       },
     };
