@@ -1,6 +1,9 @@
 // eslint-plugin/src/rules/no-overly-complex-infer-chain-t63.ts
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T63-template-literal-types.md");
 
 function hasInferInConstructor(node: TSESTree.TypeNode): boolean {
   if (node.type !== "TSConstructorType") return false;
@@ -80,8 +83,8 @@ export default createRule({
         "Disallow recursive conditional types with `infer` and deeply nested conditional branches exceeding the configured max depth.",
     },
     messages: {
-      complexInferChain:
-        "Found a recursive conditional type with `infer` nested {{depth}} levels deep (max allowed: {{maxDepth}}). Consider simplifying or using a function-based approach. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T63-template-literal-types.md",
+     complexInferChain:
+         "Found a recursive conditional type with `infer` nested {{depth}} levels deep (max allowed: {{maxDepth}}). Consider simplifying or using a function-based approach. See: {{url}}",
     },
     schema: [
       {
@@ -114,6 +117,7 @@ export default createRule({
             data: {
               depth: String(depth),
               maxDepth: String(effectiveMaxDepth),
+              url: URL,
             },
           });
         }
