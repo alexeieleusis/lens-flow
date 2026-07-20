@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T47-gradual-typing.md");
 
 function isRecordAny(node: TSESTree.TSTypeReference): boolean {
   const typeName = node.typeName;
@@ -26,6 +29,7 @@ function reportRecordAny(
   context.report({
     node,
     messageId: "recordAny",
+    data: { url: URL },
   });
 }
 
@@ -71,7 +75,7 @@ export default createRule({
     },
     messages: {
       recordAny:
-        "`Record<string, any>` loses value type safety. Use `Record<string, unknown>` and narrow with type guards. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T47-gradual-typing.md",
+        "`Record<string, any>` loses value type safety. Use `Record<string, unknown>` and narrow with type guards. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
