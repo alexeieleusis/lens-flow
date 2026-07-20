@@ -2,6 +2,9 @@ import ts from "typescript";
 import { ESLintUtils, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC16-nullability.md");
 
 function typeIncludesUndefined(type: ts.Type): boolean {
   if ((type.flags & ts.TypeFlags.Undefined) !== 0) return true;
@@ -508,8 +511,8 @@ export default createRule({
         "Require undefined handling after optional chaining before dereferencing the result",
     },
     messages: {
-      unguardedAccess:
-        "The variable `{{name}}` may be `undefined` from optional chaining. Handle it with `??` or a guard before accessing `{{member}}`. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC16-nullability.md",
+     unguardedAccess:
+         "The variable `{{name}}` may be `undefined` from optional chaining. Handle it with `??` or a guard before accessing `{{member}}`. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -585,6 +588,7 @@ export default createRule({
           data: {
             name: varName,
             member: "()",
+            url: URL,
           },
         });
       },
@@ -608,6 +612,7 @@ export default createRule({
           data: {
             name: varName,
             member: getMemberName(memberNode.property),
+            url: URL,
           },
         });
       },
