@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T14-type-narrowing.md");
 
 export default createRule({
   name: "no-typeof-loose-equality",
@@ -11,9 +14,9 @@ export default createRule({
     },
     messages: {
       looseTypeofEq:
-        "Use '===' instead of '==' with typeof for proper type narrowing. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T14-type-narrowing.md",
+        "Use '===' instead of '==' with typeof for proper type narrowing. See: {{url}}",
       looseTypeofNeq:
-        "Use '!==' instead of '!=' with typeof for proper type narrowing. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T14-type-narrowing.md",
+        "Use '!==' instead of '!=' with typeof for proper type narrowing. See: {{url}}",
     },
     schema: [],
     fixable: "code",
@@ -36,6 +39,7 @@ export default createRule({
           node,
           messageId:
             node.operator === "==" ? "looseTypeofEq" : "looseTypeofNeq",
+          data: { url: URL },
           fix: (fixer) => {
             const sourceCode = context.sourceCode;
             const opToken = sourceCode.getTokenBefore(node.right)!;
