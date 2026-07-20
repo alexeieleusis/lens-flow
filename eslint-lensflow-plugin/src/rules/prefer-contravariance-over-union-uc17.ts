@@ -1,6 +1,9 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { createFunctionParamVisitor } from "../utils/visitor-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC17-variance.md");
 
 export default createRule({
   name: "prefer-contravariance-over-union-uc17",
@@ -12,7 +15,7 @@ export default createRule({
     },
     messages: {
       preferContravariance:
-        "Handler parameter uses a union type ({{types}}) instead of a contravariant generic `<in T>`. Refactor the interface to accept a generic type parameter for polymorphic assignment. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC17-variance.md",
+        "Handler parameter uses a union type ({{types}}) instead of a contravariant generic `<in T>`. Refactor the interface to accept a generic type parameter for polymorphic assignment. See: {{url}}",
     },
     schema: [
       {
@@ -83,7 +86,7 @@ export default createRule({
       context.report({
         node: typeAnn,
         messageId: "preferContravariance",
-        data: { types: typeNames },
+        data: { types: typeNames, url: URL },
       });
     }
 
