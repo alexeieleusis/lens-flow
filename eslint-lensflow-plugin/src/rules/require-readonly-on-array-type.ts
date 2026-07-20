@@ -1,7 +1,10 @@
 // eslint-plugin/src/rules/require-readonly-on-array-type.ts
 import type { TSESTree } from "@typescript-eslint/types";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("usecases/UC06-immutability.md");
 
 export default createRule({
   name: "require-readonly-on-array-type",
@@ -13,9 +16,9 @@ export default createRule({
     },
     messages: {
       mutableArrayOnReadonlyProp:
-        "Property '{{name}}' is marked `readonly` but uses mutable array type '{{type}}`. Use `readonly {{type}}` to prevent in-place mutation via push/splice.",
+        "Property '{{name}}' is marked `readonly` but uses mutable array type '{{type}}`. Use `readonly {{type}}` to prevent in-place mutation via push/splice. See: {{url}}",
       mutableArrayRefOnReadonlyProp:
-        "Property '{{name}}' is marked `readonly` but uses mutable `Array<{{element}}>` type. Use `ReadonlyArray<{{element}}>` to prevent in-place mutation via push/splice.",
+        "Property '{{name}}' is marked `readonly` but uses mutable `Array<{{element}}>` type. Use `ReadonlyArray<{{element}}>` to prevent in-place mutation via push/splice. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -46,6 +49,7 @@ export default createRule({
             data: {
               name: propName,
               type: `${elemText}[]`,
+              url: URL,
             },
           });
         }
@@ -66,6 +70,7 @@ export default createRule({
               data: {
                 name: propName,
                 element: elemText,
+                url: URL,
               },
             });
           }
