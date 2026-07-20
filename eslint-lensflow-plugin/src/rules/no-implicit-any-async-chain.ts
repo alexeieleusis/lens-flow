@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from '@typescript-eslint/utils';
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T13-null-safety.md");
 
 function isFetchLike(node: TSESTree.Expression): boolean {
   if (
@@ -85,7 +88,7 @@ export default createRule({
     },
     messages: {
       implicitAnyAsyncChain:
-        "Variable from `.json()` on a fetch chain lacks an explicit type annotation, resulting in implicit `any`. Add a type annotation for null safety. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T13-null-safety.md",
+        "Variable from `.json()` on a fetch chain lacks an explicit type annotation, resulting in implicit `any`. Add a type annotation for null safety. See: {{url}}",
     },
     schema: [],
   },
@@ -100,6 +103,9 @@ export default createRule({
           context.report({
             node,
             messageId: "implicitAnyAsyncChain",
+            data: {
+              url: URL,
+            },
           });
         }
       },
