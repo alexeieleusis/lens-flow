@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T31-record-types.md");
 
 export default createRule({
   name: "prefer-record-over-index-signature",
@@ -11,7 +14,7 @@ export default createRule({
     },
     messages: {
       preferRecord:
-        "Use Record<K, V> instead of an inline index signature. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T31-record-types.md",
+        "Use Record<K, V> instead of an inline index signature. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -35,6 +38,7 @@ export default createRule({
         context.report({
           node: reportNode,
           messageId: "preferRecord",
+          data: { url: URL },
         });
       }
     }
