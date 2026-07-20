@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T63-template-literal-types.md");
 
 export default createRule({
   name: "no-template-literal-number-catchall",
@@ -11,9 +14,9 @@ export default createRule({
     },
     messages: {
       bareNumber:
-        "Do not use `${number}` in a template literal type as it accepts any numeric string. Use an explicit union of literal strings instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T63-template-literal-types.md",
+        "Do not use `${number}` in a template literal type as it accepts any numeric string. Use an explicit union of literal strings instead. See: {{url}}",
       bareString:
-        "Do not use `${string}` alongside more specific types in a template literal type. It dominates the union and makes other constraints meaningless. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T63-template-literal-types.md",
+        "Do not use `${string}` alongside more specific types in a template literal type. It dominates the union and makes other constraints meaningless. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -35,6 +38,7 @@ export default createRule({
             context.report({
               node,
               messageId: "bareNumber",
+              data: { url: URL },
             });
             return;
           }
@@ -43,6 +47,7 @@ export default createRule({
             context.report({
               node,
               messageId: "bareString",
+              data: { url: URL },
             });
             return;
           }
