@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("usecases/UC14-extensibility.md");
 
 type MemberNode = TSESTree.TSInterfaceBody | TSESTree.TSTypeLiteral;
 
@@ -54,6 +57,7 @@ function checkDiscriminant(
       kind,
       name,
       discriminant: propName,
+      url: URL,
     },
   });
 }
@@ -68,7 +72,7 @@ export default createRule({
     },
     messages: {
       stringDiscriminant:
-        "{{kind}} '{{name}}' uses a string-literal-union discriminant ('{{discriminant}}') with other fields. Use a discriminated union type instead to get compile-time exhaustiveness checking. See: https://raw.githubusercontent.com/jpablo/vibe-types/f5ab7f35de4cc4e292500398c8b2f6edab96c2db/plugin/skills/typescript/usecases/UC14-extensibility.md",
+        "{{kind}} '{{name}}' uses a string-literal-union discriminant ('{{discriminant}}') with other fields. Use a discriminated union type instead to get compile-time exhaustiveness checking. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
