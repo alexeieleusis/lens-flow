@@ -1,6 +1,9 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 import { containsAny } from "../utils/ts-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T49-associated-types.md");
 
 export default createRule({
   name: "no-overly-broad-generic-constraints",
@@ -12,9 +15,9 @@ export default createRule({
     },
     messages: {
       anyTypeArg:
-        "Using `any` as a generic type argument removes type safety. Provide a concrete type instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T49-associated-types.md",
+        "Using `any` as a generic type argument removes type safety. Provide a concrete type instead. See: {{url}}",
       anyConstraint:
-        "Using `any` as a type parameter constraint defeats the purpose of constraining. Use a meaningful bound instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T49-associated-types.md",
+        "Using `any` as a type parameter constraint defeats the purpose of constraining. Use a meaningful bound instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -27,6 +30,7 @@ export default createRule({
           context.report({
             node: node.constraint,
             messageId: "anyConstraint",
+            data: { url: URL },
           });
         }
       },
@@ -38,6 +42,7 @@ export default createRule({
               context.report({
                 node: param,
                 messageId: "anyTypeArg",
+                data: { url: URL },
               });
             }
           }
@@ -51,6 +56,7 @@ export default createRule({
               context.report({
                 node: param,
                 messageId: "anyTypeArg",
+                data: { url: URL },
               });
             }
           }
