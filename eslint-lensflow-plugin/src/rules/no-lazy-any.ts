@@ -1,6 +1,9 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { containsAnyType } from "../utils/no-any-param-checker.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T47-gradual-typing.md");
 
 function getParamTypeAnnotation(
   param: TSESTree.Parameter,
@@ -32,7 +35,7 @@ export default createRule({
     },
     messages: {
       lazyAny:
-        "Function uses `any` for all parameters and return type. Replace with proper types instead of deferring typing work. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T47-gradual-typing.md",
+        "Function uses `any` for all parameters and return type. Replace with proper types instead of deferring typing work. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -62,7 +65,7 @@ export default createRule({
 
       const returnTypeAnn = node.returnType?.typeAnnotation;
       if (returnTypeAnn && containsAnyType(returnTypeAnn)) {
-        context.report({ node, messageId: "lazyAny" });
+        context.report({ node, messageId: "lazyAny", data: { url: URL } });
       }
     }
 
