@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T32-immutability-markers.md");
 
 export default createRule({
   name: "no-shallow-readonly-array",
@@ -11,9 +14,9 @@ export default createRule({
     },
     messages: {
       shallowReadonlyArray:
-        "The property `{{name}}` uses `readonly` on an array type `{{type}}`, which only prevents reassignment but not element mutation. Use `readonly {{type}}` for deep immutability. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T32-immutability-markers.md",
+        "The property `{{name}}` uses `readonly` on an array type `{{type}}`, which only prevents reassignment but not element mutation. Use `readonly {{type}}` for deep immutability. See: {{url}}",
       shallowReadonlyArrayRef:
-        "The property `{{name}}` uses `readonly` on an array type `Array<{{element}}>`, which only prevents reassignment but not element mutation. Use `ReadonlyArray<{{element}}>` for deep immutability. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T32-immutability-markers.md",
+        "The property `{{name}}` uses `readonly` on an array type `Array<{{element}}>`, which only prevents reassignment but not element mutation. Use `ReadonlyArray<{{element}}>` for deep immutability. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -44,7 +47,7 @@ export default createRule({
         context.report({
           node,
           messageId: "shallowReadonlyArray",
-          data: { name: propName, type: typeName },
+          data: { name: propName, type: typeName, url: URL },
         });
       }
 
@@ -60,7 +63,7 @@ export default createRule({
         context.report({
           node,
           messageId: "shallowReadonlyArrayRef",
-          data: { name: propName, element: elemText },
+          data: { name: propName, element: elemText, url: URL },
         });
       }
     }
