@@ -1,6 +1,9 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T14-type-narrowing.md");
 
 function hasThrowStatement(
   body: TSESTree.Statement | TSESTree.BlockStatement | null,
@@ -30,7 +33,7 @@ export default createRule({
     },
     messages: {
       missingThrow:
-        "Assertion function must contain a throw statement to provide runtime safety. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T14-type-narrowing.md",
+        "Assertion function must contain a throw statement to provide runtime safety. See: {{url}}",
     },
     schema: [],
   },
@@ -62,6 +65,7 @@ export default createRule({
         context.report({
           node,
           messageId: "missingThrow",
+          data: { url: URL },
         });
       }
     }
