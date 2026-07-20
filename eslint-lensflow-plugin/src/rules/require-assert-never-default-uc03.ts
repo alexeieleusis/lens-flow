@@ -1,6 +1,9 @@
 import { TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { hasAssertNever } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC03-exhaustiveness.md");
 
 export default createRule({
   name: "require-assert-never-default-uc03",
@@ -12,11 +15,11 @@ export default createRule({
     },
     messages: {
       missingAssertNever:
-        "Default branch of a discriminant switch must call assertNever instead of returning a fallback value. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC03-exhaustiveness.md",
+        "Default branch of a discriminant switch must call assertNever instead of returning a fallback value. See: {{url}}",
       emptyDefault:
-        "Default branch of a discriminant switch is empty and must call assertNever. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC03-exhaustiveness.md",
+        "Default branch of a discriminant switch is empty and must call assertNever. See: {{url}}",
       breakOnlyDefault:
-        "Default branch of a discriminant switch only has a break statement and must call assertNever. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC03-exhaustiveness.md",
+        "Default branch of a discriminant switch only has a break statement and must call assertNever. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -43,6 +46,7 @@ export default createRule({
           context.report({
             node: defaultCase,
             messageId: "emptyDefault",
+            data: { url: URL },
           });
           return;
         }
@@ -54,6 +58,7 @@ export default createRule({
           context.report({
             node: defaultCase,
             messageId: "breakOnlyDefault",
+            data: { url: URL },
           });
           return;
         }
@@ -62,6 +67,7 @@ export default createRule({
           context.report({
             node: defaultCase,
             messageId: "missingAssertNever",
+            data: { url: URL },
           });
         }
       },
