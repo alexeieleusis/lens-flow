@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T21-encapsulation.md");
 
 const INTERNAL_COLLECTIONS = new Set(["Map", "Set", "WeakMap", "WeakSet"]);
 
@@ -87,7 +90,7 @@ function reportInterfaceIssues(
     context.report({
       node: interfaceDecl ?? node,
       messageId: "internalName",
-      data: { names: internalNameProps.join(", ") },
+      data: { names: internalNameProps.join(", "), url: URL },
     });
   }
 
@@ -95,7 +98,7 @@ function reportInterfaceIssues(
     context.report({
       node: interfaceDecl ?? node,
       messageId: "exposedCollection",
-      data: { names: exposedCollectionProps.join(", ") },
+      data: { names: exposedCollectionProps.join(", "), url: URL },
     });
   }
 }
@@ -111,9 +114,9 @@ export default createRule({
     },
     messages: {
       internalName:
-        "Interface exposes implementation-detail property name(s): {{names}}. Use abstract method names instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T21-encapsulation.md",
+        "Interface exposes implementation-detail property name(s): {{names}}. Use abstract method names instead. See: {{url}}",
       exposedCollection:
-        "Interface exposes internal collection type(s) on property/properties: {{names}}. Expose abstract accessors instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T21-encapsulation.md",
+        "Interface exposes internal collection type(s) on property/properties: {{names}}. Expose abstract accessors instead. See: {{url}}",
     },
     schema: [],
   },
