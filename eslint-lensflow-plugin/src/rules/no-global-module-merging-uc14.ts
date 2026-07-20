@@ -1,6 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
+const URL = knowledgeUrl("usecases/UC14-extensibility.md");
 const BUILTIN_INTERFACES = new Set(["Window", "Document", "NodeJS.Global", "NodeJS"]);
 
 function resolveExprName(type: TSESTree.TSInterfaceHeritage): string | null {
@@ -52,9 +54,9 @@ export default createRule({
     },
     messages: {
       globalNamespacePollution:
-        "`declare global` pollutes the global type namespace across all modules. Scope augmentations to a specific module instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC14-extensibility.md",
+        "`declare global` pollutes the global type namespace across all modules. Scope augmentations to a specific module instead. See: {{url}}",
       builtInInterfaceAugmentation:
-        `Augmenting built-in interface "{{interface}}" in a module declaration pollutes the global namespace. Scope the augmentation more narrowly. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC14-extensibility.md`,
+        `Augmenting built-in interface "{{interface}}" in a module declaration pollutes the global namespace. Scope the augmentation more narrowly. See: {{url}}`,
     },
     schema: [],
     fixable: undefined,
@@ -67,6 +69,7 @@ export default createRule({
           context.report({
             node,
             messageId: "globalNamespacePollution",
+            data: { url: URL },
           });
           return;
         }
@@ -88,7 +91,7 @@ export default createRule({
               context.report({
                 node: stmt,
                 messageId: "builtInInterfaceAugmentation",
-                data: { interface: builtinName },
+                data: { interface: builtinName, url: URL },
               });
               break;
             }
