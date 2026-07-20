@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T47-gradual-typing.md");
 
 export default createRule({
   name: "no-ts-ignore",
@@ -11,7 +14,7 @@ export default createRule({
     },
     messages: {
       preferExpectError:
-        "Use `@ts-expect-error` instead of `@ts-ignore`. `@ts-expect-error` will warn if the suppressed line no longer has a type error, preventing silent dead suppressions. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T47-gradual-typing.md",
+        "Use `@ts-expect-error` instead of `@ts-ignore`. `@ts-expect-error` will warn if the suppressed line no longer has a type error, preventing silent dead suppressions. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -26,6 +29,7 @@ export default createRule({
             context.report({
               node: comment as never,
               messageId: "preferExpectError",
+              data: { url: URL },
             });
           }
         }
