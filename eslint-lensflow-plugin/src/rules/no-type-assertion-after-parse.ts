@@ -1,8 +1,8 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const KNOWLEDGE_URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T14-type-narrowing.md";
+const KNOWLEDGE_URL = knowledgeUrl("catalog/T14-type-narrowing.md");
 
 function isJsonParseCall(node: TSESTree.CallExpression): boolean {
   return (
@@ -36,11 +36,9 @@ export default createRule({
     },
     messages: {
       directAssertion:
-        "Do not use type assertion on JSON.parse result — use runtime validation instead. See: " +
-        KNOWLEDGE_URL,
+        "Do not use type assertion on JSON.parse result — use runtime validation instead. See: {{url}}",
       indirectAssertion:
-        "Do not use type assertion on a variable initialized from JSON.parse — use runtime validation instead. See: " +
-        KNOWLEDGE_URL,
+        "Do not use type assertion on a variable initialized from JSON.parse — use runtime validation instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -56,6 +54,7 @@ export default createRule({
         context.report({
           node,
           messageId: "directAssertion",
+          data: { url: KNOWLEDGE_URL },
         });
         return;
       }
@@ -75,6 +74,7 @@ export default createRule({
           context.report({
             node,
             messageId: "indirectAssertion",
+            data: { url: KNOWLEDGE_URL },
           });
         }
       }
