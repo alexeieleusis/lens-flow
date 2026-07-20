@@ -1,6 +1,9 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { getMemberName, hasAssertNever } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC03-exhaustiveness.md");
 
 function extractMemberFromBinary(node: TSESTree.BinaryExpression): string | null {
   const leftKey =
@@ -36,7 +39,7 @@ export default createRule({
     },
     messages: {
       nestedAssertNever:
-        "assertNever in default branch of a switch nested inside a conditional that already filters on the same discriminant. The pre-filter makes the exhaustiveness check operate on an incomplete set of variants. Move the switch outside the conditional or handle the filtered variant separately. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC03-exhaustiveness.md",
+        "assertNever in default branch of a switch nested inside a conditional that already filters on the same discriminant. The pre-filter makes the exhaustiveness check operate on an incomplete set of variants. Move the switch outside the conditional or handle the filtered variant separately. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -70,6 +73,7 @@ export default createRule({
             context.report({
               node,
               messageId: "nestedAssertNever",
+              data: { url: URL },
             });
           }
         }
