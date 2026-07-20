@@ -1,5 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T34-never-bottom.md");
 
 export default createRule({
   name: "no-as-any-bypass-exhaustiveness",
@@ -11,7 +14,7 @@ export default createRule({
     },
     messages: {
       bypassExhaustiveness:
-        "Using `as any` in a switch default branch defeats exhaustiveness checking. Use an assertNever call instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T34-never-bottom.md",
+        "Using `as any` in a switch default branch defeats exhaustiveness checking. Use an assertNever call instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -25,7 +28,7 @@ export default createRule({
         const ancestors = context.sourceCode.getAncestors(node);
         const innermostSwitchCase = [...ancestors].reverse().find((a) => a.type === "SwitchCase");
         if (innermostSwitchCase?.test === null) {
-          context.report({ node, messageId: "bypassExhaustiveness" });
+          context.report({ node, messageId: "bypassExhaustiveness", data: { url: URL } });
         }
       },
     };
