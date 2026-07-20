@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T45-paramspec-variadic.md");
 
 function* iterateAncestorFunctions(
   ancestors: TSESTree.Node[],
@@ -26,7 +29,7 @@ export default createRule({
     },
     messages: {
       runtimeFilterCastGeneric:
-        "Casting a runtime .filter() result to a generic type parameter falsely claims type-level precision. Use a concrete return type instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T45-paramspec-variadic.md",
+        "Casting a runtime .filter() result to a generic type parameter falsely claims type-level precision. Use a concrete return type instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -65,6 +68,9 @@ export default createRule({
       context.report({
         node: asNode,
         messageId: "runtimeFilterCastGeneric",
+        data: {
+          url: URL,
+        },
       });
     }
 
