@@ -1,8 +1,10 @@
 import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const ValidationPattern = /^(?:valid|check|assert|parse)/;
+const URL = knowledgeUrl("usecases/UC10-encapsulation.md");
 
 function extractMemberParts(
   callee: TSESTree.MemberExpression,
@@ -159,7 +161,7 @@ export default createRule({
     },
     messages: {
       unvalidatedFactory:
-        "Private constructor is pointless because factory method '{{name}}' does no validation. Add validation or make the constructor public. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC10-encapsulation.md",
+        "Private constructor is pointless because factory method '{{name}}' does no validation. Add validation or make the constructor public. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -215,7 +217,7 @@ export default createRule({
             context.report({
               node: method,
               messageId: "unvalidatedFactory",
-              data: { name: methodName },
+              data: { name: methodName, url: URL },
             });
           }
         }
