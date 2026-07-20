@@ -1,8 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const KNOWNledge_URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md";
+const URL = knowledgeUrl("catalog/T04-generics-bounds.md");
 
 export default createRule({
   name: "no-shadowed-type-parameter",
@@ -14,8 +14,7 @@ export default createRule({
     },
     messages: {
       shadowedTypeParam:
-        "Type parameter '{{name}}' shadows an outer type parameter of the same name. Rename it to a distinct identifier. See: " +
-        KNOWNledge_URL,
+        "Type parameter '{{name}}' shadows an outer type parameter of the same name. Rename it to a distinct identifier. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -27,7 +26,7 @@ export default createRule({
 
     function reportShadow(name: string, node: TSESTree.Node) {
       if (activeNames.has(name)) {
-        context.report({ node, messageId: "shadowedTypeParam", data: { name } });
+        context.report({ node, messageId: "shadowedTypeParam", data: { name, url: URL } });
       }
     }
 
