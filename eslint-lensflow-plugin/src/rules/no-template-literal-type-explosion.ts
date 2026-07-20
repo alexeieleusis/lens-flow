@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T52-literal-types.md");
 
 export default createRule({
   name: "no-template-literal-type-explosion",
@@ -11,7 +14,7 @@ export default createRule({
     },
     messages: {
       cartesianProduct:
-        "Template literal type produces an estimated Cartesian product of {{product}} (max: {{max}}). Split into smaller template types or inline fewer unions.",
+        "Template literal type produces an estimated Cartesian product of {{product}} (max: {{max}}). Split into smaller template types or inline fewer unions. See: {{url}}",
     },
     schema: [
       {
@@ -74,6 +77,7 @@ export default createRule({
               data: {
                 product: String(product),
                 max: String(maxProduct),
+                url: URL,
               },
             });
           }
