@@ -1,6 +1,9 @@
 import { createRule } from "../utils/rule-creator.js";
 import { getChildren } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("usecases/UC02-domain-modeling.md");
 
 const ITERATOR_METHODS = new Set([
   "reduce",
@@ -156,6 +159,7 @@ function reportValidationInCallback(
       context.report({
         node: throwNode,
         messageId: "validationInIterator",
+        data: { url: URL },
       });
     }
   }
@@ -171,7 +175,7 @@ export default createRule({
     },
     messages: {
       validationInIterator:
-        "Validation logic inside iterator callback. Domain invariants should be enforced by smart constructors, not checked at use sites. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC02-domain-modeling.md",
+        "Validation logic inside iterator callback. Domain invariants should be enforced by smart constructors, not checked at use sites. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
