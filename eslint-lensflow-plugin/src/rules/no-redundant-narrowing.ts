@@ -1,5 +1,8 @@
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T14-type-narrowing.md");
 
 const SKIPPED_KEYS = new Set(["type", "loc", "range", "parent"]);
 
@@ -75,8 +78,8 @@ export default createRule({
         "Disallow redundant narrowing checks that repeat an outer block's identical check (binary comparisons, typeof, instanceof, truthiness, and call expressions)",
     },
     messages: {
-      redundantNarrowing:
-        "This narrowing check is redundant because an outer block already performed the same check. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T14-type-narrowing.md",
+     redundantNarrowing:
+         "This narrowing check is redundant because an outer block already performed the same check. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -98,6 +101,7 @@ export default createRule({
         context.report({
           node,
           messageId: "redundantNarrowing",
+          data: { url: URL },
         });
       }
       walkNode(node, outerTest);
