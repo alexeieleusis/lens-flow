@@ -1,5 +1,8 @@
 import { AST_NODE_TYPES, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T21-encapsulation.md");
 
 export default createRule({
   name: "no-mutable-getter-return",
@@ -11,11 +14,11 @@ export default createRule({
     },
     messages: {
       mutableArray:
-        "Getter returns mutable array type {{returnType}}. Use readonly array to preserve encapsulation. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T21-encapsulation.md",
+        "Getter returns mutable array type {{returnType}}. Use readonly array to preserve encapsulation. See: {{url}}",
       mutableCollection:
-        "Getter returns mutable collection type {{returnType}}. Use {{suggestion}} to preserve encapsulation. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T21-encapsulation.md",
+        "Getter returns mutable collection type {{returnType}}. Use {{suggestion}} to preserve encapsulation. See: {{url}}",
       mutableObject:
-        "Getter returns mutable object type. Return a copy or use a readonly type to preserve encapsulation. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T21-encapsulation.md",
+        "Getter returns mutable object type. Return a copy or use a readonly type to preserve encapsulation. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -55,7 +58,7 @@ export default createRule({
         context.report({
           node: member,
           messageId: "mutableArray",
-          data: { returnType: returnText },
+          data: { returnType: returnText, url: URL },
         });
       }
     };
@@ -79,7 +82,7 @@ export default createRule({
         context.report({
           node: member,
           messageId: "mutableArray",
-          data: { returnType: returnText },
+          data: { returnType: returnText, url: URL },
         });
         return;
       }
@@ -89,7 +92,7 @@ export default createRule({
         context.report({
           node: member,
           messageId: "mutableCollection",
-          data: { returnType: name, suggestion },
+          data: { returnType: name, suggestion, url: URL },
         });
       }
     };
@@ -100,6 +103,7 @@ export default createRule({
       context.report({
         node: member,
         messageId: "mutableObject",
+        data: { url: URL },
       });
     };
 
