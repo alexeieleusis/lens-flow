@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T57-typestate.md");
 
 export default createRule({
   name: "no-runtime-init-guard",
@@ -11,7 +14,7 @@ export default createRule({
     },
     messages: {
       runtimeInitGuard:
-        "Runtime null check with throw to enforce initialization should be a compile-time type error via typestate. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T57-typestate.md",
+        "Runtime null check with throw to enforce initialization should be a compile-time type error via typestate. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -36,7 +39,7 @@ export default createRule({
 
         if (!isThisMemberExpression(target)) return;
 
-        context.report({ node, messageId: "runtimeInitGuard" });
+        context.report({ node, messageId: "runtimeInitGuard", data: { url: URL } });
       },
     };
   },
