@@ -1,5 +1,8 @@
 import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T33-self-type.md");
 
 export default createRule({
   name: "no-override-this-with-base-type",
@@ -11,7 +14,7 @@ export default createRule({
     },
     messages: {
       overrideThisWithBaseType:
-        "Method \"{{methodName}}\" overrides a base method returning `this` with return type `{{returnType}}`. Use `this` to preserve polymorphism. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T33-self-type.md",
+        "Method \"{{methodName}}\" overrides a base method returning `this` with return type `{{returnType}}`. Use `this` to preserve polymorphism. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -91,6 +94,7 @@ function reportOverride(
     data: {
       methodName: name,
       returnType: returnTypeStr,
+      url: URL,
     },
   });
 }
