@@ -1,11 +1,14 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import {
   createVarianceDeclarationVisitor,
   isUsedAsInputInBody,
   isUsedAsOutputInBody,
 } from "../utils/variance-checker.js";
 import type { TSESTree } from "@typescript-eslint/types";
+
+const URL = knowledgeUrl("catalog/T08-variance-subtyping.md");
 
 export default createRule({
   name: "no-mismatched-variance-marker",
@@ -17,9 +20,9 @@ export default createRule({
     },
     messages: {
       outInInputPosition:
-        "Type parameter '{{paramName}}' is marked 'out' (covariant) but is used in an input/parameter position. Add 'in' or split into separate read/write interfaces.",
+        "Type parameter '{{paramName}}' is marked 'out' (covariant) but is used in an input/parameter position. Add 'in' or split into separate read/write interfaces. See: {{url}}",
       inInOutputPosition:
-        "Type parameter '{{paramName}}' is marked 'in' (contravariant) but is used in a return/output position. Add 'out' or split into separate read/write interfaces.",
+        "Type parameter '{{paramName}}' is marked 'in' (contravariant) but is used in a return/output position. Add 'out' or split into separate read/write interfaces. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -38,7 +41,7 @@ export default createRule({
             context.report({
               node: tp,
               messageId: "outInInputPosition",
-              data: { paramName: name },
+              data: { paramName: name, url: URL },
             });
           }
         }
@@ -48,7 +51,7 @@ export default createRule({
             context.report({
               node: tp,
               messageId: "inInOutputPosition",
-              data: { paramName: name },
+              data: { paramName: name, url: URL },
             });
           }
         }
