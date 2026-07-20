@@ -1,6 +1,9 @@
 import ts from "typescript";
 import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T12-effect-tracking.md");
 
 const KNOWN_EFFECT_NAMES = [
   "Result",
@@ -65,7 +68,7 @@ export default createRule({
     },
     messages: {
       silentAbsorption:
-        "Called .{{method}}() on an effect type without handling the error channel. Use .match(), .unwrapOrElse(), or another explicit error handler. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T12-effect-tracking.md",
+        "Called .{{method}}() on an effect type without handling the error channel. Use .match(), .unwrapOrElse(), or another explicit error handler. See: {{url}}",
     },
     schema: [
       {
@@ -158,6 +161,7 @@ export default createRule({
             messageId: "silentAbsorption",
             data: {
               method: methodName,
+              url: URL,
             },
           });
         }
