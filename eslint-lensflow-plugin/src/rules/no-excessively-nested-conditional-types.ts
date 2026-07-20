@@ -1,5 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T04-generics-bounds.md");
 
 function getConditionalNestingDepth(node: TSESTree.TypeNode): number {
   if (node.type !== "TSConditionalType") return 0;
@@ -40,8 +43,8 @@ export default createRule({
         "Disallow excessively nested conditional types that may exceed TypeScript's instantiation depth limit",
     },
     messages: {
-      excessiveNesting:
-        "Conditional type has nesting depth {{depth}} (max: {{max}}). Use a recursive helper with a depth counter instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+     excessiveNesting:
+         "Conditional type has nesting depth {{depth}} (max: {{max}}). Use a recursive helper with a depth counter instead. See: {{url}}",
     },
     schema: [
       {
@@ -71,6 +74,7 @@ export default createRule({
             data: {
               depth: String(depth),
               max: String(options.maxDepth),
+              url: URL,
             },
           });
         }
