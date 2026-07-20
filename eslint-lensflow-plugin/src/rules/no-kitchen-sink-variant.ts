@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T01-algebraic-data-types.md");
 
 export default createRule({
   name: "no-kitchen-sink-variant",
@@ -11,7 +14,7 @@ export default createRule({
     },
     messages: {
       tooManyFields:
-        "Union variant has {{count}} fields (max {{max}}). Extract into a nested type. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T01-algebraic-data-types.md",
+        "Union variant has {{count}} fields (max {{max}}). Extract into a nested type. See: {{url}}",
     },
     schema: [
       {
@@ -58,6 +61,7 @@ export default createRule({
             data: {
               count: String(properties.length),
               max: String(maxFields),
+              url: URL,
             },
           });
         }
