@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T12-effect-tracking.md");
 
 function collectParamIdentifiers(node: TSESTree.Node): string[] {
   if (node.type === "Identifier") return [node.name];
@@ -98,6 +101,7 @@ function reportEatenErrorIfApplicable(
       context.report({
         node: callback,
         messageId: "emptyCatch",
+        data: { url: URL },
       });
       return;
     }
@@ -113,7 +117,7 @@ function reportEatenErrorIfApplicable(
     context.report({
       node: callback,
       messageId: "ignoredParam",
-      data: { param: paramName },
+      data: { param: paramName, url: URL },
     });
   }
 }
@@ -128,9 +132,9 @@ export default createRule({
     },
     messages: {
       emptyCatch:
-        "The .catch() handler has an empty body and silently swallows errors. Handle the error or rethrow it. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T12-effect-tracking.md",
+        "The .catch() handler has an empty body and silently swallows errors. Handle the error or rethrow it. See: {{url}}",
       ignoredParam:
-        "The .catch() handler does not use the error parameter '{{param}}'. Handle the error or rethrow it. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T12-effect-tracking.md",
+        "The .catch() handler does not use the error parameter '{{param}}'. Handle the error or rethrow it. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
