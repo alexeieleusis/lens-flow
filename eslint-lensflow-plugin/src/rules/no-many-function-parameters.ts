@@ -1,5 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T05-type-classes.md");
 
 export default createRule({
   name: "no-many-function-parameters",
@@ -11,7 +14,7 @@ export default createRule({
     },
     messages: {
       tooManyParams:
-        "Function has {{count}} parameters (max {{maxParams}}). Consider grouping related parameters into a configuration object. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T05-type-classes.md",
+        "Function has {{count}} parameters (max {{maxParams}}). Consider grouping related parameters into a configuration object. See: {{url}}",
     },
     schema: [
       {
@@ -48,6 +51,7 @@ export default createRule({
           data: {
             count: String(count),
             maxParams: String(maxParams),
+            url: URL,
           },
         });
       }
