@@ -1,6 +1,9 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { walk } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T17-macros-metaprogramming.md");
 
 const ACCESSOR_CONTEXT_TYPES = new Set([
   "ClassAccessorDecoratorContext",
@@ -82,9 +85,9 @@ export default createRule({
     },
     messages: {
       missingAccessorKeyword:
-        "Property '{{name}}' is decorated with an accessor-context decorator but is missing the `accessor` keyword. Add `accessor` to the property declaration. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T17-macros-metaprogramming.md",
+        "Property '{{name}}' is decorated with an accessor-context decorator but is missing the `accessor` keyword. Add `accessor` to the property declaration. See: {{url}}",
       extraAccessorKeyword:
-        "Property '{{name}}' uses the `accessor` keyword but is decorated with a field-context decorator. Remove `accessor` or use an accessor-context decorator instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T17-macros-metaprogramming.md",
+        "Property '{{name}}' uses the `accessor` keyword but is decorated with a field-context decorator. Remove `accessor` or use an accessor-context decorator instead. See: {{url}}",
     },
     schema: [],
   },
@@ -133,13 +136,13 @@ export default createRule({
         context.report({
           node,
           messageId: "missingAccessorKeyword",
-          data: { name: propName },
+          data: { name: propName, url: URL },
         });
       } else if (hasFieldDeco && isAccessorField) {
         context.report({
           node,
           messageId: "extraAccessorKeyword",
-          data: { name: propName },
+          data: { name: propName, url: URL },
         });
       }
     }
