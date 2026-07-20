@@ -1,5 +1,8 @@
 import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T33-self-type.md");
 
 function getTypeName(node: TSESTree.TSTypeReference): string | null {
   if (node.typeName.type === AST_NODE_TYPES.Identifier) {
@@ -43,8 +46,8 @@ export default createRule({
         "Prefer `this` as return type over the interface's own name in interface method signatures",
     },
     messages: {
-      preferThis:
-        "Interface method returns the interface's own type ({{interfaceName}}). Use `this` instead to preserve concrete subclass type on calls. See: https://github.com/jpablo/vibe-types/blob/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T33-self-type.md",
+     preferThis:
+         "Interface method returns the interface's own type ({{interfaceName}}). Use `this` instead to preserve concrete subclass type on calls. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -73,7 +76,7 @@ export default createRule({
             context.report({
               node: returnType,
               messageId: "preferThis",
-              data: { interfaceName },
+              data: { interfaceName, url: URL },
             });
           }
         }
