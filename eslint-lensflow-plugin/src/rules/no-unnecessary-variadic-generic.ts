@@ -1,5 +1,8 @@
 import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T45-paramspec-variadic.md");
 
 export default createRule({
   name: "no-unnecessary-variadic-generic",
@@ -10,8 +13,8 @@ export default createRule({
         "Disallow generic parameters constrained to array types when only simple array methods are used",
     },
     messages: {
-      unnecessaryGeneric:
-        "Generic parameter {{param}} is constrained to an array type but only simple array methods are called. Use {{constraint}} directly instead of a generic parameter. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T45-paramspec-variadic.md",
+     unnecessaryGeneric:
+         "Generic parameter {{param}} is constrained to an array type but only simple array methods are called. Use {{constraint}} directly instead of a generic parameter. See: {{url}}",
     },
     schema: [
       {
@@ -345,7 +348,7 @@ export default createRule({
           context.report({
             node: data.node,
             messageId: "unnecessaryGeneric",
-            data: { param: genName, constraint: data.constraintText },
+            data: { param: genName, constraint: data.constraintText, url: URL },
           });
         }
       }
