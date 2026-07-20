@@ -1,6 +1,9 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { walk } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC06-immutability.md");
 
 const iterationMethods = new Set([
   "map",
@@ -143,11 +146,11 @@ function reportMutations(
   for (const mutation of mutations) {
     const { propName, paramName } = extractMutationInfo(mutation);
 
-    context.report({
-      node: mutation,
-      messageId: "mutateCallbackArg",
-      data: { param: paramName, prop: propName },
-    });
+     context.report({
+        node: mutation,
+        messageId: "mutateCallbackArg",
+        data: { param: paramName, prop: propName, url: URL },
+      });
   }
 }
 
@@ -162,7 +165,7 @@ export default createRule({
     },
     messages: {
       mutateCallbackArg:
-        "Mutating {{prop}} on the iteration callback parameter '{{param}}'. Return a new object instead of mutating the original. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC06-immutability.md",
+        "Mutating {{prop}} on the iteration callback parameter '{{param}}'. Return a new object instead of mutating the original. See: {{url}}",
     },
     schema: [],
   },
