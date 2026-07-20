@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T02-union-intersection.md");
 
 export default createRule({
   name: "no-intersected-function-types",
@@ -11,7 +14,7 @@ export default createRule({
     },
     messages: {
       intersectedFunctions:
-        "Intersecting {{count}} function types creates an overloaded function that is rarely intended. Use function overloads instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T02-union-intersection.md",
+        "Intersecting {{count}} function types creates an overloaded function that is rarely intended. Use function overloads instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -30,6 +33,7 @@ export default createRule({
             messageId: "intersectedFunctions",
             data: {
               count: String(functionTypes.length),
+              url: URL,
             },
           });
         }
