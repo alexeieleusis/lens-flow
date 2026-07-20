@@ -2,6 +2,9 @@ import { createRule } from "../utils/rule-creator.js";
 import { walk, walkNodes } from "../utils/ast-helpers.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 import { TSESTree } from "@typescript-eslint/utils";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC21-async-concurrency.md");
 
 /**
  * Check whether any descendant of the given node is an Identifier with the specified name.
@@ -52,7 +55,7 @@ export default createRule({
     },
     messages: {
       silentErrorCatch:
-        "Error is only logged to console and replaced with a generic Error, losing original error details. Preserve or rethrow the original error.",
+        "Error is only logged to console and replaced with a generic Error, losing original error details. Preserve or rethrow the original error. See: {{url}}",
     },
     schema: [],
   },
@@ -106,6 +109,7 @@ export default createRule({
         context.report({
           node,
           messageId: "silentErrorCatch",
+          data: { url: URL },
         });
       },
     };
