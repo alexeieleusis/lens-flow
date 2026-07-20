@@ -1,7 +1,10 @@
 import { createRule } from "../utils/rule-creator.js";
 import { hasThrow, walk } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import { TSESTree } from "@typescript-eslint/utils";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("usecases/UC13-state-machines.md");
 
 function isStringLiteralUnion(node: any): node is { types: any[] } {
   return (
@@ -129,7 +132,7 @@ export default createRule({
     },
     messages: {
       mutableStateRuntimeGuard:
-        "Class uses mutable state property \"{{stateProp}}\" with runtime if/throw guard in method \"{{methodName}}\". Consider using compile-time typestate enforcement instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC13-state-machines.md",
+        "Class uses mutable state property \"{{stateProp}}\" with runtime if/throw guard in method \"{{methodName}}\". Consider using compile-time typestate enforcement instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -158,6 +161,7 @@ export default createRule({
             data: {
               stateProp: v.stateProp,
               methodName: v.methodName,
+              url: URL,
             },
           });
         }
