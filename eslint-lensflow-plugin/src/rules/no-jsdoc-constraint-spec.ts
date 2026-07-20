@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from '@typescript-eslint/utils';
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC01-invalid-states.md");
 
 const CONSTRAINT_PATTERNS = [
   /"(?:\w+)"\s*\|/,
@@ -29,9 +32,9 @@ export default createRule({
     },
     messages: {
       jsdocConstraint:
-        "Do not document value constraints in JSDoc comments. Encode the constraint as a literal type union or discriminated union instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC01-invalid-states.md",
+        "Do not document value constraints in JSDoc comments. Encode the constraint as a literal type union or discriminated union instead. See: {{url}}",
       jsdocConditionalField:
-        "Do not document conditional field requirements in comments. Use a discriminated union with literal types instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC01-invalid-states.md",
+        "Do not document conditional field requirements in comments. Use a discriminated union with literal types instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -65,6 +68,7 @@ export default createRule({
               messageId: match.isConditional
                 ? "jsdocConditionalField"
                 : "jsdocConstraint",
+              data: { url: URL },
             });
           }
         }
