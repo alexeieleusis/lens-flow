@@ -1,6 +1,9 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { getKeys } from "eslint-visitor-keys";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC14-extensibility.md");
 
 const DUPLICATE_CHECK_METHODS = new Set([
   "has",
@@ -83,8 +86,8 @@ export default createRule({
         "Disallows plugin registration methods that push to an array without checking for duplicates.",
     },
     messages: {
-      unboundedRegister:
-        "Plugin registration pushes without duplicate check. Use a Map or Set with a .has() guard before inserting. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC14-extensibility.md",
+     unboundedRegister:
+         "Plugin registration pushes without duplicate check. Use a Map or Set with a .has() guard before inserting. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -110,6 +113,9 @@ export default createRule({
           context.report({
             node: node.value,
             messageId: "unboundedRegister",
+            data: {
+              url: URL,
+            },
           });
         }
       },
@@ -136,6 +142,9 @@ export default createRule({
           context.report({
             node: node.value,
             messageId: "unboundedRegister",
+            data: {
+              url: URL,
+            },
           });
         }
       },
