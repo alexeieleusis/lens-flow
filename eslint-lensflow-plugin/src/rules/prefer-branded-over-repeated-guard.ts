@@ -1,5 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T26-refinement-types.md");
 
 export default createRule({
   name: "prefer-branded-over-repeated-guard",
@@ -11,7 +14,7 @@ export default createRule({
     },
     messages: {
       repeatedGuard:
-        "Type guard `{{guardName}}` is called in {{count}} functions. Consider using a branded type validated once upstream instead of repeating the guard in each function. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T26-refinement-types.md",
+        "Type guard `{{guardName}}` is called in {{count}} functions. Consider using a branded type validated once upstream instead of repeating the guard in each function. See: {{url}}",
     },
     schema: [
       {
@@ -166,6 +169,7 @@ export default createRule({
                 data: {
                   guardName,
                   count: String(funcs.size),
+                  url: URL,
                 },
               });
             }
