@@ -1,5 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC01-invalid-states.md");
 
 function getPropertyName(key: TSESTree.TSPropertySignature["key"]): string {
   if (key.type === "Identifier") return key.name;
@@ -39,9 +42,9 @@ export default createRule({
       description:
         "Disallow union members whose direct property types contain a discriminated union",
     },
-    messages: {
+   messages: {
       nestedDiscriminatedUnion:
-        "Found a nested discriminated union inside a union member. Flatten the discriminant variants into separate top-level union members instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC01-invalid-states.md",
+        "Found a nested discriminated union inside a union member. Flatten the discriminant variants into separate top-level union members instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -65,9 +68,10 @@ export default createRule({
             const annotation = prop.typeAnnotation.typeAnnotation;
             if (isNestedDiscriminatedUnion(annotation)) {
               if (!reported) {
-                context.report({
+               context.report({
                   node: member,
                   messageId: "nestedDiscriminatedUnion",
+                  data: { url: URL },
                 });
                 reported = true;
               }
