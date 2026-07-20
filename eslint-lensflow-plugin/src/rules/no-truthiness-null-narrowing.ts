@@ -1,6 +1,9 @@
 import ts from "typescript";
 import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T14-type-narrowing.md");
 
 export default createRule({
   name: "no-truthiness-null-narrowing",
@@ -12,7 +15,7 @@ export default createRule({
     },
     messages: {
       truthinessNullNarrowing:
-        "Using truthiness check on a variable whose type includes null/undefined and falsy values (0, \"\", false). Use !== null or != null instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T14-type-narrowing.md",
+        "Using truthiness check on a variable whose type includes null/undefined and falsy values (0, \"\", false). Use !== null or != null instead. See: {{url}}",
     },
     schema: [],
   },
@@ -54,6 +57,7 @@ export default createRule({
           context.report({
             node: eslintNode,
             messageId: "truthinessNullNarrowing",
+            data: { url: URL },
           });
         }
       }
