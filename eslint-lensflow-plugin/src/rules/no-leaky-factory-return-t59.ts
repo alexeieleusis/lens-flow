@@ -1,6 +1,9 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { walk } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T59-existential-types.md");
 
 type FunctionNode =
   | TSESTree.FunctionDeclaration
@@ -53,8 +56,8 @@ export default createRule({
         "Disallow factory functions returning object literals with properties beyond their declared interface",
     },
     messages: {
-      leakyReturn:
-        "Factory function returns object with extra properties {{extraProps}} not declared in interface {{interfaceName}}. Use `as {{interfaceName}}` cast to hide implementation details. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T59-existential-types.md",
+     leakyReturn:
+         "Factory function returns object with extra properties {{extraProps}} not declared in interface {{interfaceName}}. Use `as {{interfaceName}}` cast to hide implementation details. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -76,9 +79,10 @@ export default createRule({
           node: nodeToReport,
           messageId: "leakyReturn",
           data: {
-            extraProps: extraProps.join(", "),
-            interfaceName,
-          },
+             extraProps: extraProps.join(", "),
+             interfaceName,
+             url: URL,
+           },
         });
       }
     }
