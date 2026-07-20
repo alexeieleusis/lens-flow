@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("usecases/UC13-state-machines.md");
 
 function extractPropertyName(key: TSESTree.PropertyName): string | null {
   if (key.type === "Identifier") return key.name;
@@ -17,8 +20,8 @@ export default createRule({
         "Enforce that `state` or `status` properties use a union of string literal types instead of bare `string`",
     },
     messages: {
-      bareStringState:
-        "Property `{{name}}` is typed as bare `string`. Use a union of string literal types (e.g. `\"draft\" | \"review\" | \"approved\"`) instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC13-state-machines.md",
+     bareStringState:
+         "Property `{{name}}` is typed as bare `string`. Use a union of string literal types (e.g. `\"draft\" | \"review\" | \"approved\"`) instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -41,7 +44,7 @@ export default createRule({
           context.report({
             node: typeAnn,
             messageId: "bareStringState",
-            data: { name: propName },
+            data: { name: propName, url: URL },
           });
         }
       }
