@@ -1,6 +1,9 @@
 import ts from "typescript";
 import { ESLintUtils, TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T01-algebraic-data-types.md");
 
 const DISCRIMINANT_NAMES = new Set([
   "kind",
@@ -47,8 +50,8 @@ export default createRule({
         "Disallow object literals whose string literal properties widen to `string` without `as const`, `satisfies`, or explicit type annotation",
      },
     messages: {
-      widen:
-        "Object literal assigned to discriminated-union variable '{{varName}}' without type narrowing. The discriminant '{{discriminant}}' will widen to a broader type. Use `as const`, `satisfies`, or an explicit type annotation. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T01-algebraic-data-types.md",
+     widen:
+         "Object literal assigned to discriminated-union variable '{{varName}}' without type narrowing. The discriminant '{{discriminant}}' will widen to a broader type. Use `as const`, `satisfies`, or an explicit type annotation. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -72,7 +75,7 @@ export default createRule({
       context.report({
         node: prop,
         messageId: "widen",
-        data: { varName, discriminant: propName },
+        data: { varName, discriminant: propName, url: URL },
       });
       return true;
     };
