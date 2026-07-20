@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC02-domain-modeling.md");
 
 type Comparison = {
   node: TSESTree.BinaryExpression;
@@ -67,9 +70,9 @@ export default createRule({
     },
     messages: {
       magicComparison:
-        "Variable '{{variable}}' compared against multiple magic string literals ({{values}}). Use a literal union type for compile-time exhaustiveness. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC02-domain-modeling.md",
+        "Variable '{{variable}}' compared against multiple magic string literals ({{values}}). Use a literal union type for compile-time exhaustiveness. See: {{url}}",
       magicSwitch:
-        "Switch on '{{variable}}' with multiple magic string cases. Use a literal union type for compile-time exhaustiveness. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC02-domain-modeling.md",
+        "Switch on '{{variable}}' with multiple magic string cases. Use a literal union type for compile-time exhaustiveness. See: {{url}}",
     },
     schema: [],
   },
@@ -98,6 +101,7 @@ export default createRule({
               data: {
                 variable: comp.variableName,
                 values: [...distinctValues].join(", "),
+                url: URL,
               },
             });
           }
@@ -118,7 +122,7 @@ export default createRule({
           context.report({
             node: sw,
             messageId: "magicSwitch",
-            data: { variable: getSwitchVariable(sw) },
+            data: { variable: getSwitchVariable(sw), url: URL },
           });
         }
       }
