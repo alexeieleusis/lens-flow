@@ -1,5 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T26-refinement-types.md");
 
 const PRIMITIVE_TYPES = new Set([
   "TSStringKeyword",
@@ -77,7 +80,7 @@ export default createRule({
     },
     messages: {
       noopBrandConstructor:
-        "Constructor '{{name}}' performs no validation — it simply casts to the branded type. Either add a predicate check or use the primitive type directly. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T26-refinement-types.md",
+        "Constructor '{{name}}' performs no validation — it simply casts to the branded type. Either add a predicate check or use the primitive type directly. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -118,7 +121,7 @@ export default createRule({
       context.report({
         node,
         messageId: "noopBrandConstructor",
-        data: { name: funcName },
+        data: { name: funcName, url: URL },
       });
     }
 
