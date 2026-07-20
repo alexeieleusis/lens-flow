@@ -1,6 +1,9 @@
 import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { getChildren } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T33-self-type.md");
 
 function collectReturns(node: TSESTree.Node): TSESTree.ReturnStatement[] {
   const results: TSESTree.ReturnStatement[] = [];
@@ -44,7 +47,7 @@ export default createRule({
     },
     messages: {
       preferThis:
-        "Method returns the class's own type ({{className}}) but returns `this` at runtime. Use `this` as the return type to preserve chainability in subclasses. See: https://raw.githubusercontent.com/jpablo/vibe-types/f5ab7f35de4cc4e292500398c8b2f6edab96c2db/plugin/skills/typescript/catalog/T33-self-type.md",
+        "Method returns the class's own type ({{className}}) but returns `this` at runtime. Use `this` as the return type to preserve chainability in subclasses. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -78,7 +81,7 @@ export default createRule({
             context.report({
               node: returnType,
               messageId: "preferThis",
-              data: { className },
+              data: { className, url: URL },
             });
           }
         }
