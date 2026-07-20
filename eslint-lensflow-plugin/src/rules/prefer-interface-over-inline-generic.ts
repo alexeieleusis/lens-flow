@@ -1,5 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T36-trait-objects.md");
 
 function typeLiteralContainsRef(node: TSESTree.TSTypeLiteral, paramName: string): boolean {
   return node.members.some((member) => {
@@ -117,7 +120,7 @@ export default createRule({
     },
     messages: {
       preferInterface:
-        "Generic parameter constrained by inline type literal should be extracted to a named interface. Use a named interface instead of `T extends {{constraintSummary}}`. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T36-trait-objects.md",
+        "Generic parameter constrained by inline type literal should be extracted to a named interface. Use a named interface instead of `T extends {{constraintSummary}}`. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -151,6 +154,7 @@ export default createRule({
           messageId: "preferInterface",
           data: {
             constraintSummary,
+            url: URL,
           },
         });
       }
