@@ -1,6 +1,9 @@
 import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { walk, walkNodes } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC09-builder-config.md");
 
 function getNameFromPattern(pattern: TSESTree.Node): string | null {
   if (pattern.type === AST_NODE_TYPES.Identifier) return pattern.name;
@@ -141,8 +144,8 @@ export default createRule({
         "Prefer `satisfies` for compile-time config shape validation over runtime checks on `any`-typed parameters",
     },
     messages: {
-      preferSatisfies:
-        "Found {{count}} runtime property checks on `any`-typed parameter '{{paramName}}'. Use the `satisfies` operator for compile-time shape validation instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC09-builder-config.md",
+     preferSatisfies:
+         "Found {{count}} runtime property checks on `any`-typed parameter '{{paramName}}'. Use the `satisfies` operator for compile-time shape validation instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -164,6 +167,7 @@ export default createRule({
           data: {
             count: String(checks),
             paramName: anyParam.name,
+            url: URL,
           },
         });
       }
@@ -186,6 +190,7 @@ export default createRule({
           data: {
             count: String(checks),
             paramName: anyParam.name,
+            url: URL,
           },
         });
       }
