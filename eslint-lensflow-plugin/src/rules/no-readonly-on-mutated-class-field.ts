@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T32-immutability-markers.md");
 
 function extractFieldName(key: TSESTree.Node): string | null {
   if (key.type === "Identifier") return key.name;
@@ -33,8 +36,8 @@ export default createRule({
         "Disallow mutating a readonly class field outside the constructor",
     },
     messages: {
-      mutationOfReadonly:
-        "Cannot assign to readonly field '{{field}}' outside the constructor. readonly fields can only be assigned at declaration or in the constructor. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T32-immutability-markers.md",
+     mutationOfReadonly:
+         "Cannot assign to readonly field '{{field}}' outside the constructor. readonly fields can only be assigned at declaration or in the constructor. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -88,7 +91,7 @@ export default createRule({
       context.report({
         node,
         messageId: "mutationOfReadonly",
-        data: { field: fieldName },
+        data: { field: fieldName, url: URL },
       });
     }
 
