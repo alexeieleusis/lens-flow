@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T52-literal-types.md");
 
 export default createRule({
   name: "no-large-literal-union",
@@ -11,7 +14,7 @@ export default createRule({
     },
     messages: {
       tooManyLiteralMembers:
-        "This union type has {{count}} literal members (max: {{max}}). Large literal unions cause combinatorial blowup in template types and slow type checks. Consider extracting to a const object and using `typeof Obj[keyof typeof Obj]` instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T52-literal-types.md",
+        "This union type has {{count}} literal members (max: {{max}}). Large literal unions cause combinatorial blowup in template types and slow type checks. Consider extracting to a const object and using `typeof Obj[keyof typeof Obj]` instead. See: {{url}}",
     },
     schema: [
       {
@@ -49,9 +52,10 @@ export default createRule({
             node: reportNode,
             messageId: "tooManyLiteralMembers",
             data: {
-              count: String(literalMembers.length),
-              max: String(maxMembers),
-            },
+               count: String(literalMembers.length),
+               max: String(maxMembers),
+               url: URL,
+             },
           });
         }
       },
