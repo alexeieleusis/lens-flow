@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T08-variance-subtyping.md");
 
 function unwrapTSExpressions(node: TSESTree.Expression): TSESTree.Expression {
   let current = node;
@@ -150,7 +153,7 @@ function checkReadonlyIdentifierSpread(
     context.report({
       node: spreadElement,
       messageId: "spreadReadonlyArray",
-      data: { name: spreadId.name },
+      data: { name: spreadId.name, url: URL },
     });
   }
 }
@@ -187,7 +190,7 @@ function checkReadonlyMemberSpread(
     context.report({
       node: spreadElement,
       messageId: "spreadReadonlyArray",
-      data: { name: `${unwrappedObject.name}.${memberName}` },
+      data: { name: `${unwrappedObject.name}.${memberName}`, url: URL },
     });
   }
 }
@@ -202,7 +205,7 @@ export default createRule({
     },
     messages: {
       spreadReadonlyArray:
-        "Spreading readonly array `{{name}}` into a new array is unnecessary. Change the callee parameter type from `Array<T>` to `readonly T[]`. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T08-variance-subtyping.md",
+        "Spreading readonly array `{{name}}` into a new array is unnecessary. Change the callee parameter type from `Array<T>` to `readonly T[]`. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
