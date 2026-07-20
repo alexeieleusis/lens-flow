@@ -1,5 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T07-structural-typing.md");
 
 function unwrapParens(node: TSESTree.TypeNode): TSESTree.TypeNode {
   while (node.type === ("TSParenthesizedType" as TSESTree.TypeNode["type"])) {
@@ -35,7 +38,7 @@ export default createRule({
     },
     messages: {
       missingDiscriminant:
-        "Union of object types has no member with a literal-typed discriminant property. Add a discriminant (e.g. `kind: \"circle\"`) to enable exhaustive narrowing. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T07-structural-typing.md",
+        "Union of object types has no member with a literal-typed discriminant property. Add a discriminant (e.g. `kind: \"circle\"`) to enable exhaustive narrowing. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -67,6 +70,7 @@ export default createRule({
           context.report({
             node,
             messageId: "missingDiscriminant",
+            data: { url: URL },
           });
         }
       },
