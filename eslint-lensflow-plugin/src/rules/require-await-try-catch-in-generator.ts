@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T64-async-iteration.md");
 
 function isInsideRange(
   rangeStart: number,
@@ -20,7 +23,7 @@ export default createRule({
     },
     messages: {
       missingTryCatch:
-        "await in async generator must be wrapped in try/catch to prevent unhandled rejection and silent generator exit. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T64-async-iteration.md",
+        "await in async generator must be wrapped in try/catch to prevent unhandled rejection and silent generator exit. See: {{url}}",
     },
     schema: [],
   },
@@ -63,6 +66,7 @@ export default createRule({
               context.report({
                 node,
                 messageId: "missingTryCatch",
+                data: { url: URL },
               });
             }
             return;
