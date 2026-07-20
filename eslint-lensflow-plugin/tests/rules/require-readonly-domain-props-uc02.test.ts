@@ -1,5 +1,8 @@
 import { ruleTester } from "../helpers/rule-tester.js";
 import rule from "../../src/rules/require-readonly-domain-props-uc02.js";
+import { knowledgeUrl } from "../../src/utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC02-domain-modeling.md");
 
 ruleTester.run("require-readonly-domain-props-uc02", rule, {
   valid: [
@@ -37,9 +40,9 @@ ruleTester.run("require-readonly-domain-props-uc02", rule, {
         status: OrderStatus;
       };`,
       errors: [
-        { messageId: "mutableDomainProp", data: { name: "id" } },
-        { messageId: "mutableDomainProp", data: { name: "amount" } },
-        { messageId: "mutableDomainProp", data: { name: "status" } },
+        { messageId: "mutableDomainProp", data: { name: "id", url: URL } },
+        { messageId: "mutableDomainProp", data: { name: "amount", url: URL } },
+        { messageId: "mutableDomainProp", data: { name: "status", url: URL } },
       ],
     },
     // Mutable interface with 2+ properties
@@ -49,8 +52,8 @@ ruleTester.run("require-readonly-domain-props-uc02", rule, {
         value: number;
       }`,
       errors: [
-        { messageId: "mutableDomainProp", data: { name: "id" } },
-        { messageId: "mutableDomainProp", data: { name: "value" } },
+        { messageId: "mutableDomainProp", data: { name: "id", url: URL } },
+        { messageId: "mutableDomainProp", data: { name: "value", url: URL } },
       ],
     },
     // Partial readonly — only non-readonly props are flagged
@@ -61,8 +64,8 @@ ruleTester.run("require-readonly-domain-props-uc02", rule, {
         price: number;
       };`,
       errors: [
-        { messageId: "mutableDomainProp", data: { name: "name" } },
-        { messageId: "mutableDomainProp", data: { name: "price" } },
+        { messageId: "mutableDomainProp", data: { name: "name", url: URL } },
+        { messageId: "mutableDomainProp", data: { name: "price", url: URL } },
       ],
     },
     // Mutable type literal with quoted string-literal keys
@@ -73,9 +76,9 @@ ruleTester.run("require-readonly-domain-props-uc02", rule, {
         status: OrderStatus;
       };`,
       errors: [
-        { messageId: "mutableDomainProp", data: { name: "id" } },
-        { messageId: "mutableDomainProp", data: { name: "amount" } },
-        { messageId: "mutableDomainProp", data: { name: "status" } },
+        { messageId: "mutableDomainProp", data: { name: "id", url: URL } },
+        { messageId: "mutableDomainProp", data: { name: "amount", url: URL } },
+        { messageId: "mutableDomainProp", data: { name: "status", url: URL } },
       ],
     },
     // Method signatures are excluded — only properties are flagged
@@ -86,8 +89,8 @@ ruleTester.run("require-readonly-domain-props-uc02", rule, {
         process(): void;
       }`,
       errors: [
-        { messageId: "mutableDomainProp", data: { name: "id" } },
-        { messageId: "mutableDomainProp", data: { name: "name" } },
+        { messageId: "mutableDomainProp", data: { name: "id", url: URL } },
+        { messageId: "mutableDomainProp", data: { name: "name", url: URL } },
       ],
     },
     // Computed property key with Identifier — resolves to the identifier name
@@ -98,9 +101,9 @@ ruleTester.run("require-readonly-domain-props-uc02", rule, {
         status: OrderStatus;
       };`,
       errors: [
-        { messageId: "mutableDomainProp", data: { name: "id" } },
-        { messageId: "mutableDomainProp", data: { name: "customKey" } },
-        { messageId: "mutableDomainProp", data: { name: "status" } },
+        { messageId: "mutableDomainProp", data: { name: "id", url: URL } },
+        { messageId: "mutableDomainProp", data: { name: "customKey", url: URL } },
+        { messageId: "mutableDomainProp", data: { name: "status", url: URL } },
       ],
     },
     // Computed property key with complex expression — falls back to "?"
@@ -111,9 +114,9 @@ ruleTester.run("require-readonly-domain-props-uc02", rule, {
         status: OrderStatus;
       };`,
       errors: [
-        { messageId: "mutableDomainProp", data: { name: "id" } },
-        { messageId: "mutableDomainProp", data: { name: "?" } },
-        { messageId: "mutableDomainProp", data: { name: "status" } },
+        { messageId: "mutableDomainProp", data: { name: "id", url: URL } },
+        { messageId: "mutableDomainProp", data: { name: "?", url: URL } },
+        { messageId: "mutableDomainProp", data: { name: "status", url: URL } },
       ],
     },
   ],

@@ -141,7 +141,8 @@ function extractParamName(param: TSESTree.Parameter, sourceCode: TSESLint.Source
 export function checkAnyParams(
   params: readonly TSESTree.Parameter[],
   context: TSESLint.RuleContext<string, unknown[]>,
-  messageId: string
+  messageId: string,
+  extraData?: Record<string, unknown>
 ) {
   for (const param of params) {
     const typeNode = getParamTypeAnnotation(param);
@@ -150,7 +151,7 @@ export function checkAnyParams(
       context.report({
         node: param,
         messageId,
-        data: { name: extractParamName(param, context.sourceCode) },
+        data: { name: extractParamName(param, context.sourceCode), ...extraData },
       });
     }
   }
@@ -161,21 +162,21 @@ type TypeNode = TSESTree.TSFunctionType | TSESTree.TSMethodSignature | TSESTree.
 /**
  * Creates a rule listener for concrete function nodes that checks parameters for `any` types.
  */
-export function createNoAnyParamChecker(messageId: string) {
+export function createNoAnyParamChecker(messageId: string, extraData?: Record<string, unknown>) {
   return function noAnyParamChecker(context: TSESLint.RuleContext<string, unknown[]>): TSESLint.RuleListener {
     return {
       FunctionDeclaration(node: ParamsNode) {
-        checkAnyParams(node.params, context, messageId);
+        checkAnyParams(node.params, context, messageId, extraData);
       },
       FunctionExpression(node: ParamsNode) {
         if (node.parent?.type === "MethodDefinition") return;
-        checkAnyParams(node.params, context, messageId);
+        checkAnyParams(node.params, context, messageId, extraData);
       },
       ArrowFunctionExpression(node: ParamsNode) {
-        checkAnyParams(node.params, context, messageId);
+        checkAnyParams(node.params, context, messageId, extraData);
       },
       MethodDefinition(node: TSESTree.MethodDefinition) {
-        checkAnyParams(node.value.params, context, messageId);
+        checkAnyParams(node.value.params, context, messageId, extraData);
       },
       TSParameterProperty(node) {
         const inner = node.parameter;
@@ -185,7 +186,7 @@ export function createNoAnyParamChecker(messageId: string) {
           context.report({
             node,
             messageId,
-            data: { name: paramName },
+            data: { name: paramName, ...extraData },
           });
         }
       },
@@ -196,23 +197,23 @@ export function createNoAnyParamChecker(messageId: string) {
 /**
  * Creates a rule listener for type-node function signatures that checks parameters for `any` types.
  */
-export function createNoAnyParamTypeChecker(messageId: string) {
+export function createNoAnyParamTypeChecker(messageId: string, extraData?: Record<string, unknown>) {
   return function noAnyParamTypeChecker(context: TSESLint.RuleContext<string, unknown[]>): TSESLint.RuleListener {
     return {
       TSFunctionType(node: TypeNode) {
-        checkAnyParams(node.params, context, messageId);
+        checkAnyParams(node.params, context, messageId, extraData);
       },
       TSMethodSignature(node: TypeNode) {
-        checkAnyParams(node.params, context, messageId);
+        checkAnyParams(node.params, context, messageId, extraData);
       },
       TSDeclareFunction(node: TypeNode) {
-        checkAnyParams(node.params, context, messageId);
+        checkAnyParams(node.params, context, messageId, extraData);
       },
       TSCallSignatureDeclaration(node: TypeNode) {
-        checkAnyParams(node.params, context, messageId);
+        checkAnyParams(node.params, context, messageId, extraData);
       },
       TSConstructorType(node: TSESTree.TSConstructorType) {
-        checkAnyParams(node.params, context, messageId);
+        checkAnyParams(node.params, context, messageId, extraData);
       },
     };
   };

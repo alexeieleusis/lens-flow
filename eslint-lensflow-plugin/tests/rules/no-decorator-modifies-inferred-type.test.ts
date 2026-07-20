@@ -1,5 +1,8 @@
 import { ruleTester } from "../helpers/rule-tester.js";
 import rule from "../../src/rules/no-decorator-modifies-inferred-type.js";
+import { knowledgeUrl } from "../../src/utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T17-macros-metaprogramming.md");
 
 ruleTester.run("no-decorator-modifies-inferred-type", rule, {
   valid: [
@@ -109,7 +112,7 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
       e.id;`,
       errors: [{
         messageId: "decoratorModifiesInferredType",
-        data: { property: "id" },
+        data: { property: "id", url: URL },
       }],
     },
     {
@@ -122,7 +125,7 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
       class Widget {}`,
       errors: [{
         messageId: "decoratorModifiesMultipleProperties",
-        data: { properties: '"version", "author"' },
+        data: { properties: '"version", "author"', url: URL },
       }],
     },
     {
@@ -141,7 +144,7 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
       }`,
       errors: [{
         messageId: "decoratorModifiesInferredType",
-        data: { property: "id" },
+        data: { property: "id", url: URL },
       }],
     },
 
@@ -157,7 +160,7 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
       }`,
       errors: [{
         messageId: "decoratorModifiesInferredType",
-        data: { property: "id" },
+        data: { property: "id", url: URL },
       }],
     },
 
@@ -173,7 +176,7 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
       }`,
       errors: [{
         messageId: "decoratorModifiesInferredType",
-        data: { property: "id" },
+        data: { property: "id", url: URL },
       }],
     },
 
@@ -189,7 +192,7 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
       })();`,
       errors: [{
         messageId: "decoratorModifiesInferredType",
-        data: { property: "id" },
+        data: { property: "id", url: URL },
       }],
     },
 
@@ -206,7 +209,7 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
       }`,
       errors: [{
         messageId: "decoratorModifiesInferredType",
-        data: { property: "id" },
+        data: { property: "id", url: URL },
       }],
     },
 
@@ -220,7 +223,7 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
       class Entity {}`,
       errors: [{
         messageId: "decoratorModifiesInferredType",
-        data: { property: "id" },
+        data: { property: "id", url: URL },
       }],
     },
 
@@ -234,7 +237,7 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
       class Entity {}`,
       errors: [{
         messageId: "decoratorModifiesInferredType",
-        data: { property: "id" },
+        data: { property: "id", url: URL },
       }],
     },
 
@@ -251,7 +254,7 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
       class Widget {}`,
       errors: [{
         messageId: "decoratorModifiesMultipleProperties",
-        data: { properties: '"version", "author"' },
+        data: { properties: '"version", "author"', url: URL },
       }],
     },
 
@@ -266,7 +269,7 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
       class Entity {}`,
       errors: [{
         messageId: "decoratorModifiesInferredType",
-        data: { property: "id" },
+        data: { property: "id", url: URL },
       }],
     },
   ],

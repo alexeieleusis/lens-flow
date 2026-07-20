@@ -1,5 +1,8 @@
 import { ruleTester } from "../helpers/rule-tester.js";
 import rule from "../../src/rules/no-overengineered-intersection-constraint.js";
+import { knowledgeUrl } from "../../src/utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC04-generic-constraints.md");
 
 ruleTester.run("no-overengineered-intersection-constraint", rule, {
   valid: [
@@ -59,7 +62,7 @@ type Container<T extends X & Y & Z> = { value: T };`,
       errors: [
         {
           messageId: "overengineeredIntersection",
-          data: { count: "2", types: "A, B" },
+          data: { count: "2", types: "A, B", url: URL },
         },
       ],
     },

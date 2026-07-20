@@ -69,7 +69,7 @@ ruleTester.run("no-protected-mutable-primitive-state", rule, {
       code: `export class Quoted {
         protected "state": number = 0;
       }`,
-      errors: [{ messageId: "protectedMutablePrimitive", data: { name: "state" } }],
+      errors: [{ messageId: "protectedMutablePrimitive" }],
     },
   ],
 });

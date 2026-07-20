@@ -1,5 +1,8 @@
 import { ruleTester } from "../helpers/rule-tester.js";
 import rule from "../../src/rules/no-eaten-callback-error.js";
+import { knowledgeUrl } from "../../src/utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T12-effect-tracking.md");
 
 ruleTester.run("no-eaten-callback-error", rule, {
   valid: [
@@ -40,23 +43,23 @@ ruleTester.run("no-eaten-callback-error", rule, {
     },
     {
       code: `fetch("/api").catch(e => 42);`,
-      errors: [{ messageId: "ignoredParam", data: { param: "e" } }],
+      errors: [{ messageId: "ignoredParam", data: { param: "e", url: URL } }],
     },
     {
       code: `promise.catch(err => null);`,
-      errors: [{ messageId: "ignoredParam", data: { param: "err" } }],
+      errors: [{ messageId: "ignoredParam", data: { param: "err", url: URL } }],
     },
     {
       code: `promise.catch(e => "ignored");`,
-      errors: [{ messageId: "ignoredParam", data: { param: "e" } }],
+      errors: [{ messageId: "ignoredParam", data: { param: "e", url: URL } }],
     },
     {
       code: `promise.catch(err => someOtherFunc());`,
-      errors: [{ messageId: "ignoredParam", data: { param: "err" } }],
+      errors: [{ messageId: "ignoredParam", data: { param: "err", url: URL } }],
     },
     {
       code: `promise.catch(e => console.error("oops"));`,
-      errors: [{ messageId: "ignoredParam", data: { param: "e" } }],
+      errors: [{ messageId: "ignoredParam", data: { param: "e", url: URL } }],
     },
     {
       code: `obj.method().catch(e => {});`,
@@ -72,7 +75,7 @@ ruleTester.run("no-eaten-callback-error", rule, {
     },
     {
       code: `promise.catch((e = "default") => { console.log("something"); });`,
-      errors: [{ messageId: "ignoredParam", data: { param: "e" } }],
+      errors: [{ messageId: "ignoredParam", data: { param: "e", url: URL } }],
     },
     {
       code: `promise.catch((...args) => { console.log("error"); })`,

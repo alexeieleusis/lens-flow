@@ -2,6 +2,7 @@ import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 export function createBivariantMethodVisitor(
   context: TSESLint.RuleContext<string, unknown[]>,
+  options: { url?: string } = {},
 ): {
   TSInterfaceBody: (node: TSESTree.TSInterfaceBody) => void;
   TSTypeLiteral: (node: TSESTree.TSTypeLiteral) => void;
@@ -28,10 +29,10 @@ const params = member.params
       .join(", ");
 
        context.report({
-       node: member,
-       messageId: "methodSyntax",
-       data: { name, params },
-     });
+        node: member,
+        messageId: "methodSyntax",
+        data: { name, params, url: options.url },
+      });
   };
 
   return {

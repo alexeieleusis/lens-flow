@@ -4,6 +4,9 @@ import { RuleTester } from "@typescript-eslint/rule-tester";
 import { afterAll, describe, it } from "vitest";
 import * as tsParser from "@typescript-eslint/parser";
 import rule from "../../src/rules/no-silent-effect-absorption.js";
+import { knowledgeUrl } from "../../src/utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T12-effect-tracking.md");
 
 RuleTester.afterAll = afterAll;
 RuleTester.describe = describe;
@@ -129,27 +132,27 @@ process(r.map((v) => v.length));`,
       code: EFFECT_TYPE_DEF + `
 declare const r: Effect<string, Error>;
 r.map((x) => x.length);`,
-      errors: [{ messageId: "silentAbsorption", data: { method: "map" } }],
+      errors: [{ messageId: "silentAbsorption", data: { method: "map", url: URL } }],
     },
     {
       filename: TEST_FILENAME,
       code: EFFECT_TYPE_DEF + `
 declare const r: Effect<{ name: string }, Error>;
 r.chain((user) => r);`,
-      errors: [{ messageId: "silentAbsorption", data: { method: "chain" } }],
+      errors: [{ messageId: "silentAbsorption", data: { method: "chain", url: URL } }],
     },
     {
       filename: TEST_FILENAME,
       code: EFFECT_TYPE_DEF + `
 declare const r: Effect<string, Error>;
 r.map((x) => x).map((y) => y.toUpperCase());`,
-      errors: [{ messageId: "silentAbsorption", data: { method: "map" } }],
+      errors: [{ messageId: "silentAbsorption", data: { method: "map", url: URL } }],
     },
     {
       filename: TEST_FILENAME,
       code: EFFECT_TYPE_DEF + `declare const r: Effect<string, Error> | undefined;
 r?.map((x) => x.length);`,
-      errors: [{ messageId: "silentAbsorption", data: { method: "map" } }],
+      errors: [{ messageId: "silentAbsorption", data: { method: "map", url: URL } }],
     },
     {
       filename: TEST_FILENAME,
@@ -157,7 +160,7 @@ r?.map((x) => x.length);`,
 declare const r: Effect<string, Error>;
 r.map((x) => x.length);`,
       options: [{ allowedTerminators: [] }],
-      errors: [{ messageId: "silentAbsorption", data: { method: "map" } }],
+      errors: [{ messageId: "silentAbsorption", data: { method: "map", url: URL } }],
     },
     {
       filename: TEST_FILENAME,
@@ -165,14 +168,14 @@ r.map((x) => x.length);`,
 declare const r: Effect<string, Error>;
 r.map((x) => x.length);`,
       options: [{ allowedTerminators: ["customHandle"] }],
-      errors: [{ messageId: "silentAbsorption", data: { method: "map" } }],
+      errors: [{ messageId: "silentAbsorption", data: { method: "map", url: URL } }],
     },
     {
       filename: TEST_FILENAME,
       code: EFFECT_TYPE_DEF + `
 declare const r: Effect<string, Error>;
 r.flatMap((x) => r);`,
-      errors: [{ messageId: "silentAbsorption", data: { method: "flatMap" } }],
+      errors: [{ messageId: "silentAbsorption", data: { method: "flatMap", url: URL } }],
     },
     {
       filename: TEST_FILENAME,
@@ -180,7 +183,7 @@ r.flatMap((x) => r);`,
 declare const r: Effect<string, Error>;
 declare const fnEffect: Effect<(x: string) => number>;
 r.ap(fnEffect);`,
-      errors: [{ messageId: "silentAbsorption", data: { method: "ap" } }],
+      errors: [{ messageId: "silentAbsorption", data: { method: "ap", url: URL } }],
     },
   ],
 });
