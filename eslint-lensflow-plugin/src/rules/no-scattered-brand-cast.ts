@@ -1,5 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T03-newtypes-opaque.md");
 
 function getTypeNameString(typeNode: TSESTree.TypeNode): string | null {
   if (typeNode.type === "TSTypeReference") {
@@ -176,7 +179,7 @@ export default createRule({
     },
     messages: {
       scatteredBrandCast:
-        "Scattered branded-type cast `as {{typeName}}` bypasses validation. Use a single smart constructor for all branded values. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T03-newtypes-opaque.md",
+        "Scattered branded-type cast `as {{typeName}}` bypasses validation. Use a single smart constructor for all branded values. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -202,7 +205,7 @@ export default createRule({
           context.report({
             node,
             messageId: "scatteredBrandCast",
-            data: { typeName: brandedTypeName },
+            data: { typeName: brandedTypeName, url: URL },
           });
           return;
         }
@@ -211,7 +214,7 @@ export default createRule({
           context.report({
             node,
             messageId: "scatteredBrandCast",
-            data: { typeName: brandedTypeName },
+            data: { typeName: brandedTypeName, url: URL },
           });
         }
       },
