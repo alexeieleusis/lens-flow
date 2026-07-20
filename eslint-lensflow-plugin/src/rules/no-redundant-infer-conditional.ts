@@ -3,6 +3,9 @@ import { AST_NODE_TYPES, ESLintUtils, TSESLint } from "@typescript-eslint/utils"
 import type { TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T49-associated-types.md");
 
 function containsInfer(node: TSESTree.Node): boolean {
   return walkNodes(node, (n) => n.type === AST_NODE_TYPES.TSInferType, {
@@ -42,7 +45,7 @@ export default createRule({
     },
     messages: {
       redundantConditional:
-        "This conditional type is a redundant identity distribution. The check type is already constrained to extend the union type, so `T extends A | B ? T : never` is equivalent to just `T`. Use a simple type alias instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T49-associated-types.md",
+        "This conditional type is a redundant identity distribution. The check type is already constrained to extend the union type, so `T extends A | B ? T : never` is equivalent to just `T`. Use a simple type alias instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -100,6 +103,7 @@ export default createRule({
         context.report({
           node,
           messageId: "redundantConditional",
+          data: { url: URL },
         });
       },
     };
