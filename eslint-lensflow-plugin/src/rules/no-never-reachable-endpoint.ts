@@ -1,5 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T34-never-bottom.md");
 
 function isLiteralTrue(node: TSESTree.Expression | null | undefined): boolean {
   return node?.type === "Literal" && node.value === true;
@@ -89,8 +92,8 @@ export default createRule({
         "Disallow functions with return type `never` that have a reachable endpoint",
     },
     messages: {
-      reachableEnd:
-        "A function returning 'never' must not have a reachable endpoint. Every code path must throw, loop infinitely, or call another never-returning function. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T34-never-bottom.md",
+     reachableEnd:
+         "A function returning 'never' must not have a reachable endpoint. Every code path must throw, loop infinitely, or call another never-returning function. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -108,19 +111,19 @@ export default createRule({
       if (!node.body) return;
 
       if (node.body.type !== "BlockStatement") {
-        context.report({ node, messageId: "reachableEnd" });
+        context.report({ node, messageId: "reachableEnd", data: { url: URL } });
         return;
       }
 
       const { body } = node.body;
       if (body.length === 0) {
-        context.report({ node, messageId: "reachableEnd" });
+        context.report({ node, messageId: "reachableEnd", data: { url: URL } });
         return;
       }
 
       const lastStmt = body[body.length - 1];
       if (!isTerminating(lastStmt, neverFunctions)) {
-        context.report({ node, messageId: "reachableEnd" });
+        context.report({ node, messageId: "reachableEnd", data: { url: URL } });
       }
     }
 
