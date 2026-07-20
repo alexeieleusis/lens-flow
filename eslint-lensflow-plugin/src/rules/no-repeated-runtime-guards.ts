@@ -1,6 +1,9 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { walk } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC01-invalid-states.md");
 
 interface FunctionInfo {
   node:
@@ -121,7 +124,7 @@ export default createRule({
     },
     messages: {
       repeatedGuard:
-        "Duplicate runtime guard '{{guard}}' found in {{count}} functions with the same signature. Extract validation into a branded type or parse function. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC01-invalid-states.md",
+        "Duplicate runtime guard '{{guard}}' found in {{count}} functions with the same signature. Extract validation into a branded type or parse function. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -201,6 +204,7 @@ export default createRule({
               data: {
                 guard,
                 count: String(fns.length),
+                url: URL,
               },
             });
           }
