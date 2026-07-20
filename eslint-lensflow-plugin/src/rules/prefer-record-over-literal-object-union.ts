@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T31-record-types.md");
 
 function extractPropName(key: TSESTree.TSPropertySignature["key"]): string | null {
   if (key.type === "Identifier") return key.name;
@@ -96,7 +99,7 @@ export default createRule({
     },
     messages: {
       preferRecord:
-        "This union of object literal types shares the same property structure across members but differs only in literal values. Consider factoring into a discriminated union with a Record for variant-specific data. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T31-record-types.md",
+        "This union of object literal types shares the same property structure across members but differs only in literal values. Consider factoring into a discriminated union with a Record for variant-specific data. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -139,6 +142,9 @@ export default createRule({
           context.report({
             node,
             messageId: "preferRecord",
+            data: {
+              url: URL,
+            },
           });
         }
       },
