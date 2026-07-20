@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T34-never-bottom.md");
 
 function getNameFromKey(key: TSESTree.Node): string | null {
   if (key.type === "Identifier") return key.name;
@@ -35,7 +38,7 @@ export default createRule({
     },
     messages: {
       badParamType:
-        "The `{{name}}` parameter must be typed as `never` to preserve exhaustiveness checking. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T34-never-bottom.md",
+        "The `{{name}}` parameter must be typed as `never` to preserve exhaustiveness checking. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -68,6 +71,7 @@ export default createRule({
           messageId: "badParamType",
           data: {
             name: rawParam.name,
+            url: URL,
           },
         });
       }
