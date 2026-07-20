@@ -1,6 +1,9 @@
 import { TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T64-async-iteration.md");
 
 function extractYieldExpr(
   forOfBody: TSESTree.BlockStatement | TSESTree.ExpressionStatement,
@@ -77,7 +80,7 @@ export default createRule({
     },
     messages: {
       staticAsyncGenerator:
-        "This async generator simply yields from a static literal array with {{count}} element(s). Return the array directly instead.",
+        "This async generator simply yields from a static literal array with {{count}} element(s). Return the array directly instead. See: {{url}}",
     },
     schema: [
       {
@@ -145,6 +148,7 @@ export default createRule({
         messageId: "staticAsyncGenerator",
         data: {
           count: String(init.elements.length),
+          url: URL,
         },
       });
     }
