@@ -1,5 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC13-state-machines.md");
 
 type MemberKey = {
   base: string;
@@ -90,8 +93,8 @@ export default createRule({
         "Disallow chains of if/else-if comparing the same member against string literals; prefer a switch with exhaustive matching.",
     },
     messages: {
-      stateCascade:
-        "Found {{count}} consecutive if/else-if branches comparing {{member}} against string literals. Use a switch statement with exhaustive matching instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC13-state-machines.md",
+     stateCascade:
+         "Found {{count}} consecutive if/else-if branches comparing {{member}} against string literals. Use a switch statement with exhaustive matching instead. See: {{url}}",
     },
     schema: [
       {
@@ -147,6 +150,7 @@ export default createRule({
             data: {
               count: String(count),
               member: key,
+              url: URL,
             },
           });
           return;
