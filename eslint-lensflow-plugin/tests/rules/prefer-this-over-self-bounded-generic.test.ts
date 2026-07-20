@@ -1,5 +1,8 @@
 import { ruleTester } from "../helpers/rule-tester.js";
 import rule from "../../src/rules/prefer-this-over-self-bounded-generic.js";
+import { knowledgeUrl } from "../../src/utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T33-self-type.md");
 
 ruleTester.run("prefer-this-over-self-bounded-generic", rule, {
   valid: [
@@ -35,7 +38,7 @@ ruleTester.run("prefer-this-over-self-bounded-generic", rule, {
           return this as any as T;
         }
       }`,
-      errors: [{ messageId: "selfBoundedGeneric", data: { className: "Builder" } }],
+      errors: [{ messageId: "selfBoundedGeneric", data: { className: "Builder", url: URL } }],
     },
     {
       code: `class Chain<T extends Chain<T>> {
@@ -43,13 +46,13 @@ ruleTester.run("prefer-this-over-self-bounded-generic", rule, {
           return this as T;
         }
       }`,
-      errors: [{ messageId: "selfBoundedGeneric", data: { className: "Chain" } }],
+      errors: [{ messageId: "selfBoundedGeneric", data: { className: "Chain", url: URL } }],
     },
     {
       code: `const C = class Chain<T extends Chain<T>> {
         then(fn: () => void): T { return this as T; }
       };`,
-      errors: [{ messageId: "selfBoundedGeneric", data: { className: "Chain" } }],
+      errors: [{ messageId: "selfBoundedGeneric", data: { className: "Chain", url: URL } }],
     },
   ],
 });

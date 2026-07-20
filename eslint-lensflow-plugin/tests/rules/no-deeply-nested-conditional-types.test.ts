@@ -1,5 +1,8 @@
 import { ruleTester } from "../helpers/rule-tester.js";
 import rule from "../../src/rules/no-deeply-nested-conditional-types.js";
+import { knowledgeUrl } from "../../src/utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T17-macros-metaprogramming.md");
 
 ruleTester.run("no-deeply-nested-conditional-types", rule, {
   valid: [
@@ -97,7 +100,7 @@ type UnwrapLevel4<T> = UnwrapLevel2<UnwrapLevel2<T>>;`,
       : never
     : never;`,
       options: [{ maxDepth: 2 }],
-      errors: [{ messageId: "deepNesting", data: { depth: "3" } }],
+      errors: [{ messageId: "deepNesting", data: { depth: "3", url: URL } }],
     },
    // 5 levels with maxDepth 4 reports depth 5
     {
@@ -113,7 +116,7 @@ type UnwrapLevel4<T> = UnwrapLevel2<UnwrapLevel2<T>>;`,
       : never
     : never;`,
       options: [{ maxDepth: 4 }],
-      errors: [{ messageId: "deepNesting", data: { depth: "5" } }],
+      errors: [{ messageId: "deepNesting", data: { depth: "5", url: URL } }],
     },
     // 5 levels in a function return type
     {
@@ -148,7 +151,7 @@ type UnwrapLevel4<T> = UnwrapLevel2<UnwrapLevel2<T>>;`,
     // 5 levels with parenthesized conditional types — TSParenthesizedType must be transparent
     {
       code: `type G<T> = T extends ((infer A)[] extends B ? (C extends (D extends (E extends F ? G : H) ? I : J) ? K : L) : M) ? N : O;`,
-      errors: [{ messageId: "deepNesting", data: { depth: "5" } }],
+      errors: [{ messageId: "deepNesting", data: { depth: "5", url: URL } }],
     },
   ],
 });
