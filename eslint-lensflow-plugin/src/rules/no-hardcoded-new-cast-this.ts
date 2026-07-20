@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T33-self-type.md");
 
 type MethodNode = TSESTree.MethodDefinition | TSESTree.TSAbstractMethodDefinition;
 
@@ -48,7 +51,7 @@ export default createRule({
     },
     messages: {
       hardcodedNewCastThis:
-        "Do not use `new {{className}}() as this` — it hardcodes the concrete class and breaks polymorphism. Use `Object.create(Object.getPrototypeOf(this))` instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T33-self-type.md",
+        "Do not use `new {{className}}() as this` — it hardcodes the concrete class and breaks polymorphism. Use `Object.create(Object.getPrototypeOf(this))` instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -69,7 +72,7 @@ export default createRule({
             context.report({
               node: node.argument,
               messageId: "hardcodedNewCastThis",
-              data: { className },
+              data: { className, url: URL },
             });
           }
         }
