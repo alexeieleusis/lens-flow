@@ -1,6 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
+const URL = knowledgeUrl("usecases/UC10-encapsulation.md");
 const ID_NAME_RE = /^(id|.*Id)$/;
 
 function isBareStringType(typeAnn: TSESTree.TypeNode): boolean {
@@ -41,8 +43,8 @@ export default createRule({
         "Disallow multiple functions in the same module from accepting bare `string` parameters for entity IDs.",
     },
     messages: {
-      plainStringId:
-        "Parameter \"{{paramName}}\" is a bare `string` ID. Found {{count}} functions in this module with bare-string ID parameters — use branded types to prevent ID confusion. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC10-encapsulation.md",
+     plainStringId:
+         "Parameter \"{{paramName}}\" is a bare `string` ID. Found {{count}} functions in this module with bare-string ID parameters — use branded types to prevent ID confusion. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -95,6 +97,7 @@ export default createRule({
             data: {
               paramName,
               count: String(uniqueByFn.length),
+              url: URL,
             },
           });
         }
