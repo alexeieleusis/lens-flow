@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from '@typescript-eslint/utils';
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC05-structural-contracts.md");
 
 function countFlattenedMembers(
   node: TSESTree.TypeNode,
@@ -23,9 +26,9 @@ export default createRule({
     },
     messages: {
       tooManyDirect:
-        "Intersection type has {{count}} direct members (max: {{max}}). Consider breaking it into smaller composed types. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC05-structural-contracts.md",
+        "Intersection type has {{count}} direct members (max: {{max}}). Consider breaking it into smaller composed types. See: {{url}}",
       tooManyFlattened:
-        "Intersection type flattens to {{count}} members (max: {{max}}). Deep nesting makes types unreadable. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC05-structural-contracts.md",
+        "Intersection type flattens to {{count}} members (max: {{max}}). Deep nesting makes types unreadable. See: {{url}}",
     },
     schema: [
       {
@@ -62,6 +65,7 @@ export default createRule({
             data: {
               count: String(directCount),
               max: String(thresholdDirect),
+              url: URL,
             },
           });
         }
@@ -75,6 +79,7 @@ export default createRule({
             data: {
               count: String(flattenedCount),
               max: String(thresholdFlattened),
+              url: URL,
             },
           });
         }
