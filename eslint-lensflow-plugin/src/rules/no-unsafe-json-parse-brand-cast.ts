@@ -1,5 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T03-newtypes-opaque.md");
 
 function getCastTypeName(typeNode: TSESTree.TypeNode): string {
   if (typeNode.type === "TSTypeReference" && typeNode.typeName.type === "Identifier") {
@@ -139,7 +142,7 @@ export default createRule({
           context.report({
             node,
             messageId: "unsafeBrandCast",
-            data: { typeName: getCastTypeName(castType) },
+            data: { typeName: getCastTypeName(castType), url: URL },
           });
         }
       },
