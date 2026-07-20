@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("usecases/UC04-generic-constraints.md");
 
 export default createRule({
   name: "no-overengineered-intersection-constraint",
@@ -9,9 +12,9 @@ export default createRule({
       description:
         "Disallow generic constraints that intersect multiple named interfaces when an inline structural constraint would be simpler",
     },
-    messages: {
+   messages: {
       overengineeredIntersection:
-        "Generic constraint intersects {{count}} named type(s) ({{types}}). Consider using an inline structural constraint instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC04-generic-constraints.md",
+        "Generic constraint intersects {{count}} named type(s) ({{types}}). Consider using an inline structural constraint instead. See: {{url}}",
     },
     schema: [
       {
@@ -56,6 +59,7 @@ export default createRule({
             data: {
               count: String(typeRefs.length),
               types: names,
+              url: URL,
             },
           });
         }
