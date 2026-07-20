@@ -1,10 +1,13 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import {
   deriveSchemaName,
   findVariableInScopeChain,
   looksLikeZodSchema,
 } from "../utils/schema-inference-helper.js";
+
+const URL = knowledgeUrl("catalog/T06-derivation.md");
 
 function isZInferType(node: TSESTree.TypeNode): boolean {
   if (node.type !== "TSTypeReference") return false;
@@ -57,9 +60,9 @@ export default createRule({
     },
     messages: {
       preferInfer:
-        "Type alias `{{typeName}}` duplicates schema `{{schemaName}}`. Use `type {{typeName}} = z.infer<typeof {{schemaName}}>` instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T06-derivation.md",
+        "Type alias `{{typeName}}` duplicates schema `{{schemaName}}`. Use `type {{typeName}} = z.infer<typeof {{schemaName}}>` instead. See: {{url}}",
       redundantInterface:
-        "Interface `{{interfaceName}}` is manually defined alongside schema `{{schemaName}}`. Derive the type with `type {{interfaceName}} = z.infer<typeof {{schemaName}}>` instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T06-derivation.md",
+        "Interface `{{interfaceName}}` is manually defined alongside schema `{{schemaName}}`. Derive the type with `type {{interfaceName}} = z.infer<typeof {{schemaName}}>` instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -90,6 +93,7 @@ export default createRule({
           data: {
             typeName: aliasName,
             schemaName: schemaVarName,
+            url: URL,
           },
         });
       },
@@ -110,6 +114,7 @@ export default createRule({
           data: {
             interfaceName,
             schemaName: schemaVarName,
+            url: URL,
           },
         });
       },
