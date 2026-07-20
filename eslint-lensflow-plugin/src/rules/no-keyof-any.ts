@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T04-generics-bounds.md");
 
 function containsAnyType(node: TSESTree.TypeNode): boolean {
   if (node.type === "TSAnyKeyword") return true;
@@ -23,8 +26,8 @@ export default createRule({
         "Disallow `keyof any` which resolves to `string | number | symbol` and defeats key-based constraints",
     },
     messages: {
-      keyofAny:
-        "`keyof any` resolves to `string | number | symbol`, defeating key-based constraints. Use `keyof T` to constrain to the type's keys instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+     keyofAny:
+        "`keyof any` resolves to `string | number | symbol`, defeating key-based constraints. Use `keyof T` to constrain to the type's keys instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -34,7 +37,7 @@ export default createRule({
     return {
       TSTypeOperator(node) {
         if (node.operator === "keyof" && node.typeAnnotation && containsAnyType(node.typeAnnotation)) {
-          context.report({ node, messageId: "keyofAny" });
+          context.report({ node, messageId: "keyofAny", data: { url: URL } });
         }
       },
     };
