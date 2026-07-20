@@ -1,6 +1,9 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC21-async-concurrency.md");
 
 function isSameVariable(
   ident: TSESTree.Identifier,
@@ -175,7 +178,7 @@ export default createRule({
     },
     messages: {
       orphanedAbortController:
-        "AbortController '{{name}}' is never aborted, which may cause a memory leak. Ensure .abort() is called in a cleanup path (e.g., try/finally or a timeout callback). See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC21-async-concurrency.md",
+        "AbortController '{{name}}' is never aborted, which may cause a memory leak. Ensure .abort() is called in a cleanup path (e.g., try/finally or a timeout callback). See: {{url}}",
     },
     schema: [],
   },
@@ -203,7 +206,7 @@ export default createRule({
             context.report({
               node,
               messageId: "orphanedAbortController",
-              data: { name: "(inline)" },
+              data: { name: "(inline)", url: URL },
             });
           }
           return;
@@ -236,7 +239,7 @@ export default createRule({
           context.report({
             node,
             messageId: "orphanedAbortController",
-            data: { name: varName },
+            data: { name: varName, url: URL },
           });
         }
       },
