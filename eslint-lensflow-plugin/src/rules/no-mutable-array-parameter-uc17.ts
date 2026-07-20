@@ -1,9 +1,12 @@
 import type { TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import {
   createFunctionParamVisitor,
   checkMutableArrayParam,
 } from "../utils/visitor-helpers.js";
+
+const URL = knowledgeUrl("usecases/UC17-variance.md");
 
 export default createRule({
   name: "no-mutable-array-parameter-uc17",
@@ -15,7 +18,7 @@ export default createRule({
     },
     messages: {
       mutableArrayParam:
-        "Parameter \"{{name}}\" uses mutable array type \"{{type}}\". Use `readonly {{elem}}[]` or `ReadonlyArray<{{elem}}>`. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC17-variance.md",
+        "Parameter \"{{name}}\" uses mutable array type \"{{type}}\". Use `readonly {{elem}}[]` or `ReadonlyArray<{{elem}}>`. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -32,6 +35,7 @@ export default createRule({
           name: result.paramName,
           type: result.typeText,
           elem: result.elemText,
+          url: URL,
         },
       });
     }
