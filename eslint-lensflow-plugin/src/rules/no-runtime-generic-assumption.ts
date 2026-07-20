@@ -1,5 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T04-generics-bounds.md");
 
 const runtimeMetadataProps = new Set([
   "constructor",
@@ -125,11 +128,11 @@ export default createRule({
     },
     messages: {
       runtimeMetadataAccess:
-        "Accessing {{property}} on generic parameter {{paramName}} which has no runtime type information. Use instanceof or type guards instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+        "Accessing {{property}} on generic parameter {{paramName}} which has no runtime type information. Use instanceof or type guards instead. See: {{url}}",
       unsafeCastOnGeneric:
-        "Casting generic parameter {{paramName}} to a specific type {{castType}} assumes runtime type information that does not exist. Use type guards instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+        "Casting generic parameter {{paramName}} to a specific type {{castType}} assumes runtime type information that does not exist. Use type guards instead. See: {{url}}",
       runtimeMetadataOnCall:
-        "Accessing {{property}} on the result of generic function {{funcName}}. Generic type T is erased at runtime. Use instanceof or type guards instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+        "Accessing {{property}} on the result of generic function {{funcName}}. Generic type T is erased at runtime. Use instanceof or type guards instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -223,7 +226,7 @@ export default createRule({
         context.report({
           node: memberNode,
           messageId: "runtimeMetadataOnCall",
-          data: { property: prop.name, funcName: callee.name },
+          data: { property: prop.name, funcName: callee.name, url: URL },
         });
         return;
       }
@@ -233,7 +236,7 @@ export default createRule({
           context.report({
             node: memberNode,
             messageId: "runtimeMetadataOnCall",
-            data: { property: prop.name, funcName: baseIdentifier.name },
+            data: { property: prop.name, funcName: baseIdentifier.name, url: URL },
           });
         }
       }
@@ -276,6 +279,7 @@ export default createRule({
               data: {
                 property: property.name,
                 paramName: obj.name,
+                url: URL,
               },
             });
           }
@@ -302,6 +306,7 @@ export default createRule({
             data: {
               paramName: expression.name,
               castType: getTypeText(an.typeAnnotation),
+              url: URL,
             },
           });
         }
