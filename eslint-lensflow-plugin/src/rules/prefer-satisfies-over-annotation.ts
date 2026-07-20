@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T52-literal-types.md");
 
 function buildQualifiedName(node: TSESTree.TSQualifiedName): string {
   let left: string;
@@ -70,7 +73,7 @@ export default createRule({
     },
     messages: {
       preferSatisfies:
-        "Use `satisfies {{type}}` instead of `: {{type}}` to preserve literal types. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T52-literal-types.md",
+        "Use `satisfies {{type}}` instead of `: {{type}}` to preserve literal types. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -119,7 +122,7 @@ export default createRule({
         context.report({
           node: node.id.typeAnnotation,
           messageId: "preferSatisfies",
-          data: { type: typeName },
+          data: { type: typeName, url: URL },
         });
       },
     };
