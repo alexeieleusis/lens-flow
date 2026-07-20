@@ -1,6 +1,9 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { getMembers, countOptionalFields } from "../utils/optional-fields-helper.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC01-invalid-states.md");
 
 export default createRule({
   name: "no-parallel-optional-fields-uc01",
@@ -12,7 +15,7 @@ export default createRule({
     },
     messages: {
       tooManyOptionalFields:
-        "Found {{count}} optional field(s) ({{fields}}). Using optional fields to represent partial initialization creates invalid states the type system cannot prevent. Consider using a discriminated union instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC01-invalid-states.md",
+        "Found {{count}} optional field(s) ({{fields}}). Using optional fields to represent partial initialization creates invalid states the type system cannot prevent. Consider using a discriminated union instead. See: {{url}}",
     },
     schema: [
       {
@@ -64,6 +67,7 @@ export default createRule({
             count: String(optionalCount),
             fields,
             total: String(totalFields),
+            url: URL,
           },
         });
       }
