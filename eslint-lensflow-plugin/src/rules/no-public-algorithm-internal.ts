@@ -1,6 +1,9 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC10-encapsulation.md");
 
 const INTERNAL_NAME_PATTERN =
   /^(?:buffer|cache|state|internal|_internal|accumulator|_pool)$/;
@@ -121,7 +124,7 @@ export default createRule({
     },
     messages: {
       publicInternalState:
-        "The field '{{name}}' exposes internal algorithm state as public. Make it private (#{{name}}) to prevent callers from bypassing or corrupting the algorithm. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/usecases/UC10-encapsulation.md",
+        "The field '{{name}}' exposes internal algorithm state as public. Make it private (#{{name}}) to prevent callers from bypassing or corrupting the algorithm. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -153,7 +156,7 @@ export default createRule({
           context.report({
             node: member,
             messageId: "publicInternalState",
-            data: { name: propName },
+            data: { name: propName, url: URL },
           });
         }
       },
