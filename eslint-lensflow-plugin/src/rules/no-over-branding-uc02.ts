@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("usecases/UC02-domain-modeling.md");
 
 const brandPattern = /^(.*_*brand|brand.*)$/i;
 
@@ -24,7 +27,7 @@ export default createRule({
     },
     messages: {
       overBranding:
-        "Found {{count}} branded {{primitive}} types (threshold: {{max}}). Brands should be reserved for values that are easily confused, not every field. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC02-domain-modeling.md",
+        "Found {{count}} branded {{primitive}} types (threshold: {{max}}). Brands should be reserved for values that are easily confused, not every field. See: {{url}}",
     },
     schema: [
       {
@@ -59,7 +62,7 @@ export default createRule({
         for (const [primitive, group] of byPrimitive) {
           if (group.length > maxBrandsPerPrimitive) {
             for (const branded of group) {
-              context.report({ node: branded.node, messageId: "overBranding", data: { count: String(group.length), primitive, max: String(maxBrandsPerPrimitive) } });
+              context.report({ node: branded.node, messageId: "overBranding", data: { count: String(group.length), primitive, max: String(maxBrandsPerPrimitive), url: URL } });
             }
           }
         }
