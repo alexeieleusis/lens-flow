@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC19-serialization.md");
 
 export default createRule({
   name: "require-validation-after-json-parse",
@@ -31,11 +34,11 @@ export default createRule({
        * system to narrow parsed data types.
        */
     },
-    messages: {
+   messages: {
       directUnvalidated:
-        "JSON.parse result used directly in {{calleeName}} without schema validation. Wrap with a validator like Schema.parse() or Schema.safeParse(). See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC19-serialization.md",
+        "JSON.parse result used directly in {{calleeName}} without schema validation. Wrap with a validator like Schema.parse() or Schema.safeParse(). See: {{url}}",
       unvalidatedVariableUsage:
-        "Unvalidated JSON.parse result from '{{varName}}' used in {{calleeName}} without passing through a schema validator. Wrap the parse result with Schema.parse() or Schema.safeParse(). See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC19-serialization.md",
+        "Unvalidated JSON.parse result from '{{varName}}' used in {{calleeName}} without passing through a schema validator. Wrap the parse result with Schema.parse() or Schema.safeParse(). See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -176,6 +179,7 @@ export default createRule({
           data: {
             varName: arg.name,
             calleeName: getCalleeName(callee),
+            url: URL,
           },
         });
       }
@@ -197,6 +201,7 @@ export default createRule({
             messageId: "directUnvalidated",
             data: {
               calleeName: getCalleeName(parentCall.callee),
+              url: URL,
             },
           });
         }
