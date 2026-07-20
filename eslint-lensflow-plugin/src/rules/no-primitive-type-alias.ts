@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T23-type-aliases.md");
 
 const primitiveTypes = new Set([
   "TSStringKeyword",
@@ -22,7 +25,7 @@ export default createRule({
     },
     messages: {
       primitiveAlias:
-        "Type alias \"{{name}}\" is a transparent alias for \"{{primitive}}\". Use the primitive directly or a branded type for nominal distinction.",
+        "Type alias \"{{name}}\" is a transparent alias for \"{{primitive}}\". Use the primitive directly or a branded type for nominal distinction. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -40,6 +43,7 @@ export default createRule({
             data: {
               name: node.id.name,
               primitive: primitiveName,
+              url: URL,
             },
           });
         }
