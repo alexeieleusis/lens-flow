@@ -1,5 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T06-derivation.md");
 
 function getExprNameIdentifier(node: TSESTree.TSTypeQuery): string | null {
   const { exprName } = node;
@@ -56,9 +59,9 @@ export default createRule({
     },
     messages: {
       mutableLetVar:
-        "`typeof` on `{{name}}` which is declared with `{{kind}}`. The runtime value can be reassigned and the derived type will silently drift. Declare with `const ... as const` instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T06-derivation.md",
+        "`typeof` on `{{name}}` which is declared with `{{kind}}`. The runtime value can be reassigned and the derived type will silently drift. Declare with `const ... as const` instead. See: {{url}}",
       missingAsConst:
-        "`typeof` on `{{name}}` declared with `const` but missing `as const` assertion. The object's properties will widen to non-literal types. Add `as const` to freeze the type. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T06-derivation.md",
+        "`typeof` on `{{name}}` declared with `const` but missing `as const` assertion. The object's properties will widen to non-literal types. Add `as const` to freeze the type. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -87,9 +90,10 @@ export default createRule({
             node,
             messageId: "mutableLetVar",
             data: {
-              name: varName,
-              kind: parent.kind,
-            },
+               name: varName,
+               kind: parent.kind,
+               url: URL,
+             },
           });
         } else if (isObjectOrArrayLiteral(init) && !hasAsConst(init)) {
           context.report({
@@ -97,6 +101,7 @@ export default createRule({
             messageId: "missingAsConst",
             data: {
               name: varName,
+              url: URL,
             },
           });
         }
