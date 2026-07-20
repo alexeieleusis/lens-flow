@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from '@typescript-eslint/utils';
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC05-structural-contracts.md");
 
 export default createRule({
   name: "no-god-interface",
@@ -11,9 +14,9 @@ export default createRule({
     },
     messages: {
       tooManyOptional:
-        "Type '{{name}}' has {{optionalCount}} optional properties (max {{maxOptional}}). Consider splitting into smaller, focused types. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC05-structural-contracts.md",
+        "Type '{{name}}' has {{optionalCount}} optional properties (max {{maxOptional}}). Consider splitting into smaller, focused types. See: {{url}}",
       tooManyTotal:
-        "Type '{{name}}' has {{totalCount}} total properties (max {{maxTotal}}). Consider splitting into smaller, focused types. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC05-structural-contracts.md",
+        "Type '{{name}}' has {{totalCount}} total properties (max {{maxTotal}}). Consider splitting into smaller, focused types. See: {{url}}",
     },
     schema: [
       {
@@ -69,6 +72,7 @@ export default createRule({
             name,
             optionalCount: String(optionalCount),
             maxOptional: String(thresholdOptional),
+            url: URL,
           },
         });
       } else if (totalCount >= thresholdTotal) {
@@ -79,6 +83,7 @@ export default createRule({
             name,
             totalCount: String(totalCount),
             maxTotal: String(thresholdTotal),
+            url: URL,
           },
         });
       }
