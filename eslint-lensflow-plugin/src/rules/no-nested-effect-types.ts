@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T12-effect-tracking.md");
 
 const DEFAULT_EFFECT_TYPES = new Set([
   "Promise",
@@ -83,8 +86,8 @@ export default createRule({
         "Disallow effect types nested inside other effect types (e.g., Promise<Result<Promise<User>, Error>>). Flatten to a single stacked effect instead.",
     },
     messages: {
-      nestedEffect:
-        "Nested effect type detected: {{outer}} wraps {{inner}}. Flatten to a single stacked effect type (e.g., TaskEither<E, A>). See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T12-effect-tracking.md",
+     nestedEffect:
+         "Nested effect type detected: {{outer}} wraps {{inner}}. Flatten to a single stacked effect type (e.g., TaskEither<E, A>). See: {{url}}",
     },
     schema: [
       {
@@ -136,6 +139,7 @@ export default createRule({
           data: {
             outer: nested.outer,
             inner: nested.inner,
+            url: URL,
           },
         });
       }
