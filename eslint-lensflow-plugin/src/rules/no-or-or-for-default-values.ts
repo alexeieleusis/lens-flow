@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T13-null-safety.md");
 
 function isLikelyTarget(node: TSESTree.Node): boolean {
   if (node.type === "ChainExpression") {
@@ -33,7 +36,7 @@ export default createRule({
     },
     messages: {
       preferNullishCoalescing:
-        "Use `??` instead of `||` for default values. The `||` operator replaces all falsy values (0, \"\", false) with the fallback, while `??` only replaces null and undefined. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T13-null-safety.md",
+        "Use `??` instead of `||` for default values. The `||` operator replaces all falsy values (0, \"\", false) with the fallback, while `??` only replaces null and undefined. See: {{url}}",
     },
     schema: [
       {
@@ -83,6 +86,7 @@ export default createRule({
         context.report({
           node,
           messageId: "preferNullishCoalescing",
+          data: { url: URL },
           fix(fixer) {
             const sourceCode = context.sourceCode;
             const operatorToken = sourceCode.getTokenAfter(
