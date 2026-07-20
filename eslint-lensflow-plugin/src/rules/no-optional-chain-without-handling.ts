@@ -1,6 +1,9 @@
 import ts from "typescript";
 import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T13-null-safety.md");
 
 function typeIncludesUndefined(type: ts.Type): boolean {
   if ((type.flags & ts.TypeFlags.Undefined) !== 0) return true;
@@ -21,7 +24,7 @@ export default createRule({
      },
     messages: {
       undefinedType:
-        "The type of `{{name}}` includes `undefined` from optional chaining. Use `??` to provide a default. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T13-null-safety.md",
+        "The type of `{{name}}` includes `undefined` from optional chaining. Use `??` to provide a default. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -61,7 +64,7 @@ export default createRule({
           context.report({
             node,
             messageId: "undefinedType",
-            data: { name: declName },
+            data: { name: declName, url: URL },
           });
         }
       },
