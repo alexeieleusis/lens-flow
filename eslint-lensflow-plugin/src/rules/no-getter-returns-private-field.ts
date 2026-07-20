@@ -1,6 +1,9 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC10-encapsulation.md");
 
 function isPrivateFieldReturn(expr: TSESTree.Node | null | undefined): boolean {
   if (expr?.type !== "MemberExpression") return false;
@@ -23,7 +26,7 @@ export default createRule({
     },
     messages: {
       leaksPrivateField:
-        'Getter "{{getterName}}" returns a #private field directly, leaking mutable internal state. Return a copy or an immutable view instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC10-encapsulation.md',
+        'Getter "{{getterName}}" returns a #private field directly, leaking mutable internal state. Return a copy or an immutable view instead. See: {{url}}',
     },
     schema: [],
   },
@@ -50,7 +53,7 @@ export default createRule({
           context.report({
             node,
             messageId: "leaksPrivateField",
-            data: { getterName },
+            data: { getterName, url: URL },
           });
         }
       },
