@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T57-typestate.md");
 
 export default createRule({
   name: "no-runtime-state-transition-guard",
@@ -11,7 +14,7 @@ export default createRule({
     },
     messages: {
       runtimeStateGuard:
-        "Runtime state guard using `{{prop}} !== {{expected}}` with throw. Use typestate pattern for compile-time enforcement instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T57-typestate.md",
+        "Runtime state guard using `{{prop}} !== {{expected}}` with throw. Use typestate pattern for compile-time enforcement instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -73,6 +76,7 @@ export default createRule({
           data: {
             prop: propName,
             expected: String(literal.value),
+            url: URL,
           },
         });
       },
