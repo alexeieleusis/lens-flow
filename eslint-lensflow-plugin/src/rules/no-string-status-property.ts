@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T52-literal-types.md");
 
 export default createRule({
   name: "no-string-status-property",
@@ -11,7 +14,7 @@ export default createRule({
     },
     messages: {
       stringStatusField:
-        "Property `{{name}}` is typed as plain `string`. Use a literal union (e.g. `\"OK\" | \"ERROR\"`) to constrain valid values. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T52-literal-types.md",
+        "Property `{{name}}` is typed as plain `string`. Use a literal union (e.g. `\"OK\" | \"ERROR\"`) to constrain valid values. See: {{url}}",
     },
     schema: [
       {
@@ -83,7 +86,7 @@ export default createRule({
         context.report({
           node,
           messageId: "stringStatusField",
-          data: { name: keyName },
+          data: { name: keyName, url: URL },
         });
       },
     };
