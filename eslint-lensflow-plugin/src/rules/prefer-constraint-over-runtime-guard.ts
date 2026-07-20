@@ -1,6 +1,9 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { walk } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC04-generic-constraints.md");
 
 function normalizeParam(
   param: TSESTree.Parameter,
@@ -51,7 +54,7 @@ export default createRule({
     },
     messages: {
       preferConstraint:
-        "Parameter '{{param}}' is typed as `any` with a runtime guard. Use a generic constraint instead.",
+        "Parameter '{{param}}' is typed as `any` with a runtime guard. Use a generic constraint instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -142,7 +145,7 @@ export default createRule({
         context.report({
           node,
           messageId: "preferConstraint",
-          data: { param: paramName },
+          data: { param: paramName, url: URL },
         });
       }
     }
