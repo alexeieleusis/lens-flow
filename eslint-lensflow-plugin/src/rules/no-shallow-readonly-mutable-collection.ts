@@ -1,5 +1,8 @@
 import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T21-encapsulation.md");
 
 function isMutableCollectionType(node: TSESTree.TypeNode): boolean {
   if (node.type === AST_NODE_TYPES.TSArrayType) {
@@ -68,11 +71,11 @@ export default createRule({
     },
     messages: {
       mutableArray:
-        "Property {{name}} is marked readonly but holds a mutable array type. Use readonly {{element}}[] instead of {{element}}[]. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T21-encapsulation.md",
+        "Property {{name}} is marked readonly but holds a mutable array type. Use readonly {{element}}[] instead of {{element}}[]. See: {{url}}",
       mutableMapSet:
-        "Property {{name}} is marked readonly but holds a mutable {{collection}} type. Use Readonly{{collection}} instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T21-encapsulation.md",
+        "Property {{name}} is marked readonly but holds a mutable {{collection}} type. Use Readonly{{collection}} instead. See: {{url}}",
       mutableIntersection:
-        "Property {{name}} is marked readonly but its type includes a mutable collection. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T21-encapsulation.md",
+        "Property {{name}} is marked readonly but its type includes a mutable collection. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -107,7 +110,7 @@ export default createRule({
           context.report({
             node: reportNode,
             messageId: "mutableMapSet",
-            data: { name: propName, collection: typeName },
+            data: { name: propName, collection: typeName, url: URL },
           });
         }
         if (typeName === "Array") {
@@ -117,7 +120,7 @@ export default createRule({
           context.report({
             node: reportNode,
             messageId: "mutableArray",
-            data: { name: propName, element: elementName },
+            data: { name: propName, element: elementName, url: URL },
           });
         }
         return;
@@ -130,7 +133,7 @@ export default createRule({
         context.report({
           node: reportNode,
           messageId: "mutableArray",
-          data: { name: propName, element: elementName },
+          data: { name: propName, element: elementName, url: URL },
         });
         return;
       }
@@ -138,7 +141,7 @@ export default createRule({
       context.report({
         node: reportNode,
         messageId: "mutableIntersection",
-        data: { name: propName },
+        data: { name: propName, url: URL },
       });
     }
 
