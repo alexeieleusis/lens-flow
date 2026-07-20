@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T03-newtypes-opaque.md");
 
 function isBrandSymbolName(name: string): boolean {
   // Matches common branding conventions:
@@ -19,7 +22,7 @@ export default createRule({
     },
     messages: {
       exportedBrandSymbol:
-        "Exporting the brand symbol \"{{name}}\" allows callers to forge branded values, bypassing smart constructor validation. Use `declare const` instead of `export const`. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T03-newtypes-opaque.md",
+        "Exporting the brand symbol \"{{name}}\" allows callers to forge branded values, bypassing smart constructor validation. Use `declare const` instead of `export const`. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -51,7 +54,7 @@ export default createRule({
             context.report({
               node: decl,
               messageId: "exportedBrandSymbol",
-              data: { name },
+              data: { name, url: URL },
             });
           }
         }
