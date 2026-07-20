@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T63-template-literal-types.md");
 
 function unwrapExpression(node: TSESTree.Node): TSESTree.Node {
   while (
@@ -58,7 +61,7 @@ export default createRule({
     },
     messages: {
       runtimeStringConcatKey:
-        "Property key constructed from untyped string parameter '{{param}}' at runtime. Use a literal union type for the parameter and a compile-time template literal type for the key.",
+        "Property key constructed from untyped string parameter '{{param}}' at runtime. Use a literal union type for the parameter and a compile-time template literal type for the key. See: {{url}}",
     },
     schema: [
       {
@@ -106,7 +109,7 @@ export default createRule({
         context.report({
           node: tmpl,
           messageId: "runtimeStringConcatKey",
-          data: { param: tmplExpr.name },
+          data: { param: tmplExpr.name, url: URL },
         });
       },
     };
