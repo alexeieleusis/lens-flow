@@ -1,6 +1,9 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC01-invalid-states.md");
 
 const VALIDATION_NAME_RE = /^(is|validate|check)[A-Z]/;
 
@@ -68,7 +71,7 @@ export default createRule({
     },
     messages: {
       preferParse:
-        "Function '{{name}}' returns boolean and contains validation logic. Consider returning a refined type or null instead, so the caller holds typed evidence of validity. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC01-invalid-states.md",
+        "Function '{{name}}' returns boolean and contains validation logic. Consider returning a refined type or null instead, so the caller holds typed evidence of validity. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -89,7 +92,7 @@ export default createRule({
       context.report({
         node,
         messageId: "preferParse",
-        data: { name },
+        data: { name, url: URL },
       });
     }
 
