@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T59-existential-types.md");
 
 function countOptionalProps(members: TSESTree.Node[]) {
   return members.filter(
@@ -18,7 +21,7 @@ export default createRule({
     },
     messages: {
       tooManyOptional:
-        "'{{name}}' has {{count}} optional properties. Consider using polymorphic components to handle distinct configurations instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T59-existential-types.md",
+        "'{{name}}' has {{count}} optional properties. Consider using polymorphic components to handle distinct configurations instead. See: {{url}}",
     },
     schema: [
       {
@@ -50,7 +53,7 @@ export default createRule({
           context.report({
             node: decl || node,
             messageId: "tooManyOptional",
-            data: { name, count: String(optionalProps.length) },
+            data: { name, count: String(optionalProps.length), url: URL },
           });
         }
       },
@@ -65,7 +68,7 @@ export default createRule({
           context.report({
             node: decl || node,
             messageId: "tooManyOptional",
-            data: { name, count: String(optionalProps.length) },
+            data: { name, count: String(optionalProps.length), url: URL },
           });
         }
       },
