@@ -1,4 +1,5 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 function extractParamIdentifier(
@@ -35,8 +36,7 @@ function extractParamTypeAnnotation(
   return null;
 }
 
-const KNOWLEDGE_URL =
-  "https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T26-refinement-types.md";
+const URL = knowledgeUrl("catalog/T26-refinement-types.md");
 
 const PRIMITIVE_KEYWORDS = new Set([
   "TSStringKeyword",
@@ -384,7 +384,7 @@ export default createRule({
                 count: String(group.length),
                 param: fn.paramName,
                 typeSig: fn.typeSig,
-                url: KNOWLEDGE_URL,
+                url: URL,
               },
             });
           }
