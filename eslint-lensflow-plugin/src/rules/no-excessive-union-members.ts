@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T36-trait-objects.md");
 
 export default createRule({
   name: "no-excessive-union-members",
@@ -11,7 +14,7 @@ export default createRule({
     },
     messages: {
       tooManyMembers:
-        "Union type has {{count}} members (max: {{max}}). Consider grouping related variants or using an interface dispatch for large open sets. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T36-trait-objects.md",
+        "Union type has {{count}} members (max: {{max}}). Consider grouping related variants or using an interface dispatch for large open sets. See: {{url}}",
     },
     schema: [
       {
@@ -44,6 +47,7 @@ export default createRule({
             data: {
               count: String(nonLiteralMembers.length),
               max: String(maxMembers),
+              url: URL,
             },
           });
         }
