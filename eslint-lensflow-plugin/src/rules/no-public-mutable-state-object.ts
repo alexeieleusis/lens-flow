@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("usecases/UC10-encapsulation.md");
 
 const statefulEntityPattern =
   /account|wallet|balance|counter|state|inventory|cart|session|store|registry|pool|cache|buffer|accumulator|collector/i;
@@ -84,7 +87,7 @@ export default createRule({
     },
     messages: {
       mutableStateObject:
-        "{{name}} is a plain {{kind}} with mutable state properties ({{props}}). Use a class with private fields and controlled mutation methods instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC10-encapsulation.md",
+        "{{name}} is a plain {{kind}} with mutable state properties ({{props}}). Use a class with private fields and controlled mutation methods instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -118,6 +121,7 @@ export default createRule({
             name,
             kind,
             props: mutableProps.map((m) => getKeyLabel(m.key)).join(", "),
+            url: URL,
           },
         });
       }
