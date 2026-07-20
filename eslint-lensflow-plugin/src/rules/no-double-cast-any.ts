@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T47-gradual-typing.md");
 
 export default createRule({
   name: "no-double-cast-any",
@@ -11,7 +14,7 @@ export default createRule({
     },
     messages: {
       doubleCastAny:
-        "Double-cast through `any` bypasses structural type checking. Use a single `as` cast or a type guard instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/refs/heads/main/plugin/skills/typescript/catalog/T47-gradual-typing.md",
+        "Double-cast through `any` bypasses structural type checking. Use a single `as` cast or a type guard instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -24,12 +27,12 @@ export default createRule({
 
         if (expr.type === "TSAsExpression") {
           if (expr.typeAnnotation.type === "TSAnyKeyword") {
-            context.report({ node, messageId: "doubleCastAny" });
+            context.report({ node, messageId: "doubleCastAny", data: { url: URL } });
             return;
           }
 
           if (node.typeAnnotation.type === "TSAnyKeyword") {
-            context.report({ node, messageId: "doubleCastAny" });
+            context.report({ node, messageId: "doubleCastAny", data: { url: URL } });
           }
         }
       },
