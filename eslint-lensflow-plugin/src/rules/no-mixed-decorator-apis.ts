@@ -1,5 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T17-macros-metaprogramming.md");
 
 const STAGE3_CONTEXT_TYPES = new Set([
   "ClassDecoratorContext",
@@ -60,7 +63,7 @@ export default createRule({
     },
     messages: {
       mixedDecoratorApis:
-        "Class '{{name}}' mixes stage-3 and experimental decorator APIs. Use only one decorator API consistently. Stage-3 decorators: {{stage3Decos}}. Experimental decorators: {{experimentalDecos}}. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T17-macros-metaprogramming.md",
+        "Class '{{name}}' mixes stage-3 and experimental decorator APIs. Use only one decorator API consistently. Stage-3 decorators: {{stage3Decos}}. Experimental decorators: {{experimentalDecos}}. See: {{url}}",
     },
     schema: [],
   },
@@ -104,6 +107,7 @@ export default createRule({
               name: (node.id?.name ?? "<anonymous>"),
               stage3Decos: [...stage3Used].join(", "),
               experimentalDecos: [...experimentalUsed].join(", "),
+              url: URL,
             },
           });
         }
