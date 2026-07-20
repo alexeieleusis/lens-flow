@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T17-macros-metaprogramming.md");
 
 export default createRule({
   name: "no-deeply-nested-conditional-types",
@@ -10,8 +13,8 @@ export default createRule({
         "Disallow conditional types nested more than 4 levels deep without intermediate named type aliases. Configurable via `maxDepth`",
     },
     messages: {
-      deepNesting:
-        "Conditional type nested {{depth}} levels deep. Extract intermediate levels into named type aliases for readability. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T17-macros-metaprogramming.md",
+     deepNesting:
+         "Conditional type nested {{depth}} levels deep. Extract intermediate levels into named type aliases for readability. See: {{url}}",
     },
     schema: [
       {
@@ -46,6 +49,7 @@ export default createRule({
             messageId: "deepNesting",
             data: {
               depth: String(depth),
+              url: URL,
             },
           });
         }
