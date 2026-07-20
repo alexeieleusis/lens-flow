@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from '@typescript-eslint/utils';
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T63-template-literal-types.md");
 
 const CASE_SUFFIXES = [
   "upper",
@@ -115,7 +118,7 @@ function handleParallelEnumPair(
     context.report({
       node: bNode,
       messageId: "parallelCaseEnum",
-      data: { source: aName, derived: bName },
+      data: { source: aName, derived: bName, url: URL },
     });
     return;
   }
@@ -127,7 +130,7 @@ function handleParallelEnumPair(
   context.report({
     node: derivedNode,
     messageId: "parallelCaseEnum",
-    data: { source, derived: derivedName },
+    data: { source, derived: derivedName, url: URL },
   });
 }
 
@@ -141,7 +144,7 @@ export default createRule({
     },
     messages: {
       parallelCaseEnum:
-        "Enum '{{derived}}' duplicates members of '{{source}}' with transformed casing. Use template literal intrinsic types (e.g., Uppercase<T>) instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T63-template-literal-types.md",
+        "Enum '{{derived}}' duplicates members of '{{source}}' with transformed casing. Use template literal intrinsic types (e.g., Uppercase<T>) instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
