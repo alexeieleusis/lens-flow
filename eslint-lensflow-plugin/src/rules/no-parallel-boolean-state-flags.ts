@@ -1,6 +1,9 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
-import { createBooleanFlagChecker } from "../utils/visitor-helpers.js";
+import { getInterfaceMembers } from "../utils/visitor-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC13-state-machines.md");
 
 export default createRule({
   name: "no-parallel-boolean-state-flags",
@@ -12,7 +15,7 @@ export default createRule({
     },
     messages: {
       tooManyBooleanFlags:
-        "Found {{count}} boolean state flags ({{flags}}) in {{kind}}. Model mutually exclusive states with a discriminated union instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC13-state-machines.md",
+        "Found {{count}} boolean state flags ({{flags}}) in {{kind}}. Model mutually exclusive states with a discriminated union instead. See: {{url}}",
     },
     schema: [
       {
@@ -45,6 +48,51 @@ export default createRule({
         (member.key.type === "Literal" && typeof member.key.value === "string")) &&
       member.typeAnnotation?.typeAnnotation.type === "TSBooleanKeyword";
 
-    return createBooleanFlagChecker(minCount, isBooleanFlag, "tooManyBooleanFlags")(context);
+    function checkNode(
+      node: TSESTree.TSInterfaceBody | TSESTree.TSTypeLiteral,
+    ) {
+      const members = getInterfaceMembers(node);
+      const boolFlags = members.filter(isBooleanFlag);
+
+      if (boolFlags.length >= minCount) {
+        const flagNames = boolFlags
+          .map((m) => {
+            if (m.key.type === "Identifier") return m.key.name;
+            if (m.key.type === "Literal" && typeof m.key.value === "string") return m.key.value;
+            return String(m.key?.value ?? "?");
+          })
+          .join(", ");
+
+        const parent = node.parent;
+        let kind: string;
+        if (parent?.type === "TSInterfaceDeclaration") {
+          kind = `interface \`${parent.id?.name ?? "anonymous"}\``;
+        } else if (parent?.type === "TSTypeAliasDeclaration") {
+          kind = `type \`${parent.id?.name ?? "anonymous"}\``;
+        } else {
+          kind = "type";
+        }
+
+        context.report({
+          node: parent ?? node,
+          messageId: "tooManyBooleanFlags",
+          data: {
+            count: String(boolFlags.length),
+            flags: flagNames,
+            kind,
+            url: URL,
+          },
+        });
+      }
+    }
+
+    return {
+      TSInterfaceBody(node: TSESTree.TSInterfaceBody) {
+        checkNode(node);
+      },
+      TSTypeLiteral(node: TSESTree.TSTypeLiteral) {
+        checkNode(node);
+      },
+    };
   },
 });
