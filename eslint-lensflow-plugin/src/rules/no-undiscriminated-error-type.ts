@@ -1,6 +1,8 @@
 import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
+const URL = knowledgeUrl("usecases/UC08-error-handling.md");
 const DISCRIMINANT_PATTERN = /^(kind|tag|code|type)$/;
 const ERROR_NAME_PATTERN = /Error|Fail|Exception/;
 
@@ -60,9 +62,9 @@ export default createRule({
     },
     messages: {
       undiscriminatedError:
-        "Error type '{{name}}' has no discriminant property. Add a 'kind', 'tag', 'code', or 'type' property with a literal type to enable exhaustive pattern matching. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC08-error-handling.md",
+        "Error type '{{name}}' has no discriminant property. Add a 'kind', 'tag', 'code', or 'type' property with a literal type to enable exhaustive pattern matching. See: {{url}}",
       singleMessageProperty:
-        "Type '{{name}}' has only a 'message: string' property, making it an undiscriminated error type. Consider using a discriminated union for different error kinds. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC08-error-handling.md",
+        "Type '{{name}}' has only a 'message: string' property, making it an undiscriminated error type. Consider using a discriminated union for different error kinds. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -94,7 +96,7 @@ export default createRule({
         context.report({
           node,
           messageId: "singleMessageProperty",
-          data: { name: declName ?? "unnamed" },
+          data: { name: declName ?? "unnamed", url: URL },
         });
         return;
       }
@@ -111,7 +113,7 @@ export default createRule({
         context.report({
           node,
           messageId: "undiscriminatedError",
-          data: { name: declName },
+          data: { name: declName, url: URL },
         });
         return;
       }
@@ -127,7 +129,7 @@ export default createRule({
         context.report({
           node,
           messageId: "undiscriminatedError",
-          data: { name: declName },
+          data: { name: declName, url: URL },
         });
       }
     }
