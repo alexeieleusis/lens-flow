@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T61-recursive-types.md");
 
 export default createRule({
   name: "no-sequential-depth-types",
@@ -11,7 +14,7 @@ export default createRule({
     },
     messages: {
       sequentialDepthType:
-        "Type {{name}} is part of a sequential depth chain ({{chain}}) that should be a single recursive type. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T61-recursive-types.md",
+        "Type {{name}} is part of a sequential depth chain ({{chain}}) that should be a single recursive type. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -52,6 +55,7 @@ export default createRule({
                 data: {
                   name: member.name,
                   chain: chainNames,
+                  url: URL,
                 },
               });
             }
