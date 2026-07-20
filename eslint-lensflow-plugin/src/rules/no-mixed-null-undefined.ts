@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T13-null-safety.md");
 
 export default createRule({
   name: "no-mixed-null-undefined",
@@ -11,7 +14,7 @@ export default createRule({
     },
     messages: {
       mixedNullUndefined:
-        "Union type mixes both null and undefined. Pick one based on intent: null for explicit absence, undefined for not-yet-provided. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T13-null-safety.md",
+        "Union type mixes both null and undefined. Pick one based on intent: null for explicit absence, undefined for not-yet-provided. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -31,6 +34,7 @@ export default createRule({
           context.report({
             node,
             messageId: "mixedNullUndefined",
+            data: { url: URL },
           });
         }
       },
