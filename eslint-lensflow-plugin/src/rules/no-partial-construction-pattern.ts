@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("usecases/UC10-encapsulation.md");
 
 export default createRule({
   name: "no-partial-construction-pattern",
@@ -11,7 +14,7 @@ export default createRule({
     },
     messages: {
       partialConstructionPattern:
-        "Class {{className}} has {{propCount}} field(s) with empty/null defaults and accepts Partial data, allowing partially constructed invalid state. Use a private constructor with a validated factory method instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC10-encapsulation.md",
+        "Class {{className}} has {{propCount}} field(s) with empty/null defaults and accepts Partial data, allowing partially constructed invalid state. Use a private constructor with a validated factory method instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -56,6 +59,7 @@ export default createRule({
             data: {
               className,
               propCount: String(emptyDefaultProps.length),
+              url: URL,
             },
           });
         }
