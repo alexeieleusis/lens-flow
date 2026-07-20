@@ -267,7 +267,7 @@ export default createRule({
       description: "Disallow mutating a nullable property without first checking for null/undefined",
      },
     messages: {
-      mutateNullableWithoutCheck: `Mutating nullable property '{{objName}}.{{propName}}' without a prior null check. Add a guard before mutating. See: ${URL}`,
+      mutateNullableWithoutCheck: `Mutating nullable property '{{objName}}.{{propName}}' without a prior null check. Add a guard before mutating. See: {{url}}`,
     },
     schema: [],
   },
@@ -308,7 +308,7 @@ export default createRule({
           context.report({
             node,
             messageId: "mutateNullableWithoutCheck",
-            data: { objName, propName },
+            data: { objName, propName, url: URL },
           });
         }
       },
