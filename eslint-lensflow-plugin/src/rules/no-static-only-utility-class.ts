@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("usecases/UC10-encapsulation.md");
 
 export default createRule({
   name: "no-static-only-utility-class",
@@ -11,7 +14,7 @@ export default createRule({
     },
     messages: {
       staticOnlyUtility:
-        "Class {{name}} has a private constructor, no instance fields, and only static methods. Replace with plain utility functions in a module namespace. See: https://raw.githubusercontent.com/jpablo/vibe-types/786645c333d27418ae273aee1df3f9513b9d4919/plugin/skills/typescript/usecases/UC10-encapsulation.md",
+        "Class {{name}} has a private constructor, no instance fields, and only static methods. Replace with plain utility functions in a module namespace. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -58,7 +61,7 @@ export default createRule({
           context.report({
             node: node.parent,
             messageId: "staticOnlyUtility",
-            data: { name: className },
+            data: { name: className, url: URL },
           });
         }
       },
