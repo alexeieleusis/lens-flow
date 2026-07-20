@@ -1,5 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T01-algebraic-data-types.md");
 
 function extractPropName(key: TSESTree.Property["key"]): string | null {
   if (key.type === "Identifier") return key.name;
@@ -73,7 +76,7 @@ function reportDuplicate(
   context.report({
     node: sig,
     messageId: "duplicateDiscriminant",
-    data: { propName, value },
+    data: { propName, value, url: URL },
   });
 }
 
@@ -99,7 +102,7 @@ export default createRule({
     },
     messages: {
       duplicateDiscriminant:
-        "Discriminant property `{{propName}}` has duplicate value `{{value}}` across union members. Each variant must use a unique discriminant value. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T01-algebraic-data-types.md",
+        "Discriminant property `{{propName}}` has duplicate value `{{value}}` across union members. Each variant must use a unique discriminant value. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
