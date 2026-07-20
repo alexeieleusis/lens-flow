@@ -1,5 +1,8 @@
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC02-domain-modeling.md");
 
 function isLiteralType(member: TSESTree.TypeNode): boolean {
   return member.type === "TSLiteralType";
@@ -91,12 +94,13 @@ function reportLiteralUnionField(
   member: TSESTree.TSPropertySignature,
   unionNode: TSESTree.TSUnionType,
 ) {
-  context.report({
+   context.report({
     node: member,
     messageId: "literalUnionField",
     data: {
       field: getFieldName(member.key, context.sourceCode),
       count: String(countLiteralMembers(unionNode)),
+      url: URL,
     },
   });
 }
@@ -111,7 +115,7 @@ export default createRule({
     },
     messages: {
       literalUnionField:
-        "Field '{{field}}' has a union of {{count}} literal types. Consider using a discriminated union for proper narrowing. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC02-domain-modeling.md",
+        "Field '{{field}}' has a union of {{count}} literal types. Consider using a discriminated union for proper narrowing. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
