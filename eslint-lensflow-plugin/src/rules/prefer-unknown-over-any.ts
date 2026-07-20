@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T47-gradual-typing.md");
 
 function findAnyParams(
   params: readonly TSESTree.Parameter[],
@@ -195,8 +198,8 @@ export default createRule({
         "Prefer `unknown` over `any` for function parameters that are only narrowed, never directly accessed",
     },
     messages: {
-      preferUnknown:
-        "Parameter `{{name}}` is typed as `any` but is only used in narrowing expressions. Use `unknown` instead, which forces type-safe narrowing. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T47-gradual-typing.md",
+     preferUnknown:
+         "Parameter `{{name}}` is typed as `any` but is only used in narrowing expressions. Use `unknown` instead, which forces type-safe narrowing. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -229,7 +232,7 @@ export default createRule({
           context.report({
             node: anyNode,
             messageId: "preferUnknown",
-            data: { name },
+            data: { name, url: URL },
           });
         }
       }
