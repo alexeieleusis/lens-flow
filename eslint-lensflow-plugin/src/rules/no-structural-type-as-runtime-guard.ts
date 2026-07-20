@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC05-structural-contracts.md");
 
 function isAsAnyExpression(node: TSESTree.Node): node is TSESTree.TSAsExpression {
   return (
@@ -97,8 +100,8 @@ export default createRule({
         "Disallows casting `unknown` to `any` as a fake runtime guard, which performs no actual validation because types are erased at runtime.",
     },
     messages: {
-      structuralAsAnyGuard:
-        "Casting `unknown` to `any` performs no runtime validation. Write an actual type guard or parser instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC05-structural-contracts.md",
+     structuralAsAnyGuard:
+         "Casting `unknown` to `any` performs no runtime validation. Write an actual type guard or parser instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -118,6 +121,7 @@ export default createRule({
               context.report({
                 node: asAny,
                 messageId: "structuralAsAnyGuard",
+                data: { url: URL },
               });
             }
           }
@@ -128,6 +132,7 @@ export default createRule({
           context.report({
             node: asAny,
             messageId: "structuralAsAnyGuard",
+            data: { url: URL },
           });
         }
       }
