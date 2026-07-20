@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T33-self-type.md");
 
 function isThisConstructorName(node: TSESTree.Node): boolean {
   if (node.type !== "MemberExpression") return false;
@@ -23,7 +26,7 @@ export default createRule({
     },
     messages: {
       preferInstanceof:
-        "Use `this instanceof {{className}}` instead of `this.constructor.name === \"{{className}}\"`. The constructor name is fragile across bundlers and minifiers. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T33-self-type.md",
+        "Use `this instanceof {{className}}` instead of `this.constructor.name === \"{{className}}\"`. The constructor name is fragile across bundlers and minifiers. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -51,6 +54,7 @@ export default createRule({
           messageId: "preferInstanceof",
           data: {
             className: stringLit.value,
+            url: URL,
           },
         });
       },
