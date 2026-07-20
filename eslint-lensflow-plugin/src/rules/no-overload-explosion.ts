@@ -1,6 +1,9 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 import type { TSESTree } from "@typescript-eslint/types";
+
+const URL = knowledgeUrl("usecases/UC07-callable-contracts.md");
 
 type FnLikeNode = TSESTree.FunctionDeclaration | TSESTree.TSDeclareFunction;
 
@@ -14,7 +17,7 @@ export default createRule({
     },
     messages: {
       tooManyOverloads:
-        "Function '{{name}}' has {{count}} overload signatures, which makes the API hard to maintain. Consider using a discriminated union input instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC07-callable-contracts.md",
+        "Function '{{name}}' has {{count}} overload signatures, which makes the API hard to maintain. Consider using a discriminated union input instead. See: {{url}}",
     },
     schema: [
       {
@@ -70,6 +73,7 @@ export default createRule({
               data: {
                 name,
                 count: String(group.overloads),
+                url: URL,
               },
             });
           }
