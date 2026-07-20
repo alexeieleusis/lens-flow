@@ -1,6 +1,9 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 import type { TSESTree } from "@typescript-eslint/types";
+
+const URL = knowledgeUrl("usecases/UC09-builder-config.md");
 
 const PRIMITIVES = new Set([
   "string",
@@ -27,7 +30,7 @@ export default createRule({
     },
     messages: {
       excessiveMarkers:
-        "Found {{count}} typestate marker types ({{markers}}). This creates 2^{{count}} = {{combinations}} possible states. Use Partial<T> + spread instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC09-builder-config.md",
+        "Found {{count}} typestate marker types ({{markers}}). This creates 2^{{count}} = {{combinations}} possible states. Use Partial<T> + spread instead. See: {{url}}",
     },
     schema: [
       {
@@ -86,6 +89,7 @@ export default createRule({
               count: String(markers.length),
               markers: markers.map((m) => m.name).join(", "),
               combinations: String(Math.pow(2, markers.length)),
+              url: URL,
             },
           });
         }
