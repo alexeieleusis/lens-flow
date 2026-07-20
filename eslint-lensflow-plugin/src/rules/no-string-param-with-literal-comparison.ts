@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T52-literal-types.md");
 
 interface ParamScope {
   paramIdent: TSESTree.Identifier;
@@ -49,7 +52,7 @@ export default createRule({
     },
     messages: {
       stringParamWithLiteralComparison:
-        "Parameter '{{name}}' is typed as `string` but compared against {{count}} literal(s) [{{literals}}]. Consider using a literal union type instead.",
+        "Parameter '{{name}}' is typed as `string` but compared against {{count}} literal(s) [{{literals}}]. Consider using a literal union type instead. See: {{url}}",
     },
     schema: [
       {
@@ -106,6 +109,7 @@ export default createRule({
               name: param.paramIdent.name,
               count: String(param.literals.size),
               literals: [...param.literals].join("', '"),
+              url: URL,
             },
           });
         }
