@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
 import { createBivariantMethodVisitor } from "../utils/bivariant-method-checker.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T08-variance-subtyping.md");
 
 export default createRule({
   name: "prefer-property-function-signature",
@@ -13,13 +16,13 @@ export default createRule({
     },
     messages: {
       methodSyntax:
-        "Method signature '{{name}}' uses bivariant syntax. Use function-property syntax (e.g. '{{name}}: ({{params}}) => ReturnType') for contravariant parameter checking. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T08-variance-subtyping.md",
+        "Method signature '{{name}}' uses bivariant syntax. Use function-property syntax (e.g. '{{name}}: ({{params}}) => ReturnType') for contravariant parameter checking. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
   },
   defaultOptions: [],
   create(context) {
-    return createBivariantMethodVisitor(context);
+    return createBivariantMethodVisitor(context, { url: URL });
   },
 });
