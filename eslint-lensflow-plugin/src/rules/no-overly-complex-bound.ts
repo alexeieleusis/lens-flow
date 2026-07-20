@@ -1,5 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T04-generics-bounds.md");
 
 function getMaxPropertyDepth(members: TSESTree.TypeElement[]): number {
   let maxDepth = 0;
@@ -83,13 +86,13 @@ export default createRule({
     },
     messages: {
       complexIntersection:
-        "Type parameter bound has {{count}} intersection members (max: {{max}}). Split into smaller interfaces. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+        "Type parameter bound has {{count}} intersection members (max: {{max}}). Split into smaller interfaces. See: {{url}}",
       complexTypeLiteral:
-        "Type literal in bound has {{count}} properties (max: {{max}}). Extract into a separate interface. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+        "Type literal in bound has {{count}} properties (max: {{max}}). Extract into a separate interface. See: {{url}}",
       deepNesting:
-        "Type parameter bound has nesting depth {{depth}} (max: {{max}}). Flatten the constraint. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+        "Type parameter bound has nesting depth {{depth}} (max: {{max}}). Flatten the constraint. See: {{url}}",
       complexInterfaceBound:
-        "Interface has construct signatures (`new(): T`) alongside deeply nested property types (depth: {{depth}}, nested props: {{props}}). Split into smaller interfaces. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+        "Interface has construct signatures (`new(): T`) alongside deeply nested property types (depth: {{depth}}, nested props: {{props}}). Split into smaller interfaces. See: {{url}}",
     },
     schema: [
       {
@@ -140,6 +143,7 @@ export default createRule({
           data: {
             count: String(props),
             max: String(options.maxProperties),
+            url: URL,
           },
         });
       }
@@ -152,6 +156,7 @@ export default createRule({
           data: {
             depth: String(depth),
             max: String(options.maxNestingDepth),
+            url: URL,
           },
         });
       }
@@ -168,6 +173,7 @@ export default createRule({
           data: {
             count: String(constraint.types.length),
             max: String(options.maxIntersectionMembers),
+            url: URL,
           },
         });
       }
@@ -229,6 +235,7 @@ export default createRule({
             data: {
               depth: String(maxDepth),
               props: String(maxNestedProps),
+              url: URL,
             },
           });
         }
