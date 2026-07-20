@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T63-template-literal-types.md");
 
 const INTRINSIC_TRANSFORMS = new Set([
   "Uppercase",
@@ -22,11 +25,10 @@ export default createRule({
     docs: {
       description:
         "Disallow applying intrinsic string transform types to the wide `string` type, which has no effect",
-      url: "https://github.com/jpablo/vibe-types/blob/main/plugin/skills/typescript/catalog/T63-template-literal-types.md",
     },
     messages: {
       noEffect:
-        "{{transform}} has no effect on the wide `string` type — it produces `string` unchanged. Use a string literal type or constrain the generic with `extends string`. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T63-template-literal-types.md",
+        "{{transform}} has no effect on the wide `string` type — it produces `string` unchanged. Use a string literal type or constrain the generic with `extends string`. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -50,6 +52,7 @@ export default createRule({
           messageId: "noEffect",
           data: {
             transform: typeName.name,
+            url: URL,
           },
         });
       },
