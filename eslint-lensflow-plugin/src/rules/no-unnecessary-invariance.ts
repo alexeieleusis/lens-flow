@@ -1,10 +1,13 @@
 import type { TSESTree } from "@typescript-eslint/types";
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import {
   isUsedAsInputInBody,
   isUsedAsOutputInBody,
 } from "../utils/variance-checker.js";
+
+const URL = knowledgeUrl("catalog/T08-variance-subtyping.md");
 
 export default createRule({
   name: "no-unnecessary-invariance",
@@ -16,9 +19,9 @@ export default createRule({
     },
     messages: {
       onlyOutput:
-        "Type parameter `{{name}}` is marked `in out` but only appears in output positions. Change `in out` to `out`. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T08-variance-subtyping.md",
+        "Type parameter `{{name}}` is marked `in out` but only appears in output positions. Change `in out` to `out`. See: {{url}}",
       onlyInput:
-        "Type parameter `{{name}}` is marked `in out` but only appears in input positions. Change `in out` to `in`. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T08-variance-subtyping.md",
+        "Type parameter `{{name}}` is marked `in out` but only appears in input positions. Change `in out` to `in`. See: {{url}}",
     },
     schema: [],
   },
@@ -51,13 +54,13 @@ export default createRule({
           context.report({
             node: tp,
             messageId: "onlyOutput",
-            data: { name: paramName },
+            data: { name: paramName, url: URL },
           });
         } else if (inInput && !inOutput) {
           context.report({
             node: tp,
             messageId: "onlyInput",
-            data: { name: paramName },
+            data: { name: paramName, url: URL },
           });
         }
       }
