@@ -1,6 +1,8 @@
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 
+const URL = knowledgeUrl("catalog/T04-generics-bounds.md");
 const TS_UNION = "TSUnionType";
 const IDENTIFIER = "Identifier";
 const TS_PARAM_PROP = "TSParameterProperty";
@@ -38,8 +40,8 @@ export default createRule({
         "Require generic coupling when multiple parameters share the same union type",
     },
     messages: {
-      sharedUnionWithoutGeneric:
-        "Parameters {{params}} share the same union type {{union}} without a shared generic type parameter. Use a generic type variable to couple them.",
+     sharedUnionWithoutGeneric:
+         "Parameters {{params}} share the same union type {{union}} without a shared generic type parameter. Use a generic type variable to couple them. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -91,6 +93,7 @@ export default createRule({
             data: {
               params: groupParams.join(", "),
               union: fingerprint.replace(/\|/g, " | "),
+              url: URL,
             },
           });
         }
