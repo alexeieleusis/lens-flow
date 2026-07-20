@@ -1,6 +1,9 @@
 import ts from "typescript";
 import { ESLintUtils, TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T14-type-narrowing.md");
 
 type FunctionLikeNode = TSESTree.FunctionLike
   | TSESTree.TSFunctionType
@@ -46,6 +49,7 @@ function visitFunction(
       data: {
         paramName: getParamName(firstParam),
         paramType: isUnknown ? "unknown" : "any",
+        url: URL,
       },
     });
     return;
@@ -69,6 +73,7 @@ function visitFunction(
       data: {
         paramName: getParamName(firstParam),
         paramType: typeStr,
+        url: URL,
       },
     });
   }
@@ -84,7 +89,7 @@ export default createRule({
     },
     messages: {
       unknownTypePredicate:
-        "Type predicate parameter `{{paramName}}` is typed as `{{paramType}}`, so the else branch will not be narrowed at call sites. Use a union type instead of `{{paramType}}`. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T14-type-narrowing.md",
+        "Type predicate parameter `{{paramName}}` is typed as `{{paramType}}`, so the else branch will not be narrowed at call sites. Use a union type instead of `{{paramType}}`. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
