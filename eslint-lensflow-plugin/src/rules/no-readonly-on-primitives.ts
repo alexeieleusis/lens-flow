@@ -1,6 +1,9 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 import type { TSESTree } from "@typescript-eslint/types";
+
+const URL = knowledgeUrl("catalog/T32-immutability-markers.md");
 
 const PRIMITIVE_TYPE_NODES = new Set([
   "TSStringKeyword",
@@ -69,7 +72,7 @@ export default createRule({
     },
     messages: {
       redundantReadonly:
-        "`readonly` on `{{name}}` is redundant because `{{type}}` is a primitive and already immutable by value. Remove the `readonly` modifier. See: https://github.com/jpablo/vibe-types/blob/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T32-immutability-markers.md",
+        "`readonly` on `{{name}}` is redundant because `{{type}}` is a primitive and already immutable by value. Remove the `readonly` modifier. See: {{url}}",
     },
     schema: [],
     fixable: "code",
@@ -106,7 +109,7 @@ export default createRule({
       context.report({
         node,
         messageId: "redundantReadonly",
-        data: { name: propName, type: getTypeName(unwrapped) },
+        data: { name: propName, type: getTypeName(unwrapped), url: URL },
         fix: createReadonlyFix(context, node.key),
       });
     }
@@ -133,7 +136,7 @@ export default createRule({
       context.report({
         node,
         messageId: "redundantReadonly",
-        data: { name: propName, type: getTypeName(unwrapped) },
+        data: { name: propName, type: getTypeName(unwrapped), url: URL },
         fix: createReadonlyFix(context, param),
       });
     }
