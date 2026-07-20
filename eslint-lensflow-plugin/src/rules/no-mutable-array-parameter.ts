@@ -1,9 +1,12 @@
 import type { TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import {
   createFunctionParamVisitor,
   checkMutableArrayParam,
 } from "../utils/visitor-helpers.js";
+
+const URL = knowledgeUrl("catalog/T08-variance-subtyping.md");
 
 export default createRule({
   name: "no-mutable-array-parameter",
@@ -15,7 +18,7 @@ export default createRule({
     },
     messages: {
       mutableArrayParam:
-        "Parameter \"{{name}}\" uses mutable array type \"{{type}}\". Use \"readonly T[]\" or \"ReadonlyArray<T>\" to prevent unsound covariant assignment. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T08-variance-subtyping.md",
+        "Parameter \"{{name}}\" uses mutable array type \"{{type}}\". Use \"readonly T[]\" or \"ReadonlyArray<T>\" to prevent unsound covariant assignment. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -28,7 +31,7 @@ export default createRule({
       context.report({
         node: param,
         messageId: "mutableArrayParam",
-        data: { name: result.paramName, type: result.typeText },
+        data: { name: result.paramName, type: result.typeText, url: URL },
       });
     }
 
