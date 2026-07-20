@@ -3,69 +3,135 @@ import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 type ParamsNode = TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression;
 
 /**
+ * Extracts the type annotation from a parameter node, unwrapping
+ * AssignmentPattern and RestElement wrappers.
+ */
+function getParamTypeAnnotation(param: TSESTree.Parameter): TSESTree.TypeNode | undefined {
+  if (param.type === "AssignmentPattern") {
+    if (param.left.type === "Identifier") {
+      return param.left.typeAnnotation?.typeAnnotation;
+    }
+    return;
+  }
+  if (param.type === "RestElement") {
+    if (param.typeAnnotation?.typeAnnotation) {
+      return param.typeAnnotation.typeAnnotation;
+    }
+    if (param.argument.type === "Identifier") {
+      return param.argument.typeAnnotation?.typeAnnotation;
+    }
+    return;
+  }
+  if (param.type === "Identifier") {
+    return param.typeAnnotation?.typeAnnotation;
+  }
+  if (param.type === "ObjectPattern" || param.type === "ArrayPattern") {
+    return param.typeAnnotation?.typeAnnotation;
+  }
+}
+
+function checkFunctionLikeParams(params: TSESTree.Parameter[]): boolean {
+  return params.some((p) => {
+    const typeAnn = getParamTypeAnnotation(p);
+    return typeAnn != null && containsAnyType(typeAnn);
+  });
+}
+
+function checkFunctionLikeReturnType(node: { returnType?: { typeAnnotation?: TSESTree.TypeNode } }): boolean {
+  if (node.returnType?.typeAnnotation) {
+    return containsAnyType(node.returnType.typeAnnotation);
+  }
+  return false;
+}
+
+function checkTypeLiteralMembers(members: TSESTree.TypeElement[]): boolean {
+  return members.some((member) => {
+    if (member.type === "TSPropertySignature" && member.typeAnnotation?.typeAnnotation) {
+      return containsAnyType(member.typeAnnotation.typeAnnotation);
+    }
+    if (member.type === "TSCallSignatureDeclaration" || member.type === "TSConstructSignatureDeclaration") {
+      if (checkFunctionLikeParams(member.params)) return true;
+      return checkFunctionLikeReturnType(member);
+    }
+    return false;
+  });
+}
+
+const typeHandlers: Record<string, (node: TSESTree.TypeNode) => boolean> = {
+  TSAnyKeyword: () => true,
+  TSUnionType: (node) => (node as TSESTree.TSUnionType).types.some((m) => containsAnyType(m)),
+  TSIntersectionType: (node) => (node as TSESTree.TSIntersectionType).types.some((m) => containsAnyType(m)),
+  TSArrayType: (node) => containsAnyType((node as TSESTree.TSArrayType).elementType),
+  TSTupleType: (node) => (node as TSESTree.TSTupleType).elementTypes.some((e) => containsAnyType(e)),
+  TSTypeReference: (node) => {
+    const ref = node as TSESTree.TSTypeReference;
+    if (ref.typeArguments) return ref.typeArguments.params.some((p) => containsAnyType(p));
+    return false;
+  },
+  TSRestType: (node) => containsAnyType((node as TSESTree.TSRestType).typeAnnotation),
+  TSOptionalType: (node) => containsAnyType((node as TSESTree.TSOptionalType).typeAnnotation),
+  TSIndexedAccessType: (node) => {
+    const acc = node as TSESTree.TSIndexedAccessType;
+    return containsAnyType(acc.objectType) || containsAnyType(acc.indexType);
+  },
+  TSConditionalType: (node) => {
+    const ct = node as TSESTree.TSConditionalType;
+    return (
+      containsAnyType(ct.checkType) ||
+      containsAnyType(ct.extendsType) ||
+      containsAnyType(ct.trueType) ||
+      containsAnyType(ct.falseType)
+    );
+  },
+  TSFunctionType: (node) => {
+    const fn = node as TSESTree.TSFunctionType;
+    return checkFunctionLikeParams(fn.params) || checkFunctionLikeReturnType(fn);
+  },
+  TSConstructorType: (node) => {
+    const fn = node as TSESTree.TSConstructorType;
+    return checkFunctionLikeParams(fn.params) || checkFunctionLikeReturnType(fn);
+  },
+  TSMappedType: (node) => {
+    const mt = node as TSESTree.TSMappedType;
+    return (
+      containsAnyType(mt.constraint) ||
+      (mt.nameType != null && containsAnyType(mt.nameType)) ||
+      (mt.typeAnnotation != null && containsAnyType(mt.typeAnnotation))
+    );
+  },
+  TSImportType: (node) => {
+    const imp = node as TSESTree.TSImportType;
+    if (imp.typeArguments) return imp.typeArguments.params.some((p) => containsAnyType(p));
+    return false;
+  },
+  TSTypeOperator: (node) => {
+    const op = node as TSESTree.TSTypeOperator;
+    if (op.typeAnnotation) return containsAnyType(op.typeAnnotation);
+    return false;
+  },
+  TSTypeLiteral: (node) => checkTypeLiteralMembers((node as TSESTree.TSTypeLiteral).members),
+};
+
+/**
  * Recursively checks whether a type node contains `any`.
  * Unwraps unions, intersections, and other type wrappers.
  */
-function containsAnyType(node: TSESTree.TypeNode): boolean {
-  if (node.type === "TSAnyKeyword") return true;
+export function containsAnyType(node: TSESTree.TypeNode): boolean {
+  const handler = typeHandlers[node.type];
+  return handler ? handler(node) : false;
+}
 
-  if (node.type === "TSUnionType" || node.type === "TSIntersectionType") {
-    return node.types.some((member) => containsAnyType(member));
-  }
-
-  if (node.type === "TSArrayType") {
-    return containsAnyType(node.elementType);
-  }
-
-  if (node.type === "TSTupleType") {
-    return node.elementTypes.some((element) => containsAnyType(element));
-  }
-
-  if (node.type === "TSTypeReference" && node.typeArguments) {
-    return node.typeArguments.params.some((param) => containsAnyType(param));
-  }
-
-  if (node.type === "TSRestType" || node.type === "TSOptionalType") {
-    return containsAnyType(node.typeAnnotation);
-  }
-
-  if (node.type === "TSIndexedAccessType") {
-    return containsAnyType(node.objectType) || containsAnyType(node.indexType);
-  }
-
-  if (node.type === "TSConditionalType") {
-    return (
-      containsAnyType(node.checkType) ||
-      containsAnyType(node.extendsType) ||
-      containsAnyType(node.trueType) ||
-      containsAnyType(node.falseType)
-    );
-  }
-
-  if (node.type === "TSFunctionType" || node.type === "TSConstructorType") {
-    if (node.returnType?.typeAnnotation) {
-      return containsAnyType(node.returnType.typeAnnotation);
-    }
-    return false;
-  }
-
-  if (node.type === "TSMappedType") {
-    return (
-      containsAnyType(node.constraint) ||
-      (node.nameType != null && containsAnyType(node.nameType)) ||
-      (node.typeAnnotation != null && containsAnyType(node.typeAnnotation))
-    );
-  }
-
-  if (node.type === "TSImportType" && node.typeArguments) {
-    return node.typeArguments.params.some((param) => containsAnyType(param));
-  }
-
-  if (node.type === "TSTypeOperator" && node.typeAnnotation) {
-    return containsAnyType(node.typeAnnotation);
-  }
-
+function shouldSkipParam(param: TSESTree.Parameter, typeNode: TSESTree.TypeNode | undefined): boolean {
+  if (param.type === "TSParameterProperty") return true;
+  if (typeNode?.type === "TSFunctionType" || typeNode?.type === "TSConstructorType") return true;
   return false;
+}
+
+function extractParamName(param: TSESTree.Parameter, sourceCode: TSESLint.SourceCode): string {
+  let inner: TSESTree.Node = param;
+  if (param.type === "AssignmentPattern") inner = param.left;
+  if (inner.type === "RestElement") inner = inner.argument;
+  return inner.type === "Identifier" ? inner.name : sourceCode.getText(param);
 }
 
 /**
@@ -75,52 +141,52 @@ function containsAnyType(node: TSESTree.TypeNode): boolean {
 export function checkAnyParams(
   params: readonly TSESTree.Parameter[],
   context: TSESLint.RuleContext<string, unknown[]>,
-  messageId: string
+  messageId: string,
+  extraData?: Record<string, unknown>
 ) {
   for (const param of params) {
-    if (param.type === "TSParameterProperty") continue;
-
-    const base = param.type === "AssignmentPattern" ? param.left : param;
-
-    if (base.typeAnnotation?.typeAnnotation && containsAnyType(base.typeAnnotation.typeAnnotation)) {
-      const paramName =
-        "name" in base && typeof base.name === "string" ? base.name : context.sourceCode.getText(param);
+    const typeNode = getParamTypeAnnotation(param);
+    if (shouldSkipParam(param, typeNode)) continue;
+    if (typeNode && containsAnyType(typeNode)) {
       context.report({
         node: param,
         messageId,
-        data: { name: paramName },
+        data: { name: extractParamName(param, context.sourceCode), ...extraData },
       });
     }
   }
 }
 
-type TypeNode = TSESTree.TSFunctionType | TSESTree.TSMethodSignature | TSESTree.TSDeclareFunction | TSESTree.TSCallSignatureDeclaration;
+type TypeNode = TSESTree.TSFunctionType | TSESTree.TSMethodSignature | TSESTree.TSDeclareFunction | TSESTree.TSCallSignatureDeclaration | TSESTree.TSConstructorType;
 
 /**
  * Creates a rule listener for concrete function nodes that checks parameters for `any` types.
  */
-export function createNoAnyParamChecker(messageId: string) {
+export function createNoAnyParamChecker(messageId: string, extraData?: Record<string, unknown>) {
   return function noAnyParamChecker(context: TSESLint.RuleContext<string, unknown[]>): TSESLint.RuleListener {
     return {
       FunctionDeclaration(node: ParamsNode) {
-        checkAnyParams(node.params, context, messageId);
+        checkAnyParams(node.params, context, messageId, extraData);
       },
       FunctionExpression(node: ParamsNode) {
-        checkAnyParams(node.params, context, messageId);
+        if (node.parent?.type === "MethodDefinition") return;
+        checkAnyParams(node.params, context, messageId, extraData);
       },
       ArrowFunctionExpression(node: ParamsNode) {
-        checkAnyParams(node.params, context, messageId);
+        checkAnyParams(node.params, context, messageId, extraData);
+      },
+      MethodDefinition(node: TSESTree.MethodDefinition) {
+        checkAnyParams(node.value.params, context, messageId, extraData);
       },
       TSParameterProperty(node) {
-        if (node.parameter.typeAnnotation?.typeAnnotation && containsAnyType(node.parameter.typeAnnotation.typeAnnotation)) {
-          const paramName =
-            "name" in node.parameter && typeof node.parameter.name === "string"
-              ? node.parameter.name
-              : context.sourceCode.getText(node.parameter);
+        const inner = node.parameter;
+        if (inner.type !== "Identifier") return;
+        if (inner.typeAnnotation?.typeAnnotation && containsAnyType(inner.typeAnnotation.typeAnnotation)) {
+          const paramName = inner.name;
           context.report({
             node,
             messageId,
-            data: { name: paramName },
+            data: { name: paramName, ...extraData },
           });
         }
       },
@@ -131,20 +197,23 @@ export function createNoAnyParamChecker(messageId: string) {
 /**
  * Creates a rule listener for type-node function signatures that checks parameters for `any` types.
  */
-export function createNoAnyParamTypeChecker(messageId: string) {
+export function createNoAnyParamTypeChecker(messageId: string, extraData?: Record<string, unknown>) {
   return function noAnyParamTypeChecker(context: TSESLint.RuleContext<string, unknown[]>): TSESLint.RuleListener {
     return {
       TSFunctionType(node: TypeNode) {
-        checkAnyParams(node.params, context, messageId);
+        checkAnyParams(node.params, context, messageId, extraData);
       },
       TSMethodSignature(node: TypeNode) {
-        checkAnyParams(node.params, context, messageId);
+        checkAnyParams(node.params, context, messageId, extraData);
       },
       TSDeclareFunction(node: TypeNode) {
-        checkAnyParams(node.params, context, messageId);
+        checkAnyParams(node.params, context, messageId, extraData);
       },
       TSCallSignatureDeclaration(node: TypeNode) {
-        checkAnyParams(node.params, context, messageId);
+        checkAnyParams(node.params, context, messageId, extraData);
+      },
+      TSConstructorType(node: TSESTree.TSConstructorType) {
+        checkAnyParams(node.params, context, messageId, extraData);
       },
     };
   };

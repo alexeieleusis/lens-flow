@@ -1,0 +1,98 @@
+import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T47-gradual-typing.md");
+
+function isRecordAny(node: TSESTree.TSTypeReference): boolean {
+  const typeName = node.typeName;
+  let name: string | null = null;
+  if (typeName.type === "Identifier") {
+    name = typeName.name;
+  } else if (typeName.type === "TSQualifiedName") {
+    name = typeName.right.name;
+  }
+  if (name !== "Record") return false;
+
+  const params = node.typeArguments?.params;
+  return !!(
+    params?.length === 2 &&
+    params[0].type === "TSStringKeyword" &&
+    params[1].type === "TSAnyKeyword"
+  );
+}
+
+function reportRecordAny(
+  context: TSESLint.RuleContext<"recordAny", []>,
+  node: TSESTree.Node,
+): void {
+  context.report({
+    node,
+    messageId: "recordAny",
+    data: { url: URL },
+  });
+}
+
+function handleTypeReference(
+  context: TSESLint.RuleContext<"recordAny", []>,
+  refNode: TSESTree.TSTypeReference,
+): void {
+  if (isRecordAny(refNode)) {
+    reportRecordAny(context, refNode);
+  }
+  if (refNode.typeArguments) {
+    for (const p of refNode.typeArguments.params) {
+      recurseIntoType(context, p);
+    }
+  }
+}
+
+function recurseIntoType(
+  context: TSESLint.RuleContext<"recordAny", []>,
+  typeNode: TSESTree.TypeNode,
+): void {
+  if (typeNode.type === "TSUnionType" || typeNode.type === "TSIntersectionType") {
+    for (const t of typeNode.types) recurseIntoType(context, t);
+  } else if (typeNode.type === "TSTypeReference") {
+    handleTypeReference(context, typeNode);
+  } else if (typeNode.type === "TSTypeOperator") {
+    if (typeNode.typeAnnotation) {
+      recurseIntoType(context, typeNode.typeAnnotation);
+    }
+  } else if ((typeNode as any).type === "TSParenthesizedType") {
+    const inner = (typeNode as any).typeAnnotation;
+    if (inner) recurseIntoType(context, inner);
+  }
+}
+
+export default createRule({
+  name: "no-record-string-any",
+  meta: {
+    type: "problem",
+    docs: {
+      description:
+        "Disallow `Record<K, any>` which loses all value type safety",
+    },
+    messages: {
+      recordAny:
+        "`Record<string, any>` loses value type safety. Use `Record<string, unknown>` and narrow with type guards. See: {{url}}",
+    },
+    schema: [],
+    fixable: undefined,
+  },
+  defaultOptions: [],
+  create(context: TSESLint.RuleContext<"recordAny", []>) {
+    return {
+      TSTypeReference(node) {
+        if (isRecordAny(node)) {
+          reportRecordAny(context, node);
+        }
+        if (node.typeArguments) {
+          for (const param of node.typeArguments.params) {
+            recurseIntoType(context, param);
+          }
+        }
+      },
+    };
+  },
+});

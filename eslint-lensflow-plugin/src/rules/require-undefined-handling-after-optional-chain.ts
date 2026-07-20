@@ -1,0 +1,621 @@
+import ts from "typescript";
+import { ESLintUtils, TSESTree, TSESLint } from "@typescript-eslint/utils";
+import { createRule } from "../utils/rule-creator.js";
+import { walkNodes } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC16-nullability.md");
+
+function typeIncludesUndefined(type: ts.Type): boolean {
+  if ((type.flags & ts.TypeFlags.Undefined) !== 0) return true;
+  if ((type.flags & ts.TypeFlags.Unknown) !== 0) return true;
+  if ((type.flags & ts.TypeFlags.Any) !== 0) return false;
+  if (type.isUnion()) {
+    return type.types.some(typeIncludesUndefined);
+  }
+  return false;
+}
+
+function hasOptionalAccess(node: TSESTree.Node): boolean {
+  if (node.type === "MemberExpression" && (node as TSESTree.MemberExpression).optional) {
+    return true;
+  }
+  if (node.type === "MemberExpression" || node.type === "ChainExpression") {
+    const child =
+      node.type === "ChainExpression"
+        ? node.expression
+        : node.object;
+    return hasOptionalAccess(child);
+  }
+  return false;
+}
+
+function isNonNullShortCircuitGuard(
+  current: TSESTree.LogicalExpression,
+  node: TSESTree.Node,
+  varName: string,
+): boolean {
+  const left = current.left;
+  if (left === node) return true;
+  if (left.type === "Identifier" && left.name === varName) return true;
+  if (
+    left.type === "MemberExpression" &&
+    (left as TSESTree.MemberExpression).object.type === "Identifier" &&
+    ((left as TSESTree.MemberExpression).object as TSESTree.Identifier).name === varName
+  ) {
+    return true;
+  }
+  return false;
+}
+
+function checkGuardedConsequent(
+  test: TSESTree.Node,
+  consequent: TSESTree.Node,
+  node: TSESTree.Node,
+  varName: string,
+): boolean | "stop" {
+  if (testContainsGuard(test, varName)) {
+    if (walkNodes(consequent, (n) => n === node, { skipTypeAnnotations: true })) return true;
+  }
+  return "stop";
+}
+
+function isNodeAfterInSameBlock(
+  ifStatement: TSESTree.Node,
+  node: TSESTree.Node,
+): boolean {
+  const parent = (ifStatement as { parent?: TSESTree.Node }).parent;
+  if (
+    parent &&
+    (parent.type === "BlockStatement" || parent.type === "Program")
+  ) {
+    const body = parent.body;
+    const ifIndex = body.indexOf(ifStatement as any);
+    if (ifIndex < 0) return false;
+    for (let i = ifIndex + 1; i < body.length; i++) {
+      if (walkNodes(body[i], (n) => n === node, { skipTypeAnnotations: true })) return true;
+    }
+  }
+  return false;
+}
+
+function isTerminatingStatement(stmt: TSESTree.Node): boolean {
+  if (stmt.type === "ThrowStatement") return true;
+  if (stmt.type === "ReturnStatement") return true;
+  if (stmt.type === "BlockStatement") {
+    return stmt.body.some(isTerminatingStatement);
+  }
+  return false;
+}
+
+function testContainsIsNullGuard(
+  test: TSESTree.Node,
+  varName: string,
+): boolean {
+  if (test.type === "BinaryExpression") {
+    return isBinaryIsNullGuard(test as TSESTree.BinaryExpression, varName);
+  }
+  if (test.type === "LogicalExpression") {
+    return testContainsIsNullGuard(test.left, varName);
+  }
+  if (test.type === "UnaryExpression") {
+    return isUnaryIsNullGuard(test as TSESTree.UnaryExpression, varName);
+  }
+  return false;
+}
+
+function isBinaryIsNullGuard(
+  bin: TSESTree.BinaryExpression,
+  varName: string,
+): boolean {
+  const { left, right, operator } = bin;
+  if (!["!=", "==", "===", "!=="].includes(operator)) return false;
+
+  const leftIsVar = left.type === "Identifier" && left.name === varName;
+  const rightIsVar = right.type === "Identifier" && right.name === varName;
+  if (!(leftIsVar || rightIsVar)) return false;
+
+  const other = leftIsVar ? right : left;
+  if (isNullOrUndefinedLiteral(other)) {
+    return operator === "===" || operator === "==";
+  }
+  return isTypeofUndefinedCheck(left, right, varName, operator);
+}
+
+function isNullOrUndefinedLiteral(node: TSESTree.Node): boolean {
+  if (node.type === "Literal" && (node.value === null || node.value === undefined)) {
+    return true;
+  }
+  return node.type === "Identifier" && node.name === "undefined";
+}
+
+function isTypeofUndefinedCheck(
+  left: TSESTree.Node,
+  right: TSESTree.Node,
+  varName: string,
+  operator: string,
+): boolean {
+  if (!isEqualityOperator(operator)) return false;
+  return (
+    isTypeofVar(left, varName) && isStringLiteral(right) ||
+    isTypeofVar(right, varName) && isStringLiteral(left)
+  );
+}
+
+function isEqualityOperator(op: string): boolean {
+  return op === "===" || op === "==";
+}
+
+function isTypeofVar(node: TSESTree.Node, varName: string): boolean {
+  return (
+    node.type === "UnaryExpression" &&
+    (node as TSESTree.UnaryExpression).operator === "typeof" &&
+    (node as TSESTree.UnaryExpression).argument.type === "Identifier" &&
+    ((node as TSESTree.UnaryExpression).argument as TSESTree.Identifier).name === varName
+  );
+}
+
+function isStringLiteral(node: TSESTree.Node): boolean {
+  return node.type === "Literal" && typeof (node as TSESTree.Literal).value === "string";
+}
+
+function isUnaryIsNullGuard(
+  unary: TSESTree.UnaryExpression,
+  varName: string,
+): boolean {
+  if (unary.operator === "!" && unary.argument.type === "Identifier" && unary.argument.name === varName) {
+    return true;
+  }
+  return testContainsIsNullGuard(unary.argument, varName);
+}
+
+function isInsideIfGuard(
+  current: TSESTree.IfStatement,
+  node: TSESTree.Node,
+  varName: string,
+): boolean | "stop" {
+  const result = checkGuardedConsequent(current.test, current.consequent, node, varName);
+  if (result === true) return true;
+  if (result === "stop" && !testContainsIsNullGuard(current.test, varName)) return "stop";
+
+  if (
+    testContainsIsNullGuard(current.test, varName) &&
+    isTerminatingStatement(current.consequent) &&
+    isNodeAfterInSameBlock(current, node)
+  ) return true;
+
+  // if (x != null) { ... } else { throw }; — code after is guarded
+  if (
+    current.alternate &&
+    testContainsGuard(current.test, varName) &&
+    isTerminatingStatement(current.alternate) &&
+    isNodeAfterInSameBlock(current, node)
+  ) return true;
+
+  return "stop";
+}
+
+function isInsideTernaryGuard(
+  current: TSESTree.ConditionalExpression,
+  node: TSESTree.Node,
+  varName: string,
+): boolean | "stop" {
+  return checkGuardedConsequent(current.test, current.consequent, node, varName);
+}
+
+function isAndGuard(
+  current: TSESTree.LogicalExpression,
+  varName: string,
+): boolean {
+  return testContainsGuard(current.left, varName);
+}
+
+function isGuardCall(
+  current: TSESTree.CallExpression,
+  varName: string,
+): boolean {
+  const callee = current.callee;
+  if (
+    callee.type === "Identifier" &&
+    /\b(assert|guard|check|require|ensure)\b/i.test(callee.name)
+  ) {
+    const args = current.arguments;
+    if (args.length > 0 && args[0].type === "Identifier" && args[0].name === varName) return true;
+    if (
+      args.length > 0 &&
+      args[0].type === "BinaryExpression" &&
+      testContainsGuard(args[0], varName)
+    ) return true;
+  }
+  return false;
+}
+
+function isNonNullAssertion(
+  current: TSESTree.TSNonNullExpression,
+  varName: string,
+): boolean {
+  const expr = current.expression;
+  return expr.type === "Identifier" && expr.name === varName;
+}
+
+function isScopeBoundary(node: TSESTree.Node): boolean {
+  return (
+    node.type === "FunctionDeclaration" ||
+    node.type === "FunctionExpression" ||
+    node.type === "ArrowFunctionExpression" ||
+    node.type === "Program"
+  );
+}
+
+function isFunctionNode(node: TSESTree.Node): boolean {
+  return (
+    node.type === "FunctionDeclaration" ||
+    node.type === "FunctionExpression" ||
+    node.type === "ArrowFunctionExpression"
+  );
+}
+
+function getMemberName(property: TSESTree.Node): string {
+  if (property.type === "Identifier") return property.name;
+  if (property.type === "Literal") return String((property as TSESTree.Literal).value);
+  return "";
+}
+
+function isNodeInsideTestPosition(
+  memberNode: TSESTree.Node,
+  ancestors: TSESTree.Node[],
+): boolean {
+  for (const anc of ancestors) {
+    if (isScopeBoundary(anc)) break;
+    if (
+      anc.type === "IfStatement" &&
+      walkNodes(anc.test, (n) => n === memberNode, { skipTypeAnnotations: true })
+    ) return true;
+    if (
+      anc.type === "ConditionalExpression" &&
+      walkNodes(anc.test, (n) => n === memberNode, { skipTypeAnnotations: true })
+    ) return true;
+  }
+  return false;
+}
+
+function hasGuardBeforeMemberInBlock(
+  blockBody: TSESTree.Statement[],
+  memberNode: TSESTree.Node,
+  varName: string,
+): "guarded" | "unguarded" | "not-found" {
+  let foundGuard = false;
+  for (const stmt of blockBody) {
+    if (
+      stmt.type === "IfStatement" &&
+      testContainsIsNullGuard(stmt.test, varName) &&
+      isTerminatingStatement(stmt.consequent)
+    ) {
+      foundGuard = true;
+    }
+    if (walkNodes(stmt, (n) => n === memberNode, { skipTypeAnnotations: true })) {
+      return foundGuard ? "guarded" : "unguarded";
+    }
+  }
+  return "not-found";
+}
+
+function isAfterSiblingThrowGuard(
+  ancestors: TSESTree.Node[],
+  memberNode: TSESTree.MemberExpression,
+  varName: string,
+): boolean {
+  for (const anc of ancestors) {
+    if (isFunctionNode(anc)) break;
+    if (
+      (anc.type === "BlockStatement" || anc.type === "Program") &&
+      !memberNode.optional
+    ) {
+      const blockBody = anc.body;
+      const result = hasGuardBeforeMemberInBlock(blockBody, memberNode, varName);
+      if (result === "guarded") return true;
+      if (result === "unguarded") break;
+    }
+  }
+  return false;
+}
+
+function isFoundGuard(
+  current: TSESTree.Node,
+  node: TSESTree.Node,
+  varName: string,
+): boolean {
+  if (current.type === "LogicalExpression") {
+    if (current.operator === "??" && isNonNullShortCircuitGuard(current, node, varName)) {
+      return true;
+    }
+    if (current.operator === "&&" && isAndGuard(current, varName)) {
+      return true;
+    }
+  }
+  if (current.type === "CallExpression" && isGuardCall(current, varName)) return true;
+  if (current.type === "TSNonNullExpression" && isNonNullAssertion(current, varName)) return true;
+  return false;
+}
+
+function checkNodeInGuard(
+  current: TSESTree.Node,
+  node: TSESTree.Node,
+  varName: string,
+): "found" | "stop" | "continue" {
+  if (isFoundGuard(current, node, varName)) return "found";
+
+  if (
+    current.type === "IfStatement" ||
+    current.type === "ConditionalExpression"
+  ) {
+    const result =
+      current.type === "IfStatement"
+        ? isInsideIfGuard(current, node, varName)
+        : isInsideTernaryGuard(current, node, varName);
+    if (result) return "found";
+    return "stop";
+  }
+
+  return "continue";
+}
+
+function isInsideGuard(
+  node: TSESTree.Node,
+  varName: string,
+  sourceCode: TSESLint.SourceCode,
+): boolean {
+  // getAncestors returns from root to immediate parent, so reverse for
+  // leaf-to-root traversal.
+  const ancestors = [...sourceCode.getAncestors(node)].reverse();
+  for (const current of ancestors) {
+    if (isScopeBoundary(current)) break;
+
+    const result = checkNodeInGuard(current, node, varName);
+    if (result === "found") return true;
+    if (result === "stop") break;
+  }
+  return false;
+}
+
+function isBinaryGuard(
+  test: TSESTree.BinaryExpression,
+  varName: string,
+): boolean {
+  const { left, right, operator } = test;
+  const isGuardOperator = [
+    "!==",
+    "!=",
+    "===",
+    "==",
+  ].includes(operator);
+  if (!isGuardOperator) return false;
+
+  const leftIsVar =
+    left.type === "Identifier" && left.name === varName;
+  const rightIsVar =
+    right.type === "Identifier" && right.name === varName;
+
+  if (!(leftIsVar || rightIsVar)) return false;
+
+  const other = leftIsVar ? right : left;
+  const isNullCheck =
+    other.type === "Literal" &&
+    (other.value === null || other.value === undefined);
+  const isUndefinedId =
+    other.type === "Identifier" && other.name === "undefined";
+
+  if (isNullCheck || isUndefinedId) {
+    if (operator === "!==" || operator === "!=") {
+      return true;
+    }
+    return false;
+  }
+
+  return typeofGuardMatches(left, right, varName, operator);
+}
+
+function typeofGuardMatches(
+  left: TSESTree.Node,
+  right: TSESTree.Node,
+  varName: string,
+  operator: string,
+): boolean {
+  if (operator !== "!==" && operator !== "!=") return false;
+
+  const leftIsTypeofVar =
+    left.type === "UnaryExpression" &&
+    left.operator === "typeof" &&
+    left.argument.type === "Identifier" &&
+    left.argument.name === varName;
+  const rightIsStringLiteral =
+    right.type === "Literal" && typeof right.value === "string";
+
+  if (leftIsTypeofVar && rightIsStringLiteral) return true;
+
+  const rightIsTypeofVar =
+    right.type === "UnaryExpression" &&
+    right.operator === "typeof" &&
+    right.argument.type === "Identifier" &&
+    right.argument.name === varName;
+  const leftIsStringLiteral =
+    left.type === "Literal" && typeof left.value === "string";
+
+  if (rightIsTypeofVar && leftIsStringLiteral) return true;
+
+  return false;
+}
+
+function testContainsGuard(
+  test: TSESTree.Node,
+  varName: string,
+): boolean {
+  if (test.type === "BinaryExpression") {
+    return isBinaryGuard(test as TSESTree.BinaryExpression, varName);
+  }
+
+  if (test.type === "LogicalExpression") {
+    const { left, operator } = test;
+    if (
+      (operator === "&&" || operator === "??") &&
+      left.type === "Identifier" &&
+      left.name === varName
+    ) {
+      return true;
+    }
+    return testContainsGuard(left, varName);
+  }
+
+  if (test.type === "UnaryExpression") {
+    const { argument, operator } = test as TSESTree.UnaryExpression;
+    if (operator === "!" && argument.type === "BinaryExpression") {
+      return testContainsGuard(argument, varName);
+    }
+  }
+
+  return false;
+}
+
+function isUndefinedChainVarAccess(
+  memberNode: TSESTree.MemberExpression,
+  varName: string,
+  sourceCode: TSESLint.SourceCode,
+  undefinedChainVars: Set<TSESLint.Scope.Variable>,
+): boolean {
+  const binding = findBindingInScope(
+    sourceCode.getScope(memberNode),
+    varName,
+  );
+  return binding !== null && undefinedChainVars.has(binding);
+}
+
+function findBindingInScope(
+  scope: TSESLint.Scope.Scope | null,
+  name: string,
+): TSESLint.Scope.Variable | null {
+  let current: TSESLint.Scope.Scope | null = scope;
+  while (current) {
+    const variable = current.variables.find((v) => v.name === name);
+    if (variable) return variable;
+    current = current.upper;
+  }
+  return null;
+}
+
+export default createRule({
+  name: "require-undefined-handling-after-optional-chain",
+  meta: {
+    type: "problem",
+    docs: {
+      description:
+        "Require undefined handling after optional chaining before dereferencing the result",
+    },
+    messages: {
+     unguardedAccess:
+         "The variable `{{name}}` may be `undefined` from optional chaining. Handle it with `??` or a guard before accessing `{{member}}`. See: {{url}}",
+    },
+    schema: [],
+    fixable: undefined,
+  },
+  defaultOptions: [],
+  create(context: TSESLint.RuleContext<"unguardedAccess", []>) {
+    const parserServices = ESLintUtils.getParserServices(context, true);
+    const program = parserServices.program;
+    if (!program) return {};
+    const checker = program.getTypeChecker();
+
+    // Track variables declared from optional chain that may be undefined
+    const undefinedChainVars = new Set<TSESLint.Scope.Variable>();
+
+    return {
+      VariableDeclarator(node) {
+        if (!node.init) return;
+
+       const init = node.init;
+
+        // Skip if init is a ?? expression (undefined is already handled)
+        if (init.type === "LogicalExpression" && init.operator === "??") {
+          if (hasOptionalAccess(init.left)) return;
+          return;
+        }
+
+        if (init.type !== "ChainExpression") return;
+
+        if (!hasOptionalAccess(init)) return;
+
+        // Skip if already handled with ??
+        const parent = (node as { parent?: TSESTree.Node }).parent;
+       if (
+            parent?.type === "LogicalExpression" &&
+            parent.operator === "??"
+          ) {
+           return;
+         }
+
+        const declName =
+          node.id.type === "Identifier" ? node.id.name : null;
+        if (!declName) return;
+
+        const tsNode = parserServices.esTreeNodeToTSNodeMap.get(init);
+        if (!tsNode) return;
+        const type = checker.getTypeAtLocation(tsNode);
+        if (typeIncludesUndefined(type)) {
+          const scope = context.sourceCode.getScope(node);
+          const declaredBinding = scope.variables.find(
+            (v) => v.name === declName,
+          );
+          if (declaredBinding) {
+            undefinedChainVars.add(declaredBinding);
+          }
+        }
+      },
+
+      CallExpression(callNode) {
+        if (callNode.callee.type !== "Identifier") return;
+
+        const varName = callNode.callee.name;
+        const binding = findBindingInScope(
+          context.sourceCode.getScope(callNode),
+          varName,
+        );
+        if (!binding || !undefinedChainVars.has(binding)) return;
+
+        if (isInsideGuard(callNode, varName, context.sourceCode)) return;
+
+        context.report({
+          node: callNode,
+          messageId: "unguardedAccess",
+          data: {
+            name: varName,
+            member: "()",
+            url: URL,
+          },
+        });
+      },
+
+      MemberExpression(memberNode) {
+        if (memberNode.object.type !== "Identifier") return;
+
+        const varName = memberNode.object.name;
+        if (!isUndefinedChainVarAccess(memberNode, varName, context.sourceCode, undefinedChainVars)) return;
+        if (memberNode.optional) return;
+
+        const ancestors = [...context.sourceCode.getAncestors(memberNode)].reverse();
+
+        if (isNodeInsideTestPosition(memberNode, ancestors)) return;
+        if (isAfterSiblingThrowGuard(ancestors, memberNode, varName)) return;
+        if (isInsideGuard(memberNode, varName, context.sourceCode)) return;
+
+        context.report({
+          node: memberNode,
+          messageId: "unguardedAccess",
+          data: {
+            name: varName,
+            member: getMemberName(memberNode.property),
+            url: URL,
+          },
+        });
+      },
+    };
+  },
+});

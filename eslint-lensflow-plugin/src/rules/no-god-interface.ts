@@ -1,0 +1,97 @@
+import { TSESTree, TSESLint } from '@typescript-eslint/utils';
+import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC05-structural-contracts.md");
+
+export default createRule({
+  name: "no-god-interface",
+  meta: {
+    type: "suggestion",
+    docs: {
+      description:
+        "Disallow interfaces and type literals with too many optional properties or total properties.",
+    },
+    messages: {
+      tooManyOptional:
+        "Type '{{name}}' has {{optionalCount}} optional properties (max {{maxOptional}}). Consider splitting into smaller, focused types. See: {{url}}",
+      tooManyTotal:
+        "Type '{{name}}' has {{totalCount}} total properties (max {{maxTotal}}). Consider splitting into smaller, focused types. See: {{url}}",
+    },
+    schema: [
+      {
+        type: "object",
+        properties: {
+          minOptionalFields: {
+            type: "number",
+            minimum: 1,
+          },
+          maxTotalFields: {
+            type: "number",
+            minimum: 1,
+          },
+        },
+        additionalProperties: false,
+      },
+    ],
+    fixable: undefined,
+  },
+  defaultOptions: [{ minOptionalFields: 5, maxTotalFields: 8 }],
+  create(context: TSESLint.RuleContext<"tooManyOptional" | "tooManyTotal", [{ minOptionalFields?: number, maxTotalFields?: number }]>) {
+    const [{ minOptionalFields, maxTotalFields } = {}] =
+      context.options ?? [];
+    const thresholdOptional = minOptionalFields ?? 5;
+    const thresholdTotal = maxTotalFields ?? 8;
+
+    function checkBody(
+      node: TSESTree.TSInterfaceBody | TSESTree.TSTypeLiteral,
+    ) {
+      const members =
+        node.type === "TSInterfaceBody" ? node.body : node.members;
+      const properties = members.filter(
+        (member): member is TSESTree.TSPropertySignature =>
+          member.type === "TSPropertySignature",
+      );
+      const optionalCount = properties.filter((p) => p.optional).length;
+      const totalCount = properties.length;
+
+      const parent = node.parent;
+      let declarationAncestor: TSESTree.TSInterfaceDeclaration | TSESTree.TSTypeAliasDeclaration | undefined;
+      if (parent && (parent.type === "TSInterfaceDeclaration" || parent.type === "TSTypeAliasDeclaration")) {
+        declarationAncestor = parent;
+      }
+
+      const reportNode = declarationAncestor || node;
+      const name = declarationAncestor?.id?.name ?? "anonymous";
+
+      if (optionalCount > thresholdOptional) {
+        context.report({
+          node: reportNode,
+          messageId: "tooManyOptional",
+          data: {
+            name,
+            optionalCount: String(optionalCount),
+            maxOptional: String(thresholdOptional),
+            url: URL,
+          },
+        });
+      } else if (totalCount >= thresholdTotal) {
+        context.report({
+          node: reportNode,
+          messageId: "tooManyTotal",
+          data: {
+            name,
+            totalCount: String(totalCount),
+            maxTotal: String(thresholdTotal),
+            url: URL,
+          },
+        });
+      }
+    }
+
+    return {
+      TSInterfaceBody: checkBody,
+      TSTypeLiteral: checkBody,
+    };
+  },
+});

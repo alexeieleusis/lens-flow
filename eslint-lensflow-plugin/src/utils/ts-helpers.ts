@@ -1,5 +1,20 @@
 import ts from "typescript";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+export type LiteralValue = string | number | boolean;
+
+function containsTypeByKeyword(typeNode: TSESTree.TypeNode, keyword: string): boolean {
+  if (typeNode.type === keyword) return true;
+  return collectChildTypes(typeNode).some((child) => containsTypeByKeyword(child, keyword));
+}
+
+export function containsAny(typeNode: TSESTree.TypeNode): boolean {
+  return containsTypeByKeyword(typeNode, "TSAnyKeyword");
+}
+
+export function containsUnknown(typeNode: TSESTree.TypeNode): boolean {
+  return containsTypeByKeyword(typeNode, "TSUnknownKeyword");
+}
 import {
   defaultHasNeverAssertion,
   getLiteralFromExpr,
@@ -78,6 +93,36 @@ function collectFunctionParamTypes(
   return children;
 }
 
+function collectMappedTypeChildren(type: TSESTree.TSMappedType): TSESTree.TypeNode[] {
+  return [type.typeAnnotation, type.constraint, type.nameType].filter(
+    (n): n is TSESTree.TypeNode => n !== undefined && n !== null,
+  );
+}
+
+function collectInferTypeChildren(type: TSESTree.TSInferType): TSESTree.TypeNode[] {
+  return type.typeParameter.constraint
+    ? [type.typeParameter.constraint]
+    : [];
+}
+
+function collectTypeOperatorChildren(type: TSESTree.TSTypeOperator): TSESTree.TypeNode[] {
+  return type.typeAnnotation ? [type.typeAnnotation] : [];
+}
+
+function collectTypeReferenceChildren(type: TSESTree.TSTypeReference): TSESTree.TypeNode[] {
+  return type.typeArguments ? [...type.typeArguments.params] : [];
+}
+
+function collectTypeLiteralChildren(type: TSESTree.TSTypeLiteral): TSESTree.TypeNode[] {
+  const children: TSESTree.TypeNode[] = [];
+  for (const member of type.members) {
+    if ((member.type === "TSPropertySignature" || member.type === "TSIndexSignature") && member.typeAnnotation) {
+      children.push(member.typeAnnotation.typeAnnotation);
+    }
+  }
+  return children;
+}
+
 export function collectChildTypes(type: TSESTree.TypeNode): TSESTree.TypeNode[] {
   switch (type.type) {
     case "TSUnionType":
@@ -90,88 +135,166 @@ export function collectChildTypes(type: TSESTree.TypeNode): TSESTree.TypeNode[] 
     case "TSIndexedAccessType":
       return [type.objectType, type.indexType];
     case "TSMappedType":
-      return type.typeAnnotation ? [type.typeAnnotation] : [];
+      return collectMappedTypeChildren(type);
     case "TSConditionalType":
       return [type.checkType, type.extendsType, type.trueType, type.falseType];
     case "TSRestType":
       return [type.typeAnnotation];
     case "TSInferType":
-      return type.typeParameter.constraint
-        ? [type.typeParameter.constraint]
-        : [];
+      return collectInferTypeChildren(type);
     case "TSFunctionType":
     case "TSConstructorType":
       return collectFunctionParamTypes(type);
     case "TSTypeQuery":
       return [];
     case "TSTypeOperator":
-      return type.typeAnnotation ? [type.typeAnnotation] : [];
+      return collectTypeOperatorChildren(type);
     case "TSTypeReference":
-      return type.typeArguments ? [...type.typeArguments.params] : [];
+      return collectTypeReferenceChildren(type);
     case "TSTemplateLiteralType":
+      return [...type.types];
+    case "TSOptionalType":
+      return [type.typeAnnotation];
+    case "TSTypeLiteral":
+      return collectTypeLiteralChildren(type);
+    default: {
+      const maybeParenthesized = type as unknown as { type: string; typeAnnotation?: TSESTree.TypeNode };
+      if (maybeParenthesized.type === "TSParenthesizedType" && maybeParenthesized.typeAnnotation) {
+        return [maybeParenthesized.typeAnnotation];
+      }
       return [];
-    default:
-      return [];
+    }
   }
 }
 
-export function extractLiteralValues(tsType: ts.Type): (string | number | boolean)[] {
-  const values = new Set<string | number | boolean>();
+function extractBooleanFromType(t: ts.Type, checker?: ts.TypeChecker): boolean | undefined {
+  const val = (t as ts.Type & { value?: boolean }).value;
+  if (val !== undefined) return val;
+  if (checker) {
+    const str = checker.typeToString(t);
+    if (str === "true") return true;
+    if (str === "false") return false;
+  }
+}
+
+function processTypeFlags(t: ts.Type, values: Set<LiteralValue>, checker?: ts.TypeChecker) {
+  if ((t.flags & ts.TypeFlags.StringLiteral) !== 0) {
+    values.add((t as ts.StringLiteralType).value);
+    return;
+  }
+  if ((t.flags & ts.TypeFlags.NumberLiteral) !== 0) {
+    values.add((t as ts.NumberLiteralType).value);
+    return;
+  }
+  if ((t.flags & ts.TypeFlags.BooleanLiteral) !== 0) {
+    const val = extractBooleanFromType(t, checker);
+    if (val !== undefined) values.add(val);
+    return;
+  }
+  if ((t.flags & ts.TypeFlags.Boolean) !== 0) {
+    values.add(true);
+    values.add(false);
+  }
+}
+
+function fallbackExtractUnionBooleans(tsType: ts.Type, values: Set<LiteralValue>, checker?: ts.TypeChecker) {
+  if (!tsType.isUnion()) return;
+  for (const member of tsType.types) {
+    if ((member.flags & ts.TypeFlags.BooleanLiteral) !== 0) {
+      const val = extractBooleanFromType(member, checker);
+      if (val !== undefined) values.add(val);
+    } else if ((member.flags & ts.TypeFlags.Boolean) !== 0) {
+      values.add(true);
+      values.add(false);
+    }
+  }
+}
+
+export function extractLiteralValues(tsType: ts.Type, checker?: ts.TypeChecker): (LiteralValue)[] {
+  const values = new Set<LiteralValue>();
 
   function visit(t: ts.Type) {
-    if (t.isUnion()) {
+    if (t.isUnion() || t.isIntersection()) {
       for (const member of t.types) visit(member);
       return;
     }
-    if (t.isIntersection()) {
-      for (const member of t.types) visit(member);
-      return;
-    }
-    if ((t.flags & ts.TypeFlags.StringLiteral) !== 0) {
-      values.add((t as ts.StringLiteralType).value);
-      return;
-    }
-    if ((t.flags & ts.TypeFlags.NumberLiteral) !== 0) {
-      values.add((t as ts.NumberLiteralType).value);
-      return;
-    }
-    if ((t.flags & ts.TypeFlags.BooleanLiteral) !== 0) {
-      values.add((t as ts.Type & { value: boolean }).value);
-    }
+    processTypeFlags(t, values, checker);
   }
 
   visit(tsType);
+
+  if (values.size === 0) {
+    fallbackExtractUnionBooleans(tsType, values, checker);
+  }
+
   return [...values];
 }
 
-export function checkSwitchExhaustiveness(
-  node: TSESTree.SwitchStatement,
+function resolveLiteralValues(
+  rawType: ts.Type,
+  discriminantType: ts.Type,
   checker: ts.TypeChecker,
-  tsNode: ts.Node,
-  context: Readonly<TSESLint.RuleContext<string, readonly unknown[]>>,
-  messageId: string,
-  url: string,
-): void {
-  const discriminantType = checker.getTypeAtLocation(tsNode);
-  const literalValues = extractLiteralValues(discriminantType);
+): (LiteralValue)[] {
+  let literalValues = extractLiteralValues(discriminantType, checker);
 
-  if (literalValues.length < 2) return;
+  if (literalValues.length === 0) {
+    const apparentStr = checker.typeToString(discriminantType).toLowerCase();
+    if (apparentStr === "boolean") {
+      return [true, false];
+    }
 
-  const matchedValues = new Set<string | number | boolean>();
+    literalValues = extractLiteralValues(rawType, checker);
+    if (literalValues.length === 0) {
+      const rawStr = checker.typeToString(rawType).toLowerCase();
+      if (rawStr === "boolean") {
+        return [true, false];
+      }
+    }
+  }
 
-  for (const case_ of node.cases) {
+  return literalValues;
+}
+
+function collectMatchedCaseValues(
+  cases: TSESTree.SwitchCase[],
+): Set<LiteralValue> {
+  const matchedValues = new Set<LiteralValue>();
+
+  for (const case_ of cases) {
     const val = getLiteralFromExpr(case_.test);
     if (val !== null) {
       matchedValues.add(val);
     }
   }
 
+  return matchedValues;
+}
+
+export function checkSwitchExhaustiveness(
+  node: TSESTree.SwitchStatement,
+  checker: ts.TypeChecker,
+  tsNode: ts.Node | undefined,
+  context: Readonly<TSESLint.RuleContext<string, readonly unknown[]>>,
+  messageId: string,
+  url: string,
+): void {
+  if (!tsNode) return;
+
+  const rawType = checker.getTypeAtLocation(tsNode);
+  const discriminantType = checker.getApparentType(rawType);
+
+  // true | false widens to intrinsic boolean, which getApparentType resolves
+  // to an ObjectType (Boolean) with no literal flags — handle explicitly.
+  const literalValues = resolveLiteralValues(rawType, discriminantType, checker);
+
+  if (literalValues.length < 2) return;
+
+  const matchedValues = collectMatchedCaseValues(node.cases);
   const missing = literalValues.filter((v) => !matchedValues.has(v));
 
   if (missing.length === 0) return;
 
   const defaultCase = node.cases.find((c) => c.test === null);
-
   if (defaultCase && defaultHasNeverAssertion(defaultCase.consequent)) {
     return;
   }

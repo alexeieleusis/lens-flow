@@ -4,6 +4,97 @@ import type ts from "typescript";
 
 type ParameterCheckCallback = (param: TSESTree.Parameter) => void;
 
+export type MutableArrayParam = {
+  paramName: string;
+  typeText: string;
+  elemText: string;
+};
+
+function extractMutableArrayInfo(
+  typeNode: TSESTree.TypeNode,
+  sourceCode: TSESLint.SourceCode,
+): MutableArrayParamInfo | null {
+  if (typeNode.type === "TSArrayType") {
+    return {
+      typeText: sourceCode.getText(typeNode),
+      elemText: sourceCode.getText(typeNode.elementType),
+    };
+  }
+
+  if (
+    typeNode.type === "TSTypeReference" &&
+    typeNode.typeName.type === "Identifier" &&
+    typeNode.typeName.name === "Array"
+  ) {
+    const elem =
+      typeNode.typeArguments && typeNode.typeArguments.params.length > 0
+        ? sourceCode.getText(typeNode.typeArguments.params[0])
+        : "T";
+    return {
+      typeText: sourceCode.getText(typeNode),
+      elemText: elem,
+    };
+  }
+
+  return null;
+}
+
+type MutableArrayParamInfo = {
+  typeText: string;
+  elemText: string;
+};
+
+function findMutableArrays(
+  typeNode: TSESTree.TypeNode,
+  sourceCode: TSESLint.SourceCode,
+): MutableArrayParamInfo[] {
+  const results: MutableArrayParamInfo[] = [];
+
+  const info = extractMutableArrayInfo(typeNode, sourceCode);
+  if (info) {
+    results.push(info);
+    return results;
+  }
+
+  if (
+    typeNode.type === "TSUnionType" ||
+    typeNode.type === "TSIntersectionType"
+  ) {
+    for (const inner of typeNode.types) {
+      results.push(...findMutableArrays(inner, sourceCode));
+    }
+    return results;
+  }
+
+  return results;
+}
+
+export function checkMutableArrayParam(
+  param: TSESTree.Parameter,
+  sourceCode: TSESLint.SourceCode,
+): MutableArrayParam | null {
+  let inner = param.type === "TSParameterProperty" ? param.parameter : param;
+  if (inner.type === "AssignmentPattern") {
+    inner = inner.left;
+  }
+  const typeAnn = inner.typeAnnotation?.typeAnnotation;
+  if (!typeAnn) return null;
+
+  let paramName = "?";
+  if (inner.type === "Identifier") {
+    paramName = inner.name;
+  }
+
+  const arrays = findMutableArrays(typeAnn, sourceCode);
+  if (arrays.length === 0) return null;
+
+  return {
+    paramName,
+    typeText: arrays[0].typeText,
+    elemText: arrays[0].elemText,
+  };
+}
+
 export function createFunctionParamVisitor(
   checkParam: ParameterCheckCallback,
 ): Record<string, (node: TSESTree.Node) => void> {
@@ -28,8 +119,14 @@ export function createFunctionParamVisitor(
     },
     MethodDefinition(node) {
       const fn = (node as TSESTree.MethodDefinition).value;
-      if (fn && fn.body) {
-        fn.params.forEach(checkParam);
+      if (fn) {
+        (fn as { params: TSESTree.Parameter[] }).params.forEach(checkParam);
+      }
+    },
+    TSAbstractMethodDefinition(node) {
+      const fn = (node as TSESTree.TSAbstractMethodDefinition).value;
+      if (fn) {
+        (fn as { params: TSESTree.Parameter[] }).params.forEach(checkParam);
       }
     },
   };
@@ -45,7 +142,7 @@ export function getInterfaceMembers(
 }
 
 type BooleanFlagMember = TSESTree.TSPropertySignature & {
-  key: TSESTree.Identifier;
+  key: TSESTree.Identifier | TSESTree.Literal;
   typeAnnotation: { typeAnnotation: TSESTree.TypeNode };
 };
 
@@ -69,7 +166,11 @@ export function createBooleanFlagChecker(
 
       if (boolFlags.length >= minCount) {
         const flagNames = boolFlags
-          .map((m) => (m.key.type === "Identifier" ? m.key.name : "?"))
+          .map((m) => {
+            if (m.key.type === "Identifier") return m.key.name;
+            if (m.key.type === "Literal" && typeof m.key.value === "string") return m.key.value;
+            return String(m.key?.value ?? "?");
+          })
           .join(", ");
 
         const parent = node.parent;

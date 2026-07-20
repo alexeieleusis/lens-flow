@@ -13,6 +13,7 @@ Usage:
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -178,6 +179,182 @@ export default plugin;
 """
 
 # ── Phase: branch — file operations ───────────────────────────────────────────
+
+def _parse_props(block: str) -> list[tuple[str, str]]:
+    """Parse key: value pairs from an object literal, respecting nesting."""
+    pairs: list[tuple[str, str]] = []
+    i = 0
+    while i < len(block):
+        km = re.match(r'\s*(\w+)\s*:\s*', block[i:])
+        if not km:
+            break
+        key = km.group(1)
+        j = i + km.end()
+        c = block[j]
+        if c == '{':
+            depth = 1
+            j += 1
+            while j < len(block) and depth > 0:
+                if block[j] == '{':
+                    depth += 1
+                elif block[j] == '}':
+                    depth -= 1
+                j += 1
+            val = block[i + km.end():j]
+        elif c == '[':
+            depth = 1
+            j += 1
+            while j < len(block) and depth > 0:
+                if block[j] == '[':
+                    depth += 1
+                elif block[j] == ']':
+                    depth -= 1
+                j += 1
+            val = block[i + km.end():j]
+        elif c in ('"', "'"):
+            q = c
+            j += 1
+            while j < len(block):
+                if block[j] == '\\' and j + 1 < len(block):
+                    j += 2
+                    continue
+                if block[j] == q:
+                    j += 1
+                    break
+                j += 1
+            val = block[i + km.end():j]
+        else:
+            em = re.match(r'([^,}]*)', block[j:])
+            val = em.group(1) if em else ''
+            j += len(val)
+        pairs.append((key, val.strip()))
+        while j < len(block) and block[j] == ',':
+            j += 1
+        i = j
+    return pairs
+
+
+def _infer_ts_type(val: str) -> str:
+    """Infer a TypeScript type from a JS literal value string."""
+    if val in ('true', 'false'):
+        return 'boolean'
+    if re.match(r'^-?\d+(\.\d+)?$', val):
+        return 'number'
+    if val.startswith(('"', "'")):
+        return 'string'
+    if val.startswith('['):
+        return 'unknown[]'
+    if val.startswith('{'):
+        return 'object'
+    return 'unknown'
+
+
+def _infer_options_type(text: str) -> str:
+    """Return a TS tuple type string for the rule's options, derived from defaultOptions."""
+    dm = re.search(r'defaultOptions\s*:\s*\[\s*\{', text)
+    if not dm:
+        return '[]'
+    brace_start = dm.end() - 1
+    depth = 0
+    i = brace_start
+    while i < len(text):
+        if text[i] == '{':
+            depth += 1
+        elif text[i] == '}':
+            depth -= 1
+            if depth == 0:
+                break
+        i += 1
+    block = text[brace_start + 1:i]
+    props = []
+    for key, val in _parse_props(block):
+        props.append(f'{key}: {_infer_ts_type(val)}')
+    return '[{ ' + ', '.join(props) + ' }]' if props else '[]'
+
+
+def patch_rule_file(path: Path) -> None:
+    """Fix Node16/ESM compatibility issues in a copied rule or test file.
+
+    Two issues arise when the source (CommonJS/Node) rules land in this repo
+    (Node16/ESM):
+      1. Relative imports need explicit .js extensions.
+      2. TypeScript can't contextually type `create(context)` through the
+         RuleCreator generics under strict Node16 settings, so we inject an
+         explicit TSESLint.RuleContext annotation.
+    """
+    text = path.read_text(encoding="utf-8")
+    original = text
+
+    # Fix 1: add .js to relative imports that are missing a file extension.
+    def _add_js_ext(m: re.Match) -> str:
+        quote, imp = m.group(1), m.group(2)
+        if not re.search(r'\.[a-zA-Z]+$', imp):
+            imp += '.js'
+        return f'from {quote}{imp}{quote}'
+
+    text = re.sub(r'from (["\'])(\.\.?/[^\'"]+)\1', _add_js_ext, text)
+
+    # Fix 2: annotate create(context) with an explicit TSESLint.RuleContext type.
+    if re.search(r'\bcreate\(context\)\s*\{', text):
+        # Primary: collect message IDs from context.report() calls in this file.
+        msg_ids = list(dict.fromkeys(re.findall(r'messageId:\s*["\'](\w+)["\']', text)))
+
+        # Fallback: parse the messages: { ... } block.  We need string-aware
+        # brace counting because message values contain {{template}} braces.
+        if not msg_ids:
+            m = re.search(r'messages:\s*\{', text)
+            if m:
+                depth, in_str, str_char, i = 1, False, '', m.end()
+                while i < len(text) and depth > 0:
+                    c = text[i]
+                    if in_str:
+                        if c == '\\':
+                            i += 1
+                        elif c == str_char:
+                            in_str = False
+                    else:
+                        if c in ('"', "'", '`'):
+                            in_str, str_char = True, c
+                        elif c == '{':
+                            depth += 1
+                        elif c == '}':
+                            depth -= 1
+                    i += 1
+                block = text[m.end():i - 1]
+                msg_ids = list(dict.fromkeys(
+                    re.findall(r'^\s*([a-zA-Z_$][\w$]*)\s*:', block, re.MULTILINE)
+                ))
+
+        if msg_ids:
+            msg_union = ' | '.join(f'"{mid}"' for mid in msg_ids)
+
+            if not re.search(r'import\b.*\bTSESLint\b', text):
+                # Amend an existing @typescript-eslint/utils import if present...
+                patched = re.sub(
+                    r'(import(?:\s+type)?\s*\{)([^}]+?)(\}\s*from\s*["\']@typescript-eslint/utils["\'])',
+                    lambda m: m.group(1) + m.group(2).rstrip() + ', TSESLint ' + m.group(3),
+                    text, count=1,
+                )
+                if patched == text:
+                    # ...otherwise add one after the rule-creator import line.
+                    patched = re.sub(
+                        r'(import \{ createRule \} from ["\']\.\.\/utils\/rule-creator\.js["\'];)',
+                        r'\1\nimport type { TSESLint } from "@typescript-eslint/utils";',
+                        text, count=1,
+                    )
+                text = patched
+
+            opts_type = _infer_options_type(text)
+            text = re.sub(
+                r'\bcreate\(context\)\s*\{',
+                f'create(context: TSESLint.RuleContext<{msg_union}, {opts_type}>) {{',
+                text, count=1,
+            )
+
+    if text != original:
+        path.write_text(text, encoding="utf-8")
+        print(f"  patched {path.name}")
+
 
 def copy_utils(runner: Runner) -> None:
     src_utils = SOURCE_REPO / "src" / "utils"

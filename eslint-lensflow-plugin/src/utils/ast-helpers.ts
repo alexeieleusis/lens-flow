@@ -1,7 +1,7 @@
 import ts from "typescript";
 import { TSESTree } from "@typescript-eslint/utils";
 import type { ParserServices } from "@typescript-eslint/utils";
-import { KEYS } from "eslint-visitor-keys";
+import { visitorKeys as KEYS } from "@typescript-eslint/visitor-keys";
 
 const ASSERT_NEVER_PATTERN = /^assertNever$/;
 
@@ -17,13 +17,19 @@ function collectNodeArray(val: unknown[], children: TSESTree.Node[]): void {
   }
 }
 
-export function getChildren(node: TSESTree.Node): TSESTree.Node[] {
+export function getChildren(
+  node: TSESTree.Node,
+  options: WalkOptions = {},
+): TSESTree.Node[] {
   const children: TSESTree.Node[] = [];
   const childKeys = KEYS[node.type];
   if (!childKeys) return children;
 
+  const skipType = options.skipTypeAnnotations ?? false;
+
   for (const key of childKeys) {
     if (key === "type") continue;
+    if (skipType && TYPE_ANNOTATION_KEYS.has(key)) continue;
     const val = (node as unknown as Record<string, unknown>)[key];
     if (val == null || typeof val !== "object") continue;
 
@@ -54,16 +60,31 @@ export interface WalkOptions {
    * and produce false positives. Defaults to `true`.
    */
   stopAtFunctionBoundaries?: boolean;
+  /**
+   * When true, the walker skips visitor keys that lead into type annotation
+   * positions (e.g., `typeAnnotation`, `typeArguments`, `returnType`). This
+   * prevents the walker from visiting nodes that exist only in type positions
+   * and would otherwise be mistaken for runtime value accesses.
+   */
+  skipTypeAnnotations?: boolean;
 }
+
+const TYPE_ANNOTATION_KEYS = new Set([
+  "typeAnnotation",
+  "typeParameters",
+  "typeArguments",
+  "returnType",
+  "typePredicate",
+]);
 
 export function walk(
   root: TSESTree.Node,
-  cb: (node: TSESTree.Node) => void,
+  cb: (node: TSESTree.Node) => boolean | void,
   options: WalkOptions = {},
 ): void {
   const stopBoundary = options.stopAtFunctionBoundaries ?? true;
-  cb(root);
-  for (const child of getChildren(root)) {
+  if (cb(root)) return;
+  for (const child of getChildren(root, options)) {
     if (stopBoundary && isFunctionBoundary(child)) continue;
     walk(child, cb, options);
   }
@@ -82,7 +103,7 @@ export function walkNodes(
 
     if (predicate(node)) return true;
 
-    for (const child of getChildren(node)) {
+    for (const child of getChildren(node, options)) {
       if (stopBoundary && isFunctionBoundary(child)) continue;
       if (innerWalk(child)) return true;
     }
@@ -199,7 +220,7 @@ export function getComparisonInfo(
   return { varName: memberName, tsVarNode, value, operator };
 }
 
-function getMemberName(
+export function getMemberName(
   node: TSESTree.MemberExpression,
   depth = 0,
 ): string | null {
@@ -310,10 +331,27 @@ function collectNestedStatementArrays(stmt: TSESTree.Statement): TSESTree.Statem
     if (Array.isArray(stmts)) {
       results.push(stmts);
       for (const s of stmts) extractNested(s);
-    } else {
-      if (stmts.type === "BlockStatement") {
-        results.push(stmts.body);
-        for (const s of stmts.body) extractNested(s);
+    } else if (stmts.type === "BlockStatement") {
+      results.push(stmts.body);
+      for (const s of stmts.body) extractNested(s);
+    }
+  }
+
+  function extractFromTry(s: TSESTree.TryStatement) {
+    extract(s.block.body);
+    if (s.handler) extract(s.handler.body.body);
+    if (s.finalizer) extract(s.finalizer.body);
+  }
+
+  function extractFromSwitch(s: TSESTree.SwitchStatement) {
+    for (const sc of s.cases) {
+      for (const cons of sc.consequent) {
+        if (cons.type === "BlockStatement") {
+          results.push(cons.body);
+          for (const inner of cons.body) extractNested(inner);
+        } else {
+          extractNested(cons);
+        }
       }
     }
   }
@@ -342,21 +380,10 @@ function collectNestedStatementArrays(stmt: TSESTree.Statement): TSESTree.Statem
         extractNested(s.body);
         break;
       case "TryStatement":
-        extract(s.block.body);
-        if (s.handler) extract(s.handler.body.body);
-        if (s.finalizer) extract(s.finalizer.body);
+        extractFromTry(s);
         break;
       case "SwitchStatement":
-        for (const sc of s.cases) {
-          for (const cons of sc.consequent) {
-            if (cons.type === "BlockStatement") {
-              results.push(cons.body);
-              for (const inner of cons.body) extractNested(inner);
-            } else {
-              extractNested(cons);
-            }
-          }
-        }
+        extractFromSwitch(s);
         break;
     }
   }
