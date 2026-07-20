@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T52-literal-types.md");
 
 type WidenedPrimitive = "string" | "number" | "boolean";
 
@@ -38,7 +41,7 @@ export default createRule({
     },
     messages: {
       preferConst:
-        "Use `const` instead of `let` to preserve the literal type `{{literalType}}` instead of widening to `{{widenedType}}`. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T52-literal-types.md",
+        "Use `const` instead of `let` to preserve the literal type `{{literalType}}` instead of widening to `{{widenedType}}`. See: {{url}}",
     },
     schema: [],
     fixable: "code",
@@ -98,6 +101,7 @@ export default createRule({
             data: {
               literalType: String(decl.literalType),
               widenedType: decl.widenedType,
+              url: URL,
             },
           });
         }
@@ -125,6 +129,7 @@ export default createRule({
           data: {
             literalType: String(decl.literalType),
             widenedType: decl.widenedType,
+            url: URL,
           },
           ...(i === 0 && hasFix
             ? {
