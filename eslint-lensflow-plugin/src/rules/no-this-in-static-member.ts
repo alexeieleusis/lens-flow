@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T33-self-type.md");
 
 function containsTSThisType(node: TSESTree.TypeNode): boolean {
   if (node.type === "TSThisType") return true;
@@ -24,7 +27,7 @@ export default createRule({
     },
     messages: {
       staticThisReturn:
-        "Using `this` as a return type in a static member. In static contexts, `this` refers to the constructor function, not an instance type. Use `InstanceType<typeof this>` or a generic `T extends typeof ThisClass` pattern instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T33-self-type.md",
+        "Using `this` as a return type in a static member. In static contexts, `this` refers to the constructor function, not an instance type. Use `InstanceType<typeof this>` or a generic `T extends typeof ThisClass` pattern instead. See: {{url}}",
     },
     schema: [],
   },
@@ -41,6 +44,7 @@ export default createRule({
         context.report({
           node: funcNode.returnType!,
           messageId: "staticThisReturn",
+          data: { url: URL },
         });
       }
     };
