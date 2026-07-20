@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T04-generics-bounds.md");
 
 function checkTypeReference(
   node: TSESTree.TSTypeReference,
@@ -210,7 +213,7 @@ export default createRule({
     },
     messages: {
       selfReferentialBound:
-        "Type parameter '{{name}}' references itself in its constraint '{{constraint}}'. This creates a self-referential F-bound that confuses type inference. Separate the element type from the container type. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T04-generics-bounds.md",
+        "Type parameter '{{name}}' references itself in its constraint '{{constraint}}'. This creates a self-referential F-bound that confuses type inference. Separate the element type from the container type. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -236,6 +239,7 @@ export default createRule({
             data: {
               name: paramName,
               constraint: constraintText,
+              url: URL,
             },
           });
         }
