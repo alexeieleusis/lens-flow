@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T49-associated-types.md");
 
 function hasVarianceAnnotation(tp: TSESTree.TSTypeParameter): boolean {
   return !!(tp as TSESTree.TSTypeParameter & { out?: boolean; in?: boolean }).out || !!(tp as TSESTree.TSTypeParameter & { out?: boolean; in?: boolean }).in;
@@ -288,9 +291,9 @@ export default createRule({
     },
     messages: {
       suggestOut:
-        "Type parameter '{{name}}' is only used in covariant (output) positions. Add `out` variance annotation. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T49-associated-types.md",
+        "Type parameter '{{name}}' is only used in covariant (output) positions. Add `out` variance annotation. See: {{url}}",
       suggestIn:
-        "Type parameter '{{name}}' is only used in contravariant (input) positions. Add `in` variance annotation. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T49-associated-types.md",
+        "Type parameter '{{name}}' is only used in contravariant (input) positions. Add `in` variance annotation. See: {{url}}",
     },
     schema: [],
   },
@@ -328,13 +331,13 @@ export default createRule({
         context.report({
           node: tp,
           messageId: "suggestOut",
-          data: { name: paramName },
+          data: { name: paramName, url: URL },
         });
       } else if (usage.contravariant && !usage.covariant) {
         context.report({
           node: tp,
           messageId: "suggestIn",
-          data: { name: paramName },
+          data: { name: paramName, url: URL },
         });
       }
     }
