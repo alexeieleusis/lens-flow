@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T54-functor-applicative-monad.md");
 
 const EXTRACT_METHODS = new Set([
   "fold",
@@ -96,7 +99,7 @@ export default createRule({
     },
     messages: {
       prematureExtraction:
-        "Extracting a value from a monadic context mid-pipeline loses type safety and prevents error propagation. Use chain/map and extract only at the final step. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T54-functor-applicative-monad.md",
+        "Extracting a value from a monadic context mid-pipeline loses type safety and prevents error propagation. Use chain/map and extract only at the final step. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -111,6 +114,7 @@ export default createRule({
           context.report({
             node,
             messageId: "prematureExtraction",
+            data: { url: URL },
           });
         }
       }
