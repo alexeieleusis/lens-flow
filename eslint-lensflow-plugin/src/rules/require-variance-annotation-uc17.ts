@@ -1,4 +1,7 @@
 import requireExplicitVariance from "./require-explicit-variance.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC17-variance.md");
 
 /**
  * @deprecated Use `require-explicit-variance` instead.
