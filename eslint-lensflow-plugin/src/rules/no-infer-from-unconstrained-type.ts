@@ -36,8 +36,7 @@ export default createRule({
     },
     messages: {
       inferFromUnconstrained:
-        "Using `infer` on unconstrained type parameter '{{paramName}}' (pattern `{{paramName}} extends infer {{inferName}} ? {{inferName}} : ...`) produces an identity mapping. Constrain the type parameter so inference targets a meaningful structure. See: " +
-        URL,
+        "Using `infer` on unconstrained type parameter '{{paramName}}' (pattern `{{paramName}} extends infer {{inferName}} ? {{inferName}} : ...`) produces an identity mapping. Constrain the type parameter so inference targets a meaningful structure. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -96,7 +95,7 @@ export default createRule({
           context.report({
             node,
             messageId: "inferFromUnconstrained",
-            data: { paramName: refName, inferName },
+            data: { paramName: refName, inferName, url: URL },
           });
         }
       },
