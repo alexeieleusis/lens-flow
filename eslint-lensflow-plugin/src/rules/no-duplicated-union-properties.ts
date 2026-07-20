@@ -1,5 +1,8 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T36-trait-objects.md");
 
 export default createRule({
   name: "no-duplicated-union-properties",
@@ -11,7 +14,7 @@ export default createRule({
     },
     messages: {
       duplicatedProperties:
-        "{{dupCount}} property signature(s) ({{properties}}) duplicated across union members. Extract shared structure into a common interface. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T36-trait-objects.md",
+        "{{dupCount}} property signature(s) ({{properties}}) duplicated across union members. Extract shared structure into a common interface. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -130,6 +133,7 @@ export default createRule({
             data: {
               dupCount: String(duplicated.length),
               properties: duplicated.join(", "),
+              url: URL,
             },
           });
         }
