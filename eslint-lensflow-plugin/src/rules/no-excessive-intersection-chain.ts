@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T02-union-intersection.md");
 
 export default createRule({
   name: "no-excessive-intersection-chain",
@@ -11,7 +14,7 @@ export default createRule({
     },
     messages: {
       excessiveChain:
-        "Intersection type has {{count}} members which exceeds the maximum of {{max}}. Decompose into intermediate type aliases for readability. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T02-union-intersection.md",
+        "Intersection type has {{count}} members which exceeds the maximum of {{max}}. Decompose into intermediate type aliases for readability. See: {{url}}",
     },
     schema: [
       {
@@ -40,6 +43,7 @@ export default createRule({
             data: {
               count: String(node.types.length),
               max: String(options.maxMembers),
+              url: URL,
             },
           });
         }
