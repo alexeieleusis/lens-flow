@@ -1,6 +1,9 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { AST_NODE_TYPES } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T32-immutability-markers.md");
 
 function getTypeNameIdentifier(node: TSESTree.Node | undefined): string | null {
   if (!node) return null;
@@ -94,7 +97,7 @@ export default createRule({
     },
     messages: {
       missingReadonly:
-        "Object.freeze() provides runtime immutability but TypeScript does not infer readonly from it. Add `as const` or a `Readonly<T>` type annotation. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T32-immutability-markers.md",
+        "Object.freeze() provides runtime immutability but TypeScript does not infer readonly from it. Add `as const` or a `Readonly<T>` type annotation. See: {{url}}",
     },
     schema: [],
   },
@@ -115,12 +118,12 @@ export default createRule({
         if (ancestor === declarator) break;
         if (isPerAncestor(ancestor)) return;
         if (isFunctionAncestor(ancestor)) {
-          context.report({ node, messageId: "missingReadonly" });
+          context.report({ node, messageId: "missingReadonly", data: { url: URL } });
           return;
         }
       }
       if (hasAsConst(declarator) || hasReadonlyAnnotation(declarator)) return;
-      context.report({ node, messageId: "missingReadonly" });
+      context.report({ node, messageId: "missingReadonly", data: { url: URL } });
     }
 
     return {
@@ -132,7 +135,7 @@ export default createRule({
 
         if (isDirectInit(declarator, node)) {
           if (hasAsConst(declarator) || hasReadonlyAnnotation(declarator)) return;
-          context.report({ node, messageId: "missingReadonly" });
+          context.report({ node, messageId: "missingReadonly", data: { url: URL } });
         } else {
           handleIndirectInit(declarator, node);
         }
