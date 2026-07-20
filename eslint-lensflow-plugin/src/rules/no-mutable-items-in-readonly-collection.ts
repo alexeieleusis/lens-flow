@@ -1,6 +1,9 @@
 import ts from "typescript";
 import { ESLintUtils, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("usecases/UC06-immutability.md");
 
 function isDeclarationMutable(decl: ts.Node): boolean {
   if (decl.kind === ts.SyntaxKind.SetAccessor) {
@@ -56,7 +59,7 @@ export default createRule({
      },
     messages: {
       mutableInnerType:
-        "The type '{{typeName}}' inside this readonly collection contains mutable members (writable properties or methods). Use a fully immutable inner type. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC06-immutability.md",
+        "The type '{{typeName}}' inside this readonly collection contains mutable members (writable properties or methods). Use a fully immutable inner type. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -86,6 +89,7 @@ export default createRule({
             messageId: "mutableInnerType",
             data: {
               typeName: innerTsType.symbol?.name ?? "unknown",
+              url: URL,
             },
           });
         }
@@ -106,6 +110,7 @@ export default createRule({
             messageId: "mutableInnerType",
             data: {
               typeName: innerTsType.symbol?.name ?? "unknown",
+              url: URL,
             },
           });
         }
