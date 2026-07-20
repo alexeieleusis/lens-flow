@@ -1,5 +1,8 @@
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("usecases/UC10-encapsulation.md");
 
 function isIndexSignatureSealed(member: TSESTree.TSInterfaceBody["body"][number]): boolean {
   if (member.type !== "TSIndexSignature" || member.parameters.length === 0) {
@@ -43,8 +46,8 @@ export default createRule({
         "Disallow sealed interfaces (unique symbol property) without optional evolution members",
     },
     messages: {
-      sealedNoEvolution:
-        "Interface '{{name}}' uses a sealed symbol but has no optional members for backward-compatible evolution. Add optional members or use a class. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/usecases/UC10-encapsulation.md",
+     sealedNoEvolution:
+         "Interface '{{name}}' uses a sealed symbol but has no optional members for backward-compatible evolution. Add optional members or use a class. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -77,6 +80,7 @@ export default createRule({
             messageId: "sealedNoEvolution",
             data: {
               name: node.id.name,
+              url: URL,
             },
           });
         }
