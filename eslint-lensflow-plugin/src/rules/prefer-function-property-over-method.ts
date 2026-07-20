@@ -1,6 +1,9 @@
 import type { TSESTree } from "@typescript-eslint/utils";
 import { TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T22-callable-typing.md");
 
 function findInterfaceTypeParams(
   node: TSESTree.TSMethodSignature,
@@ -111,7 +114,7 @@ export default createRule({
     },
     messages: {
       preferFunctionProperty:
-        "Method '{{name}}' references generic type parameter(s) in a generic interface. Use a function property type instead to enforce contravariant checking. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T22-callable-typing.md",
+        "Method '{{name}}' references generic type parameter(s) in a generic interface. Use a function property type instead to enforce contravariant checking. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -140,7 +143,7 @@ export default createRule({
           context.report({
             node,
             messageId: "preferFunctionProperty",
-            data: { name: methodName },
+            data: { name: methodName, url: URL },
           });
         }
       },
