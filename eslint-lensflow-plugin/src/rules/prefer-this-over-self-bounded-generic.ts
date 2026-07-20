@@ -1,5 +1,8 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
+
+const URL = knowledgeUrl("catalog/T33-self-type.md");
 
 export default createRule({
   name: "prefer-this-over-self-bounded-generic",
@@ -11,7 +14,7 @@ export default createRule({
     },
     messages: {
       selfBoundedGeneric:
-        "Class uses self-bounded generic `T extends {{className}}<T>` which requires unsafe `as T` casts. Use polymorphic `this` return type instead. See: https://raw.githubusercontent.com/jpablo/vibe-types/7891def9e1b66bebd95a393b42f3401eba697cd5/plugin/skills/typescript/catalog/T33-self-type.md",
+        "Class uses self-bounded generic `T extends {{className}}<T>` which requires unsafe `as T` casts. Use polymorphic `this` return type instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -49,6 +52,7 @@ export default createRule({
         messageId: "selfBoundedGeneric",
         data: {
           className,
+          url: URL,
         },
       });
     }
