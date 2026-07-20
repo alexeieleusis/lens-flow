@@ -1,6 +1,9 @@
 import { createRule } from "../utils/rule-creator.js";
 import { getChildren } from "../utils/ast-helpers.js";
+import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
+
+const URL = knowledgeUrl("catalog/T57-typestate.md");
 
 const FUNCTION_BOUNDARY_TYPES = new Set([
   "FunctionDeclaration",
@@ -109,7 +112,7 @@ export default createRule({
     },
     messages: {
       staleStateRef:
-        "The result of a type-state transition method should be rebound to the original `{{letName}}` variable instead of assigned to `{{constName}}`. The stale reference remains accessible and bypasses the type-state guarantee. Prefer `{{letName}} = {{letName}}.{{methodName}}()`. See: https://github.com/alexeieleusis/lens-flow/tree/main/eslint-lensflow-plugin/docs/rules/require-typestate-rebinding.md",
+        "The result of a type-state transition method should be rebound to the original `{{letName}}` variable instead of assigned to `{{constName}}`. The stale reference remains accessible and bypasses the type-state guarantee. Prefer `{{letName}} = {{letName}}.{{methodName}}(). See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -251,6 +254,7 @@ export default createRule({
                 const callee = extractCallee(init);
                 return callee ? extractMethodName(callee) : "<method>";
               })(),
+              url: URL,
             },
           });
         }
