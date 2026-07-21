@@ -116,9 +116,15 @@ New config files:
 
 - Remove `package-lock.json` from the root `.gitignore`; commit the lockfile so `npm ci`
   is reproducible in CI.
-- One-time `prettier --write .` and `oxlint --fix` pass over the existing codebase so it
-  passes its own new checks before CI goes live (a large rule-file codebase almost
-  certainly has some formatting/lint drift today).
+- One-time `prettier --write .` pass over the existing codebase, as its own isolated
+  commit (separate from the CI-wiring commits) — measured locally: 955 of ~960 files have
+  no prior formatting applied, since there's no existing Prettier setup. One clean
+  "apply formatting" commit now, then `format:check` enforces it going forward.
+- No `oxlint --fix` pass needed: oxlint's default exit code is `0` when only warnings are
+  present (only actual `error`-severity findings fail the run), and a local run today
+  produces warnings only (mostly pre-existing unused-variable/helper findings in rule
+  files). CI will surface these as advisory output without blocking merges; cleaning them
+  up is a separate future effort, not part of this CI setup.
 - `.github/dependabot.yml`: weekly `npm` ecosystem updates scoped to
   `/eslint-lensflow-plugin`, plus weekly `github-actions` ecosystem updates for the
   workflow itself.
