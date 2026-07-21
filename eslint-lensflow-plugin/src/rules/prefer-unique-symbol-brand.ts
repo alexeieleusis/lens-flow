@@ -21,7 +21,11 @@ function isStringLiteralBrand(typeAnn: TSESTree.TypeNode | undefined): boolean {
   );
 }
 
-function reportStringBrand(context: Parameters<ReturnType<typeof createRule>["create"]>[0], node: TSESTree.TSTypeAliasDeclaration, brandName: string) {
+function reportStringBrand(
+  context: Parameters<ReturnType<typeof createRule>["create"]>[0],
+  node: TSESTree.TSTypeAliasDeclaration,
+  brandName: string,
+) {
   context.report({
     node,
     messageId: "stringBrandForgery",

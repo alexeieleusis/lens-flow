@@ -4,18 +4,27 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const URL = knowledgeUrl("catalog/T31-record-types.md");
 
-function extractPropName(key: TSESTree.TSPropertySignature["key"]): string | null {
+function extractPropName(
+  key: TSESTree.TSPropertySignature["key"],
+): string | null {
   if (key.type === "Identifier") return key.name;
   if (key.type === "Literal" && typeof key.value === "string") return key.value;
-  if (key.type === "Literal" && typeof key.value === "number") return String(key.value);
+  if (key.type === "Literal" && typeof key.value === "number")
+    return String(key.value);
   return null;
 }
 
-function extractLiteralValueType(sig: TSESTree.TSPropertySignature): string | null {
+function extractLiteralValueType(
+  sig: TSESTree.TSPropertySignature,
+): string | null {
   const typeAnn = sig.typeAnnotation?.typeAnnotation;
   if (typeAnn?.type !== "TSLiteralType") return null;
   const lit = typeAnn.literal;
-  if (lit.type === "Literal" && lit.value !== null && typeof lit.value !== "object") {
+  if (
+    lit.type === "Literal" &&
+    lit.value !== null &&
+    typeof lit.value !== "object"
+  ) {
     return String(lit.value);
   }
   if (lit.type === "TemplateLiteral" && lit.quasis.length === 1) {
@@ -28,13 +37,17 @@ function extractTypeKind(typeAnn: TSESTree.TypeNode): string {
   return typeAnn.type;
 }
 
-function getPropertySigs(members: TSESTree.TypeElement[]): TSESTree.TSPropertySignature[] {
+function getPropertySigs(
+  members: TSESTree.TypeElement[],
+): TSESTree.TSPropertySignature[] {
   return members.filter(
     (m): m is TSESTree.TSPropertySignature => m.type === "TSPropertySignature",
   );
 }
 
-function buildPropsMap(literals: TSESTree.TSTypeLiteral[]): Record<string, string[]> {
+function buildPropsMap(
+  literals: TSESTree.TSTypeLiteral[],
+): Record<string, string[]> {
   const propsMap: Record<string, string[]> = {};
   for (const literal of literals) {
     for (const sig of getPropertySigs(literal.members)) {
@@ -50,7 +63,9 @@ function buildPropsMap(literals: TSESTree.TSTypeLiteral[]): Record<string, strin
   return propsMap;
 }
 
-function collectLiteralValues(literals: TSESTree.TSTypeLiteral[]): Record<string, Set<string>> {
+function collectLiteralValues(
+  literals: TSESTree.TSTypeLiteral[],
+): Record<string, Set<string>> {
   const literalValues: Record<string, Set<string>> = {};
   for (const literal of literals) {
     for (const sig of getPropertySigs(literal.members)) {
@@ -119,9 +134,7 @@ export default createRule({
         // the rule only applies to plain data shapes (property-only objects).
         for (const literal of literals) {
           for (const member of literal.members) {
-            if (
-              member.type !== "TSPropertySignature"
-            ) {
+            if (member.type !== "TSPropertySignature") {
               return;
             }
           }

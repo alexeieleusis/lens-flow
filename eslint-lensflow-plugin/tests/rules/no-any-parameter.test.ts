@@ -26,10 +26,7 @@ ruleTester.run("no-any-parameter", rule, {
       code: `function createUser(name: any, email: any) {
         return { name, email };
       }`,
-      errors: [
-        { messageId: "anyParam" },
-        { messageId: "anyParam" },
-      ],
+      errors: [{ messageId: "anyParam" }, { messageId: "anyParam" }],
     },
     {
       code: `const bad = (value: any) => value.toString();`,

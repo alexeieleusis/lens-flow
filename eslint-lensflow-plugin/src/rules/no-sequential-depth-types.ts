@@ -152,11 +152,15 @@ function checkArrayLike(member: TSESTree.TSPropertySignature): string | null {
   return null;
 }
 
-function checkPriorityMember(member: TSESTree.TSPropertySignature): string | null {
+function checkPriorityMember(
+  member: TSESTree.TSPropertySignature,
+): string | null {
   return checkArrayLike(member);
 }
 
-function checkFallbackMember(member: TSESTree.TSPropertySignature): string | null {
+function checkFallbackMember(
+  member: TSESTree.TSPropertySignature,
+): string | null {
   const propType = member.typeAnnotation?.typeAnnotation;
   if (!propType) return null;
   if (propType.type === "TSArrayType") return null;

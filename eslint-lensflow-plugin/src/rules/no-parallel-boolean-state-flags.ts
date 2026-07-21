@@ -32,7 +32,12 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ minCount: 3 }],
-  create(context: TSESLint.RuleContext<"tooManyBooleanFlags", [{ minCount: number }]>) {
+  create(
+    context: TSESLint.RuleContext<
+      "tooManyBooleanFlags",
+      [{ minCount: number }]
+    >,
+  ) {
     const [{ minCount } = { minCount: 3 }] = context.options ?? [
       { minCount: 3 },
     ];
@@ -45,7 +50,8 @@ export default createRule({
     } =>
       member.type === "TSPropertySignature" &&
       (member.key.type === "Identifier" ||
-        (member.key.type === "Literal" && typeof member.key.value === "string")) &&
+        (member.key.type === "Literal" &&
+          typeof member.key.value === "string")) &&
       member.typeAnnotation?.typeAnnotation.type === "TSBooleanKeyword";
 
     function checkNode(
@@ -58,7 +64,8 @@ export default createRule({
         const flagNames = boolFlags
           .map((m) => {
             if (m.key.type === "Identifier") return m.key.name;
-            if (m.key.type === "Literal" && typeof m.key.value === "string") return m.key.value;
+            if (m.key.type === "Literal" && typeof m.key.value === "string")
+              return m.key.value;
             return String(m.key?.value ?? "?");
           })
           .join(", ");

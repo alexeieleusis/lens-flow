@@ -14,7 +14,10 @@ function unwrapReadonly(node: any): any {
 function isAnyArray(node: any): node is any {
   node = unwrapReadonly(node);
 
-  if (node?.type === "TSArrayType" && node.elementType?.type === "TSAnyKeyword") {
+  if (
+    node?.type === "TSArrayType" &&
+    node.elementType?.type === "TSAnyKeyword"
+  ) {
     return true;
   }
   if (

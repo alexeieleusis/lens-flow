@@ -4,10 +4,16 @@ import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 const URL = knowledgeUrl("catalog/T47-gradual-typing.md");
 
-function findAnyParams(
-  params: readonly TSESTree.Parameter[],
-): Array<{ name: string; anyNode: TSESTree.TSAnyKeyword; paramNode: TSESTree.Node }> {
-  const results: Array<{ name: string; anyNode: TSESTree.TSAnyKeyword; paramNode: TSESTree.Node }> = [];
+function findAnyParams(params: readonly TSESTree.Parameter[]): Array<{
+  name: string;
+  anyNode: TSESTree.TSAnyKeyword;
+  paramNode: TSESTree.Node;
+}> {
+  const results: Array<{
+    name: string;
+    anyNode: TSESTree.TSAnyKeyword;
+    paramNode: TSESTree.Node;
+  }> = [];
 
   for (const param of params) {
     let base: TSESTree.Node;
@@ -19,8 +25,10 @@ function findAnyParams(
       base = param;
     }
 
-    const typeAnn = (base as TSESTree.Identifier | TSESTree.ObjectPattern | TSESTree.ArrayPattern)
-      .typeAnnotation?.typeAnnotation;
+    const typeAnn = (
+      base as
+        TSESTree.Identifier | TSESTree.ObjectPattern | TSESTree.ArrayPattern
+    ).typeAnnotation?.typeAnnotation;
 
     if (typeAnn?.type === "TSAnyKeyword") {
       const name = (base as TSESTree.Identifier).name ?? "unnamed";
@@ -50,25 +58,24 @@ function bodyOnlyNarrows(
   };
 
   function checkInstanceof(n: TSESTree.BinaryExpression): boolean {
-    if (n.type !== "BinaryExpression" || n.operator !== "instanceof") return false;
+    if (n.type !== "BinaryExpression" || n.operator !== "instanceof")
+      return false;
     return n.left.type === "Identifier" && isParamBinding(n.left);
   }
 
   function checkBinaryExpression(n: TSESTree.BinaryExpression): boolean {
     if (n.type !== "BinaryExpression") return false;
 
-    if (
-      n.left.type === "UnaryExpression" &&
-      n.left.operator === "typeof"
-    ) {
-      if (n.left.argument.type === "Identifier" && isParamBinding(n.left.argument)) return true;
+    if (n.left.type === "UnaryExpression" && n.left.operator === "typeof") {
+      if (
+        n.left.argument.type === "Identifier" &&
+        isParamBinding(n.left.argument)
+      )
+        return true;
     }
 
     if (n.left.type === "Identifier" && isParamBinding(n.left)) {
-      if (
-        n.right.type === "Literal" &&
-        typeof n.right.value === "string"
-      ) {
+      if (n.right.type === "Literal" && typeof n.right.value === "string") {
         return true;
       }
     }
@@ -84,7 +91,8 @@ function bodyOnlyNarrows(
   function detectNarrowingParam(testNode: TSESTree.Node): boolean {
     let narrowed = false;
     if (
-      (testNode.type === "BinaryExpression" && (checkInstanceof(testNode) || checkBinaryExpression(testNode))) ||
+      (testNode.type === "BinaryExpression" &&
+        (checkInstanceof(testNode) || checkBinaryExpression(testNode))) ||
       (testNode.type === "UnaryExpression" && checkUnaryTypeof(testNode))
     ) {
       narrowed = true;
@@ -98,7 +106,10 @@ function bodyOnlyNarrows(
     return false;
   }
 
-  function visitIfStatement(n: TSESTree.IfStatement, parent: TSESTree.Node | null): void {
+  function visitIfStatement(
+    n: TSESTree.IfStatement,
+    parent: TSESTree.Node | null,
+  ): void {
     const narrowed = detectNarrowingParam(n.test);
 
     visit(n.test, parent);
@@ -116,7 +127,10 @@ function bodyOnlyNarrows(
     }
   }
 
-  function checkIdentifierUsage(currentNode: TSESTree.Identifier, parent: TSESTree.Node): void {
+  function checkIdentifierUsage(
+    currentNode: TSESTree.Identifier,
+    parent: TSESTree.Node,
+  ): void {
     if (
       parent.type === "UnaryExpression" &&
       parent.operator === "typeof" &&
@@ -198,8 +212,8 @@ export default createRule({
         "Prefer `unknown` over `any` for function parameters that are only narrowed, never directly accessed",
     },
     messages: {
-     preferUnknown:
-         "Parameter `{{name}}` is typed as `any` but is only used in narrowing expressions. Use `unknown` instead, which forces type-safe narrowing. See: {{url}}",
+      preferUnknown:
+        "Parameter `{{name}}` is typed as `any` but is only used in narrowing expressions. Use `unknown` instead, which forces type-safe narrowing. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -219,16 +233,23 @@ export default createRule({
 
       const anyParams = findAnyParams(node.params);
 
-      let funcScope: TSESLint.Scope.Scope | null = scopeManager.acquire(node) ?? scopeManager.acquire(node.body);
-      funcScope ??= scopeManager.scopes.find(
-        (s) => s.type === "function" && s.variables.some((v) => v.name === anyParams[0]?.name),
-      ) ?? null;
+      let funcScope: TSESLint.Scope.Scope | null =
+        scopeManager.acquire(node) ?? scopeManager.acquire(node.body);
+      funcScope ??=
+        scopeManager.scopes.find(
+          (s) =>
+            s.type === "function" &&
+            s.variables.some((v) => v.name === anyParams[0]?.name),
+        ) ?? null;
       if (!funcScope) {
         return;
       }
 
       for (const { name, anyNode, paramNode } of anyParams) {
-        if (paramNode?.type === "Identifier" && bodyOnlyNarrows(body, paramNode, funcScope)) {
+        if (
+          paramNode?.type === "Identifier" &&
+          bodyOnlyNarrows(body, paramNode, funcScope)
+        ) {
           context.report({
             node: anyNode,
             messageId: "preferUnknown",

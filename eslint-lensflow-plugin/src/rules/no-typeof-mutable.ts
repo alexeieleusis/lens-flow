@@ -67,7 +67,9 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"mutableLetVar" | "missingAsConst", []>) {
+  create(
+    context: TSESLint.RuleContext<"mutableLetVar" | "missingAsConst", []>,
+  ) {
     return {
       TSTypeQuery(node) {
         const varName = getExprNameIdentifier(node);
@@ -90,10 +92,10 @@ export default createRule({
             node,
             messageId: "mutableLetVar",
             data: {
-               name: varName,
-               kind: parent.kind,
-               url: URL,
-             },
+              name: varName,
+              kind: parent.kind,
+              url: URL,
+            },
           });
         } else if (isObjectOrArrayLiteral(init) && !hasAsConst(init)) {
           context.report({

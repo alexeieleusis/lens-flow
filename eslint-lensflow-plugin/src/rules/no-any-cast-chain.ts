@@ -33,7 +33,11 @@ export default createRule({
             inner.typeAnnotation.type === "TSAnyKeyword" ||
             node.typeAnnotation.type === "TSAnyKeyword"
           ) {
-            context.report({ node, messageId: "doubleCastAny", data: { url: URL } });
+            context.report({
+              node,
+              messageId: "doubleCastAny",
+              data: { url: URL },
+            });
           }
         }
       },

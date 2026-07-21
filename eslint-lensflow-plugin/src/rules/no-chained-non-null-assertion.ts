@@ -4,9 +4,7 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const URL = knowledgeUrl("usecases/UC16-nullability.md");
 
-function getChain(
-  node: TSESTree.TSNonNullExpression
-): {
+function getChain(node: TSESTree.TSNonNullExpression): {
   count: number;
   nodes: TSESTree.TSNonNullExpression[];
 } {
@@ -59,7 +57,9 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ minChain: 2 }],
-  create(context: TSESLint.RuleContext<"chainedNonNull", [{ minChain: number }]>) {
+  create(
+    context: TSESLint.RuleContext<"chainedNonNull", [{ minChain: number }]>,
+  ) {
     const [{ minChain } = { minChain: 2 }] = context.options ?? [
       { minChain: 2 },
     ];

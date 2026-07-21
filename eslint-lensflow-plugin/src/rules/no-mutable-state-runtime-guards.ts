@@ -18,7 +18,10 @@ function isStringLiteralUnion(node: any): node is { types: any[] } {
   );
 }
 
-function getStatePropertyFromBinaryExpr(expr: any, stateProps: string[]): string | null {
+function getStatePropertyFromBinaryExpr(
+  expr: any,
+  stateProps: string[],
+): string | null {
   const { left, right } = expr;
 
   let propName: string | null = null;
@@ -101,7 +104,14 @@ function walkForGuard(
 
   walk(root, (n) => {
     if (isGuardCandidate(n)) {
-      recordGuardViolation(n.test, n.consequent, n.alternate, stateProps, violations, methodName);
+      recordGuardViolation(
+        n.test,
+        n.consequent,
+        n.alternate,
+        stateProps,
+        violations,
+        methodName,
+      );
     }
   });
 }
@@ -113,7 +123,12 @@ function walkMethodBodies(
   const violations: { stateProp: string; methodName: string }[] = [];
 
   for (const member of members) {
-    if (member.type !== "MethodDefinition" || !member.key?.type || member.key.type !== "Identifier") continue;
+    if (
+      member.type !== "MethodDefinition" ||
+      !member.key?.type ||
+      member.key.type !== "Identifier"
+    )
+      continue;
     if (!member.value?.body) continue;
 
     walkForGuard(member.value.body, stateProps, violations, member.key.name);
@@ -132,7 +147,7 @@ export default createRule({
     },
     messages: {
       mutableStateRuntimeGuard:
-        "Class uses mutable state property \"{{stateProp}}\" with runtime if/throw guard in method \"{{methodName}}\". Consider using compile-time typestate enforcement instead. See: {{url}}",
+        'Class uses mutable state property "{{stateProp}}" with runtime if/throw guard in method "{{methodName}}". Consider using compile-time typestate enforcement instead. See: {{url}}',
     },
     schema: [],
     fixable: undefined,

@@ -6,8 +6,7 @@ const URL = knowledgeUrl("catalog/T34-never-bottom.md");
 
 function getNameFromKey(key: TSESTree.Node): string | null {
   if (key.type === "Identifier") return key.name;
-  if (key.type === "Literal" && typeof key.value === "string")
-    return key.value;
+  if (key.type === "Literal" && typeof key.value === "string") return key.value;
   return null;
 }
 
@@ -48,10 +47,7 @@ export default createRule({
     const assertNeverPattern = /^assertNever$/;
     const assertExhaustivePattern = /^assertExhaustive$/;
 
-    function checkParams(
-      funcName: string,
-      params: TSESTree.Parameter[],
-    ) {
+    function checkParams(funcName: string, params: TSESTree.Parameter[]) {
       if (
         !assertNeverPattern.test(funcName) &&
         !assertExhaustivePattern.test(funcName)
@@ -78,7 +74,10 @@ export default createRule({
     }
 
     function checkFunction(
-      node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression,
+      node:
+        | TSESTree.FunctionDeclaration
+        | TSESTree.FunctionExpression
+        | TSESTree.ArrowFunctionExpression,
     ) {
       let funcName: string | undefined;
 
@@ -100,21 +99,15 @@ export default createRule({
       checkParams(funcName, node.params);
     }
 
-    function checkTSDeclareFunction(
-      node: TSESTree.TSDeclareFunction,
-    ) {
+    function checkTSDeclareFunction(node: TSESTree.TSDeclareFunction) {
       if (!node.id) return;
       const name =
-        node.id.type === "Identifier"
-          ? node.id.name
-          : getNameFromKey(node.id);
+        node.id.type === "Identifier" ? node.id.name : getNameFromKey(node.id);
       if (!name) return;
       checkParams(name, node.params);
     }
 
-    function checkTSFunctionType(
-      node: TSESTree.TSFunctionType,
-    ) {
+    function checkTSFunctionType(node: TSESTree.TSFunctionType) {
       const parent = node.parent;
       let funcName: string | undefined;
 
@@ -136,9 +129,7 @@ export default createRule({
       checkParams(funcName, node.params);
     }
 
-    function checkTSMethodSignature(
-      node: TSESTree.TSMethodSignature,
-    ) {
+    function checkTSMethodSignature(node: TSESTree.TSMethodSignature) {
       const name = getNameFromKey(node.key);
       if (!name) return;
       checkParams(name, node.params);

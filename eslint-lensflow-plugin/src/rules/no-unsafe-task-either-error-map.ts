@@ -37,9 +37,7 @@ function resolveErrorTypeFromAnnotation(
       const errorTypeParam = typeParams.params[0];
       const tsNode = esTreeNodeToTSNodeMap.get(errorTypeParam);
       if (tsNode) {
-        const resolvedType = checker.getTypeAtLocation(
-          tsNode as ts.TypeNode,
-        );
+        const resolvedType = checker.getTypeAtLocation(tsNode as ts.TypeNode);
         return checker.typeToString(resolvedType);
       }
     }
@@ -86,11 +84,12 @@ export default createRule({
     const esTreeNodeToTSNodeMap = parserServices.esTreeNodeToTSNodeMap;
     const knownTENames = getKnownTENames();
 
-    const fnStack: Array<{ fn: TSESTree.FunctionLike; errorTypeStr: string | null }> = [];
+    const fnStack: Array<{
+      fn: TSESTree.FunctionLike;
+      errorTypeStr: string | null;
+    }> = [];
 
-    function resolveErrorType(
-      fn: TSESTree.FunctionLike,
-    ): string | null {
+    function resolveErrorType(fn: TSESTree.FunctionLike): string | null {
       const returnAnn = fn.returnType?.typeAnnotation;
       if (!returnAnn) return null;
       return resolveErrorTypeFromAnnotation(
@@ -141,9 +140,7 @@ export default createRule({
             if (childNode.type !== "ThrowStatement") return;
             if (!childNode.argument) return;
 
-            const thrownTsNode = esTreeNodeToTSNodeMap.get(
-              childNode.argument,
-            );
+            const thrownTsNode = esTreeNodeToTSNodeMap.get(childNode.argument);
             if (!thrownTsNode) return;
 
             const thrownType = checker.getTypeAtLocation(

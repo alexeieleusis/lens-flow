@@ -68,7 +68,10 @@ ruleTester.run("no-readonly-on-mutated-class-field", rule, {
         increment() { this.count += 1; }
         decrement() { this.count -= 1; }
       }`,
-      errors: [{ messageId: "mutationOfReadonly" }, { messageId: "mutationOfReadonly" }],
+      errors: [
+        { messageId: "mutationOfReadonly" },
+        { messageId: "mutationOfReadonly" },
+      ],
     },
     {
       code: `class Counter {
@@ -103,5 +106,5 @@ ruleTester.run("no-readonly-on-mutated-class-field", rule, {
       }`,
       errors: [{ messageId: "mutationOfReadonly" }],
     },
-   ],
+  ],
 });

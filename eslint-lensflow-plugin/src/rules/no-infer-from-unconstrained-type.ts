@@ -62,8 +62,7 @@ export default createRule({
       TSConditionalType(node) {
         if (node.extendsType.type !== "TSInferType") return;
 
-        const inferName =
-          node.extendsType.typeParameter.name.name;
+        const inferName = node.extendsType.typeParameter.name.name;
 
         if (
           node.checkType.type !== "TSTypeReference" ||
@@ -76,9 +75,7 @@ export default createRule({
 
         let isUnconstrained = false;
         for (let i = paramScopeStack.length - 1; i >= 0; i--) {
-          const param = paramScopeStack[i].find(
-            (p) => p.name.name === refName,
-          );
+          const param = paramScopeStack[i].find((p) => p.name.name === refName);
           if (param) {
             isUnconstrained = !param.constraint;
             break;
@@ -100,30 +97,78 @@ export default createRule({
         }
       },
 
-      TSTypeAliasDeclaration(node) { enterScope(node); },
-      "TSTypeAliasDeclaration:exit"(node) { exitScope(node); },
-      TSInterfaceDeclaration(node) { enterScope(node); },
-      "TSInterfaceDeclaration:exit"(node) { exitScope(node); },
-      ClassDeclaration(node) { enterScope(node); },
-      "ClassDeclaration:exit"(node) { exitScope(node); },
-      TSFunctionType(node) { enterScope(node); },
-      "TSFunctionType:exit"(node) { exitScope(node); },
-      TSConstructorType(node) { enterScope(node); },
-      "TSConstructorType:exit"(node) { exitScope(node); },
-      TSMethodSignature(node) { enterScope(node); },
-      "TSMethodSignature:exit"(node) { exitScope(node); },
-      TSPropertySignature(node) { enterScope(node); },
-      "TSPropertySignature:exit"(node) { exitScope(node); },
-      TSMappedType(node) { enterScope(node); },
-      "TSMappedType:exit"(node) { exitScope(node); },
-      ArrowFunctionExpression(node) { enterScope(node); },
-      "ArrowFunctionExpression:exit"(node) { exitScope(node); },
-      FunctionDeclaration(node) { enterScope(node); },
-      "FunctionDeclaration:exit"(node) { exitScope(node); },
-      FunctionExpression(node) { enterScope(node); },
-      "FunctionExpression:exit"(node) { exitScope(node); },
-      TSDeclareFunction(node) { enterScope(node); },
-      "TSDeclareFunction:exit"(node) { exitScope(node); },
+      TSTypeAliasDeclaration(node) {
+        enterScope(node);
+      },
+      "TSTypeAliasDeclaration:exit"(node) {
+        exitScope(node);
+      },
+      TSInterfaceDeclaration(node) {
+        enterScope(node);
+      },
+      "TSInterfaceDeclaration:exit"(node) {
+        exitScope(node);
+      },
+      ClassDeclaration(node) {
+        enterScope(node);
+      },
+      "ClassDeclaration:exit"(node) {
+        exitScope(node);
+      },
+      TSFunctionType(node) {
+        enterScope(node);
+      },
+      "TSFunctionType:exit"(node) {
+        exitScope(node);
+      },
+      TSConstructorType(node) {
+        enterScope(node);
+      },
+      "TSConstructorType:exit"(node) {
+        exitScope(node);
+      },
+      TSMethodSignature(node) {
+        enterScope(node);
+      },
+      "TSMethodSignature:exit"(node) {
+        exitScope(node);
+      },
+      TSPropertySignature(node) {
+        enterScope(node);
+      },
+      "TSPropertySignature:exit"(node) {
+        exitScope(node);
+      },
+      TSMappedType(node) {
+        enterScope(node);
+      },
+      "TSMappedType:exit"(node) {
+        exitScope(node);
+      },
+      ArrowFunctionExpression(node) {
+        enterScope(node);
+      },
+      "ArrowFunctionExpression:exit"(node) {
+        exitScope(node);
+      },
+      FunctionDeclaration(node) {
+        enterScope(node);
+      },
+      "FunctionDeclaration:exit"(node) {
+        exitScope(node);
+      },
+      FunctionExpression(node) {
+        enterScope(node);
+      },
+      "FunctionExpression:exit"(node) {
+        exitScope(node);
+      },
+      TSDeclareFunction(node) {
+        enterScope(node);
+      },
+      "TSDeclareFunction:exit"(node) {
+        exitScope(node);
+      },
     };
   },
 });

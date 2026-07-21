@@ -36,9 +36,7 @@ type WithExtras = Core & D & E;`,
     // 6 direct (> 4) triggers; 6 flattened (not > 6) does not
     {
       code: `type Complex = A & B & C & D & E & F;`,
-      errors: [
-        { messageId: "tooManyDirect" },
-      ],
+      errors: [{ messageId: "tooManyDirect" }],
     },
     // 7 direct members including inline literal — from antipattern snippet (both > 4 and > 6)
     {

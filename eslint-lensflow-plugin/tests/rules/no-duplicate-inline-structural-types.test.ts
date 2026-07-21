@@ -44,19 +44,19 @@ function c(c: { host?: string }) {}`,
 function b(c: { host: string }) {}
 function c(c: { host: string }) {}`,
     },
-   {
+    {
       code: `function a(c: { host: string }) {}
  function b(c: { host?: string }) {}
  function c(c: { readonly host: string }) {}`,
     },
-   {
+    {
       code: `class Service {
   create(c: { host: string; port: number }) {}
   apply(c: { host: string; port: number }) {}
 }
 `,
     },
-   {
+    {
       code: `function createConfig(c: { host: string; port: number }) { /* ... */ }
  function applyConfig(c: { host: string; port: number }) { /* ... */ }
  function validateConfig(c: { host: string; port: number }) { /* ... */ }`,
@@ -101,7 +101,7 @@ function w(c: { host: string; port: number }) {}`,
         { messageId: "duplicateInlineType" },
       ],
     },
-   {
+    {
       code: `function a(c: { host: string; port: number }) {}
   function b(c: { host: string; port: number }) {}
   function c(c: { host: string; port: number }) {}
@@ -123,13 +123,13 @@ function w(c: { host: string; port: number }) {}`,
   apply(c: { host: string; port: number }) {}
   validate(c: { host: string; port: number }) {}
 }`,
-    errors: [
-         { messageId: "duplicateInlineType" },
-         { messageId: "duplicateInlineType" },
-         { messageId: "duplicateInlineType" },
-       ],
+      errors: [
+        { messageId: "duplicateInlineType" },
+        { messageId: "duplicateInlineType" },
+        { messageId: "duplicateInlineType" },
+      ],
     },
-   {
+    {
       code: `function createConfig(c: { host: string; port: number }) { /* ... */ }
  function applyConfig(c: { host: string; port: number }) { /* ... */ }`,
       options: [{ minDuplicates: 2 }],

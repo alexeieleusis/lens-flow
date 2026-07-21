@@ -6,8 +6,7 @@ const URL = knowledgeUrl("usecases/UC13-state-machines.md");
 
 function extractPropertyName(key: TSESTree.PropertyName): string | null {
   if (key.type === "Identifier") return key.name;
-  if (key.type === "Literal" && typeof key.value === "string")
-    return key.value;
+  if (key.type === "Literal" && typeof key.value === "string") return key.value;
   return null;
 }
 
@@ -20,15 +19,17 @@ export default createRule({
         "Enforce that `state` or `status` properties use a union of string literal types instead of bare `string`",
     },
     messages: {
-     bareStringState:
-         "Property `{{name}}` is typed as bare `string`. Use a union of string literal types (e.g. `\"draft\" | \"review\" | \"approved\"`) instead. See: {{url}}",
+      bareStringState:
+        'Property `{{name}}` is typed as bare `string`. Use a union of string literal types (e.g. `"draft" | "review" | "approved"`) instead. See: {{url}}',
     },
     schema: [],
     fixable: undefined,
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"bareStringState", []>) {
-    function checkMembers(node: TSESTree.TSInterfaceBody | TSESTree.TSTypeLiteral) {
+    function checkMembers(
+      node: TSESTree.TSInterfaceBody | TSESTree.TSTypeLiteral,
+    ) {
       const members: TSESTree.TypeElement[] =
         node.type === "TSInterfaceBody" ? node.body : node.members;
       for (const member of members) {

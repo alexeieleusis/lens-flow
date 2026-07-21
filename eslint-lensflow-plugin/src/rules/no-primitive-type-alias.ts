@@ -25,7 +25,7 @@ export default createRule({
     },
     messages: {
       primitiveAlias:
-        "Type alias \"{{name}}\" is a transparent alias for \"{{primitive}}\". Use the primitive directly or a branded type for nominal distinction. See: {{url}}",
+        'Type alias "{{name}}" is a transparent alias for "{{primitive}}". Use the primitive directly or a branded type for nominal distinction. See: {{url}}',
     },
     schema: [],
     fixable: undefined,
@@ -36,7 +36,10 @@ export default createRule({
       TSTypeAliasDeclaration(node) {
         const unwrapped = node.typeAnnotation;
         if (primitiveTypes.has(unwrapped.type)) {
-          const primitiveName = unwrapped.type.replace("TS", "").replace("Keyword", "").toLowerCase();
+          const primitiveName = unwrapped.type
+            .replace("TS", "")
+            .replace("Keyword", "")
+            .toLowerCase();
           context.report({
             node,
             messageId: "primitiveAlias",

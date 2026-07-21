@@ -16,7 +16,8 @@ function isLiteralType(node: TSESTree.TypeNode): boolean {
 
 function getKeyName(key: TSESTree.PropertyName): string | undefined {
   if (key.type === AST_NODE_TYPES.Identifier) return key.name;
-  if (key.type === AST_NODE_TYPES.Literal && typeof key.value === "string") return key.value;
+  if (key.type === AST_NODE_TYPES.Literal && typeof key.value === "string")
+    return key.value;
   return undefined;
 }
 
@@ -70,7 +71,12 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"singleMessageProperty" | "undiscriminatedError", []>) {
+  create(
+    context: TSESLint.RuleContext<
+      "singleMessageProperty" | "undiscriminatedError",
+      []
+    >,
+  ) {
     function checkTypeBody(
       node: TSESTree.TSTypeLiteral | TSESTree.TSInterfaceBody,
     ) {
@@ -106,7 +112,9 @@ export default createRule({
       if (
         members.length === 1 &&
         isStringProperty(members[0]) &&
-        (["message", "error"] as string[]).includes(getKeyName(members[0].key) ?? "") &&
+        (["message", "error"] as string[]).includes(
+          getKeyName(members[0].key) ?? "",
+        ) &&
         declName != null &&
         ERROR_NAME_PATTERN.test(declName)
       ) {

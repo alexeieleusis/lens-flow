@@ -10,13 +10,15 @@ const PRIMITIVE_KEYWORDS = new Set([
   "TSStringKeyword",
 ]);
 
-function isPrimitiveUnion(node: TSESTree.TypeNode): node is TSESTree.TSUnionType {
+function isPrimitiveUnion(
+  node: TSESTree.TypeNode,
+): node is TSESTree.TSUnionType {
   if (node.type !== "TSUnionType") return false;
   return node.types.every((t) => PRIMITIVE_KEYWORDS.has(t.type));
 }
 
 function isProtectedMutableWithInit(
-  member: TSESTree.ClassElement
+  member: TSESTree.ClassElement,
 ): member is TSESTree.PropertyDefinition & {
   accessibility: "protected";
   value: TSESTree.Expression;
@@ -33,7 +35,9 @@ function hasPrimitiveType(node: TSESTree.TypeNode): boolean {
   return PRIMITIVE_KEYWORDS.has(node.type) || isPrimitiveUnion(node);
 }
 
-function getPropertyName(key: TSESTree.Expression | TSESTree.PrivateIdentifier): string {
+function getPropertyName(
+  key: TSESTree.Expression | TSESTree.PrivateIdentifier,
+): string {
   if (key.type === "Identifier") return key.name;
   if (key.type === "Literal") return String(key.value);
   return "unknown";

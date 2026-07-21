@@ -22,7 +22,9 @@ export default createRule({
     fixable: "code",
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"looseTypeofEq" | "looseTypeofNeq", []>) {
+  create(
+    context: TSESLint.RuleContext<"looseTypeofEq" | "looseTypeofNeq", []>,
+  ) {
     return {
       BinaryExpression(node) {
         if (node.operator !== "==" && node.operator !== "!=") return;

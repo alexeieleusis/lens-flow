@@ -21,21 +21,22 @@ function isWidenedPrimitiveType(typeNode: TSESTree.TypeNode): boolean {
 function getPropertyName(key: TSESTree.Property["key"]): string | null {
   if (key.type === "Identifier") return key.name;
   if (key.type === "Literal" && typeof key.value === "string") return key.value;
-  if (key.type === "Literal" && typeof key.value === "number") return String(key.value);
+  if (key.type === "Literal" && typeof key.value === "number")
+    return String(key.value);
   if (key.type === "Literal" && key.value === null) return null;
   return null;
 }
 
 function isAsConstSafeReplacement(
   objectExpr: TSESTree.ObjectExpression,
-  typeLiteral: TSESTree.TSTypeLiteral
+  typeLiteral: TSESTree.TSTypeLiteral,
 ): boolean {
   const typeMembers = typeLiteral.members.filter(
-    (m) => m.type === "TSPropertySignature"
+    (m) => m.type === "TSPropertySignature",
   );
 
   const ownProperties = objectExpr.properties.filter(
-    (p) => p.type === "Property"
+    (p) => p.type === "Property",
   );
 
   if (typeMembers.length !== ownProperties.length) {
@@ -84,7 +85,7 @@ export default createRule({
           node.typeAnnotation.type === "TSTypeLiteral" &&
           node.typeAnnotation.members.length > 0 &&
           node.typeAnnotation.members.every(
-            (m) => m.type === "TSPropertySignature" && m.readonly
+            (m) => m.type === "TSPropertySignature" && m.readonly,
           ) &&
           isAsConstSafeReplacement(node.expression, node.typeAnnotation)
         ) {

@@ -15,9 +15,11 @@ function getTypeArgs(
 }
 
 function hasFailurePath(node: TSESTree.Node): boolean {
-  return node.type === "AwaitExpression" ||
+  return (
+    node.type === "AwaitExpression" ||
     node.type === "ThrowStatement" ||
-    node.type === "TryStatement";
+    node.type === "TryStatement"
+  );
 }
 
 function isSyncBody(body: TSESTree.Node): boolean {
@@ -38,7 +40,8 @@ function isAsyncNamedFunction(
     | TSESTree.ArrowFunctionExpression,
 ): boolean {
   return (
-    (node.type === "FunctionDeclaration" || node.type === "FunctionExpression") &&
+    (node.type === "FunctionDeclaration" ||
+      node.type === "FunctionExpression") &&
     node.async
   );
 }
@@ -54,7 +57,7 @@ export default createRule({
     docs: {
       description:
         "Disallow synchronous functions with no failure path from returning Result<T, never> or Either<never, T> instead of the plain value.",
-     },
+    },
     messages: {
       infallibleSyncResult:
         "Synchronous function with no failure path returns Result<T, never> or Either<never, T>. Return the plain value directly. See: {{url}}",
@@ -112,10 +115,7 @@ export default createRule({
       }
 
       if (isAsyncNamedFunction(node)) return;
-      if (
-        node.type === "ArrowFunctionExpression" &&
-        hasAsyncArrowBody(node)
-      ) {
+      if (node.type === "ArrowFunctionExpression" && hasAsyncArrowBody(node)) {
         return;
       }
 

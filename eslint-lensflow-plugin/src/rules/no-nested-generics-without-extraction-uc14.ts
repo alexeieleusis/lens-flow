@@ -10,8 +10,13 @@ function returnTypeReferencesInterface(
 ): boolean {
   if (!returnType) return false;
 
-  if (returnType.type === "TSUnionType" || returnType.type === "TSIntersectionType") {
-    return returnType.types.some((t) => returnTypeReferencesInterface(t, interfaceName));
+  if (
+    returnType.type === "TSUnionType" ||
+    returnType.type === "TSIntersectionType"
+  ) {
+    return returnType.types.some((t) =>
+      returnTypeReferencesInterface(t, interfaceName),
+    );
   }
 
   if (returnType.type !== "TSTypeReference") return false;
@@ -53,8 +58,8 @@ export default createRule({
         "Disallows generic interfaces where multiple methods return the enclosing interface type with substituted parameters, creating deep nesting and uncomposable types.",
     },
     messages: {
-     selfReferencingMethods:
-         "Interface '{{name}}' has {{count}} methods returning itself with substituted generics. Extract high-order operations into separate types to avoid deeply nested generics. See: {{url}}",
+      selfReferencingMethods:
+        "Interface '{{name}}' has {{count}} methods returning itself with substituted generics. Extract high-order operations into separate types to avoid deeply nested generics. See: {{url}}",
     },
     schema: [
       {
@@ -71,7 +76,12 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ minSelfReferencingMethods: 2 }],
-  create(context: TSESLint.RuleContext<"selfReferencingMethods", [{ minSelfReferencingMethods?: number }]>) {
+  create(
+    context: TSESLint.RuleContext<
+      "selfReferencingMethods",
+      [{ minSelfReferencingMethods?: number }]
+    >,
+  ) {
     const { minSelfReferencingMethods = 2 } = context.options[0] ?? {};
 
     return {
@@ -90,14 +100,15 @@ export default createRule({
                 getReturnType(member),
                 interfaceName,
               )) ||
- (member.type === "TSPropertySignature" &&
+            (member.type === "TSPropertySignature" &&
               member.typeAnnotation?.typeAnnotation.type === "TSFunctionType" &&
               returnTypeReferencesInterface(
                 getReturnType(member.typeAnnotation.typeAnnotation),
                 interfaceName,
               )) ||
             (member.type === "TSPropertySignature" &&
-              member.typeAnnotation?.typeAnnotation.type === "TSConstructorType" &&
+              member.typeAnnotation?.typeAnnotation.type ===
+                "TSConstructorType" &&
               returnTypeReferencesInterface(
                 getReturnType(member.typeAnnotation.typeAnnotation),
                 interfaceName,

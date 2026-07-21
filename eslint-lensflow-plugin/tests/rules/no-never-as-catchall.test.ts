@@ -93,7 +93,7 @@ ruleTester.run("no-never-as-catchall", rule, {
   return "hi";
 }
 const msg: never = greet();`,
-     errors: [{ messageId: "neverAsCatchall" }],
+      errors: [{ messageId: "neverAsCatchall" }],
     },
     {
       filename: TEST_FILENAME,

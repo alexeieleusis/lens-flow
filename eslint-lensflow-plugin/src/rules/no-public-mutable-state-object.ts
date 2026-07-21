@@ -11,11 +11,17 @@ function isArrayType(node: TSESTree.TypeNode): boolean {
   if (node.type === "TSArrayType") return true;
   if (node.type === "TSTypeReference") {
     const { typeName } = node;
-    if (typeName.type === "Identifier" && (typeName.name === "Array" || typeName.name === "ReadonlyArray"))
+    if (
+      typeName.type === "Identifier" &&
+      (typeName.name === "Array" || typeName.name === "ReadonlyArray")
+    )
       return true;
     if (typeName.type === "TSQualifiedName" && typeName.right.name === "Array")
       return true;
-    if (typeName.type === "TSQualifiedName" && typeName.right.name === "ReadonlyArray")
+    if (
+      typeName.type === "TSQualifiedName" &&
+      typeName.right.name === "ReadonlyArray"
+    )
       return true;
   }
   return false;
@@ -41,17 +47,23 @@ function hasMutableStateType(typeAnnotation: TSESTree.TypeNode): boolean {
   if (isArrayType(unwrapped)) return true;
 
   if (type === "TSUnionType") {
-    return unwrapped.types.some((t: TSESTree.TypeNode) => hasMutableStateType(t));
+    return unwrapped.types.some((t: TSESTree.TypeNode) =>
+      hasMutableStateType(t),
+    );
   }
 
   if (type === "TSIntersectionType") {
-    return unwrapped.types.some((t: TSESTree.TypeNode) => hasMutableStateType(t));
+    return unwrapped.types.some((t: TSESTree.TypeNode) =>
+      hasMutableStateType(t),
+    );
   }
 
   return false;
 }
 
-function getKeyLabel(key: TSESTree.Expression | TSESTree.PrivateIdentifier): string {
+function getKeyLabel(
+  key: TSESTree.Expression | TSESTree.PrivateIdentifier,
+): string {
   if (key.type === "Identifier") return key.name;
   if (key.type === "Literal") return String(key.value);
   return "?";
@@ -60,16 +72,14 @@ function getKeyLabel(key: TSESTree.Expression | TSESTree.PrivateIdentifier): str
 function findEnclosingDeclaration(
   node: TSESTree.Node,
 ): TSESTree.TSTypeAliasDeclaration | TSESTree.TSInterfaceDeclaration | null {
-  let current: TSESTree.Node | undefined = (node as TSESTree.Node & { parent?: TSESTree.Node }).parent;
+  let current: TSESTree.Node | undefined = (
+    node as TSESTree.Node & { parent?: TSESTree.Node }
+  ).parent;
   while (current) {
-    if (
-      current.type === "TSTypeAliasDeclaration"
-    ) {
+    if (current.type === "TSTypeAliasDeclaration") {
       return current;
     }
-    if (
-      current.type === "TSInterfaceDeclaration"
-    ) {
+    if (current.type === "TSInterfaceDeclaration") {
       return current;
     }
     current = (current as TSESTree.Node & { parent?: TSESTree.Node }).parent;
@@ -144,9 +154,7 @@ export default createRule({
         checkNode(
           node.members,
           enclosing,
-          enclosing.type === "TSInterfaceDeclaration"
-            ? "interface"
-            : "type",
+          enclosing.type === "TSInterfaceDeclaration" ? "interface" : "type",
           enclosing.type,
         );
       },

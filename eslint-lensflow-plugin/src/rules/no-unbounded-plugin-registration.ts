@@ -35,7 +35,9 @@ function isDuplicateCheckCall(
   return false;
 }
 
-function collectCallExpressions(node: TSESTree.Node): TSESTree.CallExpression[] {
+function collectCallExpressions(
+  node: TSESTree.Node,
+): TSESTree.CallExpression[] {
   const calls: TSESTree.CallExpression[] = [];
   if (node.type === "CallExpression") {
     calls.push(node);
@@ -86,8 +88,8 @@ export default createRule({
         "Disallows plugin registration methods that push to an array without checking for duplicates.",
     },
     messages: {
-     unboundedRegister:
-         "Plugin registration pushes without duplicate check. Use a Map or Set with a .has() guard before inserting. See: {{url}}",
+      unboundedRegister:
+        "Plugin registration pushes without duplicate check. Use a Map or Set with a .has() guard before inserting. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -99,7 +101,10 @@ export default createRule({
         let methodName: string | null = null;
         if (node.key.type === "Identifier") {
           methodName = node.key.name;
-        } else if (node.key.type === "Literal" && typeof node.key.value === "string") {
+        } else if (
+          node.key.type === "Literal" &&
+          typeof node.key.value === "string"
+        ) {
           methodName = node.key.value;
         }
         if (methodName !== "register") return;
@@ -123,7 +128,10 @@ export default createRule({
         let propName: string | null = null;
         if (node.key.type === "Identifier") {
           propName = node.key.name;
-        } else if (node.key.type === "Literal" && typeof node.key.value === "string") {
+        } else if (
+          node.key.type === "Literal" &&
+          typeof node.key.value === "string"
+        ) {
           propName = node.key.value;
         }
         if (propName !== "register") return;
@@ -131,7 +139,11 @@ export default createRule({
         if (!node.value) return;
 
         const fn = node.value;
-        if (fn.type !== "ArrowFunctionExpression" && fn.type !== "FunctionExpression") return;
+        if (
+          fn.type !== "ArrowFunctionExpression" &&
+          fn.type !== "FunctionExpression"
+        )
+          return;
 
         const body = fn.body;
         if (body.type !== "BlockStatement") return;

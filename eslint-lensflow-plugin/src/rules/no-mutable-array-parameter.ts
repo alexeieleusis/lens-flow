@@ -18,7 +18,7 @@ export default createRule({
     },
     messages: {
       mutableArrayParam:
-        "Parameter \"{{name}}\" uses mutable array type \"{{type}}\". Use \"readonly T[]\" or \"ReadonlyArray<T>\" to prevent unsound covariant assignment. See: {{url}}",
+        'Parameter "{{name}}" uses mutable array type "{{type}}". Use "readonly T[]" or "ReadonlyArray<T>" to prevent unsound covariant assignment. See: {{url}}',
     },
     schema: [],
     fixable: undefined,

@@ -20,7 +20,9 @@ function reportIfMissing(
   comparedValues: Set<string>,
   fallbackNode: TSESTree.Node,
   checker: ts.TypeChecker,
-  context: Parameters<NonNullable<Parameters<typeof createRule>[0]["create"]>>[0],
+  context: Parameters<
+    NonNullable<Parameters<typeof createRule>[0]["create"]>
+  >[0],
 ): void {
   reportMissingValues(
     context,
@@ -54,7 +56,9 @@ function reportFallbackIfMissing(
   tsVarNode: ts.Node,
   handled: Set<string>,
   checker: ts.TypeChecker,
-  context: Parameters<NonNullable<Parameters<typeof createRule>[0]["create"]>>[0],
+  context: Parameters<
+    NonNullable<Parameters<typeof createRule>[0]["create"]>
+  >[0],
 ): void {
   if (!fallback) return;
 
@@ -89,33 +93,39 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [],
-  create: createFunctionBodyVisitor((body, checker, esTreeNodeToTSNodeMap, context) => {
-      findIfChainStarts(body.body, esTreeNodeToTSNodeMap, ({ ifStmt, info, consecutiveValues: handled, nextIndex }) => {
-        if (ifStmt.alternate) {
-          const { handled: chainHandled, fallback } = collectChainValues(
-            ifStmt,
-            info,
-            esTreeNodeToTSNodeMap,
-          );
+  create: createFunctionBodyVisitor(
+    (body, checker, esTreeNodeToTSNodeMap, context) => {
+      findIfChainStarts(
+        body.body,
+        esTreeNodeToTSNodeMap,
+        ({ ifStmt, info, consecutiveValues: handled, nextIndex }) => {
+          if (ifStmt.alternate) {
+            const { handled: chainHandled, fallback } = collectChainValues(
+              ifStmt,
+              info,
+              esTreeNodeToTSNodeMap,
+            );
 
-          reportFallbackIfMissing(
-            fallback,
-            info.varName,
-            info.tsVarNode,
-            chainHandled,
-            checker,
-            context,
-          );
-        } else {
-          reportFallbackIfMissing(
-            body.body[nextIndex] ?? null,
-            info.varName,
-            info.tsVarNode,
-            handled,
-            checker,
-            context,
-          );
-        }
-      });
-    }),
+            reportFallbackIfMissing(
+              fallback,
+              info.varName,
+              info.tsVarNode,
+              chainHandled,
+              checker,
+              context,
+            );
+          } else {
+            reportFallbackIfMissing(
+              body.body[nextIndex] ?? null,
+              info.varName,
+              info.tsVarNode,
+              handled,
+              checker,
+              context,
+            );
+          }
+        },
+      );
+    },
+  ),
 });

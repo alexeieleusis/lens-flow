@@ -32,10 +32,7 @@ ruleTester.run("no-any-in-interface", rule, {
         extra: any;
         meta: any;
       }`,
-      errors: [
-        { messageId: "anyProperty" },
-        { messageId: "anyProperty" },
-      ],
+      errors: [{ messageId: "anyProperty" }, { messageId: "anyProperty" }],
     },
     {
       code: `type Config = {
@@ -62,10 +59,7 @@ ruleTester.run("no-any-in-interface", rule, {
     },
     {
       code: `interface X { foo: { bar: any } }`,
-      errors: [
-        { messageId: "anyProperty" },
-        { messageId: "anyProperty" },
-      ],
+      errors: [{ messageId: "anyProperty" }, { messageId: "anyProperty" }],
     },
     {
       code: `interface X { foo: string & any }`,
@@ -73,10 +67,7 @@ ruleTester.run("no-any-in-interface", rule, {
     },
     {
       code: `interface A { config: { value: any } }`,
-      errors: [
-        { messageId: "anyProperty" },
-        { messageId: "anyProperty" },
-      ],
+      errors: [{ messageId: "anyProperty" }, { messageId: "anyProperty" }],
     },
     {
       code: `interface Config {
@@ -89,10 +80,7 @@ ruleTester.run("no-any-in-interface", rule, {
         optional?: any;
         readonly immutable: any;
       }`,
-      errors: [
-        { messageId: "anyProperty" },
-        { messageId: "anyProperty" },
-      ],
+      errors: [{ messageId: "anyProperty" }, { messageId: "anyProperty" }],
     },
   ],
 });

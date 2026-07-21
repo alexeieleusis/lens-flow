@@ -32,19 +32,32 @@ function isArrayOrIterable(checker: ts.TypeChecker, argType: ts.Type): boolean {
   if (checker.getPropertyOfType(argType, "[Symbol.iterator]")) return true;
   if (checker.getPropertyOfType(argType, "[Symbol.asyncIterator]")) return true;
 
- // Fallback: check type name for known iterable types.
+  // Fallback: check type name for known iterable types.
   // This catches generic Iterable<T>, Set, Map, etc. where symbol properties
   // may not resolve via getPropertyOfType.
   const typeStr = checker.typeToString(argType);
   const iterablePrefixes = [
-    "Iterable<", "AsyncIterable<",
-    "Set<", "Map<", "WeakSet<", "WeakMap<",
-    "SetIterator<", "MapIterator<",
-    "Int8Array", "Uint8Array", "Uint8ClampedArray",
-    "Int16Array", "Uint16Array",
-    "Int32Array", "Uint32Array",
-    "Float32Array", "Float64Array", "BigInt64Array", "BigUint64Array",
-    "Generator<", "AsyncGenerator<",
+    "Iterable<",
+    "AsyncIterable<",
+    "Set<",
+    "Map<",
+    "WeakSet<",
+    "WeakMap<",
+    "SetIterator<",
+    "MapIterator<",
+    "Int8Array",
+    "Uint8Array",
+    "Uint8ClampedArray",
+    "Int16Array",
+    "Uint16Array",
+    "Int32Array",
+    "Uint32Array",
+    "Float32Array",
+    "Float64Array",
+    "BigInt64Array",
+    "BigUint64Array",
+    "Generator<",
+    "AsyncGenerator<",
   ];
   if (iterablePrefixes.some((p) => typeStr.startsWith(p))) return true;
 
@@ -110,15 +123,15 @@ export default createRule({
         const enclosingFn = findEnclosingFunction(
           context.sourceCode.getAncestors(yieldNode),
         );
-        if (!enclosingFn || !enclosingFn.generator || !enclosingFn.async) return;
+        if (!enclosingFn || !enclosingFn.generator || !enclosingFn.async)
+          return;
 
-        const tsArg =
-          parserServices.esTreeNodeToTSNodeMap.get(yieldNode.argument);
+        const tsArg = parserServices.esTreeNodeToTSNodeMap.get(
+          yieldNode.argument,
+        );
         if (!tsArg) return;
 
-        const argType = checker.getTypeAtLocation(
-          tsArg as ts.Expression,
-        );
+        const argType = checker.getTypeAtLocation(tsArg as ts.Expression);
 
         if (isArrayOrIterable(checker, argType)) {
           context.report({

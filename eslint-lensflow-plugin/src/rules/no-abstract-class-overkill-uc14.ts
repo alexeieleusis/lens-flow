@@ -61,7 +61,10 @@ export default createRule<Options, MessageIds>({
             m.value.params !== undefined,
         )
         .flatMap((m) => m.value.params)
-        .filter((p): p is TSESTree.TSParameterProperty => p.type === "TSParameterProperty");
+        .filter(
+          (p): p is TSESTree.TSParameterProperty =>
+            p.type === "TSParameterProperty",
+        );
       const concreteMethods = members.filter(
         (m): m is TSESTree.MethodDefinition =>
           m.type === "MethodDefinition" && m.value.body !== null,

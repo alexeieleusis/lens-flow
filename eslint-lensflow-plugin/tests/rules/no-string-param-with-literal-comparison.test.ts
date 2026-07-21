@@ -109,7 +109,7 @@ function setMode(mode: Mode) {
 }`,
       errors: [{ messageId: "stringParamWithLiteralComparison" }],
     },
-    // Loose equality == 
+    // Loose equality ==
     {
       code: `function process(type: string) {
   if (type == "create") return;

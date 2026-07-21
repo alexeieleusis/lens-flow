@@ -33,7 +33,8 @@ function returnsThis(node: TSESTree.MethodDefinition): boolean {
 
   return returns.every(
     (ret) =>
-      ret.argument === null || ret.argument.type === AST_NODE_TYPES.ThisExpression
+      ret.argument === null ||
+      ret.argument.type === AST_NODE_TYPES.ThisExpression,
   );
 }
 

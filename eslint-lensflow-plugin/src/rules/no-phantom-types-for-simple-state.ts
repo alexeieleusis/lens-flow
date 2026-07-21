@@ -22,7 +22,9 @@ function isPhantomPropertyName(name: string): boolean {
   return false;
 }
 
-function getKeyText(key: TSESTree.PropertyName | TSESTree.PrivateIdentifier): string | null {
+function getKeyText(
+  key: TSESTree.PropertyName | TSESTree.PrivateIdentifier,
+): string | null {
   if (key.type === AST_NODE_TYPES.Identifier) return key.name;
   if (key.type === AST_NODE_TYPES.Literal && typeof key.value === "string")
     return key.value;
@@ -42,7 +44,9 @@ function isLiteralUnion(node: TSESTree.Node): boolean {
   return node.types.length > 0 && node.types.every(isLiteralType);
 }
 
-function findTypeParamNames(node: TSESTree.TSTypeParameterDeclaration): Set<string> {
+function findTypeParamNames(
+  node: TSESTree.TSTypeParameterDeclaration,
+): Set<string> {
   const result = new Set<string>();
   for (const p of node.params) {
     result.add(p.name.name);
@@ -50,12 +54,17 @@ function findTypeParamNames(node: TSESTree.TSTypeParameterDeclaration): Set<stri
   return result;
 }
 
-function checkConstraintIsLiteralUnion(param: TSESTree.TSTypeParameter): boolean {
+function checkConstraintIsLiteralUnion(
+  param: TSESTree.TSTypeParameter,
+): boolean {
   if (!param.constraint) return false;
   return isLiteralUnion(param.constraint);
 }
 
-function isTypeRefToParam(node: TSESTree.Node | undefined, paramName: string): boolean {
+function isTypeRefToParam(
+  node: TSESTree.Node | undefined,
+  paramName: string,
+): boolean {
   if (node?.type !== AST_NODE_TYPES.TSTypeReference) return false;
   if (node.typeName.type === AST_NODE_TYPES.Identifier) {
     return node.typeName.name === paramName;
@@ -86,14 +95,14 @@ export default createRule({
     schema: [],
   },
   defaultOptions: [],
- create(context: TSESLint.RuleContext<"phantomTypeOveruse", []>) {
+  create(context: TSESLint.RuleContext<"phantomTypeOveruse", []>) {
     function checkDeclaration(
-      node: TSESTree.TSTypeAliasDeclaration | TSESTree.TSInterfaceDeclaration
+      node: TSESTree.TSTypeAliasDeclaration | TSESTree.TSInterfaceDeclaration,
     ) {
       if (!node.typeParameters) return;
       const params = node.typeParameters.params;
       const phantomParams = params.filter((p) =>
-        checkConstraintIsLiteralUnion(p)
+        checkConstraintIsLiteralUnion(p),
       );
       if (phantomParams.length === 0) return;
 
@@ -120,9 +129,7 @@ export default createRule({
         if (member.type !== AST_NODE_TYPES.TSPropertySignature) return false;
         const typeAnn = member.typeAnnotation?.typeAnnotation;
         if (!typeAnn) return false;
-        return [...paramNameSet].some((pn) =>
-          isTypeRefToParam(typeAnn, pn)
-        );
+        return [...paramNameSet].some((pn) => isTypeRefToParam(typeAnn, pn));
       });
 
       if (!hasPhantomTypeRef) return;

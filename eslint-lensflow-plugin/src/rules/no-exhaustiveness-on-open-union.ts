@@ -128,7 +128,7 @@ export default createRule({
     docs: {
       description:
         "Disallow exhaustiveness checks (throw / as never) in the default branch when the discriminant type is an open union that includes a broad base type like string",
-     },
+    },
     messages: {
       openUnion:
         "This switch discriminant type is an open union (contains both literals and a broad type like string). The default branch will receive valid arbitrary values — do not use an exhaustiveness check (throw or as never) here. Use a fallback instead. See: {{url}}",
@@ -146,8 +146,9 @@ export default createRule({
 
     return {
       SwitchStatement(node) {
-        const tsDiscriminant =
-          parserServices.esTreeNodeToTSNodeMap.get(node.discriminant);
+        const tsDiscriminant = parserServices.esTreeNodeToTSNodeMap.get(
+          node.discriminant,
+        );
         if (!tsDiscriminant) return;
 
         if (!isDiscriminantOpenUnion(tsDiscriminant, checker)) return;

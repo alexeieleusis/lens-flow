@@ -41,7 +41,9 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ minChecks: 3 }],
-  create(context: TSESLint.RuleContext<"manualTypeGuard", [{ minChecks: number }]>) {
+  create(
+    context: TSESLint.RuleContext<"manualTypeGuard", [{ minChecks: number }]>,
+  ) {
     const [{ minChecks = 3 } = {}] = context.options;
 
     function checkFunction(

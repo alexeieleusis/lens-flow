@@ -30,9 +30,7 @@ function containsEarlyExitOrBlock(node: TSESTree.Node): boolean {
     return containsEarlyExitOrBlock(node.body);
   }
   if (node.type === "SwitchStatement") {
-    return node.cases.some((c) =>
-      c.consequent.some(containsEarlyExitOrBlock),
-    );
+    return node.cases.some((c) => c.consequent.some(containsEarlyExitOrBlock));
   }
   if (node.type === "VariableDeclaration") {
     return node.declarations.some(
@@ -81,9 +79,7 @@ function containsValidation(node: TSESTree.Node): boolean {
     return containsValidation(node.body);
   }
   if (node.type === "SwitchStatement") {
-    return node.cases.some((c) =>
-      c.consequent.some(containsValidation),
-    );
+    return node.cases.some((c) => c.consequent.some(containsValidation));
   }
   if (
     node.type === "ForStatement" ||
@@ -109,7 +105,7 @@ export default createRule({
       description:
         "Disallow bare `as any` casts in function returns without preceding runtime validation",
     },
-   messages: {
+    messages: {
       blindAsAnyCast:
         "Returning a bare `as any` cast without runtime validation makes the type assertion an unchecked lie. Add a guard check before the cast, or use `as unknown as TargetType` instead. See: {{url}}",
     },
@@ -171,10 +167,7 @@ export default createRule({
         }
       },
       MethodDefinition(node) {
-        if (
-          node.value.type === "FunctionExpression" &&
-          node.value.body
-        ) {
+        if (node.value.type === "FunctionExpression" && node.value.body) {
           checkFunctionBody(node.value.body);
         }
       },

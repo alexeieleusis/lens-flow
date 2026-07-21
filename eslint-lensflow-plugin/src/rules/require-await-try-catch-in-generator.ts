@@ -38,7 +38,11 @@ export default createRule({
           if (current.type === "TryStatement") {
             const inTry =
               current.block.range &&
-              isInsideRange(current.block.range[0], current.block.range[1], node);
+              isInsideRange(
+                current.block.range[0],
+                current.block.range[1],
+                node,
+              );
             const inCatch =
               current.handler?.body.range &&
               isInsideRange(
@@ -61,7 +65,10 @@ export default createRule({
             current.type === "FunctionExpression" ||
             current.type === "ArrowFunctionExpression"
           ) {
-            const fn = current as TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression;
+            const fn = current as
+              | TSESTree.FunctionDeclaration
+              | TSESTree.FunctionExpression
+              | TSESTree.ArrowFunctionExpression;
             if (fn.generator === true && fn.async === true) {
               context.report({
                 node,

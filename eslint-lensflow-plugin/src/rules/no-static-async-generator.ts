@@ -58,8 +58,7 @@ function checkForOfPattern(
   if (forOf.right.name !== declName) return false;
 
   const body = forOf.body as
-    | TSESTree.BlockStatement
-    | TSESTree.ExpressionStatement;
+    TSESTree.BlockStatement | TSESTree.ExpressionStatement;
   const yieldExpr = extractYieldExpr(body);
   if (yieldExpr?.type !== "YieldExpression") return false;
 
@@ -98,7 +97,10 @@ export default createRule({
   },
   defaultOptions: [{ maxElements: 5 }],
   create(
-    context: TSESLint.RuleContext<"staticAsyncGenerator", [{ maxElements: number }]>,
+    context: TSESLint.RuleContext<
+      "staticAsyncGenerator",
+      [{ maxElements: number }]
+    >,
   ) {
     const [{ maxElements } = { maxElements: 5 }] = context.options ?? [];
 

@@ -69,7 +69,7 @@ export default createRule({
     docs: {
       description:
         "Disallow using `never` as a variable or parameter type when the assigned value is not of type `never`.",
-     },
+    },
     messages: {
       neverAsCatchall:
         "Variable is annotated as `never` but assigned a value of type `{{type}}`. Use `unknown` instead if the type is uncertain. See: {{url}}",

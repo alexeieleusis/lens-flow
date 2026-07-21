@@ -92,7 +92,12 @@ export default createRule({
     schema: [],
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"missingAccessorKeyword" | "extraAccessorKeyword", []>) {
+  create(
+    context: TSESLint.RuleContext<
+      "missingAccessorKeyword" | "extraAccessorKeyword",
+      []
+    >,
+  ) {
     const accessorDecoratorNames = new Set<string>();
     const fieldDecoratorNames = new Set<string>();
 

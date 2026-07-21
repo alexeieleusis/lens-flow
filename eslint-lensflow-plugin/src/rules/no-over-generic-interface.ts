@@ -31,7 +31,12 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ maxTypeParams: 3 }],
-  create(context: TSESLint.RuleContext<"tooManyTypeParams", [{ maxTypeParams: number }]>) {
+  create(
+    context: TSESLint.RuleContext<
+      "tooManyTypeParams",
+      [{ maxTypeParams: number }]
+    >,
+  ) {
     const { maxTypeParams = 3 } = context.options[0] ?? {};
 
     return {

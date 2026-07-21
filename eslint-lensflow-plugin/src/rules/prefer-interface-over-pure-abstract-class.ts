@@ -34,12 +34,8 @@ export default createRule({
       const concreteMethods = members.filter(
         (m) => m.type === "MethodDefinition" && m.value.body !== null,
       );
-      const properties = members.filter(
-        (m) => m.type === "PropertyDefinition",
-      );
-      const staticBlocks = members.filter(
-        (m) => m.type === "StaticBlock",
-      );
+      const properties = members.filter((m) => m.type === "PropertyDefinition");
+      const staticBlocks = members.filter((m) => m.type === "StaticBlock");
 
       const hasConstructorParamProperties = members.some(
         (m) =>

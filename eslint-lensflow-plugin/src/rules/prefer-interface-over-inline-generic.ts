@@ -4,10 +4,16 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const URL = knowledgeUrl("catalog/T36-trait-objects.md");
 
-function typeLiteralContainsRef(node: TSESTree.TSTypeLiteral, paramName: string): boolean {
+function typeLiteralContainsRef(
+  node: TSESTree.TSTypeLiteral,
+  paramName: string,
+): boolean {
   return node.members.some((member) => {
     if (member.type === "TSPropertySignature" && member.typeAnnotation) {
-      return containsTypeReference(member.typeAnnotation.typeAnnotation, paramName);
+      return containsTypeReference(
+        member.typeAnnotation.typeAnnotation,
+        paramName,
+      );
     }
     if (
       member.type === "TSCallSignatureDeclaration" ||
@@ -24,12 +30,16 @@ function functionTypeContainsRef(
   node: TSESTree.TSFunctionType | TSESTree.TSConstructorType,
   paramName: string,
 ): boolean {
-  if (node.returnType && containsTypeReference(node.returnType.typeAnnotation, paramName)) {
+  if (
+    node.returnType &&
+    containsTypeReference(node.returnType.typeAnnotation, paramName)
+  ) {
     return true;
   }
   if (node.typeParameters) {
     for (const tp of node.typeParameters.params) {
-      if (tp.constraint && containsTypeReference(tp.constraint, paramName)) return true;
+      if (tp.constraint && containsTypeReference(tp.constraint, paramName))
+        return true;
     }
   }
   for (const param of node.params) {
@@ -44,10 +54,16 @@ function functionTypeContainsRef(
   return false;
 }
 
-function containsTypeReference(node: TSESTree.TypeNode, paramName: string): boolean {
+function containsTypeReference(
+  node: TSESTree.TypeNode,
+  paramName: string,
+): boolean {
   switch (node.type) {
     case "TSTypeReference":
-      if (node.typeName.type === "Identifier" && node.typeName.name === paramName) {
+      if (
+        node.typeName.type === "Identifier" &&
+        node.typeName.name === paramName
+      ) {
         return true;
       }
       return false;
@@ -77,7 +93,8 @@ function containsTypeReference(node: TSESTree.TypeNode, paramName: string): bool
 
     case "TSMappedType":
     case "TSTypeOperator":
-      if (node.typeAnnotation) return containsTypeReference(node.typeAnnotation, paramName);
+      if (node.typeAnnotation)
+        return containsTypeReference(node.typeAnnotation, paramName);
       return false;
 
     case "TSConditionalType":
@@ -128,7 +145,10 @@ export default createRule({
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"preferInterface", []>) {
     function checkFunctionLike(
-      node: { typeParameters?: TSESTree.TSTypeParameterDeclaration | null; returnType?: TSESTree.TSTypeAnnotation | null },
+      node: {
+        typeParameters?: TSESTree.TSTypeParameterDeclaration | null;
+        returnType?: TSESTree.TSTypeAnnotation | null;
+      },
       reportNode: TSESTree.Node,
     ) {
       const typeParams = node.typeParameters;
@@ -141,13 +161,18 @@ export default createRule({
 
         const returnTypeAnnotation = node.returnType?.typeAnnotation;
 
-        if (returnTypeAnnotation && containsTypeReference(returnTypeAnnotation, paramName)) {
+        if (
+          returnTypeAnnotation &&
+          containsTypeReference(returnTypeAnnotation, paramName)
+        ) {
           continue;
         }
 
         const memberCount = tp.constraint.members.length;
         const constraintSummary =
-          memberCount <= 3 ? "inline type literal" : `inline type literal with ${memberCount} members`;
+          memberCount <= 3
+            ? "inline type literal"
+            : `inline type literal with ${memberCount} members`;
 
         context.report({
           node: reportNode,
@@ -161,7 +186,10 @@ export default createRule({
     }
 
     function checkFunction(
-      node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression,
+      node:
+        | TSESTree.FunctionDeclaration
+        | TSESTree.FunctionExpression
+        | TSESTree.ArrowFunctionExpression,
     ) {
       checkFunctionLike(node, node);
     }
@@ -178,7 +206,9 @@ export default createRule({
       checkFunctionLike(node, node);
     }
 
-    function checkTSCallSignatureDeclaration(node: TSESTree.TSCallSignatureDeclaration) {
+    function checkTSCallSignatureDeclaration(
+      node: TSESTree.TSCallSignatureDeclaration,
+    ) {
       checkFunctionLike(node, node);
     }
 

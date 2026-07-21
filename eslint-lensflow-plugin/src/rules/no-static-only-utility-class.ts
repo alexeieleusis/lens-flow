@@ -35,18 +35,17 @@ export default createRule({
         );
 
         const hasInstanceFields = members.some(
-          (member) =>
-            member.type === "PropertyDefinition" && !member.static,
+          (member) => member.type === "PropertyDefinition" && !member.static,
         );
 
         const nonConstructorMethods = members.filter(
           (member) =>
-            member.type === "MethodDefinition" &&
-            member.kind !== "constructor",
+            member.type === "MethodDefinition" && member.kind !== "constructor",
         );
 
-        const allNonConstructorAreStatic =
-          nonConstructorMethods.every((m) => m.type === "MethodDefinition" && m.static === true);
+        const allNonConstructorAreStatic = nonConstructorMethods.every(
+          (m) => m.type === "MethodDefinition" && m.static === true,
+        );
 
         if (
           hasPrivateConstructor &&

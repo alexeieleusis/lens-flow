@@ -47,17 +47,26 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ maxMarkers: 4 }],
-  create(context: TSESLint.RuleContext<"excessiveMarkers", [{ maxMarkers?: number }]>) {
+  create(
+    context: TSESLint.RuleContext<
+      "excessiveMarkers",
+      [{ maxMarkers?: number }]
+    >,
+  ) {
     const [{ maxMarkers: maxMarkersOpt } = {}] = context.options ?? [];
     const maxMarkers = maxMarkersOpt ?? 4;
 
-    const markers: Array<{ node: TSESTree.TSTypeAliasDeclaration; name: string }> = [];
+    const markers: Array<{
+      node: TSESTree.TSTypeAliasDeclaration;
+      name: string;
+    }> = [];
 
     const checkTypeReference = (node: TSESTree.TSTypeAliasDeclaration) => {
       const ann = node.typeAnnotation;
       if (ann?.type !== "TSTypeReference") return false;
       if (!/^(With|No)[A-Z]/.test(node.id.name)) return false;
-      const refName = ann.typeName.type === "Identifier" ? ann.typeName.name : "";
+      const refName =
+        ann.typeName.type === "Identifier" ? ann.typeName.name : "";
       return !PRIMITIVES.has(refName);
     };
 

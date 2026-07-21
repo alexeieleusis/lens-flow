@@ -81,7 +81,12 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"mutableMapSet" | "mutableArray" | "mutableIntersection", []>) {
+  create(
+    context: TSESLint.RuleContext<
+      "mutableMapSet" | "mutableArray" | "mutableIntersection",
+      []
+    >,
+  ) {
     function checkProperty(
       node: TSESTree.PropertyDefinition | TSESTree.TSPropertySignature,
     ): void {
@@ -96,7 +101,10 @@ export default createRule({
     }
 
     function reportMutableCollection(
-      reportNode: TSESTree.PropertyDefinition | TSESTree.TSPropertySignature | TSESTree.TSParameterProperty,
+      reportNode:
+        | TSESTree.PropertyDefinition
+        | TSESTree.TSPropertySignature
+        | TSESTree.TSParameterProperty,
       propName: string,
       typeAnnotation: TSESTree.TypeNode,
     ): void {
@@ -115,7 +123,7 @@ export default createRule({
         }
         if (typeName === "Array") {
           const elementName = getArrayElementName(
-            refNode.typeArguments?.params?.[0] ?? {} as TSESTree.TypeNode,
+            refNode.typeArguments?.params?.[0] ?? ({} as TSESTree.TypeNode),
           );
           context.report({
             node: reportNode,
@@ -145,13 +153,13 @@ export default createRule({
       });
     }
 
-    function checkParameterProperty(
-      node: TSESTree.TSParameterProperty,
-    ): void {
+    function checkParameterProperty(node: TSESTree.TSParameterProperty): void {
       if (!node.readonly) return;
       const parameter = node.parameter;
       if (parameter.type !== AST_NODE_TYPES.Identifier) return;
-      const typedParam = parameter as TSESTree.Identifier & { typeAnnotation?: TSESTree.TSTypeAnnotation };
+      const typedParam = parameter as TSESTree.Identifier & {
+        typeAnnotation?: TSESTree.TSTypeAnnotation;
+      };
       const typeAnnotation = typedParam.typeAnnotation?.typeAnnotation;
       if (!typeAnnotation) return;
       if (!isMutableCollectionType(typeAnnotation)) return;
@@ -177,7 +185,8 @@ export default createRule({
         if (
           node.key.type !== AST_NODE_TYPES.Identifier ||
           node.key.name !== "constructor"
-        ) return;
+        )
+          return;
 
         for (const param of node.value.params) {
           if (param.type === AST_NODE_TYPES.TSParameterProperty) {

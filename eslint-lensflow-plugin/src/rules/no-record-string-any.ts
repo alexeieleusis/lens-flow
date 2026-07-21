@@ -51,7 +51,10 @@ function recurseIntoType(
   context: TSESLint.RuleContext<"recordAny", []>,
   typeNode: TSESTree.TypeNode,
 ): void {
-  if (typeNode.type === "TSUnionType" || typeNode.type === "TSIntersectionType") {
+  if (
+    typeNode.type === "TSUnionType" ||
+    typeNode.type === "TSIntersectionType"
+  ) {
     for (const t of typeNode.types) recurseIntoType(context, t);
   } else if (typeNode.type === "TSTypeReference") {
     handleTypeReference(context, typeNode);

@@ -37,7 +37,12 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"ifChainMissingNeverCheck" | "switchMissingNeverCheck", []>) {
+  create(
+    context: TSESLint.RuleContext<
+      "ifChainMissingNeverCheck" | "switchMissingNeverCheck",
+      []
+    >,
+  ) {
     const parserServices = ESLintUtils.getParserServices(context);
     const program = parserServices.program;
     if (!program) return {};
@@ -46,8 +51,9 @@ export default createRule({
 
     return {
       SwitchStatement(node) {
-        const tsDiscriminant =
-          parserServices.esTreeNodeToTSNodeMap.get(node.discriminant);
+        const tsDiscriminant = parserServices.esTreeNodeToTSNodeMap.get(
+          node.discriminant,
+        );
         if (!tsDiscriminant) return;
 
         checkSwitchExhaustiveness(
@@ -113,8 +119,10 @@ function collectSiblingIfChain(
   const funcInfo = findContainingFunctionBody(returnNode);
   if (!funcInfo) return null;
 
-  const { varName, propName, handledValues } =
-    collectBackwardsIfChain(funcInfo.body, funcInfo.index);
+  const { varName, propName, handledValues } = collectBackwardsIfChain(
+    funcInfo.body,
+    funcInfo.index,
+  );
 
   if (!varName || handledValues.length === 0) return null;
 
@@ -164,7 +172,11 @@ function findAncestorStatementIndex(
 function collectBackwardsIfChain(
   funcBody: TSESTree.BlockStatement,
   startIndex: number,
-): { varName: string | null; propName: string | null; handledValues: (string | number)[] } {
+): {
+  varName: string | null;
+  propName: string | null;
+  handledValues: (string | number)[];
+} {
   let varName: string | null = null;
   let propName: string | null = null;
   const handledValues: (string | number)[] = [];
@@ -189,7 +201,8 @@ function collectBackwardsIfChain(
       stmt.test as TSESTree.BinaryExpression,
     );
     if (!disc) break;
-    if (varName && (disc.varName !== varName || disc.propName !== propName)) break;
+    if (varName && (disc.varName !== varName || disc.propName !== propName))
+      break;
 
     if (!varName) {
       varName = disc.varName;
@@ -226,7 +239,8 @@ function extractMemberPath(
   node: TSESTree.MemberExpression,
 ): { root: TSESTree.Identifier; propName: string } | null {
   if (node.property.type !== "Identifier") return null;
-  if (node.object.type === "Identifier") return { root: node.object, propName: node.property.name };
+  if (node.object.type === "Identifier")
+    return { root: node.object, propName: node.property.name };
   if (node.object.type === "MemberExpression") {
     const inner = extractMemberPath(node.object);
     return inner ? { root: inner.root, propName: node.property.name } : null;
@@ -234,27 +248,35 @@ function extractMemberPath(
   return null;
 }
 
-function unwrapChain(expr: TSESTree.Expression | TSESTree.PrivateIdentifier): TSESTree.Expression {
+function unwrapChain(
+  expr: TSESTree.Expression | TSESTree.PrivateIdentifier,
+): TSESTree.Expression {
   if (expr.type === "ChainExpression") return expr.expression;
   return expr as TSESTree.Expression;
 }
 
-function extractLeftMember(
-  test: TSESTree.BinaryExpression,
-): { varName: string; propName: string; value: string | number | boolean | null } | null {
+function extractLeftMember(test: TSESTree.BinaryExpression): {
+  varName: string;
+  propName: string;
+  value: string | number | boolean | null;
+} | null {
   const left = unwrapChain(test.left);
-  if (left.type !== "MemberExpression" || left.property.type !== "Identifier") return null;
+  if (left.type !== "MemberExpression" || left.property.type !== "Identifier")
+    return null;
   const path = extractMemberPath(left);
   if (!path) return null;
   const value = getLiteralFromExpr(test.right);
   return { varName: path.root.name, propName: path.propName, value };
 }
 
-function extractRightMember(
-  test: TSESTree.BinaryExpression,
-): { varName: string; propName: string; value: string | number | boolean | null } | null {
+function extractRightMember(test: TSESTree.BinaryExpression): {
+  varName: string;
+  propName: string;
+  value: string | number | boolean | null;
+} | null {
   const right = unwrapChain(test.right);
-  if (right.type !== "MemberExpression" || right.property.type !== "Identifier") return null;
+  if (right.type !== "MemberExpression" || right.property.type !== "Identifier")
+    return null;
   const path = extractMemberPath(right);
   if (!path) return null;
   const value = getLiteralFromExpr(test.left);
@@ -317,7 +339,9 @@ function getAllDiscriminantValues(
   }
 
   const values = extractLiteralValues(paramType);
-  const filtered = values.filter((v): v is string | number => typeof v !== "boolean");
+  const filtered = values.filter(
+    (v): v is string | number => typeof v !== "boolean",
+  );
   return filtered.length > 0 ? filtered : null;
 }
 
@@ -365,10 +389,14 @@ function extractParamIdentifier(
   name: string,
 ): TSESTree.Identifier | null {
   if (node.type === "Identifier") return node.name === name ? node : null;
-  if (node.type === "AssignmentPattern") return extractParamIdentifier(node.left, name);
-  if (node.type === "RestElement") return extractParamIdentifier(node.argument, name);
-  if (node.type === "TSParameterProperty") return extractParamIdentifier(node.parameter, name);
-  if (node.type === "ObjectPattern") return extractFromObjectPattern(node, name);
+  if (node.type === "AssignmentPattern")
+    return extractParamIdentifier(node.left, name);
+  if (node.type === "RestElement")
+    return extractParamIdentifier(node.argument, name);
+  if (node.type === "TSParameterProperty")
+    return extractParamIdentifier(node.parameter, name);
+  if (node.type === "ObjectPattern")
+    return extractFromObjectPattern(node, name);
   if (node.type === "ArrayPattern") return extractFromArrayPattern(node, name);
   return null;
 }
@@ -396,7 +424,8 @@ function handleObjectPatternProperty(
 ): TSESTree.Identifier | null {
   if (prop.key.type !== "Identifier" || prop.key.name !== name) return null;
   if (prop.value.type === "Identifier") return prop.value;
-  if (isPatternLike(prop.value)) return extractParamIdentifier(prop.value as PatternLike, name);
+  if (isPatternLike(prop.value))
+    return extractParamIdentifier(prop.value as PatternLike, name);
   return null;
 }
 
@@ -417,7 +446,11 @@ function extractFromArrayPattern(
   for (const element of node.elements) {
     if (!element) continue;
     if (element.type === "Identifier" && element.name === name) return element;
-    if (element.type === "RestElement" && element.argument.type === "Identifier" && element.argument.name === name) {
+    if (
+      element.type === "RestElement" &&
+      element.argument.type === "Identifier" &&
+      element.argument.name === name
+    ) {
       return element.argument;
     }
     if (isPatternLike(element)) {

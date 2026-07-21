@@ -22,7 +22,8 @@ ruleTester.run("no-overly-complex-infer-chain-t63", rule, {
   invalid: [
     // Four levels of nested infer conditionals — exceeds default maxDepth 3
     {
-      code: "type ParseCSV<S> = S extends `${infer H1},${infer Rest1}`\n" +
+      code:
+        "type ParseCSV<S> = S extends `${infer H1},${infer Rest1}`\n" +
         "  ? Rest1 extends `${infer H2},${infer Rest2}`\n" +
         "  ? Rest2 extends `${infer H3},${infer Rest3}`\n" +
         "  ? Rest3 extends `${infer H4}`\n" +
@@ -35,7 +36,8 @@ ruleTester.run("no-overly-complex-infer-chain-t63", rule, {
     },
     // Five levels — clearly over threshold
     {
-      code: "type Deep<S> = S extends `${infer A},${infer B}`\n" +
+      code:
+        "type Deep<S> = S extends `${infer A},${infer B}`\n" +
         "  ? B extends `${infer C},${infer D}`\n" +
         "  ? D extends `${infer E},${infer F}`\n" +
         "  ? F extends `${infer G},${infer H}`\n" +
@@ -48,7 +50,8 @@ ruleTester.run("no-overly-complex-infer-chain-t63", rule, {
     },
     // Two levels with custom maxDepth of 1
     {
-      code: "type AtLimit<S> = S extends `${infer H1},${infer R1}`\n" +
+      code:
+        "type AtLimit<S> = S extends `${infer H1},${infer R1}`\n" +
         "  ? R1 extends `${infer H2}`\n" +
         "  ? [H1, H2]\n" +
         "  : never\n" +
@@ -58,7 +61,8 @@ ruleTester.run("no-overly-complex-infer-chain-t63", rule, {
     },
     // Union-wrapped infer in template literal — 4 levels, exceeds maxDepth 3
     {
-      code: "type UnionDeep<S> = S extends `${infer A | string}`\n" +
+      code:
+        "type UnionDeep<S> = S extends `${infer A | string}`\n" +
         "  ? A extends `${infer B | string}`\n" +
         "  ? B extends `${infer C | string}`\n" +
         "  ? C extends `${infer D | string}`\n" +
@@ -71,7 +75,8 @@ ruleTester.run("no-overly-complex-infer-chain-t63", rule, {
     },
     // False-branch recursion — chain continues through falseType, exceeds maxDepth 3
     {
-      code: "type FalseBranch<S> = S extends `${infer H1}`\n" +
+      code:
+        "type FalseBranch<S> = S extends `${infer H1}`\n" +
         "  ? H1\n" +
         "  : S extends `${infer H2}`\n" +
         "  ? H2\n" +

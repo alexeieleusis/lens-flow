@@ -7,10 +7,7 @@ const URL = knowledgeUrl("catalog/T04-generics-bounds.md");
 function getMaxPropertyDepth(members: TSESTree.TypeElement[]): number {
   let maxDepth = 0;
   for (const member of members) {
-    if (
-      member.type === "TSPropertySignature" &&
-      member.typeAnnotation
-    ) {
+    if (member.type === "TSPropertySignature" && member.typeAnnotation) {
       const depth = getNestingDepth(member.typeAnnotation.typeAnnotation);
       if (depth > maxDepth) maxDepth = depth;
     }
@@ -46,29 +43,18 @@ function getNestingDepth(node: TSESTree.TypeNode): number {
 }
 
 function countProperties(node: TSESTree.TSTypeLiteral): number {
-  return node.members.filter(
-    (m) => m.type === "TSPropertySignature",
-  ).length;
+  return node.members.filter((m) => m.type === "TSPropertySignature").length;
 }
 
-function calcInterfaceMemberMetrics(
-  members: TSESTree.TSInterfaceBody["body"],
-) {
+function calcInterfaceMemberMetrics(members: TSESTree.TSInterfaceBody["body"]) {
   let maxDepth = 0;
   let maxNestedProps = 0;
   for (const member of members) {
-    if (
-      member.type === "TSPropertySignature" &&
-      member.typeAnnotation
-    ) {
+    if (member.type === "TSPropertySignature" && member.typeAnnotation) {
       const depth = getNestingDepth(member.typeAnnotation.typeAnnotation);
       if (depth > maxDepth) maxDepth = depth;
-      if (
-        member.typeAnnotation.typeAnnotation.type === "TSTypeLiteral"
-      ) {
-        const props = countProperties(
-          member.typeAnnotation.typeAnnotation,
-        );
+      if (member.typeAnnotation.typeAnnotation.type === "TSTypeLiteral") {
+        const props = countProperties(member.typeAnnotation.typeAnnotation);
         if (props > maxNestedProps) maxNestedProps = props;
       }
     }
@@ -123,7 +109,21 @@ export default createRule({
       maxNestingDepth: 2,
     },
   ],
-  create(context: TSESLint.RuleContext<"complexTypeLiteral" | "deepNesting" | "complexIntersection" | "complexInterfaceBound", [{ maxIntersectionMembers?: number; maxProperties?: number; maxNestingDepth?: number; }]>) {
+  create(
+    context: TSESLint.RuleContext<
+      | "complexTypeLiteral"
+      | "deepNesting"
+      | "complexIntersection"
+      | "complexInterfaceBound",
+      [
+        {
+          maxIntersectionMembers?: number;
+          maxProperties?: number;
+          maxNestingDepth?: number;
+        },
+      ]
+    >,
+  ) {
     const defaults = {
       maxIntersectionMembers: 3,
       maxProperties: 3,
@@ -222,8 +222,9 @@ export default createRule({
         );
         if (!hasConstruct) return;
 
-        const { maxDepth, maxNestedProps } =
-          calcInterfaceMemberMetrics(node.body);
+        const { maxDepth, maxNestedProps } = calcInterfaceMemberMetrics(
+          node.body,
+        );
 
         if (
           maxDepth >= options.maxNestingDepth ||

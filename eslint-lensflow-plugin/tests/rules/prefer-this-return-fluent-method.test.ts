@@ -33,10 +33,7 @@ ruleTester.run("prefer-this-return-fluent-method", rule, {
       class Derived extends Base {
         setD(d: string): Derived { this.d = d; return this; }
       }`,
-      errors: [
-        { messageId: "preferThis" },
-        { messageId: "preferThis" },
-      ],
+      errors: [{ messageId: "preferThis" }, { messageId: "preferThis" }],
     },
     {
       code: `class Builder {

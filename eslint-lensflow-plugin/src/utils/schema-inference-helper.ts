@@ -12,7 +12,9 @@ export function findVariableInScopeChain(
 ): TSESLint.Scope.Variable | null {
   let currentScope: TSESLint.Scope.Scope | null = scope;
   while (currentScope) {
-    const variable = currentScope.variables.find((v) => v.name === variableName);
+    const variable = currentScope.variables.find(
+      (v) => v.name === variableName,
+    );
     if (variable) {
       return variable;
     }
@@ -20,10 +22,7 @@ export function findVariableInScopeChain(
     // Stop before walking into function or class scopes — a schema defined
     // in an unrelated function or at module level should not match an
     // interface nested inside a different function or class method.
-    if (
-      currentScope.type === "function" ||
-      currentScope.type === "class"
-    ) {
+    if (currentScope.type === "function" || currentScope.type === "class") {
       break;
     }
 
@@ -91,9 +90,7 @@ function isZodLikeCall(node: TSESTree.CallExpression): boolean {
  * `z.string()`, `z.object({}).optional()`).  Bare identifier assignments are
  * *not* accepted because we cannot verify they reference a Zod schema.
  */
-export function looksLikeZodSchema(
-  variable: TSESLint.Scope.Variable,
-): boolean {
+export function looksLikeZodSchema(variable: TSESLint.Scope.Variable): boolean {
   for (const def of variable.defs) {
     if (def.node.type === "VariableDeclarator" && def.node.init) {
       const init = def.node.init;

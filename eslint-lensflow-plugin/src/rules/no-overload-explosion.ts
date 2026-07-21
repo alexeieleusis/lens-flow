@@ -12,8 +12,7 @@ export default createRule({
   meta: {
     type: "suggestion",
     docs: {
-      description:
-        "Disallow functions with more than 5 overload signatures",
+      description: "Disallow functions with more than 5 overload signatures",
     },
     messages: {
       tooManyOverloads:
@@ -34,7 +33,12 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ maxOverloads: 5 }],
-  create(context: TSESLint.RuleContext<"tooManyOverloads", [{ maxOverloads: number }]>) {
+  create(
+    context: TSESLint.RuleContext<
+      "tooManyOverloads",
+      [{ maxOverloads: number }]
+    >,
+  ) {
     const { maxOverloads = 5 } = context.options[0] ?? {};
     const fnGroups = new Map<
       string,

@@ -25,7 +25,9 @@ const URL = knowledgeUrl("usecases/UC06-immutability.md");
  *   `UpdateExpression`, `AssignmentExpression`, `SequenceExpression`,
  *   `Super`, `Import`, `MetaProperty`, `ChainExpression`, `JSX*`, `TS*`
  */
-function hasDynamicValue(node: TSESTree.Expression | null | undefined): boolean {
+function hasDynamicValue(
+  node: TSESTree.Expression | null | undefined,
+): boolean {
   if (!node) return false;
 
   if (node.type === "Literal") return false;
@@ -40,20 +42,24 @@ function hasDynamicValue(node: TSESTree.Expression | null | undefined): boolean 
   }
 
   if (node.type === "ObjectExpression") {
-    return node.properties.some((prop: TSESTree.Property | TSESTree.SpreadElement) => {
-      if (prop.type === "SpreadElement") {
-        return hasDynamicValue(prop.argument);
-      }
-      if (prop.computed && hasDynamicValue(prop.key)) return true;
-      return hasDynamicValue(prop.value as TSESTree.Expression | null);
-    });
+    return node.properties.some(
+      (prop: TSESTree.Property | TSESTree.SpreadElement) => {
+        if (prop.type === "SpreadElement") {
+          return hasDynamicValue(prop.argument);
+        }
+        if (prop.computed && hasDynamicValue(prop.key)) return true;
+        return hasDynamicValue(prop.value as TSESTree.Expression | null);
+      },
+    );
   }
 
   if (node.type === "ArrayExpression") {
-    return node.elements.some((el: TSESTree.SpreadElement | TSESTree.Expression | null) => {
-      if (el?.type === "SpreadElement") return hasDynamicValue(el.argument);
-      return hasDynamicValue(el);
-    });
+    return node.elements.some(
+      (el: TSESTree.SpreadElement | TSESTree.Expression | null) => {
+        if (el?.type === "SpreadElement") return hasDynamicValue(el.argument);
+        return hasDynamicValue(el);
+      },
+    );
   }
 
   return true;
@@ -90,7 +96,8 @@ export default createRule({
         const expr = node.expression;
 
         if (
-          (expr.type === "ObjectExpression" || expr.type === "ArrayExpression") &&
+          (expr.type === "ObjectExpression" ||
+            expr.type === "ArrayExpression") &&
           hasDynamicValue(expr)
         ) {
           context.report({

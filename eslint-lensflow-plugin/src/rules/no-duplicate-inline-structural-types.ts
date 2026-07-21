@@ -9,7 +9,9 @@ type Entry = {
   node: TSESTree.TSTypeLiteral;
 };
 
-function getTypeName(name: TSESTree.EntityName | TSESTree.TSQualifiedName): string {
+function getTypeName(
+  name: TSESTree.EntityName | TSESTree.TSQualifiedName,
+): string {
   if (name.type === "Identifier") return name.name;
   if (name.type === "TSQualifiedName") {
     return `${getTypeName(name.left)}.${name.right.name}`;
@@ -35,7 +37,8 @@ const KEYWORD_TYPE_MAP = {
 function serializeLiteralType(node: TSESTree.TSLiteralType): string {
   const lit = node.literal;
   if (lit.type === "Literal") return String(lit.value);
-  if (lit.type === "TemplateLiteral") return lit.quasis.map((q) => q.value.cooked ?? "").join("");
+  if (lit.type === "TemplateLiteral")
+    return lit.quasis.map((q) => q.value.cooked ?? "").join("");
   if (lit.type === "UnaryExpression") {
     const arg = lit.argument;
     const value = arg.type === "Literal" ? String(arg.value) : "";
@@ -44,7 +47,9 @@ function serializeLiteralType(node: TSESTree.TSLiteralType): string {
   return (lit as { type: string }).type;
 }
 
-function serializeTemplateLiteralType(node: TSESTree.TSTemplateLiteralType): string {
+function serializeTemplateLiteralType(
+  node: TSESTree.TSTemplateLiteralType,
+): string {
   const parts: string[] = [];
   for (let i = 0; i < node.quasis.length; i++) {
     parts.push(node.quasis[i].value.cooked ?? "");
@@ -67,7 +72,8 @@ function serializeCallableType(
 }
 
 function serializeTypeNode(node: TSESTree.TypeNode): string {
-  if (node.type in KEYWORD_TYPE_MAP) return KEYWORD_TYPE_MAP[node.type as keyof typeof KEYWORD_TYPE_MAP];
+  if (node.type in KEYWORD_TYPE_MAP)
+    return KEYWORD_TYPE_MAP[node.type as keyof typeof KEYWORD_TYPE_MAP];
 
   switch (node.type) {
     case "TSTypeReference":
@@ -97,7 +103,12 @@ function serializeTypeNode(node: TSESTree.TypeNode): string {
     case "TSTypeOperator":
       return `type ${serializeTypeNode(node.typeAnnotation as TSESTree.TypeNode)}`;
     case "TSConstructorType":
-      return serializeCallableType(node.params, node.returnType, "new", "unknown");
+      return serializeCallableType(
+        node.params,
+        node.returnType,
+        "new",
+        "unknown",
+      );
     case "TSFunctionType":
       return serializeCallableType(node.params, node.returnType, "(", "void");
     default:
@@ -117,7 +128,9 @@ function serializeTypeAnnotation(node: TSESTree.TSTypeAnnotation): string {
   return "unknown";
 }
 
-function memberKey(m: TSESTree.TSPropertySignature | TSESTree.TSMethodSignature): string {
+function memberKey(
+  m: TSESTree.TSPropertySignature | TSESTree.TSMethodSignature,
+): string {
   if (m.key.type === "Identifier") return m.key.name;
   if (m.key.type === "Literal") return String(m.key.value);
   return m.key.type;
@@ -139,25 +152,35 @@ function paramToString(p: TSESTree.Parameter): string {
 }
 
 function serializePropertySignature(m: TSESTree.TSPropertySignature): string {
-  const typeAnn = m.typeAnnotation ? serializeTypeAnnotation(m.typeAnnotation) : "unknown";
-  const mods = [m.readonly ? "R" : "", m.optional ? "?" : ""].filter(Boolean).join("");
+  const typeAnn = m.typeAnnotation
+    ? serializeTypeAnnotation(m.typeAnnotation)
+    : "unknown";
+  const mods = [m.readonly ? "R" : "", m.optional ? "?" : ""]
+    .filter(Boolean)
+    .join("");
   return `P:${memberKey(m)}:${typeAnn}${mods}`;
 }
 
 function serializeMethodSignature(m: TSESTree.TSMethodSignature): string {
   const params = m.params.map(paramToString).join(",");
   const ret = m.returnType ? serializeTypeAnnotation(m.returnType) : "void";
-  const mods = [m.readonly ? "R" : "", m.optional ? "?" : ""].filter(Boolean).join("");
+  const mods = [m.readonly ? "R" : "", m.optional ? "?" : ""]
+    .filter(Boolean)
+    .join("");
   return `M:${memberKey(m)}(${params}):${ret}${mods}`;
 }
 
-function serializeCallSignature(m: TSESTree.TSCallSignatureDeclaration): string {
+function serializeCallSignature(
+  m: TSESTree.TSCallSignatureDeclaration,
+): string {
   const params = m.params.map(paramToString).join(",");
   const ret = m.returnType ? serializeTypeAnnotation(m.returnType) : "void";
   return `C(${params}):${ret}`;
 }
 
-function serializeConstructSignature(m: TSESTree.TSConstructSignatureDeclaration): string {
+function serializeConstructSignature(
+  m: TSESTree.TSConstructSignatureDeclaration,
+): string {
   const params = m.params.map(paramToString).join(",");
   const ret = m.returnType ? serializeTypeAnnotation(m.returnType) : "unknown";
   return `N(${params}):${ret}`;
@@ -165,7 +188,9 @@ function serializeConstructSignature(m: TSESTree.TSConstructSignatureDeclaration
 
 function serializeIndexSignature(m: TSESTree.TSIndexSignature): string {
   const params = m.parameters.map(paramToString).join(",");
-  const ret = m.typeAnnotation ? serializeTypeAnnotation(m.typeAnnotation) : "unknown";
+  const ret = m.typeAnnotation
+    ? serializeTypeAnnotation(m.typeAnnotation)
+    : "unknown";
   return `I(${params}):${ret}`;
 }
 
@@ -173,7 +198,8 @@ function serializeMember(m: TSESTree.TypeElement): string {
   if (m.type === "TSPropertySignature") return serializePropertySignature(m);
   if (m.type === "TSMethodSignature") return serializeMethodSignature(m);
   if (m.type === "TSCallSignatureDeclaration") return serializeCallSignature(m);
-  if (m.type === "TSConstructSignatureDeclaration") return serializeConstructSignature(m);
+  if (m.type === "TSConstructSignatureDeclaration")
+    return serializeConstructSignature(m);
   if (m.type === "TSIndexSignature") return serializeIndexSignature(m);
   return `__unknown__`;
 }
@@ -214,7 +240,12 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ minDuplicates: 3 }],
-  create(context: TSESLint.RuleContext<"duplicateInlineType", [{ minDuplicates: number }]>) {
+  create(
+    context: TSESLint.RuleContext<
+      "duplicateInlineType",
+      [{ minDuplicates: number }]
+    >,
+  ) {
     const [{ minDuplicates } = { minDuplicates: 3 }] = context.options ?? [];
     const entries: Entry[] = [];
     const visited = new Set<number>();
@@ -223,9 +254,15 @@ export default createRule({
       let target: TSESTree.Identifier | undefined;
       if (param.type === "Identifier") {
         target = param;
-      } else if (param.type === "AssignmentPattern" && param.left.type === "Identifier") {
+      } else if (
+        param.type === "AssignmentPattern" &&
+        param.left.type === "Identifier"
+      ) {
         target = param.left;
-      } else if (param.type === "RestElement" && param.argument.type === "Identifier") {
+      } else if (
+        param.type === "RestElement" &&
+        param.argument.type === "Identifier"
+      ) {
         target = param.argument;
       } else if (
         param.type === "TSParameterProperty" &&

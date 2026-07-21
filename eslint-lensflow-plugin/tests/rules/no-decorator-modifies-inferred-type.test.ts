@@ -110,10 +110,12 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
 
       const e = new Entity();
       e.id;`,
-      errors: [{
-        messageId: "decoratorModifiesInferredType",
-        data: { property: "id", url: URL },
-      }],
+      errors: [
+        {
+          messageId: "decoratorModifiesInferredType",
+          data: { property: "id", url: URL },
+        },
+      ],
     },
     {
       code: `function addMeta(target: unknown, ctx: ClassDecoratorContext) {
@@ -123,10 +125,12 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
 
       @addMeta
       class Widget {}`,
-      errors: [{
-        messageId: "decoratorModifiesMultipleProperties",
-        data: { properties: '"version", "author"', url: URL },
-      }],
+      errors: [
+        {
+          messageId: "decoratorModifiesMultipleProperties",
+          data: { properties: '"version", "author"', url: URL },
+        },
+      ],
     },
     {
       code: `function addId(target: unknown, ctx: ClassDecoratorContext) {
@@ -142,10 +146,12 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
       class Entity {
         name: string;
       }`,
-      errors: [{
-        messageId: "decoratorModifiesInferredType",
-        data: { property: "id", url: URL },
-      }],
+      errors: [
+        {
+          messageId: "decoratorModifiesInferredType",
+          data: { property: "id", url: URL },
+        },
+      ],
     },
 
     // Nested inside namespace
@@ -158,10 +164,12 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
         @addId
         class Entity {}
       }`,
-      errors: [{
-        messageId: "decoratorModifiesInferredType",
-        data: { property: "id", url: URL },
-      }],
+      errors: [
+        {
+          messageId: "decoratorModifiesInferredType",
+          data: { property: "id", url: URL },
+        },
+      ],
     },
 
     // Nested inside if block
@@ -174,10 +182,12 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
         @addId
         class Entity {}
       }`,
-      errors: [{
-        messageId: "decoratorModifiesInferredType",
-        data: { property: "id", url: URL },
-      }],
+      errors: [
+        {
+          messageId: "decoratorModifiesInferredType",
+          data: { property: "id", url: URL },
+        },
+      ],
     },
 
     // Nested inside IIFE
@@ -190,10 +200,12 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
         @addId
         class Entity {}
       })();`,
-      errors: [{
-        messageId: "decoratorModifiesInferredType",
-        data: { property: "id", url: URL },
-      }],
+      errors: [
+        {
+          messageId: "decoratorModifiesInferredType",
+          data: { property: "id", url: URL },
+        },
+      ],
     },
 
     // Nested inside function
@@ -207,10 +219,12 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
         class Entity {}
         return Entity;
       }`,
-      errors: [{
-        messageId: "decoratorModifiesInferredType",
-        data: { property: "id", url: URL },
-      }],
+      errors: [
+        {
+          messageId: "decoratorModifiesInferredType",
+          data: { property: "id", url: URL },
+        },
+      ],
     },
 
     // Arrow function decorator adding undeclared property
@@ -221,10 +235,12 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
 
       @addId
       class Entity {}`,
-      errors: [{
-        messageId: "decoratorModifiesInferredType",
-        data: { property: "id", url: URL },
-      }],
+      errors: [
+        {
+          messageId: "decoratorModifiesInferredType",
+          data: { property: "id", url: URL },
+        },
+      ],
     },
 
     // Function expression decorator adding undeclared property
@@ -235,10 +251,12 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
 
       @addId
       class Entity {}`,
-      errors: [{
-        messageId: "decoratorModifiesInferredType",
-        data: { property: "id", url: URL },
-      }],
+      errors: [
+        {
+          messageId: "decoratorModifiesInferredType",
+          data: { property: "id", url: URL },
+        },
+      ],
     },
 
     // Object.defineProperties (plural) adding undeclared properties
@@ -252,10 +270,12 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
 
       @addMeta
       class Widget {}`,
-      errors: [{
-        messageId: "decoratorModifiesMultipleProperties",
-        data: { properties: '"version", "author"', url: URL },
-      }],
+      errors: [
+        {
+          messageId: "decoratorModifiesMultipleProperties",
+          data: { properties: '"version", "author"', url: URL },
+        },
+      ],
     },
 
     // Qualified type reference (TSQualifiedName) — property not declared on class
@@ -267,10 +287,12 @@ ruleTester.run("no-decorator-modifies-inferred-type", rule, {
 
       @addId
       class Entity {}`,
-      errors: [{
-        messageId: "decoratorModifiesInferredType",
-        data: { property: "id", url: URL },
-      }],
+      errors: [
+        {
+          messageId: "decoratorModifiesInferredType",
+          data: { property: "id", url: URL },
+        },
+      ],
     },
   ],
 });

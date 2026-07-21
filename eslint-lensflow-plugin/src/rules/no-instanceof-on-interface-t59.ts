@@ -30,7 +30,7 @@ export default createRule({
     docs: {
       description:
         "Disallow using instanceof to check the concrete class of a variable typed as an interface.",
-     },
+    },
     messages: {
       instanceofOnInterface:
         "Using instanceof to check the concrete class of a variable typed as an interface breaks existential encapsulation. Only call methods declared on the interface. See: {{url}}",

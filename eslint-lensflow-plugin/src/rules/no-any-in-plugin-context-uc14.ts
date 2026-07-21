@@ -13,19 +13,23 @@ function hasParamTypeAnnotation(
 
 function hasAnyParam(params: readonly TSESTree.Parameter[]): boolean {
   return params.some(
-    p =>
+    (p) =>
       hasParamTypeAnnotation(p) &&
       p.typeAnnotation.typeAnnotation?.type === AST_NODE_TYPES.TSAnyKeyword,
   );
 }
 
-function hasAnyReturn(node: { returnType?: { typeAnnotation?: { type?: string } } }): boolean {
+function hasAnyReturn(node: {
+  returnType?: { typeAnnotation?: { type?: string } };
+}): boolean {
   return node.returnType?.typeAnnotation?.type === AST_NODE_TYPES.TSAnyKeyword;
 }
 
-function checkMemberForAny(
-  member: TSESTree.TypeElement,
-): { targetNode: TSESTree.TypeElement; anyParam: boolean; anyReturn: boolean } | null {
+function checkMemberForAny(member: TSESTree.TypeElement): {
+  targetNode: TSESTree.TypeElement;
+  anyParam: boolean;
+  anyReturn: boolean;
+} | null {
   if (member.type === AST_NODE_TYPES.TSMethodSignature) {
     return {
       targetNode: member,
@@ -35,7 +39,8 @@ function checkMemberForAny(
   }
   if (
     member.type === AST_NODE_TYPES.TSPropertySignature &&
-    member.typeAnnotation?.typeAnnotation?.type === AST_NODE_TYPES.TSFunctionType
+    member.typeAnnotation?.typeAnnotation?.type ===
+      AST_NODE_TYPES.TSFunctionType
   ) {
     const fnType = member.typeAnnotation.typeAnnotation;
     return {
@@ -47,7 +52,10 @@ function checkMemberForAny(
   return null;
 }
 
-function selectMessageId(anyParam: boolean, anyReturn: boolean): "anyParamAndReturn" | "anyParam" | "anyReturn" {
+function selectMessageId(
+  anyParam: boolean,
+  anyReturn: boolean,
+): "anyParamAndReturn" | "anyParam" | "anyReturn" {
   if (anyParam && anyReturn) return "anyParamAndReturn";
   if (anyParam) return "anyParam";
   return "anyReturn";
@@ -62,14 +70,22 @@ export default createRule({
         "Disallows 'any' as parameter or return type in interface methods and function-typed properties, which defeats structural typing at extension points.",
     },
     messages: {
-      anyParam: "Do not use 'any' as a parameter type in interface methods or function-typed properties. Use a specific type to preserve structural typing and type safety at extension points. See: {{url}}",
-      anyReturn: "Do not use 'any' as a return type in interface methods or function-typed properties. Use a specific return type to preserve type safety at extension points. See: {{url}}",
-      anyParamAndReturn: "Do not use 'any' as parameter or return type in interface methods or function-typed properties. Use specific types to preserve structural typing and type safety at extension points. See: {{url}}",
+      anyParam:
+        "Do not use 'any' as a parameter type in interface methods or function-typed properties. Use a specific type to preserve structural typing and type safety at extension points. See: {{url}}",
+      anyReturn:
+        "Do not use 'any' as a return type in interface methods or function-typed properties. Use a specific return type to preserve type safety at extension points. See: {{url}}",
+      anyParamAndReturn:
+        "Do not use 'any' as parameter or return type in interface methods or function-typed properties. Use specific types to preserve structural typing and type safety at extension points. See: {{url}}",
     },
     schema: [],
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"anyParam" | "anyReturn" | "anyParamAndReturn", []>) {
+  create(
+    context: TSESLint.RuleContext<
+      "anyParam" | "anyReturn" | "anyParamAndReturn",
+      []
+    >,
+  ) {
     return {
       TSInterfaceBody(node) {
         for (const member of node.body) {

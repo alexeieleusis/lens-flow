@@ -13,8 +13,8 @@ export default createRule({
         "Disallow conditional types nested more than 4 levels deep without intermediate named type aliases. Configurable via `maxDepth`",
     },
     messages: {
-     deepNesting:
-         "Conditional type nested {{depth}} levels deep. Extract intermediate levels into named type aliases for readability. See: {{url}}",
+      deepNesting:
+        "Conditional type nested {{depth}} levels deep. Extract intermediate levels into named type aliases for readability. See: {{url}}",
     },
     schema: [
       {
@@ -39,9 +39,8 @@ export default createRule({
         const ancestors = context.sourceCode.getAncestors(node);
         const depth =
           1 +
-          ancestors.filter(
-            (ancestor) => ancestor.type === "TSConditionalType",
-          ).length;
+          ancestors.filter((ancestor) => ancestor.type === "TSConditionalType")
+            .length;
 
         if (depth > maxDepth) {
           context.report({

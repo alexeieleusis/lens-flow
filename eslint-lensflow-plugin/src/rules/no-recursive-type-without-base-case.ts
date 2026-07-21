@@ -18,7 +18,8 @@ function findSelfReferences(
       const typeName = n.typeName;
       if (
         (typeName.type === "Identifier" && typeName.name === aliasName) ||
-        (typeName.type === "TSQualifiedName" && typeName.right.name === aliasName)
+        (typeName.type === "TSQualifiedName" &&
+          typeName.right.name === aliasName)
       ) {
         results.push(n);
       }
@@ -74,8 +75,11 @@ function hasStructuralReduction(
 ): boolean {
   let current: TypeNode = typeParam;
 
-  while ((current as unknown as { type: string }).type === "TSParenthesizedType") {
-    current = (current as unknown as { typeAnnotation: TypeNode }).typeAnnotation;
+  while (
+    (current as unknown as { type: string }).type === "TSParenthesizedType"
+  ) {
+    current = (current as unknown as { typeAnnotation: TypeNode })
+      .typeAnnotation;
   }
 
   if (current.type === "TSInferType") return true;
@@ -91,7 +95,11 @@ function hasStructuralReduction(
   }
 
   if (current.type === "TSTupleType") {
-    return hasCollectionReduction(current.elementTypes, genericParams, inferNames);
+    return hasCollectionReduction(
+      current.elementTypes,
+      genericParams,
+      inferNames,
+    );
   }
 
   return false;
@@ -131,7 +139,12 @@ export default createRule({
     schema: [],
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"noTerminatingBranch" | "noStructuralReduction", []>) {
+  create(
+    context: TSESLint.RuleContext<
+      "noTerminatingBranch" | "noStructuralReduction",
+      []
+    >,
+  ) {
     return {
       TSTypeAliasDeclaration(node) {
         if (node.typeAnnotation.type !== "TSConditionalType") return;

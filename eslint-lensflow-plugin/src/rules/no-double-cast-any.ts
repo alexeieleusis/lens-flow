@@ -27,12 +27,20 @@ export default createRule({
 
         if (expr.type === "TSAsExpression") {
           if (expr.typeAnnotation.type === "TSAnyKeyword") {
-            context.report({ node, messageId: "doubleCastAny", data: { url: URL } });
+            context.report({
+              node,
+              messageId: "doubleCastAny",
+              data: { url: URL },
+            });
             return;
           }
 
           if (node.typeAnnotation.type === "TSAnyKeyword") {
-            context.report({ node, messageId: "doubleCastAny", data: { url: URL } });
+            context.report({
+              node,
+              messageId: "doubleCastAny",
+              data: { url: URL },
+            });
           }
         }
       },

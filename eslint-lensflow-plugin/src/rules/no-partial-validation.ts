@@ -28,12 +28,13 @@ function extractTypeCheck(node: TSESTree.Node): CheckedField | null {
   return extractTypeofCheck(node) ?? extractInCheck(node) ?? null;
 }
 
-function extractTypeofCheck(node: TSESTree.BinaryExpression): CheckedField | null {
-  if (
-    !isTypeofMemberExpression(node)
-  ) return null;
+function extractTypeofCheck(
+  node: TSESTree.BinaryExpression,
+): CheckedField | null {
+  if (!isTypeofMemberExpression(node)) return null;
 
-  const member = (node.left as TSESTree.UnaryExpression).argument as TSESTree.MemberExpression;
+  const member = (node.left as TSESTree.UnaryExpression)
+    .argument as TSESTree.MemberExpression;
   const obj = member.object;
   const prop = member.property;
 
@@ -77,9 +78,7 @@ function extractInCheck(node: TSESTree.BinaryExpression): CheckedField | null {
   return null;
 }
 
-function extractPropNameFromInLeft(
-  node: TSESTree.Node
-): string | null {
+function extractPropNameFromInLeft(node: TSESTree.Node): string | null {
   if (node.type === "Literal" && typeof node.value === "string") {
     return node.value;
   }
@@ -105,7 +104,7 @@ export default createRule({
     docs: {
       description:
         "Disallow checking only some fields of an input at runtime while leaving other fields unvalidated. Use a schema validator instead.",
-     },
+    },
     messages: {
       partialValidation:
         "Only {{checked}} of {{total}} properties are checked for '{{varName}}'. Use a schema validator to validate all fields instead of partial runtime checks. See: {{url}}",
@@ -142,8 +141,7 @@ export default createRule({
         const varNode = findIdentifierInTree(test, varName);
         if (!varNode) continue;
 
-        const tsNode =
-          parserServices.esTreeNodeToTSNodeMap.get(varNode);
+        const tsNode = parserServices.esTreeNodeToTSNodeMap.get(varNode);
         if (!tsNode) continue;
 
         const varType = checker.getTypeAtLocation(tsNode as ts.Declaration);
@@ -185,7 +183,10 @@ export default createRule({
   },
 });
 
-function findIdentifierInTree(root: TSESTree.Node, name: string): TSESTree.Identifier | null {
+function findIdentifierInTree(
+  root: TSESTree.Node,
+  name: string,
+): TSESTree.Identifier | null {
   let found: TSESTree.Identifier | null = null;
   walkNodes(root, (node) => {
     if (node.type === "Identifier" && node.name === name) {

@@ -30,10 +30,12 @@ export default createRule({
       if (member.type !== "TSIndexSignature") return;
       if (member.readonly) return;
       const param = member.parameters[0];
-      const typeAnn = (param as TSESTree.Identifier).typeAnnotation?.typeAnnotation;
+      const typeAnn = (param as TSESTree.Identifier).typeAnnotation
+        ?.typeAnnotation;
       if (
         typeAnn &&
-        (typeAnn.type === "TSStringKeyword" || typeAnn.type === "TSNumberKeyword")
+        (typeAnn.type === "TSStringKeyword" ||
+          typeAnn.type === "TSNumberKeyword")
       ) {
         context.report({
           node: reportNode,

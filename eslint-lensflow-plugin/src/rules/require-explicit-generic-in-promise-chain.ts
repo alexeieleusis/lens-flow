@@ -51,14 +51,14 @@ export default createRule({
         // Check return type of inner call — must be a Promise-like type (has `.then`)
         const innerReturnType = parserServices.getTypeAtLocation(innerCall);
         const thenProp = checker.getPropertyOfType(innerReturnType, "then");
-        const thenType = thenProp ? checker.getTypeOfSymbol(thenProp) : undefined;
+        const thenType = thenProp
+          ? checker.getTypeOfSymbol(thenProp)
+          : undefined;
         if (
-          !thenType
-            ?.getCallSignatures()
-            .some((sig) => {
-              const decl = sig.getDeclaration();
-              return decl && decl.name?.getText() === "then";
-            })
+          !thenType?.getCallSignatures().some((sig) => {
+            const decl = sig.getDeclaration();
+            return decl && decl.name?.getText() === "then";
+          })
         )
           return;
 

@@ -21,9 +21,11 @@ function computeMaxDepth(node: TSESTree.TSTypeLiteral): number {
     ) {
       memberDepth = Math.max(
         0,
-        ...typeAnnotation.types.filter(
-          (t): t is TSESTree.TSTypeLiteral => t.type === "TSTypeLiteral",
-        ).map(computeMaxDepth),
+        ...typeAnnotation.types
+          .filter(
+            (t): t is TSESTree.TSTypeLiteral => t.type === "TSTypeLiteral",
+          )
+          .map(computeMaxDepth),
       );
     }
 

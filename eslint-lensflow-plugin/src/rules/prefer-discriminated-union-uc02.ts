@@ -77,7 +77,10 @@ function resolveUnionNode(
   return null;
 }
 
-function getFieldName(key: TSESTree.PropertyName, sourceCode: TSESLint.SourceCode): string {
+function getFieldName(
+  key: TSESTree.PropertyName,
+  sourceCode: TSESLint.SourceCode,
+): string {
   if (key.type === "Identifier") {
     return key.name;
   }
@@ -94,7 +97,7 @@ function reportLiteralUnionField(
   member: TSESTree.TSPropertySignature,
   unionNode: TSESTree.TSUnionType,
 ) {
-   context.report({
+  context.report({
     node: member,
     messageId: "literalUnionField",
     data: {
@@ -121,7 +124,7 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [],
- create(context: TSESLint.RuleContext<"literalUnionField", []>) {
+  create(context: TSESLint.RuleContext<"literalUnionField", []>) {
     const typeAliases = new Map<string, TSESTree.TypeNode>();
 
     return {

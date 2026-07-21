@@ -1,15 +1,14 @@
-import { TSESTree, TSESLint } from '@typescript-eslint/utils';
+import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const URL = knowledgeUrl("usecases/UC05-structural-contracts.md");
 
-function countFlattenedMembers(
-  node: TSESTree.TypeNode,
-): number {
+function countFlattenedMembers(node: TSESTree.TypeNode): number {
   if (node.type === "TSIntersectionType") {
     return node.types.reduce(
-      (sum: number, member: TSESTree.TypeNode) => sum + countFlattenedMembers(member),
+      (sum: number, member: TSESTree.TypeNode) =>
+        sum + countFlattenedMembers(member),
       0,
     );
   }
@@ -49,8 +48,14 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ maxMembers: 4, maxFlattenedMembers: 6 }],
-  create(context: TSESLint.RuleContext<"tooManyDirect" | "tooManyFlattened", [{ maxMembers?: number; maxFlattenedMembers?: number }]>) {
-    const { maxMembers = 4, maxFlattenedMembers = 6 } = context.options[0] ?? {};
+  create(
+    context: TSESLint.RuleContext<
+      "tooManyDirect" | "tooManyFlattened",
+      [{ maxMembers?: number; maxFlattenedMembers?: number }]
+    >,
+  ) {
+    const { maxMembers = 4, maxFlattenedMembers = 6 } =
+      context.options[0] ?? {};
     const thresholdDirect = maxMembers;
     const thresholdFlattened = maxFlattenedMembers;
 

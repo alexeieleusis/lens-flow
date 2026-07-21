@@ -40,7 +40,9 @@ function isTrivialConsoleCall(stmt: TSESTree.Statement): boolean {
   if (method.type !== "Identifier") return false;
   if (!/^(log|error)$/i.test(method.name)) return false;
   return expr.arguments.every(
-    (arg) => arg.type === "Literal" && typeof (arg as TSESTree.Literal).value === "string",
+    (arg) =>
+      arg.type === "Literal" &&
+      typeof (arg as TSESTree.Literal).value === "string",
   );
 }
 
@@ -78,17 +80,17 @@ export default createRule({
             });
             return;
           }
-          if (
-            body.length === 1 &&
-            isTrivialConsoleCall(body[0])
-          ) {
+          if (body.length === 1 && isTrivialConsoleCall(body[0])) {
             context.report({
               node: alt,
               messageId: "trivialLog",
               data: { url: URL },
             });
           }
-        } else if (alt.type === "ExpressionStatement" && isTrivialConsoleCall(alt)) {
+        } else if (
+          alt.type === "ExpressionStatement" &&
+          isTrivialConsoleCall(alt)
+        ) {
           context.report({
             node: alt,
             messageId: "trivialLog",

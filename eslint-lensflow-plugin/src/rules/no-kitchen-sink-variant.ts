@@ -31,7 +31,9 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ maxFields: 6 }],
-  create(context: TSESLint.RuleContext<"tooManyFields", [{ maxFields?: number }]>) {
+  create(
+    context: TSESLint.RuleContext<"tooManyFields", [{ maxFields?: number }]>,
+  ) {
     const { maxFields = 6 } = context.options[0] ?? { maxFields: 6 };
 
     return {

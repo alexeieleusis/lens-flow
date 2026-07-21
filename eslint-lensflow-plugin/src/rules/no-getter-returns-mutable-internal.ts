@@ -4,7 +4,11 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const URL = knowledgeUrl("usecases/UC10-encapsulation.md");
 const MUTABLE_COLLECTIONS = new Set(["Map", "Set", "Array"]);
-const READONLY_COLLECTIONS = new Set(["ReadonlyMap", "ReadonlySet", "ReadonlyArray"]);
+const READONLY_COLLECTIONS = new Set([
+  "ReadonlyMap",
+  "ReadonlySet",
+  "ReadonlyArray",
+]);
 
 function resolveTypeName(
   typeName: TSESTree.EntityName,
@@ -77,8 +81,13 @@ export default createRule({
     return {
       ClassBody(node) {
         const getters = node.body.filter(
-          (member): member is TSESTree.MethodDefinition | TSESTree.TSAbstractMethodDefinition =>
-            (member.type === "MethodDefinition" || member.type === "TSAbstractMethodDefinition") && member.kind === "get",
+          (
+            member,
+          ): member is
+            TSESTree.MethodDefinition | TSESTree.TSAbstractMethodDefinition =>
+            (member.type === "MethodDefinition" ||
+              member.type === "TSAbstractMethodDefinition") &&
+            member.kind === "get",
         );
 
         for (const getter of getters) {

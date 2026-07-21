@@ -7,7 +7,7 @@ const URL = knowledgeUrl("catalog/T52-literal-types.md");
 type WidenedPrimitive = "string" | "number" | "boolean";
 
 function getLiteralInfo(
-  init: TSESTree.Literal | TSESTree.TemplateLiteral
+  init: TSESTree.Literal | TSESTree.TemplateLiteral,
 ): { literalType: string | number; widenedType: WidenedPrimitive } | null {
   if (init.type === "TemplateLiteral") {
     if (init.expressions.length !== 0) return null;
@@ -50,15 +50,21 @@ export default createRule({
   create(context: TSESLint.RuleContext<"preferConst", []>) {
     const reportedDeclarations = new Set<number>();
 
-    function isReassigned(declarator: TSESTree.VariableDeclarator, varName: string): boolean {
+    function isReassigned(
+      declarator: TSESTree.VariableDeclarator,
+      varName: string,
+    ): boolean {
       let currentScope = context.sourceCode.getScope(declarator);
       let variable = null;
       while (currentScope !== null) {
-        variable = currentScope.variables.find((v) => v.name === varName) ?? null;
+        variable =
+          currentScope.variables.find((v) => v.name === varName) ?? null;
         if (variable) break;
         currentScope = currentScope.upper!;
       }
-      return variable?.references.some((ref) => ref.isWrite() && !ref.init) ?? false;
+      return (
+        variable?.references.some((ref) => ref.isWrite() && !ref.init) ?? false
+      );
     }
 
     function isViolatingDeclarator(declarator: TSESTree.VariableDeclarator) {
@@ -89,7 +95,7 @@ export default createRule({
       violatingDeclarators: (TSESTree.VariableDeclarator & {
         literalType: string | number;
         widenedType: WidenedPrimitive;
-      })[]
+      })[],
     ) {
       const letToken = context.sourceCode.getFirstToken(node);
 
@@ -117,7 +123,7 @@ export default createRule({
       violatingDeclarators: (TSESTree.VariableDeclarator & {
         literalType: string | number;
         widenedType: WidenedPrimitive;
-      })[]
+      })[],
     ) {
       const hasFix = letToken.value === "let";
 
@@ -155,10 +161,12 @@ export default createRule({
         const violatingDeclarators = node.declarations
           .map(isViolatingDeclarator)
           .filter(
-            (d): d is TSESTree.VariableDeclarator & {
+            (
+              d,
+            ): d is TSESTree.VariableDeclarator & {
               literalType: string | number;
               widenedType: WidenedPrimitive;
-            } => d !== null
+            } => d !== null,
           );
 
         if (violatingDeclarators.length === 0) {

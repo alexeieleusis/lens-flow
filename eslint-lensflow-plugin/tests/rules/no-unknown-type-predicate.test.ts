@@ -97,7 +97,10 @@ function isString(x) { return typeof x === "string"; }`,
       filename: TEST_FILENAME,
       code: `function isString(x: unknown): x is string;
 function isString(x): x is string { return typeof x === "string"; }`,
-      errors: [{ messageId: "unknownTypePredicate" }, { messageId: "unknownTypePredicate" }],
+      errors: [
+        { messageId: "unknownTypePredicate" },
+        { messageId: "unknownTypePredicate" },
+      ],
     },
   ],
 });

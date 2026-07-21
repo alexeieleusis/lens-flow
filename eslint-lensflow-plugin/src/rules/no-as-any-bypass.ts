@@ -37,8 +37,7 @@ export default createRule({
             data: { url: URL },
           });
         } else if (isAnyCast) {
-          const parentIsAsExpression =
-            node.parent?.type === "TSAsExpression";
+          const parentIsAsExpression = node.parent?.type === "TSAsExpression";
 
           if (!parentIsAsExpression) {
             context.report({

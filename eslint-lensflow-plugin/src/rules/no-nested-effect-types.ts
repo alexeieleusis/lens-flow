@@ -13,13 +13,12 @@ const DEFAULT_EFFECT_TYPES = new Set([
   "Either",
 ]);
 
-function getTypeRefName(
-  node: TSESTree.TypeNode,
-): string | null {
+function getTypeRefName(node: TSESTree.TypeNode): string | null {
   if (node.type !== "TSTypeReference") return null;
   const tn = node.typeName;
   if (tn.type === "Identifier") return tn.name;
-  if (tn.type === "TSQualifiedName" && tn.right.type === "Identifier") return tn.right.name;
+  if (tn.type === "TSQualifiedName" && tn.right.type === "Identifier")
+    return tn.right.name;
   return null;
 }
 
@@ -86,8 +85,8 @@ export default createRule({
         "Disallow effect types nested inside other effect types (e.g., Promise<Result<Promise<User>, Error>>). Flatten to a single stacked effect instead.",
     },
     messages: {
-     nestedEffect:
-         "Nested effect type detected: {{outer}} wraps {{inner}}. Flatten to a single stacked effect type (e.g., TaskEither<E, A>). See: {{url}}",
+      nestedEffect:
+        "Nested effect type detected: {{outer}} wraps {{inner}}. Flatten to a single stacked effect type (e.g., TaskEither<E, A>). See: {{url}}",
     },
     schema: [
       {
@@ -106,7 +105,9 @@ export default createRule({
   },
   defaultOptions: [{ effectTypes: Array.from(DEFAULT_EFFECT_TYPES) }],
 
-  create(context: TSESLint.RuleContext<"nestedEffect", [{ effectTypes: string[] }]>) {
+  create(
+    context: TSESLint.RuleContext<"nestedEffect", [{ effectTypes: string[] }]>,
+  ) {
     const [
       { effectTypes } = { effectTypes: Array.from(DEFAULT_EFFECT_TYPES) },
     ] = context.options ?? [{ effectTypes: Array.from(DEFAULT_EFFECT_TYPES) }];

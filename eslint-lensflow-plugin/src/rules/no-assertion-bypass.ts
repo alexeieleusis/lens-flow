@@ -35,7 +35,9 @@ function unwrap(node: TSESTree.Node): TSESTree.Expression {
 
 function findObjectLiteral(
   expr: TSESTree.Expression,
-  context: Parameters<NonNullable<Parameters<typeof createRule>[0]["create"]>>[0],
+  context: Parameters<
+    NonNullable<Parameters<typeof createRule>[0]["create"]>
+  >[0],
 ): TSESTree.ObjectExpression | null {
   if (expr.type === "ObjectExpression") return expr;
 
@@ -50,10 +52,7 @@ function findObjectLiteral(
       ) {
         // If the variable has an explicit type annotation, the `as` is
         // intentional narrowing — not a bypass.
-        if (
-          def.node.id.type === "Identifier" &&
-          def.node.id.typeAnnotation
-        ) {
+        if (def.node.id.type === "Identifier" && def.node.id.typeAnnotation) {
           return null;
         }
         return def.node.init;
@@ -89,8 +88,9 @@ export default createRule({
 
     return {
       TSAsExpression(node) {
-        const typeNodeTs =
-          parserServices.esTreeNodeToTSNodeMap.get(node.typeAnnotation);
+        const typeNodeTs = parserServices.esTreeNodeToTSNodeMap.get(
+          node.typeAnnotation,
+        );
         if (!typeNodeTs) return;
 
         const targetType = checker.getTypeFromTypeNode(
@@ -102,9 +102,9 @@ export default createRule({
         if (checker.getIndexInfosOfType(targetType).length > 0) return;
 
         const targetPropNames = new Set(
-          checker.getPropertiesOfType(targetType).map(
-            (p) => p.escapedName as string,
-          ),
+          checker
+            .getPropertiesOfType(targetType)
+            .map((p) => p.escapedName as string),
         );
 
         const objLit = findObjectLiteral(unwrap(node.expression), context);

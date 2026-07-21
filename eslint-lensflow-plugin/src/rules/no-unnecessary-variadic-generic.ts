@@ -13,8 +13,8 @@ export default createRule({
         "Disallow generic parameters constrained to array types when only simple array methods are used",
     },
     messages: {
-     unnecessaryGeneric:
-         "Generic parameter {{param}} is constrained to an array type but only simple array methods are called. Use {{constraint}} directly instead of a generic parameter. See: {{url}}",
+      unnecessaryGeneric:
+        "Generic parameter {{param}} is constrained to an array type but only simple array methods are called. Use {{constraint}} directly instead of a generic parameter. See: {{url}}",
     },
     schema: [
       {
@@ -52,18 +52,17 @@ export default createRule({
     >,
   ) {
     const firstOption = context.options[0];
-    const simpleMethods =
-      firstOption?.simpleMethods ?? [
-        "reduce",
-        "forEach",
-        "map",
-        "filter",
-        "some",
-        "every",
-        "includes",
-        "find",
-        "findIndex",
-      ];
+    const simpleMethods = firstOption?.simpleMethods ?? [
+      "reduce",
+      "forEach",
+      "map",
+      "filter",
+      "some",
+      "every",
+      "includes",
+      "find",
+      "findIndex",
+    ];
     const simpleSet = new Set<string>(simpleMethods);
 
     const fnStack: Array<
@@ -102,9 +101,7 @@ export default createRule({
       return undefined;
     }
 
-    function collectDestructuredIdentifiers(
-      node: TSESTree.Node,
-    ): string[] {
+    function collectDestructuredIdentifiers(node: TSESTree.Node): string[] {
       const identifiers: string[] = [];
 
       if (node.type === AST_NODE_TYPES.Identifier) {
@@ -112,9 +109,7 @@ export default createRule({
       } else if (node.type === AST_NODE_TYPES.ObjectPattern) {
         for (const prop of node.properties) {
           if (prop.type === AST_NODE_TYPES.Property) {
-            identifiers.push(
-              ...collectDestructuredIdentifiers(prop.value),
-            );
+            identifiers.push(...collectDestructuredIdentifiers(prop.value));
           }
         }
       } else if (node.type === AST_NODE_TYPES.ArrayPattern) {
@@ -358,7 +353,8 @@ export default createRule({
       name: string,
       node: TSESTree.Node,
     ): TSESLint.Scope.Variable | undefined {
-      let scope: TSESLint.Scope.Scope | null = context.sourceCode.getScope(node);
+      let scope: TSESLint.Scope.Scope | null =
+        context.sourceCode.getScope(node);
       while (scope) {
         for (const v of scope.variables) {
           if (v.name === name) return v;

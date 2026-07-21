@@ -31,7 +31,12 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ maxMembers: 20 }],
-  create(context: TSESLint.RuleContext<"tooManyLiteralMembers", [{ maxMembers?: number }]>) {
+  create(
+    context: TSESLint.RuleContext<
+      "tooManyLiteralMembers",
+      [{ maxMembers?: number }]
+    >,
+  ) {
     const { maxMembers = 20 } = context.options[0] ?? {};
 
     return {
@@ -52,10 +57,10 @@ export default createRule({
             node: reportNode,
             messageId: "tooManyLiteralMembers",
             data: {
-               count: String(literalMembers.length),
-               max: String(maxMembers),
-               url: URL,
-             },
+              count: String(literalMembers.length),
+              max: String(maxMembers),
+              url: URL,
+            },
           });
         }
       },

@@ -33,6 +33,7 @@ so oxlint and coverage were anticipated but never wired up.
 **Triggers:** `pull_request` targeting `main`, `push` to `main`.
 
 **Concurrency:**
+
 ```yaml
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -77,7 +78,7 @@ fails on the very first run.
 **Baseline (measured locally, all 4108 tests passing):**
 
 | Metric     | Current | Threshold set |
-|------------|---------|---------------|
+| ---------- | ------- | ------------- |
 | Statements | 86.98%  | 86%           |
 | Lines      | 86.98%  | 86%           |
 | Branches   | 80.51%  | 80%           |
@@ -89,6 +90,7 @@ is 80%+ across all four metrics, already true except branches, which sits right 
 line.
 
 **Coverage config** (`vitest.config.ts`, `test.coverage`):
+
 - `provider: "v8"`
 - `reporter: ["text", "lcov", "html", "json-summary"]` — `lcov` matches
   `sonar-project.properties`' existing `sonar.javascript.lcov.reportPaths=coverage/lcov.info`
@@ -97,17 +99,20 @@ line.
 ## package.json changes
 
 New scripts:
+
 - `test:coverage`: `vitest run --coverage`
 - `format`: `prettier --write .`
 - `format:check`: `prettier --check .`
 - `lint:oxlint`: `oxlint .`
 
 New devDependencies:
+
 - `@vitest/coverage-v8` (v3.x, matching installed `vitest` major)
 - `prettier`
 - `oxlint`
 
 New config files:
+
 - `.prettierrc` — default/standard settings (no project-specific style signal found;
   use Prettier defaults)
 - `.prettierignore` — excludes `dist/`, `coverage/`, `node_modules/`

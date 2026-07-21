@@ -10,7 +10,10 @@ function isClassDecoratorContextParam(param: TSESTree.Parameter): boolean {
   const typeAnn = inner.typeAnnotation.typeAnnotation;
   if (typeAnn.type === "TSTypeReference") {
     const typeNode = typeAnn.typeName;
-    if (typeNode.type === "Identifier" && typeNode.name === "ClassDecoratorContext") {
+    if (
+      typeNode.type === "Identifier" &&
+      typeNode.name === "ClassDecoratorContext"
+    ) {
       return true;
     }
     if (
@@ -23,7 +26,9 @@ function isClassDecoratorContextParam(param: TSESTree.Parameter): boolean {
   return false;
 }
 
-function extractTemplateLiteralValue(node: TSESTree.TemplateLiteral): string | null {
+function extractTemplateLiteralValue(
+  node: TSESTree.TemplateLiteral,
+): string | null {
   if (node.expressions.length === 0 && node.quasis.length === 1) {
     return node.quasis[0].value.cooked ?? node.quasis[0].value.raw;
   }
@@ -37,7 +42,10 @@ function extractKeyname(key: TSESTree.Expression): string | null {
   return null;
 }
 
-function isObjectCall(node: TSESTree.CallExpression, methodName: string): boolean {
+function isObjectCall(
+  node: TSESTree.CallExpression,
+  methodName: string,
+): boolean {
   const { callee } = node;
   return (
     callee.type === "MemberExpression" &&
@@ -49,14 +57,18 @@ function isObjectCall(node: TSESTree.CallExpression, methodName: string): boolea
   );
 }
 
-function extractDefinePropertySingle(node: TSESTree.CallExpression): string[] | null {
+function extractDefinePropertySingle(
+  node: TSESTree.CallExpression,
+): string[] | null {
   const propArg = node.arguments[1] as TSESTree.Expression | undefined;
   if (!propArg) return null;
   const name = extractKeyname(propArg);
   return name === null ? null : [name];
 }
 
-function extractDefinePropertiesMulti(node: TSESTree.CallExpression): string[] | null {
+function extractDefinePropertiesMulti(
+  node: TSESTree.CallExpression,
+): string[] | null {
   const descArg = node.arguments[1];
   if (descArg?.type !== "ObjectExpression") return null;
   const names: string[] = [];
@@ -80,9 +92,7 @@ function extractDefinePropertyCalls(
   return null;
 }
 
-function getDecoratorFuncName(
-  expression: TSESTree.Expression,
-): string | null {
+function getDecoratorFuncName(expression: TSESTree.Expression): string | null {
   if (expression.type === "Identifier") {
     return expression.name;
   }
@@ -95,30 +105,40 @@ function getDecoratorFuncName(
   return null;
 }
 
-function keyToString(key: TSESTree.Expression | TSESTree.PrivateIdentifier): string | null {
+function keyToString(
+  key: TSESTree.Expression | TSESTree.PrivateIdentifier,
+): string | null {
   if (key.type === "Identifier") return key.name;
   if (key.type === "Literal" && typeof key.value === "string") return key.value;
-  if (key.type === "Literal" && typeof key.value === "number") return String(key.value);
+  if (key.type === "Literal" && typeof key.value === "number")
+    return String(key.value);
   if (key.type === "PrivateIdentifier") return `#${key.name}`;
   return null;
 }
 
 function hasKey(
   member: TSESTree.ClassElement,
-): member is TSESTree.PropertyDefinition |
-  TSESTree.TSAbstractPropertyDefinition |
-  TSESTree.AccessorProperty |
-  TSESTree.MethodDefinition |
-  TSESTree.TSAbstractMethodDefinition {
+): member is
+  | TSESTree.PropertyDefinition
+  | TSESTree.TSAbstractPropertyDefinition
+  | TSESTree.AccessorProperty
+  | TSESTree.MethodDefinition
+  | TSESTree.TSAbstractMethodDefinition {
   return [
-    "PropertyDefinition", "TSAbstractPropertyDefinition", "AccessorProperty",
-    "MethodDefinition", "TSAbstractMethodDefinition",
+    "PropertyDefinition",
+    "TSAbstractPropertyDefinition",
+    "AccessorProperty",
+    "MethodDefinition",
+    "TSAbstractMethodDefinition",
   ].includes(member.type);
 }
 
 function isPropertyLike(
   member: TSESTree.ClassElement,
-): member is TSESTree.PropertyDefinition | TSESTree.TSAbstractPropertyDefinition | TSESTree.AccessorProperty {
+): member is
+  | TSESTree.PropertyDefinition
+  | TSESTree.TSAbstractPropertyDefinition
+  | TSESTree.AccessorProperty {
   return (
     member.type === "PropertyDefinition" ||
     member.type === "TSAbstractPropertyDefinition" ||
@@ -144,7 +164,10 @@ function isConstructorParamProperty(
   );
 }
 
-function processClassMember(member: TSESTree.ClassElement, declared: Set<string>): void {
+function processClassMember(
+  member: TSESTree.ClassElement,
+  declared: Set<string>,
+): void {
   if (!hasKey(member)) return;
   const name = keyToString(member.key);
   if (name === null) return;
@@ -192,7 +215,12 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"decoratorModifiesInferredType" | "decoratorModifiesMultipleProperties", []>) {
+  create(
+    context: TSESLint.RuleContext<
+      "decoratorModifiesInferredType" | "decoratorModifiesMultipleProperties",
+      []
+    >,
+  ) {
     const decoratorFuncProps = new Map<string, Set<string>>();
     const decoratorFuncStack: string[] = [];
     const decoratedClasses: TSESTree.ClassDeclaration[] = [];
@@ -224,9 +252,7 @@ export default createRule({
       });
     }
 
-    function checkClassDecorators(
-      classNode: TSESTree.ClassDeclaration,
-    ) {
+    function checkClassDecorators(classNode: TSESTree.ClassDeclaration) {
       const declaredProperties = getClassDeclaredProperties(classNode.body);
 
       for (const decorator of classNode.decorators) {
@@ -260,10 +286,7 @@ export default createRule({
       },
 
       "FunctionDeclaration:exit"(node) {
-        if (
-          node.params.some(isClassDecoratorContextParam) &&
-          node.id
-        ) {
+        if (node.params.some(isClassDecoratorContextParam) && node.id) {
           exitDecoratorFunc();
         }
       },

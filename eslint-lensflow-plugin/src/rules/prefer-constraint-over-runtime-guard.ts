@@ -5,19 +5,19 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const URL = knowledgeUrl("usecases/UC04-generic-constraints.md");
 
-function normalizeParam(
-  param: TSESTree.Parameter,
-): TSESTree.Identifier | null {
+function normalizeParam(param: TSESTree.Parameter): TSESTree.Identifier | null {
   if (param.type === "TSParameterProperty") {
     return normalizeParam(param.parameter);
   }
   if (param.type === "AssignmentPattern") {
-    const left = param.left as TSESTree.Identifier | TSESTree.ArrayPattern | TSESTree.ObjectPattern;
+    const left = param.left as
+      TSESTree.Identifier | TSESTree.ArrayPattern | TSESTree.ObjectPattern;
     if (left.type === "Identifier") return left;
     return null;
   }
   if (param.type === "RestElement") {
-    const arg = param.argument as TSESTree.Identifier | TSESTree.ArrayPattern | TSESTree.ObjectPattern;
+    const arg = param.argument as
+      TSESTree.Identifier | TSESTree.ArrayPattern | TSESTree.ObjectPattern;
     if (arg.type === "Identifier") return arg;
     return null;
   }
@@ -39,9 +39,11 @@ function findAnyParamVariable(
   if (!id || id.typeAnnotation?.typeAnnotation.type !== "TSAnyKeyword") {
     return null;
   }
-  return scopeManager
-    .getDeclaredVariables(node)
-    .find((v) => v.identifiers.includes(id)) ?? null;
+  return (
+    scopeManager
+      .getDeclaredVariables(node)
+      .find((v) => v.identifiers.includes(id)) ?? null
+  );
 }
 
 export default createRule({
@@ -65,7 +67,8 @@ export default createRule({
       ident: TSESTree.Identifier,
       target: TSESLint.Scope.Variable,
     ): boolean {
-      let current: TSESLint.Scope.Scope | null = context.sourceCode.getScope(ident);
+      let current: TSESLint.Scope.Scope | null =
+        context.sourceCode.getScope(ident);
       while (current) {
         for (const v of current.variables) {
           if (v.name === ident.name) return v === target;
@@ -108,25 +111,31 @@ export default createRule({
       }
 
       function isRuntimeGuard(n: TSESTree.Node): boolean {
-        if (n.type === "UnaryExpression"
-          && n.operator === "typeof"
-          && n.argument.type === "Identifier"
-          && isAnyParamIdent(n.argument)) {
+        if (
+          n.type === "UnaryExpression" &&
+          n.operator === "typeof" &&
+          n.argument.type === "Identifier" &&
+          isAnyParamIdent(n.argument)
+        ) {
           return true;
         }
-        if (n.type === "BinaryExpression"
-          && n.operator === "instanceof"
-          && n.left.type === "Identifier"
-          && isAnyParamIdent(n.left)) {
+        if (
+          n.type === "BinaryExpression" &&
+          n.operator === "instanceof" &&
+          n.left.type === "Identifier" &&
+          isAnyParamIdent(n.left)
+        ) {
           return true;
         }
         return false;
       }
 
       function isPropertyAccess(n: TSESTree.Node): boolean {
-        return n.type === "MemberExpression"
-          && n.object.type === "Identifier"
-          && isAnyParamIdent(n.object);
+        return (
+          n.type === "MemberExpression" &&
+          n.object.type === "Identifier" &&
+          isAnyParamIdent(n.object)
+        );
       }
 
       walk(body, (n) => {

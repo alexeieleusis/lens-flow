@@ -60,7 +60,10 @@ async function processFile(filePath) {
 
   if (hasConstUrl) {
     const alreadyImported = content.includes("knowledgeUrl");
-    content = content.replace(CONST_URL_RE, (_, path) => `const URL = knowledgeUrl("${path}")`);
+    content = content.replace(
+      CONST_URL_RE,
+      (_, path) => `const URL = knowledgeUrl("${path}")`,
+    );
     if (!alreadyImported) {
       content = addImport(content);
     }
@@ -97,7 +100,9 @@ async function main() {
     }
   }
 
-  console.log(`\nDone. ${changed} file(s) updated, ${skipped} file(s) unchanged.`);
+  console.log(
+    `\nDone. ${changed} file(s) updated, ${skipped} file(s) unchanged.`,
+  );
 }
 
 main().catch((err) => {

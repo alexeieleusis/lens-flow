@@ -48,10 +48,10 @@ export default createRule({
     docs: {
       description:
         "Disallow object literals whose string literal properties widen to `string` without `as const`, `satisfies`, or explicit type annotation",
-     },
+    },
     messages: {
-     widen:
-         "Object literal assigned to discriminated-union variable '{{varName}}' without type narrowing. The discriminant '{{discriminant}}' will widen to a broader type. Use `as const`, `satisfies`, or an explicit type annotation. See: {{url}}",
+      widen:
+        "Object literal assigned to discriminated-union variable '{{varName}}' without type narrowing. The discriminant '{{discriminant}}' will widen to a broader type. Use `as const`, `satisfies`, or an explicit type annotation. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -63,7 +63,7 @@ export default createRule({
 
     const reportIfWidenedDiscriminant = (
       prop: TSESTree.Property,
-      varName: string
+      varName: string,
     ): boolean => {
       const propType = parserServices.getTypeAtLocation(prop);
       if ((propType.flags & ts.TypeFlags.StringLiteral) !== 0) return false;

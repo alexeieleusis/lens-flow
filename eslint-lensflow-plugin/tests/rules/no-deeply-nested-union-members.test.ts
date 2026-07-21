@@ -24,11 +24,8 @@ ruleTester.run("no-deeply-nested-union-members", rule, {
       errors: [{ messageId: "deepNesting" }],
     },
     {
-       code: `type NestedUnion = { a: { b: { c: string } } } | { d: { e: { f: number } } };`,
-       errors: [
-         { messageId: "deepNesting" },
-         { messageId: "deepNesting" },
-       ],
-     },
+      code: `type NestedUnion = { a: { b: { c: string } } } | { d: { e: { f: number } } };`,
+      errors: [{ messageId: "deepNesting" }, { messageId: "deepNesting" }],
+    },
   ],
 });

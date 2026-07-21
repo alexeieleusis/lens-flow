@@ -18,7 +18,7 @@ export default createRule({
     },
     messages: {
       mutableArrayParam:
-        "Parameter \"{{name}}\" uses mutable array type \"{{type}}\". Use `readonly {{elem}}[]` or `ReadonlyArray<{{elem}}>`. See: {{url}}",
+        'Parameter "{{name}}" uses mutable array type "{{type}}". Use `readonly {{elem}}[]` or `ReadonlyArray<{{elem}}>`. See: {{url}}',
     },
     schema: [],
     fixable: undefined,

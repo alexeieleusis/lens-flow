@@ -22,10 +22,12 @@
 ### Task 1: Pure URL/path extraction and compliance-check functions
 
 **Files:**
+
 - Create: `/home/alexeieleusis/scripts/restore_help_urls.py`
 - Create: `/home/alexeieleusis/scripts/test_restore_help_urls.py`
 
 **Interfaces:**
+
 - Produces: `extract_knowledge_path_from_raw_url(text: str) -> str | None`, `extract_knowledge_path_from_call(text: str) -> str | None`, `find_shared_url_import(text: str) -> tuple[str, str] | None` (returns `(const_name, relative_import_path)`), `is_compliant(text: str) -> bool`.
 
 - [ ] **Step 1: Write the failing tests**
@@ -228,10 +230,12 @@ git commit -m "feat: add URL extraction and compliance-check helpers to restore_
 ### Task 2: `classify_file` — combine extraction into a per-rule classification
 
 **Files:**
+
 - Modify: `/home/alexeieleusis/scripts/restore_help_urls.py`
 - Modify: `/home/alexeieleusis/scripts/test_restore_help_urls.py`
 
 **Interfaces:**
+
 - Consumes: `extract_knowledge_path_from_raw_url`, `extract_knowledge_path_from_call`, `find_shared_url_import`, `is_compliant` (Task 1).
 - Produces: `ClassifyResult` dataclass with fields `knowledge_path: str | None`, `source: str`, `cleanup_util: str | None = None`; `classify_file(rule_name: str, current_text: str, read_util_text: Callable[[str], str | None], read_history_text: Callable[[], str | None]) -> ClassifyResult | None` (returns `None` when the file is already compliant — meaning "skip").
 
@@ -424,10 +428,12 @@ git commit -m "feat: add classify_file to resolve each rule's target knowledge p
 ### Task 3: `Runner` class with git/gh/npm/npx/opencode wrappers
 
 **Files:**
+
 - Modify: `/home/alexeieleusis/scripts/restore_help_urls.py`
 - Modify: `/home/alexeieleusis/scripts/test_restore_help_urls.py`
 
 **Interfaces:**
+
 - Produces: `Runner(dry_run: bool = False, verbose: bool = False)` with methods `run(cmd, capture=False, check=True, cwd=None)`, `git(*args, capture=False, check=True)`, `gh(*args, capture=False, check=True)`, `npm(*args, capture=False, check=True)`, `npx(*args, capture=False, check=True)`, `opencode(prompt: str)`.
 
 - [ ] **Step 1: Write the failing tests**
@@ -550,10 +556,12 @@ git commit -m "feat: add Runner class with git/gh/npm/npx/opencode wrappers"
 ### Task 4: `build_map` orchestration + `--build-map` CLI
 
 **Files:**
+
 - Modify: `/home/alexeieleusis/scripts/restore_help_urls.py`
 - Modify: `/home/alexeieleusis/scripts/test_restore_help_urls.py`
 
 **Interfaces:**
+
 - Consumes: `classify_file`, `Runner` (Tasks 2–3).
 - Produces: `build_map(runner: Runner, repo_dir: Path, out_path: Path) -> list[dict]`. Each dict: `{"rule": str, "knowledge_path": str, "source": str, "cleanup_util": str | None}`.
 
@@ -722,10 +730,12 @@ git commit -m "feat: add build_map orchestration and --build-map CLI"
 ### Task 5: `build_prompt` — the opencode instruction text
 
 **Files:**
+
 - Modify: `/home/alexeieleusis/scripts/restore_help_urls.py`
 - Modify: `/home/alexeieleusis/scripts/test_restore_help_urls.py`
 
 **Interfaces:**
+
 - Produces: `build_prompt(rule_name: str, knowledge_path: str, error_context: str | None = None) -> str`.
 
 - [ ] **Step 1: Write the failing tests**
@@ -824,10 +834,12 @@ git commit -m "feat: add build_prompt for opencode instructions"
 ### Task 6: `verify_file` — typecheck + targeted vitest run
 
 **Files:**
+
 - Modify: `/home/alexeieleusis/scripts/restore_help_urls.py`
 - Modify: `/home/alexeieleusis/scripts/test_restore_help_urls.py`
 
 **Interfaces:**
+
 - Consumes: `Runner.npm`, `Runner.npx` (Task 3).
 - Produces: `verify_file(runner: Runner, rule_name: str) -> tuple[bool, str]`.
 
@@ -892,10 +904,12 @@ git commit -m "feat: add verify_file for typecheck + targeted vitest run"
 ### Task 7: `apply_one` — per-file opencode/verify/retry/commit state machine
 
 **Files:**
+
 - Modify: `/home/alexeieleusis/scripts/restore_help_urls.py`
 - Modify: `/home/alexeieleusis/scripts/test_restore_help_urls.py`
 
 **Interfaces:**
+
 - Consumes: `Runner`, `build_prompt`, `verify_file` (Tasks 3, 5, 6).
 - Produces: `apply_one(runner: Runner, entry: dict, max_retries: int, verify_fn: Callable[[Runner, str], tuple[bool, str]] = verify_file) -> tuple[bool, str]` (returns `(succeeded, last_error)`).
 
@@ -1017,10 +1031,12 @@ git commit -m "feat: add apply_one retry/verify/commit state machine"
 ### Task 8: `apply_map`, shared-util cleanup, `filter_entries`, and full `--apply` CLI
 
 **Files:**
+
 - Modify: `/home/alexeieleusis/scripts/restore_help_urls.py`
 - Modify: `/home/alexeieleusis/scripts/test_restore_help_urls.py`
 
 **Interfaces:**
+
 - Consumes: `apply_one`, `Runner` (Tasks 3, 7).
 - Produces: `filter_entries(entries: list[dict], start: str | None, end: str | None) -> list[dict]`, `_remove_export_const(text: str, const_name: str) -> str`, `cleanup_shared_util(runner: Runner, entries: list[dict], repo_dir: Path) -> None`, `apply_map(runner: Runner, entries: list[dict], max_retries: int, manual_review_path: Path, repo_dir: Path) -> tuple[int, int]`, updated `main()` with `--apply`, `--start`, `--end`, `--max-retries`, `--manual-review-path`.
 
@@ -1395,9 +1411,11 @@ git commit -m "feat: add apply_map, shared-util cleanup, and full --apply CLI"
 ### Task 9: Manual end-to-end smoke test against the real repo
 
 **Files:**
+
 - None created/modified — this task exercises the finished script against the real `eslint-lensflow-plugin` repo.
 
 **Interfaces:**
+
 - Consumes: the complete `restore_help_urls.py` CLI (Tasks 1–8).
 
 - [ ] **Step 1: Confirm the working tree is clean**
@@ -1408,16 +1426,19 @@ Expected: no output (clean tree). If not clean, stop and resolve before continui
 - [ ] **Step 2: Build the real map**
 
 Run:
+
 ```bash
 cd ~/scripts
 python3 restore_help_urls.py --build-map \
   --map-path /tmp/claude-1000/-home-alexeieleusis-second-ssd-development-lensflow-eslint-lensflow-plugin/b4538fc0-3c24-472f-afab-288f45017c09/scratchpad/url-map.json
 ```
+
 Expected: `Wrote 244 entries to /tmp/.../url-map.json` (no `[warn] could not resolve` lines).
 
 - [ ] **Step 3: Sanity-check the map's source-label counts**
 
 Run:
+
 ```bash
 python3 -c "
 import json
@@ -1427,17 +1448,20 @@ print(Counter(e['source'] for e in entries))
 print(len(entries))
 "
 ```
+
 Expected: `Counter({'raw-url': 222, 'concat-style': 5, 'missing-recovered': 15, 'shared-util-const': 2})` and `244`.
 
 - [ ] **Step 4: Dry-run `--apply` on a small known slice to inspect the generated prompts**
 
 Run:
+
 ```bash
 cd /home/alexeieleusis/second_ssd/development/lensflow/eslint-lensflow-plugin
 python3 ~/scripts/restore_help_urls.py --apply --dry-run --verbose \
   --map-path /tmp/claude-1000/-home-alexeieleusis-second-ssd-development-lensflow-eslint-lensflow-plugin/b4538fc0-3c24-472f-afab-288f45017c09/scratchpad/url-map.json \
   --start no-collect-then-sync-iterate --end no-collect-then-transform
 ```
+
 Expected: prints `git status --porcelain`, then for each of the two matched rules a `[1/2]`/`[2/2]` header, an `opencode run ...` line whose prompt mentions `src/rules/no-collect-then-sync-iterate.ts` (or `-transform`) and `catalog/T64-async-iteration.md`, followed by `npm run typecheck`, `npx vitest run tests/rules/<rule>.test.ts`, and `git add`/`git commit` lines (dry-run, so nothing is actually written or committed) — then a final `Done. 2 fixed, 0 failed.` line, then the shared-util cleanup dry-run commands for `async-iteration.ts`.
 
 - [ ] **Step 5: Confirm no real changes were made**

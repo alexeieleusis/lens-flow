@@ -13,8 +13,8 @@ export default createRule({
         "Disallow `any[]` on children/nested elements properties — use a self-referential type instead.",
     },
     messages: {
-     anyArrayChildren:
-         "Property \"{{propName}}\" uses `any[]` for a nested structure. Use a self-referential type (e.g. `{{parentName}}[]`) for structural type safety. See: {{url}}",
+      anyArrayChildren:
+        'Property "{{propName}}" uses `any[]` for a nested structure. Use a self-referential type (e.g. `{{parentName}}[]`) for structural type safety. See: {{url}}',
     },
     schema: [],
     fixable: undefined,
@@ -29,7 +29,10 @@ export default createRule({
 
         if (node.key.type === "Identifier") {
           propName = node.key.name;
-        } else if (node.key.type === "Literal" && typeof node.key.value === "string") {
+        } else if (
+          node.key.type === "Literal" &&
+          typeof node.key.value === "string"
+        ) {
           propName = node.key.value;
         }
 
@@ -38,7 +41,8 @@ export default createRule({
         const typeAnn = node.typeAnnotation?.typeAnnotation;
 
         const isAnyArray =
-          (typeAnn?.type === "TSArrayType" && typeAnn.elementType.type === "TSAnyKeyword") ||
+          (typeAnn?.type === "TSArrayType" &&
+            typeAnn.elementType.type === "TSAnyKeyword") ||
           (typeAnn?.type === "TSTypeReference" &&
             typeAnn.typeName.type === "Identifier" &&
             typeAnn.typeName.name === "Array" &&
@@ -47,10 +51,14 @@ export default createRule({
         if (!isAnyArray) return;
 
         let parentName = "the containing type";
-        if (node.parent?.type === "TSTypeLiteral" || node.parent?.type === "TSInterfaceBody") {
+        if (
+          node.parent?.type === "TSTypeLiteral" ||
+          node.parent?.type === "TSInterfaceBody"
+        ) {
           const grandParent = node.parent.parent;
           if (
-            (grandParent?.type === "TSTypeAliasDeclaration" || grandParent?.type === "TSInterfaceDeclaration") &&
+            (grandParent?.type === "TSTypeAliasDeclaration" ||
+              grandParent?.type === "TSInterfaceDeclaration") &&
             grandParent.id.type === "Identifier"
           ) {
             parentName = grandParent.id.name;

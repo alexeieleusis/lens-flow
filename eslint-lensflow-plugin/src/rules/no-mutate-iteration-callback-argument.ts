@@ -18,7 +18,7 @@ const iterationMethods = new Set([
 ]);
 
 function isCallbackExpression(
-  node: TSESTree.Node
+  node: TSESTree.Node,
 ): node is TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression {
   return (
     node.type === "ArrowFunctionExpression" ||
@@ -27,16 +27,14 @@ function isCallbackExpression(
 }
 
 function extractParamNames(
-  callback: TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression
+  callback: TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression,
 ): string[] {
   return callback.params
     .filter((p): p is TSESTree.Identifier => p.type === "Identifier")
     .map((p) => p.name);
 }
 
-function getRootIdentifier(
-  node: TSESTree.Node
-): TSESTree.Identifier | null {
+function getRootIdentifier(node: TSESTree.Node): TSESTree.Identifier | null {
   while (node.type === "MemberExpression") {
     node = node.object;
   }
@@ -46,7 +44,7 @@ function getRootIdentifier(
 
 function isAssignmentMutation(
   node: TSESTree.Node,
-  paramNames: string[]
+  paramNames: string[],
 ): node is TSESTree.AssignmentExpression {
   if (
     node.type === "AssignmentExpression" &&
@@ -60,7 +58,7 @@ function isAssignmentMutation(
 
 function isUpdateMutation(
   node: TSESTree.Node,
-  paramNames: string[]
+  paramNames: string[],
 ): node is TSESTree.UpdateExpression {
   if (
     node.type === "UpdateExpression" &&
@@ -74,15 +72,17 @@ function isUpdateMutation(
 
 function findMutations(
   body: TSESTree.Node,
-  paramNames: string[]
+  paramNames: string[],
 ): (TSESTree.AssignmentExpression | TSESTree.UpdateExpression)[] {
   const mutations: (
-    | TSESTree.AssignmentExpression
-    | TSESTree.UpdateExpression
+    TSESTree.AssignmentExpression | TSESTree.UpdateExpression
   )[] = [];
 
   walk(body, (n) => {
-    if (isAssignmentMutation(n, paramNames) || isUpdateMutation(n, paramNames)) {
+    if (
+      isAssignmentMutation(n, paramNames) ||
+      isUpdateMutation(n, paramNames)
+    ) {
       mutations.push(n);
     }
   });
@@ -97,7 +97,7 @@ function getPropertyName(prop: TSESTree.Node): string {
 }
 
 function getParamNameFromMemberExpression(
-  member: TSESTree.MemberExpression
+  member: TSESTree.MemberExpression,
 ): string {
   const root = getRootIdentifier(member);
   return root ? root.name : "?";
@@ -114,7 +114,7 @@ function buildPropertyPath(member: TSESTree.MemberExpression): string {
 }
 
 function extractMutationInfo(
-  mutation: TSESTree.AssignmentExpression | TSESTree.UpdateExpression
+  mutation: TSESTree.AssignmentExpression | TSESTree.UpdateExpression,
 ): { propName: string; paramName: string } {
   if (
     mutation.type === "AssignmentExpression" &&
@@ -141,16 +141,16 @@ function extractMutationInfo(
 
 function reportMutations(
   context: Parameters<NonNullable<ReturnType<typeof createRule>["create"]>>[0],
-  mutations: (TSESTree.AssignmentExpression | TSESTree.UpdateExpression)[]
+  mutations: (TSESTree.AssignmentExpression | TSESTree.UpdateExpression)[],
 ) {
   for (const mutation of mutations) {
     const { propName, paramName } = extractMutationInfo(mutation);
 
-     context.report({
-        node: mutation,
-        messageId: "mutateCallbackArg",
-        data: { param: paramName, prop: propName, url: URL },
-      });
+    context.report({
+      node: mutation,
+      messageId: "mutateCallbackArg",
+      data: { param: paramName, prop: propName, url: URL },
+    });
   }
 }
 

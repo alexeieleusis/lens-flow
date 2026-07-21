@@ -10,7 +10,9 @@ export interface SwitchExhaustivenessRuleOptions {
   url: string;
 }
 
-export function createSwitchExhaustivenessRule(options: SwitchExhaustivenessRuleOptions) {
+export function createSwitchExhaustivenessRule(
+  options: SwitchExhaustivenessRuleOptions,
+) {
   return createRule({
     name: options.name,
     meta: {
@@ -34,8 +36,9 @@ export function createSwitchExhaustivenessRule(options: SwitchExhaustivenessRule
 
       return {
         SwitchStatement(node: TSESTree.SwitchStatement) {
-          const tsDiscriminant =
-            parserServices.esTreeNodeToTSNodeMap.get(node.discriminant);
+          const tsDiscriminant = parserServices.esTreeNodeToTSNodeMap.get(
+            node.discriminant,
+          );
           if (!tsDiscriminant) return;
 
           checkSwitchExhaustiveness(

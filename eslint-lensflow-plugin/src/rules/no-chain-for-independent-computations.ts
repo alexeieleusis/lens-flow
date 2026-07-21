@@ -42,7 +42,9 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"noParamInChain" | "unusedParamInChain", []>) {
+  create(
+    context: TSESLint.RuleContext<"noParamInChain" | "unusedParamInChain", []>,
+  ) {
     const chainMethods = new Set(["chain", "flatMap"]);
 
     function isChainCall(node: TSESTree.CallExpression): boolean {
@@ -50,7 +52,10 @@ export default createRule({
       if (callee.type === AST_NODE_TYPES.MemberExpression) {
         const prop = callee.property;
 
-        if (prop.type === AST_NODE_TYPES.Identifier && chainMethods.has(prop.name)) {
+        if (
+          prop.type === AST_NODE_TYPES.Identifier &&
+          chainMethods.has(prop.name)
+        ) {
           return true;
         }
       }
@@ -90,9 +95,9 @@ export default createRule({
       if (!ident) return;
 
       const scopeManager = ctx.sourceCode.scopeManager;
-      const paramVar = scopeManager?.getDeclaredVariables(callback).find(
-        (v) => v.name === ident.name,
-      );
+      const paramVar = scopeManager
+        ?.getDeclaredVariables(callback)
+        .find((v) => v.name === ident.name);
 
       // For AssignmentPattern like (x = 1), the scope manager counts the
       // identifier inside the pattern as a reference. Filter those out so

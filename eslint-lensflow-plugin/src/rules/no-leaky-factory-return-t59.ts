@@ -27,13 +27,13 @@ function getObjectKeys(objExpr: TSESTree.ObjectExpression): string[] {
   return keys;
 }
 
-function unwrapSatisfies(
-  expr: TSESTree.Expression,
-): TSESTree.Expression {
+function unwrapSatisfies(expr: TSESTree.Expression): TSESTree.Expression {
   return expr.type === "TSSatisfiesExpression" ? expr.expression : expr;
 }
 
-function findReturnStatements(fnNode: FunctionNode): TSESTree.ReturnStatement[] {
+function findReturnStatements(
+  fnNode: FunctionNode,
+): TSESTree.ReturnStatement[] {
   const results: TSESTree.ReturnStatement[] = [];
   walk(fnNode.body, (node) => {
     if (
@@ -56,8 +56,8 @@ export default createRule({
         "Disallow factory functions returning object literals with properties beyond their declared interface",
     },
     messages: {
-     leakyReturn:
-         "Factory function returns object with extra properties {{extraProps}} not declared in interface {{interfaceName}}. Use `as {{interfaceName}}` cast to hide implementation details. See: {{url}}",
+      leakyReturn:
+        "Factory function returns object with extra properties {{extraProps}} not declared in interface {{interfaceName}}. Use `as {{interfaceName}}` cast to hide implementation details. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -79,10 +79,10 @@ export default createRule({
           node: nodeToReport,
           messageId: "leakyReturn",
           data: {
-             extraProps: extraProps.join(", "),
-             interfaceName,
-             url: URL,
-           },
+            extraProps: extraProps.join(", "),
+            interfaceName,
+            url: URL,
+          },
         });
       }
     }

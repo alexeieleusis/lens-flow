@@ -67,7 +67,7 @@ ruleTester.run("no-any-array-return", rule, {
       errors: [{ messageId: "anyArrayReturn" }],
     },
     {
-      code:    `type ReadonlyMapper = () => readonly any[];`,
+      code: `type ReadonlyMapper = () => readonly any[];`,
       errors: [{ messageId: "anyArrayReturn" }],
     },
     {

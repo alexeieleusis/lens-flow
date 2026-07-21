@@ -14,8 +14,8 @@ export default createRule({
         "Disallow `(x as any).property` capability checks on union-typed values",
     },
     messages: {
-     capabilityProbe:
-         "Using `as any` to check for a property or method instead of enforcing capability through a proper interface. See: {{url}}",
+      capabilityProbe:
+        "Using `as any` to check for a property or method instead of enforcing capability through a proper interface. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -33,8 +33,8 @@ export default createRule({
       TSAsExpression(node) {
         if (node.typeAnnotation.type !== "TSAnyKeyword") return;
 
-        let effectiveChild: TSESTree.TSAsExpression | TSESTree.TSNonNullExpression =
-          node;
+        let effectiveChild:
+          TSESTree.TSAsExpression | TSESTree.TSNonNullExpression = node;
         let parent = node.parent;
         if (parent.type === "TSNonNullExpression") {
           effectiveChild = parent;
@@ -52,7 +52,11 @@ export default createRule({
         const exprType = checker.getTypeAtLocation(tsNode);
         if (!exprType.isUnion()) return;
 
-        context.report({ node, messageId: "capabilityProbe", data: { url: URL } });
+        context.report({
+          node,
+          messageId: "capabilityProbe",
+          data: { url: URL },
+        });
       },
     };
   },

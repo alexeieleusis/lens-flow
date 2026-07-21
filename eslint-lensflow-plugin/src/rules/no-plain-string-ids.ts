@@ -43,21 +43,29 @@ export default createRule({
         "Disallow multiple functions in the same module from accepting bare `string` parameters for entity IDs.",
     },
     messages: {
-     plainStringId:
-         "Parameter \"{{paramName}}\" is a bare `string` ID. Found {{count}} functions in this module with bare-string ID parameters — use branded types to prevent ID confusion. See: {{url}}",
+      plainStringId:
+        'Parameter "{{paramName}}" is a bare `string` ID. Found {{count}} functions in this module with bare-string ID parameters — use branded types to prevent ID confusion. See: {{url}}',
     },
     schema: [],
     fixable: undefined,
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"plainStringId", []>) {
-    const violations: Array<{ fnNode: TSESTree.Node; paramNode: TSESTree.Node; paramName: string }> = [];
+    const violations: Array<{
+      fnNode: TSESTree.Node;
+      paramNode: TSESTree.Node;
+      paramName: string;
+    }> = [];
 
     function checkFunction(node: { params: TSESTree.Parameter[] }) {
       for (const param of node.params) {
         const idInfo = isIdParam(param);
         if (idInfo) {
-          violations.push({ fnNode: node as TSESTree.Node, paramNode: param as TSESTree.Node, paramName: idInfo.name });
+          violations.push({
+            fnNode: node as TSESTree.Node,
+            paramNode: param as TSESTree.Node,
+            paramName: idInfo.name,
+          });
         }
       }
     }
@@ -88,7 +96,9 @@ export default createRule({
         checkFunction(node);
       },
       "Program:exit"() {
-        const uniqueByFn = [...new Map(violations.map(v => [v.fnNode, v])).values()];
+        const uniqueByFn = [
+          ...new Map(violations.map((v) => [v.fnNode, v])).values(),
+        ];
         if (uniqueByFn.length < 2) return;
         for (const { paramNode, paramName } of uniqueByFn) {
           context.report({

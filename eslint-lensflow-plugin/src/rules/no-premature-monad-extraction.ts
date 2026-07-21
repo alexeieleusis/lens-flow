@@ -81,8 +81,13 @@ function isExtractionIdentifier(node: TSESTree.Identifier): boolean {
   return EXTRACT_METHODS.has(node.name);
 }
 
-function isExtractionMemberExpression(node: TSESTree.MemberExpression): boolean {
-  if (node.object.type === "Identifier" && node.property.type === "Identifier") {
+function isExtractionMemberExpression(
+  node: TSESTree.MemberExpression,
+): boolean {
+  if (
+    node.object.type === "Identifier" &&
+    node.property.type === "Identifier"
+  ) {
     const nsKey = `${node.object.name}.${node.property.name}`;
     return NS_EXTRACT_METHODS.has(nsKey);
   }

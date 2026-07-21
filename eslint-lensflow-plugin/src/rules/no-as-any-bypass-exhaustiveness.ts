@@ -26,9 +26,15 @@ export default createRule({
         if (node.typeAnnotation.type !== "TSAnyKeyword") return;
 
         const ancestors = context.sourceCode.getAncestors(node);
-        const innermostSwitchCase = [...ancestors].reverse().find((a) => a.type === "SwitchCase");
+        const innermostSwitchCase = [...ancestors]
+          .reverse()
+          .find((a) => a.type === "SwitchCase");
         if (innermostSwitchCase?.test === null) {
-          context.report({ node, messageId: "bypassExhaustiveness", data: { url: URL } });
+          context.report({
+            node,
+            messageId: "bypassExhaustiveness",
+            data: { url: URL },
+          });
         }
       },
     };

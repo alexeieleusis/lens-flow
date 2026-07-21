@@ -56,10 +56,18 @@ function hasNestedThrow(stmt: TSESTree.Statement): boolean {
     if (hasThrow(child)) return true;
   }
   if (stmt.type === "IfStatement") {
-    return (stmt.consequent ? hasThrow(stmt.consequent) : false) ||
-      (stmt.alternate ? hasThrow(stmt.alternate) : false);
+    return (
+      (stmt.consequent ? hasThrow(stmt.consequent) : false) ||
+      (stmt.alternate ? hasThrow(stmt.alternate) : false)
+    );
   }
-  if (stmt.type === "ForStatement" || stmt.type === "ForInStatement" || stmt.type === "ForOfStatement" || stmt.type === "WhileStatement" || stmt.type === "DoWhileStatement") {
+  if (
+    stmt.type === "ForStatement" ||
+    stmt.type === "ForInStatement" ||
+    stmt.type === "ForOfStatement" ||
+    stmt.type === "WhileStatement" ||
+    stmt.type === "DoWhileStatement"
+  ) {
     return hasThrow((stmt as any).body);
   }
   return false;

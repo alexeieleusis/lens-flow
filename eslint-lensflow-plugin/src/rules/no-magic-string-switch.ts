@@ -1,4 +1,4 @@
-import { TSESTree, TSESLint } from '@typescript-eslint/utils';
+import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
@@ -10,9 +10,7 @@ function hasNamespacePattern(value: string): boolean {
   return NAMESPACE_SEPARATORS.some((sep) => value.includes(sep));
 }
 
-function getParamIdentifier(
-  p: TSESTree.Parameter,
-): TSESTree.Identifier | null {
+function getParamIdentifier(p: TSESTree.Parameter): TSESTree.Identifier | null {
   if (p.type === "Identifier") return p;
   if (p.type === "AssignmentPattern" && p.left.type === "Identifier")
     return p.left;
@@ -99,15 +97,19 @@ export default createRule({
             .map(getParamIdentifier)
             .filter(
               (id): id is TSESTree.Identifier =>
-                  id?.typeAnnotation?.typeAnnotation != null &&
-                 unwrapTSType(id.typeAnnotation.typeAnnotation).type === "TSStringKeyword",
+                id?.typeAnnotation?.typeAnnotation != null &&
+                unwrapTSType(id.typeAnnotation.typeAnnotation).type ===
+                  "TSStringKeyword",
             )
             .map((id) => id.name),
         );
         if (!stringParamNames.has(binding.name)) return;
 
         const stringCases = node.cases
-          .filter((c) => c.test?.type === "Literal" && typeof c.test.value === "string")
+          .filter(
+            (c) =>
+              c.test?.type === "Literal" && typeof c.test.value === "string",
+          )
           .map((c) => (c.test as TSESTree.StringLiteral).value);
 
         const namespacedCases = stringCases.filter(hasNamespacePattern);

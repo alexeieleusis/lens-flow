@@ -6,7 +6,8 @@ const URL = knowledgeUrl("catalog/T07-structural-typing.md");
 
 function unwrapParens(node: TSESTree.TypeNode): TSESTree.TypeNode {
   while (node.type === ("TSParenthesizedType" as TSESTree.TypeNode["type"])) {
-    node = (node as unknown as { typeAnnotation: TSESTree.TypeNode }).typeAnnotation;
+    node = (node as unknown as { typeAnnotation: TSESTree.TypeNode })
+      .typeAnnotation;
   }
   return node;
 }
@@ -38,7 +39,7 @@ export default createRule({
     },
     messages: {
       missingDiscriminant:
-        "Union of object types has no member with a literal-typed discriminant property. Add a discriminant (e.g. `kind: \"circle\"`) to enable exhaustive narrowing. See: {{url}}",
+        'Union of object types has no member with a literal-typed discriminant property. Add a discriminant (e.g. `kind: "circle"`) to enable exhaustive narrowing. See: {{url}}',
     },
     schema: [],
     fixable: undefined,
@@ -60,9 +61,12 @@ export default createRule({
               sig.type === "TSPropertySignature" &&
               sig.typeAnnotation?.typeAnnotation?.type === "TSLiteralType" &&
               sig.typeAnnotation.typeAnnotation.literal.type === "Literal" &&
-              (typeof sig.typeAnnotation.typeAnnotation.literal.value === "string" ||
-                typeof sig.typeAnnotation.typeAnnotation.literal.value === "number" ||
-                typeof sig.typeAnnotation.typeAnnotation.literal.value === "boolean"),
+              (typeof sig.typeAnnotation.typeAnnotation.literal.value ===
+                "string" ||
+                typeof sig.typeAnnotation.typeAnnotation.literal.value ===
+                  "number" ||
+                typeof sig.typeAnnotation.typeAnnotation.literal.value ===
+                  "boolean"),
           ),
         );
 

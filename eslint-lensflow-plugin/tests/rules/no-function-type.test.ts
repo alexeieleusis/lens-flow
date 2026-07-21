@@ -19,7 +19,10 @@ ruleTester.run("no-function-type", rule, {
     },
     {
       code: `type Handlers = { click: Function; hover: Function };`,
-      errors: [{ messageId: "noFunctionType" }, { messageId: "noFunctionType" }],
+      errors: [
+        { messageId: "noFunctionType" },
+        { messageId: "noFunctionType" },
+      ],
     },
     {
       code: `type MaybeFn = Function | null;`,

@@ -1,6 +1,9 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
-import { createNoAnyParamChecker, createNoAnyParamTypeChecker } from "../utils/no-any-param-checker.js";
+import {
+  createNoAnyParamChecker,
+  createNoAnyParamTypeChecker,
+} from "../utils/no-any-param-checker.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const URL = knowledgeUrl("catalog/T47-gradual-typing.md");

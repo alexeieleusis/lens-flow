@@ -12,7 +12,7 @@ export default createRule({
       description:
         "Disallow generic constraints that intersect multiple named interfaces when an inline structural constraint would be simpler",
     },
-   messages: {
+    messages: {
       overengineeredIntersection:
         "Generic constraint intersects {{count}} named type(s) ({{types}}). Consider using an inline structural constraint instead. See: {{url}}",
     },
@@ -31,7 +31,12 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ minIntersectionMembers: 2 }],
-  create(context: TSESLint.RuleContext<"overengineeredIntersection", [{ minIntersectionMembers: number }]>) {
+  create(
+    context: TSESLint.RuleContext<
+      "overengineeredIntersection",
+      [{ minIntersectionMembers: number }]
+    >,
+  ) {
     const [{ minIntersectionMembers } = { minIntersectionMembers: 2 }] =
       context.options ?? [{ minIntersectionMembers: 2 }];
 
@@ -48,7 +53,8 @@ export default createRule({
           const names = typeRefs
             .map((m) => {
               if (m.typeName.type === "Identifier") return m.typeName.name;
-              if (m.typeName.type === "TSQualifiedName") return m.typeName.right.name;
+              if (m.typeName.type === "TSQualifiedName")
+                return m.typeName.right.name;
               return "?";
             })
             .join(", ");

@@ -17,7 +17,8 @@ const untrustedCallNames = new Set([
 function unwrapExpression(node: TSESTree.Node): TSESTree.Node {
   if (node.type === "AwaitExpression") return unwrapExpression(node.argument);
   if (node.type === "ChainExpression") return unwrapExpression(node.expression);
-  if (node.type === "TSNonNullExpression") return unwrapExpression(node.expression);
+  if (node.type === "TSNonNullExpression")
+    return unwrapExpression(node.expression);
   return node;
 }
 
@@ -39,7 +40,8 @@ function getUntrustedCallNameFromExpression(
   ) {
     const fullName = `${callee.object.name}.${callee.property.name}`;
     if (untrustedCallNames.has(fullName)) return fullName;
-    if (untrustedCallNames.has(callee.property.name)) return callee.property.name;
+    if (untrustedCallNames.has(callee.property.name))
+      return callee.property.name;
     return null;
   }
   return null;
@@ -56,17 +58,12 @@ function getUntrustedCallName(
   // If it's an identifier, trace to its declaration initializer
   const unwrapped = unwrapExpression(node);
   if (unwrapped.type === "Identifier") {
-    const scope = sourceCode.getScope
-      ? sourceCode.getScope(unwrapped)
-      : null;
+    const scope = sourceCode.getScope ? sourceCode.getScope(unwrapped) : null;
     if (scope) {
       const variable = scope.set.get(unwrapped.name);
       if (variable && variable.defs.length > 0) {
         const def = variable.defs[0];
-        if (
-          def.node.type === "VariableDeclarator" &&
-          def.node.init
-        ) {
+        if (def.node.type === "VariableDeclarator" && def.node.init) {
           return getUntrustedCallNameFromExpression(def.node.init);
         }
       }
@@ -94,7 +91,9 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"blindCastUntrusted" | "blindCast", []>) {
+  create(
+    context: TSESLint.RuleContext<"blindCastUntrusted" | "blindCast", []>,
+  ) {
     const parserServices = ESLintUtils.getParserServices(context, true);
     const program = parserServices.program;
     if (!program) return {};
@@ -104,17 +103,17 @@ export default createRule({
 
     return {
       TSAsExpression(node) {
-        const exprTs =
-          parserServices.esTreeNodeToTSNodeMap.get(node.expression);
+        const exprTs = parserServices.esTreeNodeToTSNodeMap.get(
+          node.expression,
+        );
         if (!exprTs) return;
 
-        const exprType = checker.getTypeAtLocation(
-          exprTs as ts.Expression,
-        );
+        const exprType = checker.getTypeAtLocation(exprTs as ts.Expression);
         const sourceTypeStr = checker.typeToString(exprType);
 
-        const typeNodeTs =
-          parserServices.esTreeNodeToTSNodeMap.get(node.typeAnnotation);
+        const typeNodeTs = parserServices.esTreeNodeToTSNodeMap.get(
+          node.typeAnnotation,
+        );
         if (!typeNodeTs) return;
 
         const targetType = checker.getTypeFromTypeNode(

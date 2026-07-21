@@ -75,7 +75,7 @@ type UnwrapLevel4<T> = UnwrapLevel2<UnwrapLevel2<T>>;`,
   : never;`,
       errors: [{ messageId: "deepNesting" }],
     },
-   // 5 levels in a different shape
+    // 5 levels in a different shape
     {
       code: `type Deep<T> = T extends string
    ? T extends \`prefix-\${infer Rest}\`
@@ -102,7 +102,7 @@ type UnwrapLevel4<T> = UnwrapLevel2<UnwrapLevel2<T>>;`,
       options: [{ maxDepth: 2 }],
       errors: [{ messageId: "deepNesting", data: { depth: "3", url: URL } }],
     },
-   // 5 levels with maxDepth 4 reports depth 5
+    // 5 levels with maxDepth 4 reports depth 5
     {
       code: `type F<T> = T extends (infer A)[]
     ? A extends (infer B)[]

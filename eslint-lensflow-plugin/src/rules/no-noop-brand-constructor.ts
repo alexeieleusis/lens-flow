@@ -32,9 +32,7 @@ function isBrandedType(node: TSESTree.TypeNode): boolean {
         }
         if (!name) return false;
         return (
-          name === "_brand" ||
-          name === "__brand" ||
-          name.endsWith("Brand")
+          name === "_brand" || name === "__brand" || name.endsWith("Brand")
         );
       }),
   );

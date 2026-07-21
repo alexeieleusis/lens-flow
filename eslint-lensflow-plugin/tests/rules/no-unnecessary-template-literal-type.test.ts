@@ -7,7 +7,7 @@ ruleTester.run("no-unnecessary-template-literal-type", rule, {
     `type Label = \`pre_\${"a" | "b" | "c"}\`;`,
     `type Code = \`\${"x" | "y"}_suffix\`;`,
     `type Tag = \`a\${T}b\${U}\`;`,
-   `type Mixed = \`status-\${"ok" | "err"}\` | "other";`,
+    `type Mixed = \`status-\${"ok" | "err"}\` | "other";`,
     `type Numeric = \`\${1 | 2 | 3}\`;`,
     `type MixedLiterals = \`\${"a" | 1}\`;`,
     `type Bool = \`\${true | false}\`;`,

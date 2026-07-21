@@ -12,7 +12,7 @@ export default createRule({
     docs: {
       description:
         "Disallow type aliases that are unions of other union type aliases, which create nested union structure obscuring the full set of variants.",
-     },
+    },
     messages: {
       composed:
         "Type alias '{{name}}' is a union of other union aliases, creating nested union structure that obscures the full set of variants. Flatten into a single union instead. See: {{url}}",
@@ -26,7 +26,10 @@ export default createRule({
     const program = parserServices.program;
     if (!program) return {};
     const checker = program.getTypeChecker();
-    function analyzeUnionMember(member: TSESTree.TypeNode): { isUnion: boolean; refName: string } {
+    function analyzeUnionMember(member: TSESTree.TypeNode): {
+      isUnion: boolean;
+      refName: string;
+    } {
       let current = member;
 
       // If the unwrapped node is itself a union (e.g. (A | B)), recurse into its members
@@ -38,7 +41,8 @@ export default createRule({
         return { isUnion: false, refName: "" };
       }
 
-      if (current.type !== "TSTypeReference") return { isUnion: false, refName: "" };
+      if (current.type !== "TSTypeReference")
+        return { isUnion: false, refName: "" };
 
       const tsNode = parserServices.esTreeNodeToTSNodeMap.get(current);
       if (!tsNode) return { isUnion: false, refName: "" };
@@ -48,9 +52,7 @@ export default createRule({
       if (!isUnion) return { isUnion: false, refName: "" };
 
       const refName =
-        current.typeName.type === "Identifier"
-          ? current.typeName.name
-          : "";
+        current.typeName.type === "Identifier" ? current.typeName.name : "";
 
       return { isUnion: true, refName };
     }
@@ -68,7 +70,10 @@ export default createRule({
 
         for (const member of members) {
           const { isUnion } = analyzeUnionMember(member);
-          if (isUnion) { hasUnionAlias = true; break; }
+          if (isUnion) {
+            hasUnionAlias = true;
+            break;
+          }
         }
 
         if (hasUnionAlias) {

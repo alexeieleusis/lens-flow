@@ -28,8 +28,7 @@ export default createRule({
   meta: {
     type: "problem",
     docs: {
-      description:
-        "Enforce that assertion functions contain a throw statement",
+      description: "Enforce that assertion functions contain a throw statement",
     },
     messages: {
       missingThrow:
@@ -61,7 +60,10 @@ export default createRule({
         "type" in node.body &&
         node.body.type === "BlockStatement";
 
-      if (!hasBody || !hasThrowStatement(node.body as TSESTree.BlockStatement)) {
+      if (
+        !hasBody ||
+        !hasThrowStatement(node.body as TSESTree.BlockStatement)
+      ) {
         context.report({
           node,
           messageId: "missingThrow",
@@ -72,7 +74,10 @@ export default createRule({
 
     function checkMethodDefinition(node: TSESTree.MethodDefinition) {
       const value = node.value as TSESTree.Node;
-      if (value.type === "FunctionExpression" || value.type === "ArrowFunctionExpression") {
+      if (
+        value.type === "FunctionExpression" ||
+        value.type === "ArrowFunctionExpression"
+      ) {
         checkFunction(value);
       }
     }

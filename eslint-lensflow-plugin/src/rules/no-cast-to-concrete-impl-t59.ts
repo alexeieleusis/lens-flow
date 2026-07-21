@@ -51,7 +51,10 @@ function classImplementsInterface(
       const parentClass = parentSymbol.declarations?.find(
         (d): d is ts.ClassDeclaration => ts.isClassDeclaration(d),
       );
-      if (parentClass && classImplementsInterface(parentClass, sourceType, checker, visited)) {
+      if (
+        parentClass &&
+        classImplementsInterface(parentClass, sourceType, checker, visited)
+      ) {
         return true;
       }
     }
@@ -86,7 +89,9 @@ export default createRule({
 
         if (!isInterfaceType(sourceType)) return;
 
-        const targetType = parserServices.getTypeAtLocation(node.typeAnnotation);
+        const targetType = parserServices.getTypeAtLocation(
+          node.typeAnnotation,
+        );
         const targetSymbol = targetType.getSymbol() || targetType.aliasSymbol;
 
         if (!targetSymbol) return;

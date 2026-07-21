@@ -20,10 +20,7 @@ function isDefaultValueType(node: TSESTree.Node): boolean {
     // Skip null — `x || null` -> `x ?? null` is a semantic no-op
     return node.value !== null;
   }
-  return (
-    node.type === "ArrayExpression" ||
-    node.type === "ObjectExpression"
-  );
+  return node.type === "ArrayExpression" || node.type === "ObjectExpression";
 }
 
 export default createRule({
@@ -36,7 +33,7 @@ export default createRule({
     },
     messages: {
       preferNullishCoalescing:
-        "Use `??` instead of `||` for default values. The `||` operator replaces all falsy values (0, \"\", false) with the fallback, while `??` only replaces null and undefined. See: {{url}}",
+        'Use `??` instead of `||` for default values. The `||` operator replaces all falsy values (0, "", false) with the fallback, while `??` only replaces null and undefined. See: {{url}}',
     },
     schema: [
       {
@@ -45,8 +42,7 @@ export default createRule({
           ignorePatterns: {
             type: "array",
             items: { type: "string" },
-            description:
-              "Array of regex patterns for variable names to ignore",
+            description: "Array of regex patterns for variable names to ignore",
           },
         },
         additionalProperties: false,
@@ -55,7 +51,12 @@ export default createRule({
     fixable: "code",
   },
   defaultOptions: [{ ignorePatterns: [] }],
-  create(context: TSESLint.RuleContext<"preferNullishCoalescing", [{ ignorePatterns: string[] }]>) {
+  create(
+    context: TSESLint.RuleContext<
+      "preferNullishCoalescing",
+      [{ ignorePatterns: string[] }]
+    >,
+  ) {
     const [{ ignorePatterns = [] } = {}] = context.options ?? [];
     const patterns = ignorePatterns.map((p) => {
       try {
@@ -91,8 +92,7 @@ export default createRule({
             const sourceCode = context.sourceCode;
             const operatorToken = sourceCode.getTokenAfter(
               left,
-              (token) =>
-                token.type === "Punctuator" && token.value === "||",
+              (token) => token.type === "Punctuator" && token.value === "||",
             );
             if (!operatorToken) return null;
             return fixer.replaceText(operatorToken, "??");

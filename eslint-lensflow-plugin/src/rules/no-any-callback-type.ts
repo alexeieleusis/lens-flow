@@ -4,7 +4,10 @@ import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 const URL = knowledgeUrl("catalog/T22-callable-typing.md");
 
-type CallableNode = TSESTree.TSFunctionType | TSESTree.TSMethodSignature | TSESTree.TSCallSignatureDeclaration;
+type CallableNode =
+  | TSESTree.TSFunctionType
+  | TSESTree.TSMethodSignature
+  | TSESTree.TSCallSignatureDeclaration;
 
 function isAnyCallback(node: CallableNode): boolean {
   if (node.params.length !== 1) return false;
@@ -17,7 +20,8 @@ function isAnyCallback(node: CallableNode): boolean {
   let isAnyArrayType = false;
 
   if (
-    (typeAnn?.type === "TSArrayType" && typeAnn.elementType.type === "TSAnyKeyword") ||
+    (typeAnn?.type === "TSArrayType" &&
+      typeAnn.elementType.type === "TSAnyKeyword") ||
     (typeAnn?.type === "TSTypeReference" &&
       typeAnn.typeName.type === "Identifier" &&
       typeAnn.typeName.name === "ReadonlyArray" &&
@@ -51,7 +55,11 @@ export default createRule({
   create(context: TSESLint.RuleContext<"anyCallbackType", []>) {
     const reportIfAnyCallback = (node: CallableNode) => {
       if (isAnyCallback(node)) {
-        context.report({ node, messageId: "anyCallbackType", data: { url: URL } });
+        context.report({
+          node,
+          messageId: "anyCallbackType",
+          data: { url: URL },
+        });
       }
     };
 

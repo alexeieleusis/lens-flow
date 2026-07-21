@@ -5,12 +5,18 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 const URL = knowledgeUrl("catalog/T49-associated-types.md");
 
 function hasVarianceAnnotation(tp: TSESTree.TSTypeParameter): boolean {
-  return !!(tp as TSESTree.TSTypeParameter & { out?: boolean; in?: boolean }).out || !!(tp as TSESTree.TSTypeParameter & { out?: boolean; in?: boolean }).in;
+  return (
+    !!(tp as TSESTree.TSTypeParameter & { out?: boolean; in?: boolean }).out ||
+    !!(tp as TSESTree.TSTypeParameter & { out?: boolean; in?: boolean }).in
+  );
 }
 
 function extractTypeName(node: TSESTree.TSTypeReference): string | null {
   if (node.typeName.type === "Identifier") return node.typeName.name;
-  if (node.typeName.type === "TSQualifiedName" && node.typeName.right.type === "Identifier")
+  if (
+    node.typeName.type === "TSQualifiedName" &&
+    node.typeName.right.type === "Identifier"
+  )
     return node.typeName.right.name;
   return null;
 }
@@ -124,7 +130,10 @@ function handlePropertySignature(
 }
 
 function handleSignatureCommon(
-  node: TSESTree.TSCallSignatureDeclaration | TSESTree.TSConstructSignatureDeclaration | TSESTree.TSMethodSignature,
+  node:
+    | TSESTree.TSCallSignatureDeclaration
+    | TSESTree.TSConstructSignatureDeclaration
+    | TSESTree.TSMethodSignature,
   paramName: string,
   result: { covariant: boolean; contravariant: boolean },
 ): void {
@@ -132,11 +141,15 @@ function handleSignatureCommon(
     if ("typeAnnotation" in p && p.typeAnnotation)
       findTypeParamUsage(p.typeAnnotation, paramName, false, result);
   });
-  if (node.returnType) findTypeParamUsage(node.returnType.typeAnnotation, paramName, true, result);
+  if (node.returnType)
+    findTypeParamUsage(node.returnType.typeAnnotation, paramName, true, result);
 }
 
 function handleSignature(
-  node: TSESTree.TSCallSignatureDeclaration | TSESTree.TSConstructSignatureDeclaration | TSESTree.TSMethodSignature,
+  node:
+    | TSESTree.TSCallSignatureDeclaration
+    | TSESTree.TSConstructSignatureDeclaration
+    | TSESTree.TSMethodSignature,
   paramName: string,
   result: { covariant: boolean; contravariant: boolean },
 ): void {
@@ -342,7 +355,9 @@ export default createRule({
       }
     }
 
-    function checkDeclaration(node: TSESTree.TSInterfaceDeclaration | TSESTree.TSTypeAliasDeclaration): void {
+    function checkDeclaration(
+      node: TSESTree.TSInterfaceDeclaration | TSESTree.TSTypeAliasDeclaration,
+    ): void {
       if (!node.typeParameters?.params.length) return;
 
       const typeParams = node.typeParameters.params;

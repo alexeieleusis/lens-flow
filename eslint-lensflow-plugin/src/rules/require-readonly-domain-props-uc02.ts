@@ -41,7 +41,12 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ minProperties: 2 }],
-  create(context: TSESLint.RuleContext<"mutableDomainProp", [{ minProperties: number }]>) {
+  create(
+    context: TSESLint.RuleContext<
+      "mutableDomainProp",
+      [{ minProperties: number }]
+    >,
+  ) {
     const [{ minProperties } = { minProperties: 2 }] = context.options ?? [
       { minProperties: 2 },
     ];
@@ -53,10 +58,7 @@ export default createRule({
       if (members.length < minProperties) return;
 
       for (const member of members) {
-        if (
-          member.type === "TSPropertySignature" &&
-          member.readonly !== true
-        ) {
+        if (member.type === "TSPropertySignature" && member.readonly !== true) {
           let propName: string;
           if (member.key.type === "Identifier") {
             propName = member.key.name;

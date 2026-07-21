@@ -87,12 +87,17 @@ function allPropertiesMatch(
   childKeys: Set<string>,
   visited: Set<string>,
 ): boolean {
-  const aKeys = Object.getOwnPropertyNames(aProps).sort((a, b) => a.localeCompare(b));
-  const bKeys = Object.getOwnPropertyNames(bProps).sort((a, b) => a.localeCompare(b));
+  const aKeys = Object.getOwnPropertyNames(aProps).sort((a, b) =>
+    a.localeCompare(b),
+  );
+  const bKeys = Object.getOwnPropertyNames(bProps).sort((a, b) =>
+    a.localeCompare(b),
+  );
 
   for (const key of aKeys) {
     if (SKIP_KEYS.has(key)) continue;
-    if (!propertyValuesMatch(key, aProps[key], bProps[key], childKeys, visited)) return false;
+    if (!propertyValuesMatch(key, aProps[key], bProps[key], childKeys, visited))
+      return false;
   }
 
   for (const key of bKeys) {

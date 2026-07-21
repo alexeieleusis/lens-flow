@@ -8,8 +8,7 @@ import { type TSESTree } from "@typescript-eslint/utils";
  * covered — a separate utility would be needed for those cases.
  */
 export type FnLikeNode =
-  | TSESTree.FunctionDeclaration
-  | TSESTree.TSDeclareFunction;
+  TSESTree.FunctionDeclaration | TSESTree.TSDeclareFunction;
 
 export function isImpl(node: FnLikeNode): boolean {
   return node.type === "FunctionDeclaration" && node.body !== null;
@@ -52,9 +51,7 @@ function processGroups(
   }
 }
 
-export function createOverloadGroupVisitor(
-  onGroup: (group: FnGroup) => void,
-): {
+export function createOverloadGroupVisitor(onGroup: (group: FnGroup) => void): {
   FunctionDeclaration: (node: TSESTree.FunctionDeclaration) => void;
   TSDeclareFunction: (node: TSESTree.TSDeclareFunction) => void;
   "Program:exit": () => void;

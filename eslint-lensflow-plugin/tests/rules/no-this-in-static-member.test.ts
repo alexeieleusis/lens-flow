@@ -53,7 +53,10 @@ ruleTester.run("no-this-in-static-member", rule, {
           return Object.create(source);
         }
       }`,
-      errors: [{ messageId: "staticThisReturn" }, { messageId: "staticThisReturn" }],
+      errors: [
+        { messageId: "staticThisReturn" },
+        { messageId: "staticThisReturn" },
+      ],
     },
     {
       code: `class Base {

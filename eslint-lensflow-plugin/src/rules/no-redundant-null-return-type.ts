@@ -6,9 +6,7 @@ import { walk } from "../utils/ast-helpers.js";
 
 const KNOWLEDGE_URL = knowledgeUrl("usecases/UC16-nullability.md");
 
-function hasNullableMember(
-  typeAnnotation: TSESTree.TypeNode,
-): boolean {
+function hasNullableMember(typeAnnotation: TSESTree.TypeNode): boolean {
   if (
     typeAnnotation.type === "TSNullKeyword" ||
     typeAnnotation.type === "TSUndefinedKeyword"
@@ -31,7 +29,9 @@ function hasNullableConstituent(type: ts.Type): boolean {
   return (type.flags & flag) !== 0;
 }
 
-function collectReturnStatements(body: TSESTree.Node): TSESTree.ReturnStatement[] {
+function collectReturnStatements(
+  body: TSESTree.Node,
+): TSESTree.ReturnStatement[] {
   const returns: TSESTree.ReturnStatement[] = [];
   walk(body, (node) => {
     if (node.type === "ReturnStatement") {
@@ -48,7 +48,7 @@ export default createRule({
     docs: {
       description:
         "Disallow annotating a function return type as T | null when the returned value can never actually be null.",
-     },
+    },
     messages: {
       redundantNullReturnType:
         "Return type includes null or undefined but no return expression can produce a nullish value. Remove null/undefined from the return type. See: {{url}}",

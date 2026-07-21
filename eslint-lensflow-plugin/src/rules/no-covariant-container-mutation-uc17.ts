@@ -27,7 +27,9 @@ function findMatchedCovariantParam(
 
 function paramText(
   match: { name: string; node: TSESTree.Parameter },
-  context: Parameters<NonNullable<Parameters<typeof createRule>[0]["create"]>>[0],
+  context: Parameters<
+    NonNullable<Parameters<typeof createRule>[0]["create"]>
+  >[0],
 ): string {
   const ann = paramTypeAnnotation(match.node);
   if (ann) return context.sourceCode.getText(ann);
@@ -47,7 +49,9 @@ function extractKeyName(key: TSESTree.Node): string {
 function checkMethodSignature(
   member: TSESTree.TSMethodSignature,
   covariantNames: Set<string>,
-  context: Parameters<NonNullable<Parameters<typeof createRule>[0]["create"]>>[0],
+  context: Parameters<
+    NonNullable<Parameters<typeof createRule>[0]["create"]>
+  >[0],
 ) {
   if (!paramsContainAnyTypeRef(member.params, [...covariantNames])) return;
 
@@ -68,7 +72,9 @@ function checkMethodSignature(
 function checkPropertySignature(
   member: TSESTree.TSPropertySignature,
   covariantNames: Set<string>,
-  context: Parameters<NonNullable<Parameters<typeof createRule>[0]["create"]>>[0],
+  context: Parameters<
+    NonNullable<Parameters<typeof createRule>[0]["create"]>
+  >[0],
 ) {
   const typeAnn = member.typeAnnotation?.typeAnnotation;
   if (typeAnn?.type !== AST_NODE_TYPES.TSFunctionType) return;
@@ -92,7 +98,9 @@ function checkSignatureWithParams(
   member: TSESTree.Node & { params: TSESTree.Parameter[] },
   messageId: "callSignatureOnCovariant" | "constructSignatureOnCovariant",
   covariantNames: Set<string>,
-  context: Parameters<NonNullable<Parameters<typeof createRule>[0]["create"]>>[0],
+  context: Parameters<
+    NonNullable<Parameters<typeof createRule>[0]["create"]>
+  >[0],
 ) {
   if (!paramsContainAnyTypeRef(member.params, [...covariantNames])) return;
 
@@ -112,17 +120,31 @@ function checkSignatureWithParams(
 function checkCallSignature(
   member: TSESTree.TSCallSignatureDeclaration,
   covariantNames: Set<string>,
-  context: Parameters<NonNullable<Parameters<typeof createRule>[0]["create"]>>[0],
+  context: Parameters<
+    NonNullable<Parameters<typeof createRule>[0]["create"]>
+  >[0],
 ) {
-  checkSignatureWithParams(member, "callSignatureOnCovariant", covariantNames, context);
+  checkSignatureWithParams(
+    member,
+    "callSignatureOnCovariant",
+    covariantNames,
+    context,
+  );
 }
 
 function checkConstructSignature(
   member: TSESTree.TSConstructSignatureDeclaration,
   covariantNames: Set<string>,
-  context: Parameters<NonNullable<Parameters<typeof createRule>[0]["create"]>>[0],
+  context: Parameters<
+    NonNullable<Parameters<typeof createRule>[0]["create"]>
+  >[0],
 ) {
-  checkSignatureWithParams(member, "constructSignatureOnCovariant", covariantNames, context);
+  checkSignatureWithParams(
+    member,
+    "constructSignatureOnCovariant",
+    covariantNames,
+    context,
+  );
 }
 
 export default createRule({
@@ -147,16 +169,20 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"mutationOnCovariant" | "propertyMutationOnCovariant" | "callSignatureOnCovariant" | "constructSignatureOnCovariant", []>) {
+  create(
+    context: TSESLint.RuleContext<
+      | "mutationOnCovariant"
+      | "propertyMutationOnCovariant"
+      | "callSignatureOnCovariant"
+      | "constructSignatureOnCovariant",
+      []
+    >,
+  ) {
     return createVarianceDeclarationVisitor((typeParams, body) => {
-      const covariantParams = typeParams.filter(
-        (tp) => tp.out && !tp.in,
-      );
+      const covariantParams = typeParams.filter((tp) => tp.out && !tp.in);
       if (covariantParams.length === 0) return;
 
-      const covariantNames = new Set(
-        covariantParams.map((tp) => tp.name.name),
-      );
+      const covariantNames = new Set(covariantParams.map((tp) => tp.name.name));
 
       const members =
         body.type === AST_NODE_TYPES.TSInterfaceBody ? body.body : body.members;
@@ -175,17 +201,11 @@ export default createRule({
             context,
           );
         } else if (member.type === AST_NODE_TYPES.TSCallSignatureDeclaration) {
-          checkCallSignature(
-            member,
-            covariantNames,
-            context,
-          );
-        } else if (member.type === AST_NODE_TYPES.TSConstructSignatureDeclaration) {
-          checkConstructSignature(
-            member,
-            covariantNames,
-            context,
-          );
+          checkCallSignature(member, covariantNames, context);
+        } else if (
+          member.type === AST_NODE_TYPES.TSConstructSignatureDeclaration
+        ) {
+          checkConstructSignature(member, covariantNames, context);
         }
       }
     });

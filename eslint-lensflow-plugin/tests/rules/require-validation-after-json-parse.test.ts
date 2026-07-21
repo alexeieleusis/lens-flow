@@ -29,7 +29,7 @@ ruleTester.run("require-validation-after-json-parse", rule, {
     `let raw = JSON.parse(req.body);
     const validated = Schema.parse(raw);
     database.save(raw);`,
-   // Destructured variable validated before use
+    // Destructured variable validated before use
     `const { data } = JSON.parse(req.body);
     const validated = Schema.parse(data);
     database.save(data);`,

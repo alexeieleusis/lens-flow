@@ -60,7 +60,9 @@ function unwrapAndCheckType(typeNode: TSESTree.TypeNode): boolean {
 
   // TSParenthesizedType exists at runtime but isn't in @typescript-eslint's TypeNode union.
   if ((typeNode as any).type === "TSParenthesizedType") {
-    return unwrapAndCheckType((typeNode as any).typeAnnotation as TSESTree.TypeNode);
+    return unwrapAndCheckType(
+      (typeNode as any).typeAnnotation as TSESTree.TypeNode,
+    );
   }
 
   if (typeNode.type === "TSUnionType") {
@@ -74,7 +76,10 @@ function unwrapAndCheckType(typeNode: TSESTree.TypeNode): boolean {
   return false;
 }
 
-function hasMethodAccessingProperty(classBody: TSESTree.ClassBody, propertyName: string): boolean {
+function hasMethodAccessingProperty(
+  classBody: TSESTree.ClassBody,
+  propertyName: string,
+): boolean {
   const accessesProperty = (body: TSESTree.Node) =>
     walkNodes(body, (node) => {
       return (
@@ -102,7 +107,7 @@ function hasMethodAccessingProperty(classBody: TSESTree.ClassBody, propertyName:
 
 function propertyDefAccessesProperty(
   member: TSESTree.PropertyDefinition,
-  accessesProperty: (body: TSESTree.Node) => boolean
+  accessesProperty: (body: TSESTree.Node) => boolean,
 ): boolean {
   if (!member.value) return false;
   if (member.value.type === "ArrowFunctionExpression") {
@@ -148,7 +153,10 @@ export default createRule({
           let propName;
           if (propDef.key.type === "Identifier") {
             propName = propDef.key.name;
-          } else if (propDef.key.type === "Literal" && typeof propDef.key.value === "string") {
+          } else if (
+            propDef.key.type === "Literal" &&
+            typeof propDef.key.value === "string"
+          ) {
             propName = propDef.key.value;
           } else {
             propName = "?";

@@ -16,12 +16,11 @@ const DISCRIMINANT_NAMES = new Set([
   "name",
 ]);
 
-function getBaseIdentifier(
-  node: TSESTree.Node,
-): TSESTree.Identifier | null {
+function getBaseIdentifier(node: TSESTree.Node): TSESTree.Identifier | null {
   if (node.type === "Identifier") return node;
   if (node.type === "MemberExpression") return getBaseIdentifier(node.object);
-  if (node.type === "ChainExpression") return getBaseIdentifier(node.expression);
+  if (node.type === "ChainExpression")
+    return getBaseIdentifier(node.expression);
   return null;
 }
 
@@ -73,7 +72,10 @@ function isDiscriminantMember(
   );
 }
 
-function addBases(bases: Set<TSESTree.Identifier>, source: Iterable<TSESTree.Identifier>) {
+function addBases(
+  bases: Set<TSESTree.Identifier>,
+  source: Iterable<TSESTree.Identifier>,
+) {
   for (const b of source) bases.add(b);
 }
 
@@ -115,7 +117,8 @@ function extractBasesFromTest(
     addBases(bases, extractBasesFromTest(test.right));
     return bases;
   }
-  if (test.type === "UnaryExpression") return extractBasesFromTest(test.argument);
+  if (test.type === "UnaryExpression")
+    return extractBasesFromTest(test.argument);
   if (test.type === "CallExpression") return processCallExpression(test);
   if (isDiscriminantMember(test)) {
     const base = getBaseIdentifier(test.object);
@@ -140,10 +143,7 @@ function extractBaseFromSwitchDiscriminant(
 }
 
 function extractPropName(expr: TSESTree.Expression): string {
-  if (
-    expr.type === "MemberExpression" &&
-    expr.property.type === "Identifier"
-  ) {
+  if (expr.type === "MemberExpression" && expr.property.type === "Identifier") {
     return expr.property.name;
   }
   if (
@@ -212,11 +212,16 @@ function findDiscriminantForBase(
   test: TSESTree.Expression,
   baseName: string,
 ): string | null {
-  if (test.type === "BinaryExpression") return checkBinaryDiscriminant(test, baseName);
-  if (test.type === "LogicalExpression") return checkLogicalDiscriminant(test, baseName);
-  if (test.type === "UnaryExpression") return findDiscriminantForBase(test.argument, baseName);
-  if (test.type === "CallExpression") return checkCallDiscriminant(test, baseName);
-  if (test.type === "MemberExpression") return checkMemberDiscriminant(test, baseName);
+  if (test.type === "BinaryExpression")
+    return checkBinaryDiscriminant(test, baseName);
+  if (test.type === "LogicalExpression")
+    return checkLogicalDiscriminant(test, baseName);
+  if (test.type === "UnaryExpression")
+    return findDiscriminantForBase(test.argument, baseName);
+  if (test.type === "CallExpression")
+    return checkCallDiscriminant(test, baseName);
+  if (test.type === "MemberExpression")
+    return checkMemberDiscriminant(test, baseName);
   return null;
 }
 
@@ -312,7 +317,8 @@ function reportIfCastInDiscriminantCheck(
         areSameVariable(scopeManager, enclosingIf, b, castBase),
     );
     if (match) {
-      const discriminant = findDiscriminantForBase(enclosingIf.test, castBase.name) ?? "property";
+      const discriminant =
+        findDiscriminantForBase(enclosingIf.test, castBase.name) ?? "property";
       context.report({
         node,
         messageId: "ifDiscriminant",
@@ -377,13 +383,16 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"ifDiscriminant" | "switchDiscriminant", []>) {
+  create(
+    context: TSESLint.RuleContext<"ifDiscriminant" | "switchDiscriminant", []>,
+  ) {
     return {
       TSAsExpression(node) {
         if (node.typeAnnotation.type !== "TSAnyKeyword") return;
 
         const castBase = getBaseIdentifier(node.expression);
-        if (!castBase || !isCastDirectlyOnBase(node.expression, castBase)) return;
+        if (!castBase || !isCastDirectlyOnBase(node.expression, castBase))
+          return;
 
         if (reportIfCastInDiscriminantCheck(context, node, castBase)) return;
         reportSwitchCastInDiscriminantCheck(context, node, castBase);

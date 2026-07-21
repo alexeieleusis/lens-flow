@@ -6,7 +6,10 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 const BrandedTypePattern = /^[A-Z]/;
 const URL = knowledgeUrl("usecases/UC09-builder-config.md");
 
-function getBrandName(typeName: TSESTree.Identifier | TSESTree.TSQualifiedName | TSESTree.ThisExpression): string | null {
+function getBrandName(
+  typeName:
+    TSESTree.Identifier | TSESTree.TSQualifiedName | TSESTree.ThisExpression,
+): string | null {
   if (typeName.type === "Identifier") return typeName.name;
   if (typeName.type === "TSQualifiedName") return typeName.right.name;
   return null;
@@ -64,7 +67,10 @@ function unwrapToCast(node: TSESTree.Node): TSESTree.Node {
 }
 
 function isBrandedCast(node: TSESTree.Node): string | null {
-  const castNode = node.type === "TSAsExpression" || node.type === "TSSatisfiesExpression" ? node : null;
+  const castNode =
+    node.type === "TSAsExpression" || node.type === "TSSatisfiesExpression"
+      ? node
+      : null;
   if (!castNode) return null;
   const t = castNode.typeAnnotation;
   if (t.type !== "TSTypeReference" || !isBrandedTypeName(t)) return null;
@@ -72,9 +78,7 @@ function isBrandedCast(node: TSESTree.Node): string | null {
   return name ?? null;
 }
 
-function hasBrandedCastInBody(
-  body: TSESTree.Node,
-): string | null {
+function hasBrandedCastInBody(body: TSESTree.Node): string | null {
   let found: string | null = null;
   walkNodes(body, (node) => {
     const brand = isBrandedCast(node);
@@ -115,10 +119,7 @@ function hasValidationLogic(node: TSESTree.Node): boolean {
       return true;
     }
 
-    if (
-      current.type === "UnaryExpression" &&
-      current.operator === "typeof"
-    ) {
+    if (current.type === "UnaryExpression" && current.operator === "typeof") {
       return true;
     }
 
@@ -169,12 +170,12 @@ function isValidatorCall(callee: TSESTree.Expression): boolean {
   return false;
 }
 
-
-function isArrowBareCast(
-  body: TSESTree.Node,
-): boolean {
+function isArrowBareCast(body: TSESTree.Node): boolean {
   const unwrapped = unwrapToCast(body);
-  return unwrapped.type === "TSAsExpression" || unwrapped.type === "TSSatisfiesExpression";
+  return (
+    unwrapped.type === "TSAsExpression" ||
+    unwrapped.type === "TSSatisfiesExpression"
+  );
 }
 
 export default createRule({
@@ -199,13 +200,16 @@ export default createRule({
         | TSESTree.FunctionExpression
         | TSESTree.ArrowFunctionExpression,
     ) {
-      const branded = hasBrandedReturnType(node.returnType?.typeAnnotation ?? null) || hasBrandedCastInBody(node.body);
+      const branded =
+        hasBrandedReturnType(node.returnType?.typeAnnotation ?? null) ||
+        hasBrandedCastInBody(node.body);
       if (!branded) return;
 
       const isArrowBareCastCheck =
         node.type === "ArrowFunctionExpression" && isArrowBareCast(node.body);
       const hasBlockBodyBrandedCast =
-        node.body.type === "BlockStatement" && hasBrandedCastInBody(node.body) !== null;
+        node.body.type === "BlockStatement" &&
+        hasBrandedCastInBody(node.body) !== null;
 
       if (isArrowBareCastCheck || hasBlockBodyBrandedCast) {
         if (!hasValidationLogic(node)) {

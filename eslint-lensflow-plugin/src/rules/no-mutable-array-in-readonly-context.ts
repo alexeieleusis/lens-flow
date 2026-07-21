@@ -13,7 +13,10 @@ function createTypeCheckers(checker: ts.TypeChecker) {
   function isMutableArray(type: ts.Type) {
     const pushProp = type.getProperty("push");
     if (!pushProp?.valueDeclaration) return false;
-    const pushType = checker.getTypeOfSymbolAtLocation(pushProp, pushProp.valueDeclaration);
+    const pushType = checker.getTypeOfSymbolAtLocation(
+      pushProp,
+      pushProp.valueDeclaration,
+    );
     return pushType.getCallSignatures().length > 0;
   }
 
@@ -40,7 +43,7 @@ export default createRule({
     docs: {
       description:
         "Disallow assigning a readonly array to a mutable array without copying",
-     },
+    },
     messages: {
       mutableAssignmentFromReadonly:
         "Assigning readonly array '{{source}}' to mutable array '{{target}}' without copying. Use spread (e.g., [...{{source}}]) to create a mutable copy. See: {{url}}",

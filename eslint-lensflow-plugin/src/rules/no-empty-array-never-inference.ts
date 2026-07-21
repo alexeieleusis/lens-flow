@@ -24,16 +24,13 @@ export default createRule({
     return {
       VariableDeclarator(node) {
         const decl = node.parent;
-        if (
-          decl.type === "VariableDeclaration" &&
-          decl.kind !== "const"
-        )
+        if (decl.type === "VariableDeclaration" && decl.kind !== "const")
           return;
         if (
           node.init?.type === "ArrayExpression" &&
           node.init.elements.length === 0 &&
-         !node.id.typeAnnotation
-         ) {
+          !node.id.typeAnnotation
+        ) {
           context.report({
             node: node.init,
             messageId: "emptyArrayNoType",

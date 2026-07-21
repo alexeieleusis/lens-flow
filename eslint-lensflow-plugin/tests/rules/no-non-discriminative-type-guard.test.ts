@@ -168,7 +168,10 @@ function outer(a: Cat | Dog): a is Cat {
   }
   return "name" in a;
 }`,
-      errors: [{ messageId: "nonDiscriminative" }, { messageId: "nonDiscriminative" }],
+      errors: [
+        { messageId: "nonDiscriminative" },
+        { messageId: "nonDiscriminative" },
+      ],
     },
     // Arrow function with block body — non-discriminative property
     {

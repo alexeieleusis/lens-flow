@@ -42,10 +42,7 @@ ruleTester.run("no-any-in-callable", rule, {
   invalid: [
     {
       code: `function wrap(x: any): any { return { value: x }; }`,
-      errors: [
-        { messageId: "anyParam" },
-        { messageId: "anyReturn" },
-      ],
+      errors: [{ messageId: "anyParam" }, { messageId: "anyReturn" }],
     },
     {
       code: `function process(data: any) { console.log(data); }`,
@@ -53,25 +50,16 @@ ruleTester.run("no-any-in-callable", rule, {
     },
     {
       code: `const fn = (x: any): any => x;`,
-      errors: [
-        { messageId: "anyParam" },
-        { messageId: "anyReturn" },
-      ],
+      errors: [{ messageId: "anyParam" }, { messageId: "anyReturn" }],
     },
     {
       code: `type Wrap = (x: any) => any;`,
-      errors: [
-        { messageId: "anyParam" },
-        { messageId: "anyReturn" },
-      ],
+      errors: [{ messageId: "anyParam" }, { messageId: "anyReturn" }],
     },
     // FunctionExpression with any param and return
     {
       code: `(function(x: any): any { return x; })`,
-      errors: [
-        { messageId: "anyParam" },
-        { messageId: "anyReturn" },
-      ],
+      errors: [{ messageId: "anyParam" }, { messageId: "anyReturn" }],
     },
     {
       code: `function identity(x: any) { return x; }`,
@@ -87,10 +75,7 @@ ruleTester.run("no-any-in-callable", rule, {
     },
     {
       code: `interface I { method(x: any): any }`,
-      errors: [
-        { messageId: "anyParam" },
-        { messageId: "anyReturn" },
-      ],
+      errors: [{ messageId: "anyParam" }, { messageId: "anyReturn" }],
     },
     {
       code: `type T = { handle(data: any): void }`,
@@ -119,26 +104,17 @@ ruleTester.run("no-any-in-callable", rule, {
     // Callable signature with any
     {
       code: `type Fn = (x: any) => any;`,
-      errors: [
-        { messageId: "anyParam" },
-        { messageId: "anyReturn" },
-      ],
+      errors: [{ messageId: "anyParam" }, { messageId: "anyReturn" }],
     },
     // Constructor signature type with any
     {
       code: `type Ctor = new (x: any) => any;`,
-      errors: [
-        { messageId: "anyParam" },
-        { messageId: "anyReturn" },
-      ],
+      errors: [{ messageId: "anyParam" }, { messageId: "anyReturn" }],
     },
     // Multiple params with any
     {
       code: `function f(a: any, b: number): any { return a; }`,
-      errors: [
-        { messageId: "anyParam" },
-        { messageId: "anyReturn" },
-      ],
+      errors: [{ messageId: "anyParam" }, { messageId: "anyReturn" }],
     },
     // Union-wrapped any in parameter
     {
@@ -153,10 +129,7 @@ ruleTester.run("no-any-in-callable", rule, {
     // Union-wrapped any in both parameter and return
     {
       code: `function f(x: any | string): any | number { return x; }`,
-      errors: [
-        { messageId: "anyParam" },
-        { messageId: "anyReturn" },
-      ],
+      errors: [{ messageId: "anyParam" }, { messageId: "anyReturn" }],
     },
     // Intersection-wrapped any
     {
@@ -191,10 +164,7 @@ ruleTester.run("no-any-in-callable", rule, {
     // TSCallSignatureDeclaration - callable interface with any
     {
       code: `interface Api { (x: any): any }`,
-      errors: [
-        { messageId: "anyParam" },
-        { messageId: "anyReturn" },
-      ],
+      errors: [{ messageId: "anyParam" }, { messageId: "anyReturn" }],
     },
     // TSCallSignatureDeclaration - callable type literal with any
     {

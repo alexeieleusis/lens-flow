@@ -66,7 +66,10 @@ ruleTester.run("no-non-literal-discriminant", rule, {
         | { kind: "first"; x: number }
         | { kind: string; y: string }
         | { kind: string; z: boolean };`,
-      errors: [{ messageId: "nonLiteralDiscriminant" }, { messageId: "nonLiteralDiscriminant" }],
+      errors: [
+        { messageId: "nonLiteralDiscriminant" },
+        { messageId: "nonLiteralDiscriminant" },
+      ],
     },
     // Quoted key with widened discriminant — exercises the Literal key branch
     {

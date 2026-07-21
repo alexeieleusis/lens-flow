@@ -46,8 +46,8 @@ export default createRule({
         "Prefer `this` as return type over the interface's own name in interface method signatures",
     },
     messages: {
-     preferThis:
-         "Interface method returns the interface's own type ({{interfaceName}}). Use `this` instead to preserve concrete subclass type on calls. See: {{url}}",
+      preferThis:
+        "Interface method returns the interface's own type ({{interfaceName}}). Use `this` instead to preserve concrete subclass type on calls. See: {{url}}",
     },
     schema: [],
     fixable: undefined,

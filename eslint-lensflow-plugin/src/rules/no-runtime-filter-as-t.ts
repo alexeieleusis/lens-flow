@@ -59,10 +59,16 @@ export default createRule({
 
       const innerExpr = asNode.expression;
       if (innerExpr.type !== "CallExpression") return;
-      if ((innerExpr.callee as TSESTree.MemberExpression).type !== "MemberExpression")
+      if (
+        (innerExpr.callee as TSESTree.MemberExpression).type !==
+        "MemberExpression"
+      )
         return;
       const callee = innerExpr.callee as TSESTree.MemberExpression;
-      if (callee.property.type !== "Identifier" || callee.property.name !== "filter")
+      if (
+        callee.property.type !== "Identifier" ||
+        callee.property.name !== "filter"
+      )
         return;
 
       context.report({

@@ -114,7 +114,9 @@ function collectFromObjectProps(
 ): string[] {
   const found: string[] = [];
   for (const prop of props) {
-    found.push(...collectUnsafeTypes(checker.getTypeOfSymbol(prop), checker, seen));
+    found.push(
+      ...collectUnsafeTypes(checker.getTypeOfSymbol(prop), checker, seen),
+    );
   }
   return [...new Set(found)];
 }

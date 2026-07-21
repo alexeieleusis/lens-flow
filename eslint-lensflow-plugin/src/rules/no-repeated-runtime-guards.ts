@@ -25,28 +25,16 @@ function extractBinaryGuard(
   let paramName: string | null = null;
   let literalValue: string | null = null;
 
-  if (
-    node.left.type === "Identifier" &&
-    params.includes(node.left.name)
-  ) {
+  if (node.left.type === "Identifier" && params.includes(node.left.name)) {
     paramName = node.left.name;
-    if (
-      node.right.type === "Literal" &&
-      typeof node.right.value === "number"
-    ) {
+    if (node.right.type === "Literal" && typeof node.right.value === "number") {
       literalValue = String(node.right.value);
     }
   }
 
-  if (
-    node.right.type === "Identifier" &&
-    params.includes(node.right.name)
-  ) {
+  if (node.right.type === "Identifier" && params.includes(node.right.name)) {
     paramName = node.right.name;
-    if (
-      node.left.type === "Literal" &&
-      typeof node.left.value === "number"
-    ) {
+    if (node.left.type === "Literal" && typeof node.left.value === "number") {
       literalValue = String(node.left.value);
     }
   }
@@ -91,15 +79,19 @@ function extractGuards(
 ): Set<string> {
   const guards = new Set<string>();
 
-  walk(body, (node) => {
-    if (node.type === "BinaryExpression") {
-      extractBinaryGuard(node, paramNames, guards);
-    }
+  walk(
+    body,
+    (node) => {
+      if (node.type === "BinaryExpression") {
+        extractBinaryGuard(node, paramNames, guards);
+      }
 
-    if (node.type === "CallExpression") {
-      extractCallGuard(node, paramNames, guards);
-    }
-  }, { stopAtFunctionBoundaries: true });
+      if (node.type === "CallExpression") {
+        extractCallGuard(node, paramNames, guards);
+      }
+    },
+    { stopAtFunctionBoundaries: true },
+  );
 
   return guards;
 }
@@ -109,8 +101,10 @@ function extractParamName(
   sourceCode: TSESLint.SourceCode,
 ): string | null {
   if (param.type === "Identifier") return param.name;
-  if (param.type === "AssignmentPattern") return extractParamName(param.left, sourceCode);
-  if (param.type === "RestElement") return extractParamName(param.argument, sourceCode);
+  if (param.type === "AssignmentPattern")
+    return extractParamName(param.left, sourceCode);
+  if (param.type === "RestElement")
+    return extractParamName(param.argument, sourceCode);
   return sourceCode.getText(param);
 }
 
@@ -135,13 +129,16 @@ export default createRule({
     const functions: FunctionInfo[] = [];
 
     function getSignatureKey(params: TSESTree.Parameter[]): string {
-      return JSON.stringify(params.map((p) => {
-        const effectiveParam = p.type === "TSParameterProperty" ? p.parameter : p;
-        if (effectiveParam.typeAnnotation) {
-          return sourceCode.getText(effectiveParam.typeAnnotation);
-        }
-        return ": unknown";
-      }));
+      return JSON.stringify(
+        params.map((p) => {
+          const effectiveParam =
+            p.type === "TSParameterProperty" ? p.parameter : p;
+          if (effectiveParam.typeAnnotation) {
+            return sourceCode.getText(effectiveParam.typeAnnotation);
+          }
+          return ": unknown";
+        }),
+      );
     }
 
     function visitFunction(
@@ -158,8 +155,7 @@ export default createRule({
 
       if (paramNames.length === 0) return;
 
-      const body =
-        node.body?.type === "BlockStatement" ? node.body : null;
+      const body = node.body?.type === "BlockStatement" ? node.body : null;
       if (!body) return;
 
       const guards = extractGuards(body, paramNames);
@@ -172,7 +168,9 @@ export default createRule({
       });
     }
 
-    function groupFnsBySignature(fns: FunctionInfo[]): Map<string, FunctionInfo[]> {
+    function groupFnsBySignature(
+      fns: FunctionInfo[],
+    ): Map<string, FunctionInfo[]> {
       const groups = new Map<string, FunctionInfo[]>();
       for (const fn of fns) {
         const existing = groups.get(fn.signatureKey) || [];

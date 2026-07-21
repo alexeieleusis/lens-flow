@@ -86,7 +86,11 @@ ruleTester.run("no-effect-boundary-assertion", rule, {
     // Correct pattern: discriminated union check instead of assertion
     {
       filename: TEST_FILENAME,
-      code: EITHER_DEF + USER_DEF + ERROR_DEF + `
+      code:
+        EITHER_DEF +
+        USER_DEF +
+        ERROR_DEF +
+        `
 declare const either: Either<AppError, User>;
 const user = either._tag === "Right" ? either.right : null;
       `,
@@ -94,7 +98,11 @@ const user = either._tag === "Right" ? either.right : null;
     // Correct pattern: using match on Either
     {
       filename: TEST_FILENAME,
-      code: TASK_EITHER_DEF + USER_DEF + ERROR_DEF + `
+      code:
+        TASK_EITHER_DEF +
+        USER_DEF +
+        ERROR_DEF +
+        `
 declare const task: TaskEither<AppError, User>;
 task.match({ Left: (e) => console.error(e), Right: (u) => console.log(u.name) });
       `,
@@ -102,7 +110,9 @@ task.match({ Left: (e) => console.error(e), Right: (u) => console.log(u.name) })
     // Assertion to non-inner type is not this antipattern
     {
       filename: TEST_FILENAME,
-      code: EITHER_DEF + `
+      code:
+        EITHER_DEF +
+        `
 declare const e: Either<string, number>;
 const x = e as unknown;
       `,
@@ -119,7 +129,9 @@ const user = obj as User;
     // Result type: using unwrapOr is correct
     {
       filename: TEST_FILENAME,
-      code: RESULT_DEF + `
+      code:
+        RESULT_DEF +
+        `
 declare const r: Result<string, Error>;
 const val = r.unwrapOr("default");
       `,
@@ -127,7 +139,10 @@ const val = r.unwrapOr("default");
     // Single-param effect: Task with only one type argument — guarded by params.length < 2
     {
       filename: TEST_FILENAME,
-      code: TASK_DEF + USER_DEF + `
+      code:
+        TASK_DEF +
+        USER_DEF +
+        `
 declare const task: Task<User>;
 const user = task as User;
       `,
@@ -135,7 +150,9 @@ const user = task as User;
     // Single-param effect: IO with only one type argument — guarded by params.length < 2
     {
       filename: TEST_FILENAME,
-      code: IO_DEF + `
+      code:
+        IO_DEF +
+        `
 declare const io: IO<void>;
 const val = io as void;
       `,
@@ -143,7 +160,9 @@ const val = io as void;
     // Assertion to a concrete non-success type: Either<string, number> asserted to boolean
     {
       filename: TEST_FILENAME,
-      code: EITHER_DEF + `
+      code:
+        EITHER_DEF +
+        `
 declare const e: Either<string, number>;
 const x = e as boolean;
       `,
@@ -151,7 +170,11 @@ const x = e as boolean;
     // Nested effect: Promise wrapping Either — outer type doesn't match effect pattern
     {
       filename: TEST_FILENAME,
-      code: EITHER_DEF + USER_DEF + ERROR_DEF + `
+      code:
+        EITHER_DEF +
+        USER_DEF +
+        ERROR_DEF +
+        `
 declare const p: Promise<Either<AppError, User>>;
 const user = p as User;
       `,
@@ -159,7 +182,9 @@ const user = p as User;
     // Nested effect: Array wrapping Either — outer type doesn't match effect pattern
     {
       filename: TEST_FILENAME,
-      code: EITHER_DEF + `
+      code:
+        EITHER_DEF +
+        `
 declare const arr: Array<Either<string, number>>;
 const val = arr as number;
       `,
@@ -169,7 +194,11 @@ const val = arr as number;
     // Asserting Either<E, User> to User
     {
       filename: TEST_FILENAME,
-      code: EITHER_DEF + USER_DEF + ERROR_DEF + `
+      code:
+        EITHER_DEF +
+        USER_DEF +
+        ERROR_DEF +
+        `
 declare const either: Either<AppError, User>;
 const user = either as User;
       `,
@@ -178,7 +207,10 @@ const user = either as User;
     // Asserting TaskEither<Err, User> to User
     {
       filename: TEST_FILENAME,
-      code: TASK_EITHER_DEF + USER_DEF + `
+      code:
+        TASK_EITHER_DEF +
+        USER_DEF +
+        `
 declare const fetchUser: (id: number) => TaskEither<Error, User>;
 const task = fetchUser(1);
 const user = task as User;
@@ -188,7 +220,9 @@ const user = task as User;
     // Asserting Result<User, E> to User (first-param success convention)
     {
       filename: TEST_FILENAME,
-      code: RESULT_DEF + `
+      code:
+        RESULT_DEF +
+        `
 declare const r: Result<string, Error>;
 const val = r as string;
       `,
@@ -197,7 +231,9 @@ const val = r as string;
     // Asserting Either with inline type
     {
       filename: TEST_FILENAME,
-      code: EITHER_DEF + `
+      code:
+        EITHER_DEF +
+        `
 declare const e: Either<string, { id: number; name: string }>;
 const data = e as { id: number; name: string };
       `,

@@ -14,7 +14,7 @@ export default createRule({
     },
     messages: {
       stringStatusField:
-        "Property `{{name}}` is typed as plain `string`. Use a literal union (e.g. `\"OK\" | \"ERROR\"`) to constrain valid values. See: {{url}}",
+        'Property `{{name}}` is typed as plain `string`. Use a literal union (e.g. `"OK" | "ERROR"`) to constrain valid values. See: {{url}}',
     },
     schema: [
       {
@@ -45,7 +45,12 @@ export default createRule({
       ],
     },
   ],
-  create(context: TSESLint.RuleContext<"stringStatusField", [{ statusFieldNames: string[] }]>) {
+  create(
+    context: TSESLint.RuleContext<
+      "stringStatusField",
+      [{ statusFieldNames: string[] }]
+    >,
+  ) {
     const defaults = [
       {
         statusFieldNames: [

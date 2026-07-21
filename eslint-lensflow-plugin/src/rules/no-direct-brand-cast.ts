@@ -34,12 +34,10 @@ function isBrandedPrimitiveType(
     if ((constituent.flags & ts.TypeFlags.Object) !== 0) {
       const props = (constituent as ts.ObjectType).getProperties();
       if (
-        props.some(
-          (p) => {
-            const name = p.escapedName.toString().toLowerCase();
-            return name.includes("brand");
-          },
-        )
+        props.some((p) => {
+          const name = p.escapedName.toString().toLowerCase();
+          return name.includes("brand");
+        })
       ) {
         hasBrandObject = true;
       }
@@ -95,11 +93,7 @@ function findEnclosingSmartConstructor(
   for (let i = ancestors.length - 1; i >= 0; i--) {
     const current = ancestors[i];
     if (current.type === "ArrowFunctionExpression") {
-      return isArrowSmartConstructor(
-        current,
-        ancestors,
-        i,
-      );
+      return isArrowSmartConstructor(current, ancestors, i);
     }
     if (isNamedSmartConstructor(current)) return true;
   }

@@ -28,7 +28,12 @@ export default createRule({
     // Using a stack handles nested VariableDeclarators with destructuring patterns correctly.
     const declaratorIds: (TSESTree.Identifier | undefined)[] = [];
 
-    function checkFunction(node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression) {
+    function checkFunction(
+      node:
+        | TSESTree.FunctionDeclaration
+        | TSESTree.FunctionExpression
+        | TSESTree.ArrowFunctionExpression,
+    ) {
       // Prefer the function's own id (FunctionDeclaration, named FunctionExpression).
       // Fall back to the enclosing VariableDeclarator's id (arrow, anonymous FE).
       let nameNode: TSESTree.Identifier | null | undefined;
@@ -54,12 +59,25 @@ export default createRule({
     }
 
     function checkTypedSignature(
-      nameNode: TSESTree.Identifier | TSESTree.Literal | TSESTree.PrivateIdentifier | null | undefined,
-      returnType: TSESTree.TypeNode | undefined
+      nameNode:
+        | TSESTree.Identifier
+        | TSESTree.Literal
+        | TSESTree.PrivateIdentifier
+        | null
+        | undefined,
+      returnType: TSESTree.TypeNode | undefined,
     ) {
       if (!nameNode) return;
-      if (nameNode.type !== "Identifier" && nameNode.type !== "Literal" && nameNode.type !== "PrivateIdentifier") return;
-      const name = nameNode.type === "Literal" ? String(nameNode.value ?? "") : nameNode.name;
+      if (
+        nameNode.type !== "Identifier" &&
+        nameNode.type !== "Literal" &&
+        nameNode.type !== "PrivateIdentifier"
+      )
+        return;
+      const name =
+        nameNode.type === "Literal"
+          ? String(nameNode.value ?? "")
+          : nameNode.name;
       if (!NAME_PATTERN.test(name)) return;
       if (returnType?.type === "TSBooleanKeyword") {
         context.report({
