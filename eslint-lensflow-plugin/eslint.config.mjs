@@ -15,8 +15,5 @@ export default [
     plugins: {
       "@typescript-eslint": tsPlugin,
     },
-    rules: {
-      "@typescript-eslint/no-explicit-any": "warn",
-    },
   },
 ];
