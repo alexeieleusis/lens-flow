@@ -1,5 +1,7 @@
 # eslint-plugin-eslint-lensflow
 
+![CI](https://github.com/alexeieleusis/lens-flow/actions/workflows/ci.yml/badge.svg)
+
 Leverage the type system for better software design and implementation
 
 ## Installation
