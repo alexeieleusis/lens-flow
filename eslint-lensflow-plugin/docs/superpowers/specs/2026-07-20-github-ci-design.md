@@ -44,14 +44,14 @@ concurrency:
 more).
 
 **Job `ci`:** runs on `ubuntu-latest`, `defaults.run.working-directory:
-eslint-lensflow-plugin`, Node 24.x via `actions/setup-node@v4` (current LTS as of 2026-07;
+eslint-lensflow-plugin`, Node 24.x via `actions/setup-node@v7` (current LTS as of 2026-07;
 satisfies `engines: >=24` in package.json) with `cache: npm` and
 `cache-dependency-path: eslint-lensflow-plugin/package-lock.json`.
 
 Steps, in fail-fast order (cheapest checks first, expensive test suite last):
 
-1. `actions/checkout@v4`
-2. `actions/setup-node@v4` (Node 24.x, npm cache)
+1. `actions/checkout@v7`
+2. `actions/setup-node@v7` (Node 24.x, npm cache)
 3. `npm ci`
 4. `npm run typecheck` — `tsc --noEmit`
 5. `npm run build` — `tsc -p tsconfig.build.json` (verifies actual emit/declarations, not
@@ -63,7 +63,7 @@ Steps, in fail-fast order (cheapest checks first, expensive test suite last):
    replacement for step 6)
 8. `npm run format:check` — new; `prettier --check .`
 9. `npm run test:coverage` — new; `vitest run --coverage`, thresholds enforced (see below)
-10. `actions/upload-artifact@v4` — upload `coverage/` for inspection (`if: always()`)
+10. `actions/upload-artifact@v7` — upload `coverage/` for inspection (`if: always()`)
 
 ## Coverage
 
@@ -79,10 +79,15 @@ fails on the very first run.
 
 | Metric     | Current | Threshold set |
 | ---------- | ------- | ------------- |
-| Statements | 86.98%  | 86%           |
-| Lines      | 86.98%  | 86%           |
+| Statements | 86.59%  | 86%           |
+| Lines      | 86.59%  | 86%           |
 | Branches   | 80.51%  | 80%           |
 | Functions  | 90.40%  | 90%           |
+
+(Numbers above are from the final full-suite dry-run in Task 8; the very first
+measurement during design was 86.98%/86.98%/80.51%/90.40% — the small drift is
+noise from the Prettier reformat and lint-config fix touching line ranges
+slightly, not a real coverage regression. All four still clear the thresholds.)
 
 Thresholds are set just under today's measured numbers (via `coverage.thresholds` in
 `vitest.config.ts`) so CI passes immediately and ratchets up as coverage improves. Target
