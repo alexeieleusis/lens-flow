@@ -12,6 +12,7 @@ concurrency:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   ci:
@@ -50,6 +51,56 @@ jobs:
 
       - name: Test with coverage
         run: npm run test:coverage
+
+      - name: Comment coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const fs = require("fs");
+            const summary = JSON.parse(
+              fs.readFileSync("eslint-lensflow-plugin/coverage/coverage-summary.json", "utf8"),
+            ).total;
+            const thresholds = { statements: 86, lines: 86, branches: 80, functions: 90 };
+
+            const rows = ["statements", "lines", "branches", "functions"].map((key) => {
+              const pct = summary[key].pct;
+              const threshold = thresholds[key];
+              const status = pct >= threshold ? "✅" : "❌";
+              return `| ${key} | ${pct}% | ${threshold}% | ${status} |`;
+            });
+
+            const marker = "<!-- coverage-report -->";
+            const body = [
+              marker,
+              "### Coverage report",
+              "| Metric | Coverage | Threshold | |",
+              "| --- | --- | --- | --- |",
+              ...rows,
+            ].join("\n");
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find((c) => c.body.includes(marker));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
 
       - name: Upload coverage report
         if: always()
