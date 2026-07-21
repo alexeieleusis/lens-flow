@@ -19,18 +19,20 @@
     "build": "tsc -p tsconfig.build.json",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/ tests/"
   },
   "dependencies": {
     "@typescript-eslint/utils": "^8.0.0",
     "@typescript-eslint/visitor-keys": "^8.0.0",
-    "eslint-visitor-keys": "^5.0.1"
+    "eslint-visitor-keys": "^4.0.0"
   },
   "devDependencies": {
     "@types/node": "^25.9.1",
     "@typescript-eslint/parser": "^8.0.0",
     "@typescript-eslint/rule-tester": "^8.0.0",
+    "@vitest/coverage-v8": "^3.2.7",
     "eslint": "^9.0.0",
     "typescript": "^5.0.0",
     "vitest": "^3.0.0"
