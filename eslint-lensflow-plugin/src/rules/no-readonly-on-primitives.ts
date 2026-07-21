@@ -25,7 +25,8 @@ function isPrimitiveLiteralType(node: TSESTree.Node): boolean {
 
 function unwrapParens(node: TSESTree.TypeNode): TSESTree.TypeNode {
   while (node.type === ("TSParenthesizedType" as TSESTree.TypeNode["type"])) {
-    node = (node as unknown as { typeAnnotation: TSESTree.TypeNode }).typeAnnotation;
+    node = (node as unknown as { typeAnnotation: TSESTree.TypeNode })
+      .typeAnnotation;
   }
   return node;
 }
@@ -55,10 +56,7 @@ function createReadonlyFix(
     if (!readonlyToken) return null;
     const nextToken = source.getTokenAfter(readonlyToken);
     if (!nextToken) return null;
-    return fixer.removeRange([
-      readonlyToken.range[0],
-      nextToken.range[0],
-    ]);
+    return fixer.removeRange([readonlyToken.range[0], nextToken.range[0]]);
   };
 }
 
@@ -80,7 +78,10 @@ export default createRule({
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"redundantReadonly", []>) {
     function checkFieldNode(
-      node: TSESTree.TSPropertySignature | TSESTree.PropertyDefinition | TSESTree.TSAbstractPropertyDefinition,
+      node:
+        | TSESTree.TSPropertySignature
+        | TSESTree.PropertyDefinition
+        | TSESTree.TSAbstractPropertyDefinition,
     ) {
       if (!node.readonly) return;
 
@@ -131,7 +132,8 @@ export default createRule({
       )
         return;
 
-      const propName = param.type === "Identifier" ? param.name : "this parameter";
+      const propName =
+        param.type === "Identifier" ? param.name : "this parameter";
 
       context.report({
         node,

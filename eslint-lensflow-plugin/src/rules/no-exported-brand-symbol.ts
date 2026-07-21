@@ -9,7 +9,7 @@ function isBrandSymbolName(name: string): boolean {
   // - ends with "_brand" (e.g., MyType_brand)
   // - contains "$$" (e.g., $$type, $$MyBrand)
   // - underscore-prefixed (e.g., _brand, _type, _key)
-  return /\$[$]/.test(name) || /\b_brand$/.test(name) || name.startsWith('_');
+  return /\$[$]/.test(name) || /\b_brand$/.test(name) || name.startsWith("_");
 }
 
 export default createRule({
@@ -22,7 +22,7 @@ export default createRule({
     },
     messages: {
       exportedBrandSymbol:
-        "Exporting the brand symbol \"{{name}}\" allows callers to forge branded values, bypassing smart constructor validation. Use `declare const` instead of `export const`. See: {{url}}",
+        'Exporting the brand symbol "{{name}}" allows callers to forge branded values, bypassing smart constructor validation. Use `declare const` instead of `export const`. See: {{url}}',
     },
     schema: [],
     fixable: undefined,

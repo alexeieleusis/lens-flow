@@ -42,16 +42,15 @@ export default createRule({
             has_partial_param(member.value),
         );
 
-        if (
-          emptyDefaultProps.length >= 2 &&
-          partial_methods.length >= 1
-        ) {
+        if (emptyDefaultProps.length >= 2 && partial_methods.length >= 1) {
           const ancestors = context.sourceCode.getAncestors(node);
           const classNode = ancestors.find(
-            (a) => a.type === "ClassDeclaration" || a.type === "ClassExpression"
+            (a) =>
+              a.type === "ClassDeclaration" || a.type === "ClassExpression",
           );
           const className =
-            (classNode && "id" in classNode && classNode.id?.name) ?? "Anonymous";
+            (classNode && "id" in classNode && classNode.id?.name) ??
+            "Anonymous";
 
           context.report({
             node,
@@ -93,10 +92,7 @@ function has_partial_param(
 
     if (ta.type === "TSTypeReference") {
       const typeName = ta.typeName;
-      if (
-        typeName.type === "Identifier" &&
-        typeName.name === "Partial"
-      ) {
+      if (typeName.type === "Identifier" && typeName.name === "Partial") {
         return true;
       }
     }

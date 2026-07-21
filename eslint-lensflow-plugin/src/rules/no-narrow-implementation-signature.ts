@@ -14,13 +14,8 @@ function getFnName(node: FnLikeNode): string | null {
   return null;
 }
 
-function getTypedParam(
-  param: TSESTree.Parameter,
-): TSESTree.TypeNode | null {
-  if (
-    "typeAnnotation" in param &&
-    param.typeAnnotation?.typeAnnotation
-  ) {
+function getTypedParam(param: TSESTree.Parameter): TSESTree.TypeNode | null {
+  if ("typeAnnotation" in param && param.typeAnnotation?.typeAnnotation) {
     return param.typeAnnotation.typeAnnotation;
   }
   return null;
@@ -82,10 +77,18 @@ function isParamTypeNarrow(
   esTreeNodeToTSNodeMap: { get: (node: TSESTree.Node) => ts.Node | undefined },
 ): boolean {
   const overloadParamType = resolveParamType(
-    overload, index, checker, esTreeNodeToTSNodeMap, checker.getUnknownType(),
+    overload,
+    index,
+    checker,
+    esTreeNodeToTSNodeMap,
+    checker.getUnknownType(),
   );
   const implParamType = resolveParamType(
-    impl, index, checker, esTreeNodeToTSNodeMap, checker.getAnyType(),
+    impl,
+    index,
+    checker,
+    esTreeNodeToTSNodeMap,
+    checker.getAnyType(),
   );
   return !checker.isTypeAssignableTo(overloadParamType, implParamType);
 }
@@ -129,9 +132,7 @@ function checkReturnTypeCompatibility(
   if (implRetTypeNode) {
     const implTsNode = esTreeNodeToTSNodeMap.get(implRetTypeNode);
     if (!implTsNode) return false;
-    const implRetType = checker.getTypeFromTypeNode(
-      implTsNode as ts.TypeNode,
-    );
+    const implRetType = checker.getTypeFromTypeNode(implTsNode as ts.TypeNode);
     return !checker.isTypeAssignableTo(overloadRetType, implRetType);
   }
 
@@ -152,7 +153,15 @@ function hasNarrowImplementation(
     if (hasIncompatibleParams(impl, overload, checker, esTreeNodeToTSNodeMap)) {
       return true;
     }
-    if (checkReturnTypeCompatibility(impl, overload, tsImplNode, checker, esTreeNodeToTSNodeMap)) {
+    if (
+      checkReturnTypeCompatibility(
+        impl,
+        overload,
+        tsImplNode,
+        checker,
+        esTreeNodeToTSNodeMap,
+      )
+    ) {
       return true;
     }
   }
@@ -166,7 +175,7 @@ export default createRule({
     docs: {
       description:
         "Disallow overload implementation signatures whose parameter or return type is too narrow to be a supertype of all declared overloads.",
-      },
+    },
     messages: {
       narrowImpl:
         "Implementation signature for `{{fnName}}` is too narrow to cover all overload signatures. The implementation's parameter and return types must be supertypes of the declared overloads. See: {{url}}",
@@ -190,13 +199,15 @@ export default createRule({
         impl,
       ) as ts.FunctionDeclaration;
 
-      if (hasNarrowImplementation(
-        impl,
-        overloads,
-        checker,
-        parserServices.esTreeNodeToTSNodeMap,
-        tsImplNode,
-      )) {
+      if (
+        hasNarrowImplementation(
+          impl,
+          overloads,
+          checker,
+          parserServices.esTreeNodeToTSNodeMap,
+          tsImplNode,
+        )
+      ) {
         context.report({
           node: impl,
           messageId: "narrowImpl",

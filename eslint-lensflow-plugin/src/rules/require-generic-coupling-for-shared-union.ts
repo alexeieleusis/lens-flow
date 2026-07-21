@@ -17,10 +17,8 @@ function getUnionFingerprint(
     .join("|");
 }
 
-function hasTypeParameters(
-  node: FunctionLikeNode,
-): boolean {
-  return !!(node).typeParameters?.params.length;
+function hasTypeParameters(node: FunctionLikeNode): boolean {
+  return !!node.typeParameters?.params.length;
 }
 
 type FunctionLikeNode =
@@ -40,8 +38,8 @@ export default createRule({
         "Require generic coupling when multiple parameters share the same union type",
     },
     messages: {
-     sharedUnionWithoutGeneric:
-         "Parameters {{params}} share the same union type {{union}} without a shared generic type parameter. Use a generic type variable to couple them. See: {{url}}",
+      sharedUnionWithoutGeneric:
+        "Parameters {{params}} share the same union type {{union}} without a shared generic type parameter. Use a generic type variable to couple them. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -51,10 +49,14 @@ export default createRule({
     const sourceCode = context.sourceCode;
 
     function collectUnionGroups(params: TSESTree.Parameter[]) {
-      const unionGroups = new Map<string, { name: string; param: TSESTree.Parameter }[]>();
+      const unionGroups = new Map<
+        string,
+        { name: string; param: TSESTree.Parameter }[]
+      >();
 
       for (const param of params) {
-        let effectiveParam = param.type === TS_PARAM_PROP ? (param as any).parameter : param;
+        let effectiveParam =
+          param.type === TS_PARAM_PROP ? (param as any).parameter : param;
         if (effectiveParam.type === "AssignmentPattern") {
           effectiveParam = (effectiveParam as TSESTree.AssignmentPattern).left;
         }

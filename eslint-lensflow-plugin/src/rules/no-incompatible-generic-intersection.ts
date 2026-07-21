@@ -1,5 +1,9 @@
 import * as ts from "typescript";
-import { ESLintUtils, type TSESTree, type TSESLint } from "@typescript-eslint/utils";
+import {
+  ESLintUtils,
+  type TSESTree,
+  type TSESLint,
+} from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
@@ -10,10 +14,12 @@ interface ESTreeToTSNodeMap {
 const URL = knowledgeUrl("catalog/T02-union-intersection.md");
 
 function extractRightmostIdentifier(
-  node: TSESTree.Identifier | TSESTree.TSQualifiedName | TSESTree.TSTypeParameter,
+  node:
+    TSESTree.Identifier | TSESTree.TSQualifiedName | TSESTree.TSTypeParameter,
 ): string | null {
   if (node.type === "Identifier") return node.name;
-  if (node.type === "TSQualifiedName") return extractRightmostIdentifier(node.right);
+  if (node.type === "TSQualifiedName")
+    return extractRightmostIdentifier(node.right);
   return null;
 }
 
@@ -33,7 +39,7 @@ function groupTypeRefs(
 }
 
 function typesOverlap(typeA: ts.Type, typeB: ts.Type): boolean {
-  if ((typeA.flags & ts.TypeFlags.Never) || (typeB.flags & ts.TypeFlags.Never)) {
+  if (typeA.flags & ts.TypeFlags.Never || typeB.flags & ts.TypeFlags.Never) {
     return false;
   }
 
@@ -46,19 +52,35 @@ function typesOverlap(typeA: ts.Type, typeB: ts.Type): boolean {
     return unionB.types.some((member) => typesOverlap(typeA, member));
   }
 
-  if ((typeA.flags & ts.TypeFlags.StringLiteral) && (typeB.flags & ts.TypeFlags.StringLiteral)) {
-    return (typeA as ts.StringLiteralType).value === (typeB as ts.StringLiteralType).value;
+  if (
+    typeA.flags & ts.TypeFlags.StringLiteral &&
+    typeB.flags & ts.TypeFlags.StringLiteral
+  ) {
+    return (
+      (typeA as ts.StringLiteralType).value ===
+      (typeB as ts.StringLiteralType).value
+    );
   }
-  if ((typeA.flags & ts.TypeFlags.NumberLiteral) && (typeB.flags & ts.TypeFlags.NumberLiteral)) {
-    return (typeA as ts.NumberLiteralType).value === (typeB as ts.NumberLiteralType).value;
+  if (
+    typeA.flags & ts.TypeFlags.NumberLiteral &&
+    typeB.flags & ts.TypeFlags.NumberLiteral
+  ) {
+    return (
+      (typeA as ts.NumberLiteralType).value ===
+      (typeB as ts.NumberLiteralType).value
+    );
   }
-  if ((typeA.flags & ts.TypeFlags.BooleanLiteral) && (typeB.flags & ts.TypeFlags.BooleanLiteral)) {
+  if (
+    typeA.flags & ts.TypeFlags.BooleanLiteral &&
+    typeB.flags & ts.TypeFlags.BooleanLiteral
+  ) {
     return (typeA as ts.LiteralType).value === (typeB as ts.LiteralType).value;
   }
 
   // Different primitive types don't overlap
-  const primitiveFlags = ts.TypeFlags.String | ts.TypeFlags.Number | ts.TypeFlags.Boolean;
-  if ((typeA.flags & primitiveFlags) && (typeB.flags & primitiveFlags)) {
+  const primitiveFlags =
+    ts.TypeFlags.String | ts.TypeFlags.Number | ts.TypeFlags.Boolean;
+  if (typeA.flags & primitiveFlags && typeB.flags & primitiveFlags) {
     return typeA.flags === typeB.flags;
   }
 
@@ -137,7 +159,7 @@ export default createRule({
     docs: {
       description:
         "Disallow intersecting generic types with mutually incompatible type parameters.",
-     },
+    },
     messages: {
       incompatible:
         "Intersection of '{{left}}' and '{{right}}' has incompatible type parameters. Consider using a union (`|`) instead. See: {{url}}",

@@ -4,7 +4,9 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const URL = knowledgeUrl("catalog/T57-typestate.md");
 
-function isThisMemberExpression(node: TSESTree.Node): node is TSESTree.MemberExpression {
+function isThisMemberExpression(
+  node: TSESTree.Node,
+): node is TSESTree.MemberExpression {
   if (node.type !== "MemberExpression") return false;
   if (node.object.type !== "ThisExpression") return false;
   if (node.property.type !== "Identifier") return false;
@@ -28,22 +30,39 @@ const FunctionBoundaryTypes = new Set([
   "ArrowFunctionExpression",
 ]);
 
-function traverseChildren(node: TSESTree.Node, check: (n: TSESTree.Node) => boolean): boolean {
+function traverseChildren(
+  node: TSESTree.Node,
+  check: (n: TSESTree.Node) => boolean,
+): boolean {
   for (const key of Object.keys(node)) {
     if (shouldSkipNodeKey(key)) continue;
     const child = (node as any)[key];
     if (Array.isArray(child)) {
       for (const item of child) {
-        if (item && typeof item === "object" && "type" in item && check(item as TSESTree.Node)) return true;
+        if (
+          item &&
+          typeof item === "object" &&
+          "type" in item &&
+          check(item as TSESTree.Node)
+        )
+          return true;
       }
-    } else if (child && typeof child === "object" && "type" in child && check(child as TSESTree.Node)) {
+    } else if (
+      child &&
+      typeof child === "object" &&
+      "type" in child &&
+      check(child as TSESTree.Node)
+    ) {
       return true;
     }
   }
   return false;
 }
 
-function isStateAssignmentMatch(node: TSESTree.Node, propName: string): boolean {
+function isStateAssignmentMatch(
+  node: TSESTree.Node,
+  propName: string,
+): boolean {
   if (node.type !== "AssignmentExpression") return false;
   const assign = node;
   if (!isThisMemberExpression(assign.left)) return false;
@@ -51,7 +70,10 @@ function isStateAssignmentMatch(node: TSESTree.Node, propName: string): boolean 
   return assignedProp === propName;
 }
 
-function findAssignmentInConsequent(consequent: TSESTree.BlockStatement, propName: string): boolean {
+function findAssignmentInConsequent(
+  consequent: TSESTree.BlockStatement,
+  propName: string,
+): boolean {
   const visited = new WeakSet<TSESTree.Node>();
 
   function checkNode(node: TSESTree.Node): boolean {
@@ -82,13 +104,13 @@ export default createRule({
     },
     messages: {
       magicStringStateComparison:
-       "Comparing this.{{prop}} against a magic string literal (\"{{value}}\") to gate a state transition. Use typestate to encode valid transitions at the type level. See: {{url}}",
+        'Comparing this.{{prop}} against a magic string literal ("{{value}}") to gate a state transition. Use typestate to encode valid transitions at the type level. See: {{url}}',
     },
     schema: [],
     fixable: undefined,
   },
   defaultOptions: [],
- create(context: TSESLint.RuleContext<"magicStringStateComparison", []>) {
+  create(context: TSESLint.RuleContext<"magicStringStateComparison", []>) {
     return {
       IfStatement(node) {
         const test = node.test;

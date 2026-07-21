@@ -34,7 +34,7 @@ export default createRule({
        * system to narrow parsed data types.
        */
     },
-   messages: {
+    messages: {
       directUnvalidated:
         "JSON.parse result used directly in {{calleeName}} without schema validation. Wrap with a validator like Schema.parse() or Schema.safeParse(). See: {{url}}",
       unvalidatedVariableUsage:
@@ -44,7 +44,12 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"unvalidatedVariableUsage" | "directUnvalidated", []>) {
+  create(
+    context: TSESLint.RuleContext<
+      "unvalidatedVariableUsage" | "directUnvalidated",
+      []
+    >,
+  ) {
     const scopeStack: Record<string, TSESTree.Node | "validated">[] = [{}];
 
     const enterScope = () => {
@@ -58,7 +63,9 @@ export default createRule({
     const currentScope = (): Record<string, TSESTree.Node | "validated"> =>
       scopeStack[scopeStack.length - 1];
 
-    const lookupParsedData = (name: string): TSESTree.Node | "validated" | undefined => {
+    const lookupParsedData = (
+      name: string,
+    ): TSESTree.Node | "validated" | undefined => {
       for (let i = scopeStack.length - 1; i >= 0; i--) {
         if (name in scopeStack[i]) return scopeStack[i][name];
       }
@@ -115,7 +122,7 @@ export default createRule({
     };
 
     const isParentCallExpression = (
-      node: TSESTree.CallExpression
+      node: TSESTree.CallExpression,
     ): TSESTree.CallExpression | null => {
       const p = node.parent;
       if (p?.type !== "CallExpression") return null;
@@ -123,7 +130,7 @@ export default createRule({
     };
 
     const isVariableDeclaratorWithId = (
-      node: TSESTree.CallExpression
+      node: TSESTree.CallExpression,
     ): string | null => {
       const p = node.parent;
       if (p?.type !== "VariableDeclarator") return null;
@@ -131,9 +138,7 @@ export default createRule({
       return p.id.name;
     };
 
-    const extractIdentifiersFromPattern = (
-      node: TSESTree.Node
-    ): string[] => {
+    const extractIdentifiersFromPattern = (node: TSESTree.Node): string[] => {
       const identifiers: string[] = [];
       if (node.type === "Identifier") {
         identifiers.push(node.name);
@@ -159,7 +164,7 @@ export default createRule({
 
     const checkUnvalidatedArgs = (
       callee: TSESTree.Expression,
-      args: TSESTree.CallExpressionArgument[]
+      args: TSESTree.CallExpressionArgument[],
     ) => {
       if (isValidationMethod(callee)) {
         for (const arg of args) {

@@ -23,17 +23,16 @@ function normalizeVariable(
   }
   const objName =
     node.object.type === "Identifier" || node.object.type === "MemberExpression"
-      ? normalizeVariable(node.object as TSESTree.Identifier | TSESTree.MemberExpression)
+      ? normalizeVariable(
+          node.object as TSESTree.Identifier | TSESTree.MemberExpression,
+        )
       : undefined;
   if (!objName) return "?";
-  const prop =
-    node.property.type === "Identifier" ? node.property.name : "?";
+  const prop = node.property.type === "Identifier" ? node.property.name : "?";
   return objName + "." + prop;
 }
 
-function getSwitchVariable(
-  sw: TSESTree.SwitchStatement,
-): string {
+function getSwitchVariable(sw: TSESTree.SwitchStatement): string {
   if (
     sw.discriminant.type === "Identifier" ||
     sw.discriminant.type === "MemberExpression"
@@ -88,9 +87,7 @@ export default createRule({
       scopeStack.push({ comparisons: [], switches: [] });
     }
 
-    function reportMagicComparisons(
-      groups: Map<string, Comparison[]>,
-    ): void {
+    function reportMagicComparisons(groups: Map<string, Comparison[]>): void {
       for (const [, groupComps] of groups) {
         const distinctValues = new Set(groupComps.map((c) => c.value));
         if (distinctValues.size >= 2) {
@@ -109,9 +106,7 @@ export default createRule({
       }
     }
 
-    function reportMagicSwitches(
-      switches: TSESTree.SwitchStatement[],
-    ): void {
+    function reportMagicSwitches(switches: TSESTree.SwitchStatement[]): void {
       for (const sw of switches) {
         const stringCases = sw.cases.filter(
           (c) =>
@@ -184,13 +179,11 @@ export default createRule({
         if (leftIsStringLiteral) {
           literal = node.left as TSESTree.Literal;
           nonLiteral = node.right as
-            | TSESTree.Identifier
-            | TSESTree.MemberExpression;
+            TSESTree.Identifier | TSESTree.MemberExpression;
         } else {
           literal = node.right as TSESTree.Literal;
           nonLiteral = node.left as
-            | TSESTree.Identifier
-            | TSESTree.MemberExpression;
+            TSESTree.Identifier | TSESTree.MemberExpression;
         }
 
         scope.comparisons.push({

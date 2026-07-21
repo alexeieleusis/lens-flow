@@ -19,12 +19,12 @@ function computeNestingDepth(
           })
           .filter((v): v is TSESTree.Expression => v !== null)
       : node.elements
-           .map((e) => {
-             if (e === null) return null;
-             if (e.type === "SpreadElement") return e.argument;
-             return e;
-           })
-           .filter((v): v is TSESTree.Expression => v !== null);
+          .map((e) => {
+            if (e === null) return null;
+            if (e.type === "SpreadElement") return e.argument;
+            return e;
+          })
+          .filter((v): v is TSESTree.Expression => v !== null);
 
   for (const value of values) {
     let unwrapped: TSESTree.Expression = value;
@@ -33,9 +33,8 @@ function computeNestingDepth(
       unwrapped.type === "TSSatisfiesExpression" ||
       unwrapped.type === "TSNonNullExpression"
     ) {
-      unwrapped = "expression" in unwrapped
-        ? (unwrapped as any).expression
-        : value;
+      unwrapped =
+        "expression" in unwrapped ? (unwrapped as any).expression : value;
     }
 
     if (
@@ -77,7 +76,9 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ threshold: 3 }],
-  create(context: TSESLint.RuleContext<"deeplyNested", [{ threshold: number }]>) {
+  create(
+    context: TSESLint.RuleContext<"deeplyNested", [{ threshold: number }]>,
+  ) {
     const { threshold = 3 } = context.options[0] ?? {};
 
     return {
@@ -90,10 +91,7 @@ export default createRule({
           return;
 
         const expr = node.expression;
-        if (
-          expr.type !== "ObjectExpression" &&
-          expr.type !== "ArrayExpression"
-        )
+        if (expr.type !== "ObjectExpression" && expr.type !== "ArrayExpression")
           return;
 
         const depth = computeNestingDepth(expr);

@@ -46,19 +46,13 @@ ruleTester.run("no-any-in-utility-function", rule, {
       code: `function clone(data: any): any {
         return JSON.parse(JSON.stringify(data));
       }`,
-      errors: [
-        { messageId: "anyParam" },
-        { messageId: "anyReturn" },
-      ],
+      errors: [{ messageId: "anyParam" }, { messageId: "anyReturn" }],
     },
     {
       code: `export function stringify(value: any): any {
         return JSON.stringify(value);
       }`,
-      errors: [
-        { messageId: "anyParam" },
-        { messageId: "anyReturn" },
-      ],
+      errors: [{ messageId: "anyParam" }, { messageId: "anyReturn" }],
     },
     {
       code: `function parse(text: string): any {
@@ -86,7 +80,9 @@ ruleTester.run("no-any-in-utility-function", rule, {
       code: `function handle({ a }: any): void {
         console.log(a);
       }`,
-      errors: [{ messageId: "anyParam", data: { name: "{ a }: any", url: URL } }],
+      errors: [
+        { messageId: "anyParam", data: { name: "{ a }: any", url: URL } },
+      ],
     },
     {
       code: `function process([x]: any): void {
@@ -96,44 +92,29 @@ ruleTester.run("no-any-in-utility-function", rule, {
     },
     {
       code: `export const clone = (data: any): any => JSON.parse(JSON.stringify(data))`,
-      errors: [
-        { messageId: "anyParam" },
-        { messageId: "anyReturn" },
-      ],
+      errors: [{ messageId: "anyParam" }, { messageId: "anyReturn" }],
     },
     {
       code: `const clone = (data: any): any => JSON.parse(JSON.stringify(data))`,
-      errors: [
-        { messageId: "anyParam" },
-        { messageId: "anyReturn" },
-      ],
+      errors: [{ messageId: "anyParam" }, { messageId: "anyReturn" }],
     },
     {
       code: `export const stringify = function(value: any): any {
         return JSON.stringify(value);
       }`,
-      errors: [
-        { messageId: "anyParam" },
-        { messageId: "anyReturn" },
-      ],
+      errors: [{ messageId: "anyParam" }, { messageId: "anyReturn" }],
     },
     {
       code: `const stringify = function(value: any): any {
         return JSON.stringify(value);
       }`,
-      errors: [
-        { messageId: "anyParam" },
-        { messageId: "anyReturn" },
-      ],
+      errors: [{ messageId: "anyParam" }, { messageId: "anyReturn" }],
     },
     {
       code: `export default function clone(data: any): any {
         return JSON.parse(JSON.stringify(data));
       }`,
-      errors: [
-        { messageId: "anyParam" },
-        { messageId: "anyReturn" },
-      ],
+      errors: [{ messageId: "anyParam" }, { messageId: "anyReturn" }],
     },
     {
       code: `export default (data: any) => data`,
@@ -149,22 +130,23 @@ ruleTester.run("no-any-in-utility-function", rule, {
       code: `export const handle = ({ a = 1 }: any): void => {
         console.log(a);
       }`,
-      errors: [{ messageId: "anyParam", data: { name: "{ a = 1 }: any", url: URL } }],
+      errors: [
+        { messageId: "anyParam", data: { name: "{ a = 1 }: any", url: URL } },
+      ],
     },
     {
       code: `export const process = ([x = 0]: any): void => {
         console.log(x);
       }`,
-      errors: [{ messageId: "anyParam", data: { name: "[x = 0]: any", url: URL } }],
+      errors: [
+        { messageId: "anyParam", data: { name: "[x = 0]: any", url: URL } },
+      ],
     },
     {
       code: `function process<T>(data: any, config: T): any {
         return config;
       }`,
-      errors: [
-        { messageId: "anyParam" },
-        { messageId: "anyReturn" },
-      ],
+      errors: [{ messageId: "anyParam" }, { messageId: "anyReturn" }],
     },
     {
       code: `export const map = <T>(items: any): T => items as T`,

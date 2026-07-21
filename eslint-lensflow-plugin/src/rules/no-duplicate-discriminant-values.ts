@@ -10,7 +10,9 @@ function extractPropName(key: TSESTree.Property["key"]): string | null {
   return null;
 }
 
-function extractLiteralValue(literal: TSESTree.TypeNode | undefined): string | null {
+function extractLiteralValue(
+  literal: TSESTree.TypeNode | undefined,
+): string | null {
   if (!literal) return null;
   if (literal.type !== "TSLiteralType") return null;
 
@@ -22,7 +24,11 @@ function extractLiteralValue(literal: TSESTree.TypeNode | undefined): string | n
   return null;
 }
 
-function isDiscriminantCandidate(member: TSESTree.TypeElement): member is TSESTree.TSPropertySignature & { typeAnnotation: { typeAnnotation: TSESTree.TSLiteralType } } {
+function isDiscriminantCandidate(
+  member: TSESTree.TypeElement,
+): member is TSESTree.TSPropertySignature & {
+  typeAnnotation: { typeAnnotation: TSESTree.TSLiteralType };
+} {
   if (member.type !== "TSPropertySignature") return false;
   if (!member.typeAnnotation) return false;
   return member.typeAnnotation.typeAnnotation.type === "TSLiteralType";
@@ -52,10 +58,7 @@ function addDiscriminant(
 function buildDiscriminantsMap(
   types: TSESTree.TSTypeLiteral[],
 ): Map<string, TSESTree.TSPropertySignature[]> {
-  const discriminants = new Map<
-    string,
-    TSESTree.TSPropertySignature[]
-  >();
+  const discriminants = new Map<string, TSESTree.TSPropertySignature[]>();
 
   for (const memberType of types) {
     for (const member of memberType.members) {

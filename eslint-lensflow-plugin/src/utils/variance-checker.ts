@@ -1,7 +1,11 @@
 import { AST_NODE_TYPES, type TSESTree } from "@typescript-eslint/utils";
 
 function getTypeNameRightmost(typeName: TSESTree.EntityName): string | null {
-  let current: TSESTree.Identifier | TSESTree.TSQualifiedName | TSESTree.ThisExpression | null = typeName;
+  let current:
+    | TSESTree.Identifier
+    | TSESTree.TSQualifiedName
+    | TSESTree.ThisExpression
+    | null = typeName;
   while (current?.type === AST_NODE_TYPES.TSQualifiedName) {
     current = current.right;
   }
@@ -30,20 +34,14 @@ export function containsTypeRef(
 
   switch (node.type) {
     case AST_NODE_TYPES.TSArrayType:
-      return containsTypeRef(
-        node.elementType,
-        paramName,
-        depth + 1,
-      );
+      return containsTypeRef(node.elementType, paramName, depth + 1);
     case AST_NODE_TYPES.TSTupleType:
       return node.elementTypes.some((el) =>
         containsTypeRef(el, paramName, depth + 1),
       );
     case AST_NODE_TYPES.TSUnionType:
     case AST_NODE_TYPES.TSIntersectionType:
-      return node.types.some((t) =>
-        containsTypeRef(t, paramName, depth + 1),
-      );
+      return node.types.some((t) => containsTypeRef(t, paramName, depth + 1));
     case AST_NODE_TYPES.TSTypeReference: {
       if (node.typeArguments) {
         return node.typeArguments.params.some((arg) =>
@@ -68,16 +66,18 @@ export function containsTypeRef(
     }
     case AST_NODE_TYPES.TSRestType:
     case AST_NODE_TYPES.TSOptionalType:
-      return containsTypeRef(
-        node.typeAnnotation,
-        paramName,
-        depth + 1,
-      );
+      return containsTypeRef(node.typeAnnotation, paramName, depth + 1);
     case AST_NODE_TYPES.TSMappedType: {
       return (
-        (node.typeAnnotation ? containsTypeRef(node.typeAnnotation, paramName, depth + 1) : false) ||
-        (node.nameType ? containsTypeRef(node.nameType, paramName, depth + 1) : false) ||
-        (node.constraint ? containsTypeRef(node.constraint, paramName, depth + 1) : false)
+        (node.typeAnnotation
+          ? containsTypeRef(node.typeAnnotation, paramName, depth + 1)
+          : false) ||
+        (node.nameType
+          ? containsTypeRef(node.nameType, paramName, depth + 1)
+          : false) ||
+        (node.constraint
+          ? containsTypeRef(node.constraint, paramName, depth + 1)
+          : false)
       );
     }
     case AST_NODE_TYPES.TSTypeOperator: {
@@ -94,7 +94,11 @@ export function containsTypeRef(
           return tp ? containsTypeRef(tp, paramName, depth + 1) : false;
         }) ||
         (node.returnType?.typeAnnotation
-          ? containsTypeRef(node.returnType.typeAnnotation, paramName, depth + 1)
+          ? containsTypeRef(
+              node.returnType.typeAnnotation,
+              paramName,
+              depth + 1,
+            )
           : false)
       );
     }
@@ -133,7 +137,11 @@ function memberContainsTypeRef(
   if (member.type === AST_NODE_TYPES.TSIndexSignature) {
     return (
       (member.typeAnnotation?.typeAnnotation
-        ? containsTypeRef(member.typeAnnotation.typeAnnotation, paramName, depth)
+        ? containsTypeRef(
+            member.typeAnnotation.typeAnnotation,
+            paramName,
+            depth,
+          )
         : false) ||
       member.parameters.some((p) => {
         const tp = paramTypeAnnotation(p);
@@ -150,8 +158,12 @@ function conditionalTypeOutputRef(
   depth: number,
 ): boolean {
   return (
-    (node.trueType ? containsTypeRefInOutput(node.trueType, paramName, depth + 1) : false) ||
-    (node.falseType ? containsTypeRefInOutput(node.falseType, paramName, depth + 1) : false)
+    (node.trueType
+      ? containsTypeRefInOutput(node.trueType, paramName, depth + 1)
+      : false) ||
+    (node.falseType
+      ? containsTypeRefInOutput(node.falseType, paramName, depth + 1)
+      : false)
   );
 }
 
@@ -189,11 +201,7 @@ export function containsTypeRefInOutput(
       return false;
     }
     case AST_NODE_TYPES.TSArrayType:
-      return containsTypeRefInOutput(
-        node.elementType,
-        paramName,
-        depth + 1,
-      );
+      return containsTypeRefInOutput(node.elementType, paramName, depth + 1);
     case AST_NODE_TYPES.TSTupleType:
       return node.elementTypes.some((el) =>
         containsTypeRefInOutput(el, paramName, depth + 1),
@@ -205,15 +213,15 @@ export function containsTypeRefInOutput(
       );
     case AST_NODE_TYPES.TSRestType:
     case AST_NODE_TYPES.TSOptionalType:
-      return containsTypeRefInOutput(
-        node.typeAnnotation,
-        paramName,
-        depth + 1,
-      );
+      return containsTypeRefInOutput(node.typeAnnotation, paramName, depth + 1);
     case AST_NODE_TYPES.TSFunctionType:
     case AST_NODE_TYPES.TSConstructorType: {
       return node.returnType?.typeAnnotation
-        ? containsTypeRefInOutput(node.returnType.typeAnnotation, paramName, depth + 1)
+        ? containsTypeRefInOutput(
+            node.returnType.typeAnnotation,
+            paramName,
+            depth + 1,
+          )
         : false;
     }
     case AST_NODE_TYPES.TSConditionalType:
@@ -226,7 +234,11 @@ export function containsTypeRefInOutput(
       if (node.operator === "keyof") {
         return false;
       }
-      return containsTypeRefInOutput(node.typeAnnotation!, paramName, depth + 1);
+      return containsTypeRefInOutput(
+        node.typeAnnotation!,
+        paramName,
+        depth + 1,
+      );
     }
     case AST_NODE_TYPES.TSTypeLiteral:
       return node.members.some((m) =>
@@ -251,33 +263,54 @@ function memberContainsOutputRef(
   if (member.type === AST_NODE_TYPES.TSPropertySignature) {
     const p = member as TSESTree.TSPropertySignature;
     return p.typeAnnotation?.typeAnnotation
-      ? containsTypeRefInOutput(p.typeAnnotation.typeAnnotation, paramName, depth)
+      ? containsTypeRefInOutput(
+          p.typeAnnotation.typeAnnotation,
+          paramName,
+          depth,
+        )
       : false;
   }
   if (member.type === AST_NODE_TYPES.TSIndexSignature) {
     return member.typeAnnotation?.typeAnnotation
-      ? containsTypeRefInOutput(member.typeAnnotation.typeAnnotation, paramName, depth)
+      ? containsTypeRefInOutput(
+          member.typeAnnotation.typeAnnotation,
+          paramName,
+          depth,
+        )
       : false;
   }
   if (member.type === AST_NODE_TYPES.TSCallSignatureDeclaration) {
     return member.returnType?.typeAnnotation
-      ? containsTypeRefInOutput(member.returnType.typeAnnotation, paramName, depth)
+      ? containsTypeRefInOutput(
+          member.returnType.typeAnnotation,
+          paramName,
+          depth,
+        )
       : false;
   }
   if (member.type === AST_NODE_TYPES.TSConstructSignatureDeclaration) {
     return member.returnType?.typeAnnotation
-      ? containsTypeRefInOutput(member.returnType.typeAnnotation, paramName, depth)
+      ? containsTypeRefInOutput(
+          member.returnType.typeAnnotation,
+          paramName,
+          depth,
+        )
       : false;
   }
   return false;
 }
 
-function innerParamTypeAnnotation(param: TSESTree.Node): TSESTree.Node | undefined {
+function innerParamTypeAnnotation(
+  param: TSESTree.Node,
+): TSESTree.Node | undefined {
   if (param.type === AST_NODE_TYPES.Identifier) {
     return param.typeAnnotation?.typeAnnotation;
   }
   if (param.type === AST_NODE_TYPES.RestElement) {
-    return param.typeAnnotation?.typeAnnotation || innerParamTypeAnnotation(param.argument);
+    return (
+      param.typeAnnotation?.typeAnnotation ||
+      innerParamTypeAnnotation(param.argument)
+    );
   }
   if (
     param.type === AST_NODE_TYPES.ObjectPattern ||
@@ -288,9 +321,14 @@ function innerParamTypeAnnotation(param: TSESTree.Node): TSESTree.Node | undefin
   return undefined;
 }
 
-export function paramTypeAnnotation(param: TSESTree.Node): TSESTree.Node | undefined {
+export function paramTypeAnnotation(
+  param: TSESTree.Node,
+): TSESTree.Node | undefined {
   if (param.type === AST_NODE_TYPES.AssignmentPattern) {
-    return param.typeAnnotation?.typeAnnotation || innerParamTypeAnnotation(param.left);
+    return (
+      param.typeAnnotation?.typeAnnotation ||
+      innerParamTypeAnnotation(param.left)
+    );
   }
   if (param.type === AST_NODE_TYPES.TSParameterProperty) {
     return innerParamTypeAnnotation(param.parameter);
@@ -421,15 +459,12 @@ export function createVarianceDeclarationVisitor(
       }
     },
 
-   TSTypeAliasDeclaration(node) {
+    TSTypeAliasDeclaration(node) {
       if (
         node.typeParameters &&
         node.typeAnnotation.type === AST_NODE_TYPES.TSTypeLiteral
       ) {
-        checkFn(
-          node.typeParameters.params,
-          node.typeAnnotation,
-        );
+        checkFn(node.typeParameters.params, node.typeAnnotation);
       }
     },
   };

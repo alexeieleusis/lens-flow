@@ -40,7 +40,7 @@ export default createRule({
       description:
         "Disallow calling .parse() on schema validators without try/catch or using .safeParse() instead",
     },
-   messages: {
+    messages: {
       unhandledParse:
         "Calling .parse() without try/catch can crash on invalid input. Use .safeParse() or wrap in try/catch. See: {{url}}",
     },
@@ -62,9 +62,7 @@ export default createRule({
   defaultOptions: [{}],
   create(context: TSESLint.RuleContext<"unhandledParse", RuleOptions>) {
     const [options] = context.options;
-    const allowedReceivers = new Set(
-      options?.allowedReceivers ?? [],
-    );
+    const allowedReceivers = new Set(options?.allowedReceivers ?? []);
 
     const isAllowedReceiver = (obj: TSESTree.Node) => {
       if (obj.type !== "Identifier") return false;

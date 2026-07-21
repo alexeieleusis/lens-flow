@@ -13,7 +13,10 @@ function getMemberKey(node: TSESTree.MemberExpression): MemberKey | null {
   const parts: string[] = [];
   let current: TSESTree.Node = node.object;
 
-  while (current.type === "MemberExpression" && current.property.type === "Identifier") {
+  while (
+    current.type === "MemberExpression" &&
+    current.property.type === "Identifier"
+  ) {
     parts.unshift(current.property.name);
     current = current.object;
   }
@@ -42,7 +45,11 @@ function extractBranchInfo(
   let memberExpr: TSESTree.MemberExpression | null = null;
   let literalNode: TSESTree.Literal | null = null;
 
-  if (left.type === "MemberExpression" && right.type === "Literal" && typeof right.value === "string") {
+  if (
+    left.type === "MemberExpression" &&
+    right.type === "Literal" &&
+    typeof right.value === "string"
+  ) {
     memberExpr = left;
     literalNode = right;
   } else if (
@@ -62,7 +69,9 @@ function extractBranchInfo(
   return { memberKey, literal: String(literalNode.value) };
 }
 
-function collectIfElseIfChain(root: TSESTree.IfStatement): TSESTree.IfStatement[] {
+function collectIfElseIfChain(
+  root: TSESTree.IfStatement,
+): TSESTree.IfStatement[] {
   const chain: TSESTree.IfStatement[] = [root];
 
   let current: TSESTree.Node | null = root;
@@ -93,8 +102,8 @@ export default createRule({
         "Disallow chains of if/else-if comparing the same member against string literals; prefer a switch with exhaustive matching.",
     },
     messages: {
-     stateCascade:
-         "Found {{count}} consecutive if/else-if branches comparing {{member}} against string literals. Use a switch statement with exhaustive matching instead. See: {{url}}",
+      stateCascade:
+        "Found {{count}} consecutive if/else-if branches comparing {{member}} against string literals. Use a switch statement with exhaustive matching instead. See: {{url}}",
     },
     schema: [
       {
@@ -111,7 +120,9 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ minBranches: 3 }],
-  create(context: TSESLint.RuleContext<"stateCascade", [{ minBranches?: number }]>) {
+  create(
+    context: TSESLint.RuleContext<"stateCascade", [{ minBranches?: number }]>,
+  ) {
     const { minBranches = 3 } = context.options[0] ?? {};
     const reported = new Set<TSESTree.IfStatement>();
 

@@ -21,7 +21,7 @@ type Bar = string & { readonly bar: string };
 type Baz = string & { readonly baz: boolean };
 type Qux = string & { readonly qux: symbol };`,
     {
-      code:    `type FirstName = string & { readonly __brand: "FirstName" };
+      code: `type FirstName = string & { readonly __brand: "FirstName" };
 type LastName  = string & { readonly __brand: "LastName" };
 type Address   = string & { readonly __brand: "Address" };
 type Phone     = string & { readonly __brand: "Phone" };`,

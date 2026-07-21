@@ -1,4 +1,4 @@
-import path from "node:path";   
+import path from "node:path";
 import { RuleTester } from "@typescript-eslint/rule-tester";
 import { afterAll, describe, it } from "vitest";
 import * as tsParser from "@typescript-eslint/parser";
@@ -61,7 +61,8 @@ ruleTester.run("no-unsafe-task-either-error-map", rule, {
     // Correct: throws a typed error matching the declared error channel
     {
       filename: TEST_FILENAME,
-      code: TE_TYPES +
+      code:
+        TE_TYPES +
         `function fetchUser(id: string): TE.TaskEither<NetworkError, User> {
   return TE.tryCatch(
     async () => {
@@ -76,7 +77,8 @@ ruleTester.run("no-unsafe-task-either-error-map", rule, {
     // Correct: constructs typed error in mapper
     {
       filename: TEST_FILENAME,
-      code: TE_TYPES +
+      code:
+        TE_TYPES +
         `function loadData(): TE.TaskEither<ApiError, string> {
   return TE.tryCatch(
     async () => {
@@ -102,7 +104,8 @@ ruleTester.run("no-unsafe-task-either-error-map", rule, {
     // No return type annotation — can't determine error type
     {
       filename: TEST_FILENAME,
-      code: TE_TYPES +
+      code:
+        TE_TYPES +
         `function fetchData() {
   return TE.tryCatch(
     async () => { throw new Error("x"); },
@@ -113,7 +116,8 @@ ruleTester.run("no-unsafe-task-either-error-map", rule, {
     // Correct: TaskEither namespace (full name) works the same as TE alias
     {
       filename: TEST_FILENAME,
-      code: TASK_EITHER_TYPES +
+      code:
+        TASK_EITHER_TYPES +
         `function fetchUser(id: string): TaskEither.TaskEither<NetworkError, User> {
   return TaskEither.tryCatch(
     async () => {
@@ -128,7 +132,8 @@ ruleTester.run("no-unsafe-task-either-error-map", rule, {
     // Correct: union return type containing TaskEither — typed error is correct
     {
       filename: TEST_FILENAME,
-      code: TE_TYPES +
+      code:
+        TE_TYPES +
         `function fetchUserOrNone(id: string): TE.TaskEither<NetworkError, User> | null {
   if (!id) return null;
   return TE.tryCatch(
@@ -146,7 +151,8 @@ ruleTester.run("no-unsafe-task-either-error-map", rule, {
     // Throws generic Error, mapper uses unsafe `as` cast — two errors
     {
       filename: TEST_FILENAME,
-      code: TE_TYPES +
+      code:
+        TE_TYPES +
         `function fetchUser(id: string): TE.TaskEither<NetworkError, User> {
   return TE.tryCatch(
     async () => {
@@ -157,15 +163,13 @@ ruleTester.run("no-unsafe-task-either-error-map", rule, {
     (e) => e as NetworkError,
   );
 }`,
-      errors: [
-        { messageId: "unsafeThrow" },
-        { messageId: "unsafeCast" },
-      ],
+      errors: [{ messageId: "unsafeThrow" }, { messageId: "unsafeCast" }],
     },
     // Only unsafe throw, no as cast in mapper
     {
       filename: TEST_FILENAME,
-      code: TE_TYPES +
+      code:
+        TE_TYPES +
         `function loadData(): TE.TaskEither<ApiError, string> {
   return TE.tryCatch(
     async () => {
@@ -179,7 +183,8 @@ ruleTester.run("no-unsafe-task-either-error-map", rule, {
     // Only unsafe as cast in mapper, throw is correct type
     {
       filename: TEST_FILENAME,
-      code: TE_TYPES +
+      code:
+        TE_TYPES +
         `function readFile(): TE.TaskEither<IOError, Buffer> {
   return TE.tryCatch(
     async () => {
@@ -193,7 +198,8 @@ ruleTester.run("no-unsafe-task-either-error-map", rule, {
     // Regression: nested function should not corrupt enclosing scope
     {
       filename: TEST_FILENAME,
-      code: TE_TYPES +
+      code:
+        TE_TYPES +
         `function fetchUser(id: string): TE.TaskEither<NetworkError, User> {
   const mapFn = (x: string) => x.toUpperCase();
   return TE.tryCatch(
@@ -210,7 +216,8 @@ ruleTester.run("no-unsafe-task-either-error-map", rule, {
     // TaskEither namespace: unsafe throw with generic Error
     {
       filename: TEST_FILENAME,
-      code: TASK_EITHER_TYPES +
+      code:
+        TASK_EITHER_TYPES +
         `function fetchUser(id: string): TaskEither.TaskEither<NetworkError, User> {
   return TaskEither.tryCatch(
     async () => {
@@ -226,7 +233,8 @@ ruleTester.run("no-unsafe-task-either-error-map", rule, {
     // Union return type: unsafe throw — union should not hide the error
     {
       filename: TEST_FILENAME,
-      code: TE_TYPES +
+      code:
+        TE_TYPES +
         `function fetchUserOrNone(id: string): TE.TaskEither<NetworkError, User> | null {
   if (!id) return null;
   return TE.tryCatch(

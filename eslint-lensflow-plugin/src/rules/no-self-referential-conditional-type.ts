@@ -5,16 +5,12 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const URL = knowledgeUrl("catalog/T45-paramspec-variadic.md");
 
-function getRefName(
-  node: TSESTree.TypeNode,
-): string | null {
+function getRefName(node: TSESTree.TypeNode): string | null {
   if (node.type !== "TSTypeReference") return null;
   return node.typeName.type === "Identifier" ? node.typeName.name : null;
 }
 
-function getTypeArgs(
-  node: TSESTree.TypeNode,
-): TSESTree.TypeNode[] {
+function getTypeArgs(node: TSESTree.TypeNode): TSESTree.TypeNode[] {
   if (node.type === "TSTypeReference" && node.typeArguments) {
     return node.typeArguments.params;
   }
@@ -35,10 +31,7 @@ function collectInferNames(
   return names;
 }
 
-function referencesName(
-  node: TSESTree.TypeNode,
-  names: Set<string>,
-): boolean {
+function referencesName(node: TSESTree.TypeNode, names: Set<string>): boolean {
   const refName = getRefName(node);
   if (refName && names.has(refName)) return true;
 
@@ -59,9 +52,10 @@ function hasSelfReferentialCall(
     if (params.length === 0) return false;
     const hasInferUsage = params.some((p) => referencesName(p, inferNames));
     const hasNonDefaultOriginal = params.some(
-      (p) => referencesName(p, typeParamNames) &&
-             !referencesName(p, inferNames) &&
-             !referencesName(p, defaultParamNames),
+      (p) =>
+        referencesName(p, typeParamNames) &&
+        !referencesName(p, inferNames) &&
+        !referencesName(p, defaultParamNames),
     );
     const hasOnlyInfer = !params.some((p) => referencesName(p, typeParamNames));
     if (hasNonDefaultOriginal || (hasInferUsage && hasOnlyInfer)) {
@@ -71,7 +65,13 @@ function hasSelfReferentialCall(
 
   const children = collectChildTypes(type);
   return children.some((child) =>
-    hasSelfReferentialCall(child, aliasName, typeParamNames, inferNames, defaultParamNames),
+    hasSelfReferentialCall(
+      child,
+      aliasName,
+      typeParamNames,
+      inferNames,
+      defaultParamNames,
+    ),
   );
 }
 
@@ -101,15 +101,35 @@ export default createRule({
           node.typeParameters.params.map((p) => p.name.name),
         );
         const defaultParamNames = new Set(
-          node.typeParameters.params.filter((p) => p.default).map((p) => p.name.name),
+          node.typeParameters.params
+            .filter((p) => p.default)
+            .map((p) => p.name.name),
         );
 
-        function checkConditionals(type: TSESTree.TypeNode, inferNames: Set<string> = new Set()): void {
+        function checkConditionals(
+          type: TSESTree.TypeNode,
+          inferNames: Set<string> = new Set(),
+        ): void {
           if (type.type === "TSConditionalType") {
-            const branchInferNames = collectInferNames(type.extendsType, collectInferNames(type.checkType, inferNames));
+            const branchInferNames = collectInferNames(
+              type.extendsType,
+              collectInferNames(type.checkType, inferNames),
+            );
             if (
-              hasSelfReferentialCall(type.trueType, aliasName, typeParamNames, branchInferNames, defaultParamNames) ||
-              hasSelfReferentialCall(type.falseType, aliasName, typeParamNames, branchInferNames, defaultParamNames)
+              hasSelfReferentialCall(
+                type.trueType,
+                aliasName,
+                typeParamNames,
+                branchInferNames,
+                defaultParamNames,
+              ) ||
+              hasSelfReferentialCall(
+                type.falseType,
+                aliasName,
+                typeParamNames,
+                branchInferNames,
+                defaultParamNames,
+              )
             ) {
               context.report({
                 node: type,

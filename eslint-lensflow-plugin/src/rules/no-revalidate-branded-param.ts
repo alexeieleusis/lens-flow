@@ -27,9 +27,7 @@ function isSameBinding(
   paramId: TSESTree.Identifier,
 ): boolean {
   const scope = sourceCode.getScope(identifier);
-  const variable = scope.variables.find(
-    (v) => v.name === identifier.name,
-  );
+  const variable = scope.variables.find((v) => v.name === identifier.name);
   if (!variable) return false;
   return variable.identifiers.includes(paramId);
 }
@@ -184,13 +182,19 @@ export default createRule({
       if (brandedParams.size === 0) return;
 
       for (const [paramName, paramId] of brandedParams) {
-        checkRegexAndLength(body, sourceCode, paramName, paramId, (node, issue) => {
-          context.report({
-            node,
-            messageId: issue === "regex" ? "regexTest" : "lengthCheck",
-            data: { param: paramName, url: DOCS_URL },
-          });
-        });
+        checkRegexAndLength(
+          body,
+          sourceCode,
+          paramName,
+          paramId,
+          (node, issue) => {
+            context.report({
+              node,
+              messageId: issue === "regex" ? "regexTest" : "lengthCheck",
+              data: { param: paramName, url: DOCS_URL },
+            });
+          },
+        );
       }
     }
 

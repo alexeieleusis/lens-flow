@@ -26,11 +26,14 @@ function getConditionalNestingDepth(node: TSESTree.TypeNode): number {
     return deepest;
   };
 
-  return 1 + Math.max(
-    recurse(node.checkType),
-    recurse(node.extendsType),
-    recurse(node.trueType),
-    recurse(node.falseType),
+  return (
+    1 +
+    Math.max(
+      recurse(node.checkType),
+      recurse(node.extendsType),
+      recurse(node.trueType),
+      recurse(node.falseType),
+    )
   );
 }
 
@@ -43,8 +46,8 @@ export default createRule({
         "Disallow excessively nested conditional types that may exceed TypeScript's instantiation depth limit",
     },
     messages: {
-     excessiveNesting:
-         "Conditional type has nesting depth {{depth}} (max: {{max}}). Use a recursive helper with a depth counter instead. See: {{url}}",
+      excessiveNesting:
+        "Conditional type has nesting depth {{depth}} (max: {{max}}). Use a recursive helper with a depth counter instead. See: {{url}}",
     },
     schema: [
       {
@@ -61,7 +64,9 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ maxDepth: 2 }],
-  create(context: TSESLint.RuleContext<"excessiveNesting", [{ maxDepth: number }]>) {
+  create(
+    context: TSESLint.RuleContext<"excessiveNesting", [{ maxDepth: number }]>,
+  ) {
     const options = context.options[0] ?? { maxDepth: 2 };
 
     return {

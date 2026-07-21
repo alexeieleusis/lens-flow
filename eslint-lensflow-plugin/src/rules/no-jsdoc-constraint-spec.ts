@@ -1,4 +1,4 @@
-import { TSESTree, TSESLint } from '@typescript-eslint/utils';
+import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
@@ -40,12 +40,20 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"jsdocConstraint" | "jsdocConditionalField", []>) {
+  create(
+    context: TSESLint.RuleContext<
+      "jsdocConstraint" | "jsdocConditionalField",
+      []
+    >,
+  ) {
     function hasConstraintComments(node: TSESTree.TSPropertySignature): {
       isConditional: boolean;
     } | null {
       const commentLines = context.sourceCode.getCommentsBefore(node);
-      const commentText = commentLines.map((c) => c.value).join(" ").replace(/\s+/g, " ");
+      const commentText = commentLines
+        .map((c) => c.value)
+        .join(" ")
+        .replace(/\s+/g, " ");
 
       const isConditional = /\brequired\s+when\b/i.test(commentText);
 

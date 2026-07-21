@@ -76,10 +76,7 @@ ruleTester.run("no-mutable-getter-return", rule, {
         get a(): number[] { return this.#a; }
         get b(): string[] { return this.#b; }
       }`,
-      errors: [
-        { messageId: "mutableArray" },
-        { messageId: "mutableArray" },
-      ],
+      errors: [{ messageId: "mutableArray" }, { messageId: "mutableArray" }],
     },
     {
       code: `class Container {

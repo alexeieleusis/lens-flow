@@ -47,7 +47,9 @@ function hasTypeRefToName(
   return false;
 }
 
-function findKeywordInMembers(types: TSESTree.TypeNode[]): "any" | "unknown" | null {
+function findKeywordInMembers(
+  types: TSESTree.TypeNode[],
+): "any" | "unknown" | null {
   for (const t of types) {
     if (t.type === "TSAnyKeyword") return "any";
     if (t.type === "TSUnknownKeyword") return "unknown";
@@ -63,7 +65,8 @@ function findKeyword(node: TSESTree.TypeNode): "any" | "unknown" | null {
   if (node.type === "TSAnyKeyword") return "any";
   if (node.type === "TSUnknownKeyword") return "unknown";
   if (node.type === "TSUnionType") return findKeywordInMembers(node.types);
-  if (node.type === "TSIntersectionType") return findKeywordInMembers(node.types);
+  if (node.type === "TSIntersectionType")
+    return findKeywordInMembers(node.types);
   return null;
 }
 
@@ -118,8 +121,9 @@ function collectAnyProps(
 }
 
 function resolveUnionAliasName(node: TSESTree.Node): string | null {
-  let current: TSESTree.Node | undefined =
-    (node as TSESTree.Node & { parent?: TSESTree.Node }).parent;
+  let current: TSESTree.Node | undefined = (
+    node as TSESTree.Node & { parent?: TSESTree.Node }
+  ).parent;
   while (current) {
     if (current.type === "TSTypeAliasDeclaration") {
       return current.id.name;

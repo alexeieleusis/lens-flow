@@ -5,7 +5,9 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const URL = knowledgeUrl("usecases/UC03-exhaustiveness.md");
 
-function extractMemberFromBinary(node: TSESTree.BinaryExpression): string | null {
+function extractMemberFromBinary(
+  node: TSESTree.BinaryExpression,
+): string | null {
   const leftKey =
     node.left.type === "MemberExpression" ? getMemberName(node.left) : null;
   const rightKey =
@@ -16,13 +18,16 @@ function extractMemberFromBinary(node: TSESTree.BinaryExpression): string | null
 function findAncestorIf(node: TSESTree.Node): TSESTree.IfStatement | null {
   let current: TSESTree.Node | null = node;
   while (current) {
-    const parent = (current as unknown as Record<string, unknown>)["parent"] as TSESTree.Node | null;
+    const parent = (current as unknown as Record<string, unknown>)[
+      "parent"
+    ] as TSESTree.Node | null;
     if (!parent) return null;
     if (
       parent.type === "FunctionDeclaration" ||
       parent.type === "FunctionExpression" ||
       parent.type === "ArrowFunctionExpression"
-    ) return null;
+    )
+      return null;
     if (parent.type === "IfStatement") return parent;
     current = parent;
   }
@@ -51,7 +56,7 @@ export default createRule({
         const defaultCase = node.cases.find((c) => c.test === null);
         if (!defaultCase) return;
 
-        if (!defaultCase.consequent.some(s => hasAssertNever(s))) return;
+        if (!defaultCase.consequent.some((s) => hasAssertNever(s))) return;
 
         const discriminant = node.discriminant;
         if (discriminant.type !== "MemberExpression") return;

@@ -22,10 +22,10 @@ export default createRule({
     docs: {
       description:
         "Disallow using the 'in' operator to check a property that exists on all union members in a type guard function, which does not narrow the union type.",
-     },
+    },
     messages: {
       nonDiscriminative:
-         "The property '{{property}}' exists on all members of the union type, so '\"{{property}}\" in value' cannot distinguish union members. Use a property that uniquely identifies the target member. See: {{url}}",
+        "The property '{{property}}' exists on all members of the union type, so '\"{{property}}\" in value' cannot distinguish union members. Use a property that uniquely identifies the target member. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -34,7 +34,7 @@ export default createRule({
   create(context: TSESLint.RuleContext<"nonDiscriminative", []>) {
     const parserServices = ESLintUtils.getParserServices(context, true);
     const program = parserServices.program;
-     if (!program) return {};
+    if (!program) return {};
 
     const checker = program.getTypeChecker();
 
@@ -92,10 +92,7 @@ export default createRule({
       const left = node.left;
       let propertyName: string | undefined;
 
-      if (
-        left.type === "Literal" &&
-        typeof left.value === "string"
-      ) {
+      if (left.type === "Literal" && typeof left.value === "string") {
         propertyName = left.value;
       } else if (
         left.type === "TemplateLiteral" &&

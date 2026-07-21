@@ -102,7 +102,10 @@ ruleTester.run("require-readonly-domain-props-uc02", rule, {
       };`,
       errors: [
         { messageId: "mutableDomainProp", data: { name: "id", url: URL } },
-        { messageId: "mutableDomainProp", data: { name: "customKey", url: URL } },
+        {
+          messageId: "mutableDomainProp",
+          data: { name: "customKey", url: URL },
+        },
         { messageId: "mutableDomainProp", data: { name: "status", url: URL } },
       ],
     },

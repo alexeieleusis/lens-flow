@@ -15,8 +15,10 @@ function getParamTypeAnnotation(
     return param.left.typeAnnotation?.typeAnnotation;
   }
   if (param.type === "RestElement") {
-    if (param.typeAnnotation?.typeAnnotation) return param.typeAnnotation.typeAnnotation;
-    if (param.argument.type === "Identifier") return param.argument.typeAnnotation?.typeAnnotation;
+    if (param.typeAnnotation?.typeAnnotation)
+      return param.typeAnnotation.typeAnnotation;
+    if (param.argument.type === "Identifier")
+      return param.argument.typeAnnotation?.typeAnnotation;
     return undefined;
   }
   if ("typeAnnotation" in param && param.typeAnnotation) {
@@ -76,7 +78,7 @@ export default createRule({
       TSFunctionType: checkFunctionNode,
       TSDeclareFunction: checkFunctionNode,
       TSMethodSignature: checkFunctionNode,
-     TSCallSignatureDeclaration: checkFunctionNode,
+      TSCallSignatureDeclaration: checkFunctionNode,
     };
   },
 });

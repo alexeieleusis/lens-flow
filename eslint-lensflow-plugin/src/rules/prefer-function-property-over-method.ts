@@ -16,9 +16,7 @@ function findInterfaceTypeParams(
       current.typeParameters &&
       current.typeParameters.params.length > 0
     ) {
-      return new Set(
-        current.typeParameters.params.map((tp) => tp.name.name),
-      );
+      return new Set(current.typeParameters.params.map((tp) => tp.name.name));
     }
     current = current.parent;
   }
@@ -35,9 +33,7 @@ function referencesTypeParam(
 
   const typeAnnotation = actualParam.typeAnnotation.typeAnnotation;
 
-  function qualifiedNameHasTypeParam(
-    qn: TSESTree.TSQualifiedName
-  ): boolean {
+  function qualifiedNameHasTypeParam(qn: TSESTree.TSQualifiedName): boolean {
     if (typeParamNames.has(qn.right.name)) return true;
     const left = qn.left;
     if (left.type === "Identifier") {
@@ -49,9 +45,7 @@ function referencesTypeParam(
     return false;
   }
 
-  function walkTypeReference(
-    node: TSESTree.TSTypeReference
-  ): boolean {
+  function walkTypeReference(node: TSESTree.TSTypeReference): boolean {
     if (
       node.typeName.type === "Identifier" &&
       typeParamNames.has(node.typeName.name)
@@ -89,7 +83,12 @@ function referencesTypeParam(
           (node.returnType ? walk(node.returnType.typeAnnotation) : false)
         );
       case "TSConditionalType":
-        return walk(node.checkType) || walk(node.extendsType) || walk(node.trueType) || walk(node.falseType);
+        return (
+          walk(node.checkType) ||
+          walk(node.extendsType) ||
+          walk(node.trueType) ||
+          walk(node.falseType)
+        );
       case "TSMappedType":
         return node.typeAnnotation ? walk(node.typeAnnotation) : false;
       case "TSIndexedAccessType":
@@ -129,7 +128,10 @@ export default createRule({
         let methodName: string;
         if (node.key.type === "Identifier") {
           methodName = node.key.name;
-        } else if (node.key.type === "Literal" && typeof node.key.value === "string") {
+        } else if (
+          node.key.type === "Literal" &&
+          typeof node.key.value === "string"
+        ) {
           methodName = node.key.value;
         } else {
           methodName = "<unknown>";

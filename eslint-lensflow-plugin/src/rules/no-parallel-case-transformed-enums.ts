@@ -1,4 +1,4 @@
-import { TSESTree, TSESLint } from '@typescript-eslint/utils';
+import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
@@ -75,24 +75,15 @@ function getMemberNames(decl: TSESTree.TSEnumDeclaration): string[] {
   );
 }
 
-function membersMatchNormalized(
-  a: string[],
-  b: string[],
-): boolean {
+function membersMatchNormalized(a: string[], b: string[]): boolean {
   return a.every((v, i) => v.toLowerCase() === b[i].toLowerCase());
 }
 
-function membersDifferInCasing(
-  a: string[],
-  b: string[],
-): boolean {
+function membersDifferInCasing(a: string[], b: string[]): boolean {
   return a.some((v, i) => v !== b[i]);
 }
 
-function isParallelCasePair(
-  aMembers: string[],
-  bMembers: string[],
-): boolean {
+function isParallelCasePair(aMembers: string[], bMembers: string[]): boolean {
   if (aMembers.length !== bMembers.length) return false;
   if (aMembers.length === 0) return false;
   if (!membersMatchNormalized(aMembers, bMembers)) return false;
@@ -172,13 +163,7 @@ export default createRule({
 
             if (!isParallelCasePair(a.members, b.members)) continue;
 
-            handleParallelEnumPair(
-              context,
-              a.name,
-              a.node,
-              b.name,
-              b.node,
-            );
+            handleParallelEnumPair(context, a.name, a.node, b.name, b.node);
           }
         }
       },

@@ -120,10 +120,7 @@ function bind(host: string, port: number) {
 function bind(host: string, port: number) {
   if (!checkPort(port)) throw new Error();
 }`,
-      errors: [
-        { messageId: "repeatedGuard" },
-        { messageId: "repeatedGuard" },
-      ],
+      errors: [{ messageId: "repeatedGuard" }, { messageId: "repeatedGuard" }],
     },
     {
       code: `const connect = (host: string, port: number) => {
@@ -166,10 +163,7 @@ function bind(host: string, port: number) {
     if (port < 1) throw new Error();
   }
 }`,
-      errors: [
-        { messageId: "repeatedGuard" },
-        { messageId: "repeatedGuard" },
-      ],
+      errors: [{ messageId: "repeatedGuard" }, { messageId: "repeatedGuard" }],
     },
   ],
 });

@@ -4,10 +4,14 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const URL = knowledgeUrl("catalog/T34-never-bottom.md");
 
-function getBaseIdentifierNode(node: TSESTree.Node): TSESTree.Identifier | null {
+function getBaseIdentifierNode(
+  node: TSESTree.Node,
+): TSESTree.Identifier | null {
   if (node.type === "Identifier") return node;
-  if (node.type === "MemberExpression") return getBaseIdentifierNode(node.object);
-  if (node.type === "ChainExpression") return getBaseIdentifierNode(node.expression);
+  if (node.type === "MemberExpression")
+    return getBaseIdentifierNode(node.object);
+  if (node.type === "ChainExpression")
+    return getBaseIdentifierNode(node.expression);
   return null;
 }
 
@@ -50,7 +54,8 @@ function extractNarrowedVariableFromIfTest(
   test: TSESTree.Node,
 ): TSESTree.Identifier | null {
   if (test.type !== "BinaryExpression") return null;
-  if (!["===", "==", "!=", "!==", "instanceof"].includes(test.operator)) return null;
+  if (!["===", "==", "!=", "!==", "instanceof"].includes(test.operator))
+    return null;
 
   const { left, right } = test;
 
@@ -132,9 +137,17 @@ function resolveVariable(
   scopes: unknown[],
   identifier: TSESTree.Identifier,
 ): TSESLint.Scope.Variable | null {
-  let innermost: { block: TSESTree.Node; references: unknown[]; upper: unknown } | null = null;
+  let innermost: {
+    block: TSESTree.Node;
+    references: unknown[];
+    upper: unknown;
+  } | null = null;
   for (const scope of scopes) {
-    const s = scope as { block: TSESTree.Node; references: unknown[]; upper: unknown };
+    const s = scope as {
+      block: TSESTree.Node;
+      references: unknown[];
+      upper: unknown;
+    };
     const block = s.block;
     if (!block?.range) continue;
     if (
@@ -271,11 +284,21 @@ export default createRule({
 
         const ancestors = sourceCode.getAncestors(node);
         const castedVar = resolveVariable(scopes, castedId);
-        const narrowedResult = findNarrowedVariable(ancestors, castedId, scopes);
+        const narrowedResult = findNarrowedVariable(
+          ancestors,
+          castedId,
+          scopes,
+        );
         if (!narrowedResult) return;
 
         if (castedVar && narrowedResult.guard.range) {
-          if (hasReassignmentBetween(castedVar, narrowedResult.guard.range[1], castedId.range[0])) {
+          if (
+            hasReassignmentBetween(
+              castedVar,
+              narrowedResult.guard.range[1],
+              castedId.range[0],
+            )
+          ) {
             return;
           }
         }

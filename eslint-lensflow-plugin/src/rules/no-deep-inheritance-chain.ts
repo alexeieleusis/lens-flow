@@ -15,7 +15,7 @@ export default createRule({
     },
     messages: {
       deepChain:
-        "Class \"{{name}}\" has an inheritance chain of depth {{depth}} (threshold: {{maxDepth}}). Consider using composition via interfaces instead. See: {{url}}",
+        'Class "{{name}}" has an inheritance chain of depth {{depth}} (threshold: {{maxDepth}}). Consider using composition via interfaces instead. See: {{url}}',
     },
     schema: [
       {
@@ -39,7 +39,11 @@ export default createRule({
 
     return {
       ClassDeclaration(node) {
-        if (node.parent?.type === "Program" && node.superClass?.type === "Identifier" && node.id) {
+        if (
+          node.parent?.type === "Program" &&
+          node.superClass?.type === "Identifier" &&
+          node.id
+        ) {
           classMap.set(node.id.name, node.superClass.name);
         }
       },
@@ -56,8 +60,12 @@ export default createRule({
           }
           if (depth >= maxDepth) {
             const classNode = context.sourceCode.ast.body.find(
-              (n): n is TSESTree.ClassDeclaration & { id: TSESTree.Identifier } =>
-                n.type === "ClassDeclaration" && n.id !== null && n.id.name === className,
+              (
+                n,
+              ): n is TSESTree.ClassDeclaration & { id: TSESTree.Identifier } =>
+                n.type === "ClassDeclaration" &&
+                n.id !== null &&
+                n.id.name === className,
             );
             if (classNode) {
               context.report({

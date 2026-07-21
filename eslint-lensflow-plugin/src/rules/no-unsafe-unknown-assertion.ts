@@ -58,7 +58,9 @@ export default createRule({
 
         if (typeStr !== "unknown") return;
 
-        const targetType = parserServices.getTypeAtLocation(node.typeAnnotation);
+        const targetType = parserServices.getTypeAtLocation(
+          node.typeAnnotation,
+        );
         const targetTypeStr = checker.typeToString(targetType);
 
         if (["unknown", "any", "never"].includes(targetTypeStr)) return;

@@ -89,7 +89,11 @@ export default createRule({
           context.report({
             node: decl,
             messageId: "exposedRegistry",
-            data: { collection: decl.callee.name, name: "<anonymous>", url: URL },
+            data: {
+              collection: decl.callee.name,
+              name: "<anonymous>",
+              url: URL,
+            },
           });
           return;
         }
@@ -101,7 +105,12 @@ export default createRule({
       },
 
       "Program:exit"() {
-        for (const { node, name, collection, directlyExported } of mapSetDecls) {
+        for (const {
+          node,
+          name,
+          collection,
+          directlyExported,
+        } of mapSetDecls) {
           if (directlyExported || exportedNames.has(name)) {
             context.report({
               node,

@@ -5,11 +5,7 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const URL = knowledgeUrl("catalog/T14-type-narrowing.md");
 
-const ASYNC_FN_NAMES = new Set([
-  "setTimeout",
-  "setInterval",
-  "setImmediate",
-]);
+const ASYNC_FN_NAMES = new Set(["setTimeout", "setInterval", "setImmediate"]);
 
 const ASYNC_MEMBER_METHODS = new Set(["then", "catch", "finally"]);
 
@@ -119,9 +115,7 @@ function isCallbackArg(
   return null;
 }
 
-function collectChildNodes(
-  val: unknown,
-): TSESTree.Node[] {
+function collectChildNodes(val: unknown): TSESTree.Node[] {
   if (Array.isArray(val)) {
     const nodes: TSESTree.Node[] = [];
     for (const item of val) {
@@ -142,8 +136,7 @@ function findCallbacksFromValue(
   visited: WeakSet<object>,
 ): (TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression)[] {
   const results: (
-    | TSESTree.ArrowFunctionExpression
-    | TSESTree.FunctionExpression
+    TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression
   )[] = [];
   if (val && typeof val === "object") {
     for (const child of collectChildNodes(val)) {
@@ -161,8 +154,7 @@ function findCallbacks(
   visited.add(node);
 
   const callbacks: (
-    | TSESTree.ArrowFunctionExpression
-    | TSESTree.FunctionExpression
+    TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression
   )[] = [];
 
   if (node.type === "CallExpression") {
@@ -184,7 +176,10 @@ function findCallbacks(
   return callbacks;
 }
 
-function paramMatchesVarName(param: TSESTree.Parameter, varName: string): boolean {
+function paramMatchesVarName(
+  param: TSESTree.Parameter,
+  varName: string,
+): boolean {
   if (param.type === "Identifier") {
     return param.name === varName;
   }
@@ -204,7 +199,10 @@ function isLetDeclared(varName: string, scopeNode: TSESTree.Node): boolean {
   const body = (scopeNode as any).body;
   if (!body) return false;
 
-  function isLetIdentifierDecl(decl: TSESTree.VariableDeclarator, name: string): boolean {
+  function isLetIdentifierDecl(
+    decl: TSESTree.VariableDeclarator,
+    name: string,
+  ): boolean {
     return decl.id.type === "Identifier" && decl.id.name === name;
   }
 
@@ -260,10 +258,7 @@ function isMutableBinding(
   return false;
 }
 
-function typeIncludesNullable(
-  type: ts.Type,
-  checker: ts.TypeChecker,
-): boolean {
+function typeIncludesNullable(type: ts.Type, checker: ts.TypeChecker): boolean {
   const allTypes = type.isUnion() ? type.types : [type];
   for (const member of allTypes) {
     const typeName = checker.typeToString(member);
@@ -341,15 +336,10 @@ function searchArrayForIdentifier(
   return null;
 }
 
-function extractCbParamNames(
-  params: TSESTree.Parameter[],
-): string[] {
+function extractCbParamNames(params: TSESTree.Parameter[]): string[] {
   return params.flatMap((p) => {
     if (p.type === "Identifier") return [p.name];
-    if (
-      p.type === "ObjectPattern" ||
-      p.type === "ArrayPattern"
-    ) {
+    if (p.type === "ObjectPattern" || p.type === "ArrayPattern") {
       return collectIdentifiersInNode(p);
     }
     return [];
@@ -367,9 +357,7 @@ function reportNarrowingInCallback(
       ? callback.body.body
       : [callback.body];
 
-  const identifiers = cbBody.flatMap((stmt) =>
-    collectIdentifiersInNode(stmt),
-  );
+  const identifiers = cbBody.flatMap((stmt) => collectIdentifiersInNode(stmt));
 
   if (!identifiers.includes(varName)) return;
 
@@ -424,7 +412,7 @@ export default createRule({
     docs: {
       description:
         "Disallow using a mutable variable inside a callback after narrowing it, because the narrowing is lost as the variable could be reassigned",
-     },
+    },
     messages: {
       narrowingLost:
         "The variable '{{varName}}' is narrowed outside the callback but may be reassigned before the callback executes. Assign to a 'const' inside the narrowed scope before using it in the callback. See: {{url}}",

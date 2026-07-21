@@ -1,4 +1,4 @@
-import { TSESTree, TSESLint } from '@typescript-eslint/utils';
+import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
@@ -27,7 +27,8 @@ function isDirectJsonCall(node: TSESTree.Expression): boolean {
 
 function hasJsonCall(node: TSESTree.Expression): boolean {
   if (isDirectJsonCall(node)) {
-    const callee = (node as TSESTree.CallExpression).callee as TSESTree.MemberExpression;
+    const callee = (node as TSESTree.CallExpression)
+      .callee as TSESTree.MemberExpression;
     return isFetchLike(callee.object);
   }
 
@@ -58,9 +59,7 @@ function hasJsonCall(node: TSESTree.Expression): boolean {
   return false;
 }
 
-function checkThenCallback(
-  cb: TSESTree.Expression
-): boolean | undefined {
+function checkThenCallback(cb: TSESTree.Expression): boolean | undefined {
   if (cb.type === "ArrowFunctionExpression") {
     const body = cb.body;
     if (body.type === "BlockStatement") return false;

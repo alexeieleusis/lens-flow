@@ -62,10 +62,7 @@ ruleTester.run("no-any-in-plugin-context-uc14", rule, {
         a(x: any): void;
         b(y: string): any;
       }`,
-      errors: [
-        { messageId: "anyParam" },
-        { messageId: "anyReturn" },
-      ],
+      errors: [{ messageId: "anyParam" }, { messageId: "anyReturn" }],
     },
   ],
 });

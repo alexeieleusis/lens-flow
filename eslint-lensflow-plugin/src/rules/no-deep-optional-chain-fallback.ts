@@ -68,9 +68,11 @@ export default createRule({
         if (node.operator !== "??") return;
 
         const ancestors = context.sourceCode.getAncestors(node);
-        const parentIsCoalesce = ancestors.length > 0 &&
+        const parentIsCoalesce =
+          ancestors.length > 0 &&
           ancestors[ancestors.length - 1].type === "LogicalExpression" &&
-          (ancestors[ancestors.length - 1] as TSESTree.LogicalExpression).operator === "??";
+          (ancestors[ancestors.length - 1] as TSESTree.LogicalExpression)
+            .operator === "??";
         if (parentIsCoalesce) return;
 
         const fallbackCount = countNullishCoalesces(node);

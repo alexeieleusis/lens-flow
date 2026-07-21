@@ -10,8 +10,7 @@ function isPrivateFieldReturn(expr: TSESTree.Node | null | undefined): boolean {
   if (expr.object.type !== "ThisExpression") return false;
   if (expr.property.type === "PrivateIdentifier") return true;
   return (
-    expr.property.type === "Identifier" &&
-    expr.property.name.startsWith("#")
+    expr.property.type === "Identifier" && expr.property.name.startsWith("#")
   );
 }
 

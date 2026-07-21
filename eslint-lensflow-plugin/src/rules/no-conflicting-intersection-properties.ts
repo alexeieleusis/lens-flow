@@ -65,7 +65,10 @@ function isLiteralVsPrimitiveConflict(
   return false;
 }
 
-function isConflictingTypes(a: TSESTree.TypeNode, b: TSESTree.TypeNode): boolean {
+function isConflictingTypes(
+  a: TSESTree.TypeNode,
+  b: TSESTree.TypeNode,
+): boolean {
   const typeA = a.type;
   const typeB = b.type;
 
@@ -154,7 +157,12 @@ function findConflicts(propMap: Map<string, PropEntry[]>): string[] {
 
     for (let i = 0; i < entries.length; i++) {
       for (let j = i + 1; j < entries.length; j++) {
-        if (isConflictingTypes(entries[i].typeAnnotation, entries[j].typeAnnotation)) {
+        if (
+          isConflictingTypes(
+            entries[i].typeAnnotation,
+            entries[j].typeAnnotation,
+          )
+        ) {
           conflicts.push(propName);
           break;
         }

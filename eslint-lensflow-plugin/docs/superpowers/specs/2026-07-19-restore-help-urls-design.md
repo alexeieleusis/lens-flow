@@ -75,7 +75,7 @@ For every non-compliant file, resolve the target knowledge markdown path:
 2. Else if the file imports a shared `*_URL` constant from another file under
    `src/utils/` (not `knowledge-url.ts`), resolve that constant's value and
    extract `<path>` the same way. Record `cleanup_util: <path to that utils
-   file>` on the map entry.
+file>` on the map entry.
 3. Else (no URL anywhere currently) run
    `git show delete_lastRule:eslint-lensflow-plugin/src/rules/<name>.ts`
    and extract `<path>` from the raw URL found there.

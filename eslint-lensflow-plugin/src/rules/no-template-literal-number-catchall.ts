@@ -28,9 +28,7 @@ export default createRule({
         const types = node.types;
 
         const hasMoreSpecificType = types.some(
-          (t) =>
-            t.type !== "TSStringKeyword" &&
-            t.type !== "TSNumberKeyword",
+          (t) => t.type !== "TSStringKeyword" && t.type !== "TSNumberKeyword",
         );
 
         for (const type of types) {

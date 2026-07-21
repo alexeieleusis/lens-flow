@@ -11,9 +11,7 @@ function hasInfer(node: TSESTree.TypeNode): boolean {
   return children.some((child) => hasInfer(child));
 }
 
-function findReferencedTypeParamNames(
-  node: TSESTree.TypeNode,
-): string[] {
+function findReferencedTypeParamNames(node: TSESTree.TypeNode): string[] {
   const names = new Set<string>();
 
   function walk(type: TSESTree.TypeNode) {

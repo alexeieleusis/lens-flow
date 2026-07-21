@@ -130,10 +130,7 @@ interface Config { name: string }
 const obj = { name: "a", extra: true };
 const typed = (obj as unknown) as Config;
 `,
-      errors: [
-        { messageId: "excessProps" },
-        { messageId: "excessProps" },
-      ],
+      errors: [{ messageId: "excessProps" }, { messageId: "excessProps" }],
     },
     // TSNonNullExpression wrapper — excess property should still be caught
     {

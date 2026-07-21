@@ -48,9 +48,7 @@ function findFirstThrow(body: TSESTree.Node): TSESTree.ThrowStatement | null {
 
 const EXCLUDED_NAMES = new Set(["assertNever", "fail"]);
 
-function getFunctionName(
-  node: TSESTree.FunctionLike,
-): string {
+function getFunctionName(node: TSESTree.FunctionLike): string {
   if (
     node.type === "FunctionDeclaration" ||
     node.type === "FunctionExpression" ||

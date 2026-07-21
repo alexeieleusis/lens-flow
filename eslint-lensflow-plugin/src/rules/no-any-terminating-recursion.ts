@@ -5,7 +5,8 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const URL = knowledgeUrl("catalog/T61-recursive-types.md");
 
-type AnyOrUnknownNode = TSESTree.TSAnyKeyword | TSESTree.TSUnknownKeyword | null;
+type AnyOrUnknownNode =
+  TSESTree.TSAnyKeyword | TSESTree.TSUnknownKeyword | null;
 
 function findAnyOrUnknown(node: TSESTree.Node): AnyOrUnknownNode {
   if (node.type === "TSAnyKeyword" || node.type === "TSUnknownKeyword") {
@@ -19,12 +20,17 @@ function findAnyOrUnknown(node: TSESTree.Node): AnyOrUnknownNode {
   return null;
 }
 
-function isSelfReferential(declName: string, typeNode: TSESTree.TypeNode): boolean {
+function isSelfReferential(
+  declName: string,
+  typeNode: TSESTree.TypeNode,
+): boolean {
   function check(node: TSESTree.Node): boolean {
     if (node.type === "TSTypeReference") {
       if (
-        (node.typeName.type === "Identifier" && node.typeName.name === declName) ||
-        (node.typeName.type === "TSQualifiedName" && node.typeName.right.name === declName)
+        (node.typeName.type === "Identifier" &&
+          node.typeName.name === declName) ||
+        (node.typeName.type === "TSQualifiedName" &&
+          node.typeName.right.name === declName)
       ) {
         return true;
       }
@@ -39,7 +45,10 @@ function isSelfReferential(declName: string, typeNode: TSESTree.TypeNode): boole
   return check(typeNode);
 }
 
-function isInterfaceSelfReferential(declName: string, body: TSESTree.TSInterfaceBody): boolean {
+function isInterfaceSelfReferential(
+  declName: string,
+  body: TSESTree.TSInterfaceBody,
+): boolean {
   for (const member of body.body) {
     if (isSelfReferentialInMember(declName, member)) {
       return true;
@@ -48,7 +57,9 @@ function isInterfaceSelfReferential(declName: string, body: TSESTree.TSInterface
   return false;
 }
 
-function getParamTypeAnnotation(param: TSESTree.Node): TSESTree.TSTypeAnnotation | null {
+function getParamTypeAnnotation(
+  param: TSESTree.Node,
+): TSESTree.TSTypeAnnotation | null {
   // Unwrap RestElement (...args, ...{a}, ...x = "default")
   let p = param;
   if (p.type === "RestElement") {
@@ -67,7 +78,7 @@ function getParamTypeAnnotation(param: TSESTree.Node): TSESTree.TSTypeAnnotation
 function checkParamsAndReturnType(
   declName: string,
   params: readonly TSESTree.Node[],
-  returnType: TSESTree.TSTypeAnnotation | undefined
+  returnType: TSESTree.TSTypeAnnotation | undefined,
 ): boolean {
   for (const param of params) {
     const typeAnn = getParamTypeAnnotation(param);
@@ -81,7 +92,10 @@ function checkParamsAndReturnType(
   return false;
 }
 
-function isSelfReferentialInMember(declName: string, member: TSESTree.Node): boolean {
+function isSelfReferentialInMember(
+  declName: string,
+  member: TSESTree.Node,
+): boolean {
   if (member.type === "TSPropertySignature") {
     const sig = member as TSESTree.TSPropertySignature;
     if (sig.typeAnnotation) {
@@ -105,7 +119,11 @@ function isSelfReferentialInMember(declName: string, member: TSESTree.Node): boo
   return false;
 }
 
-function checkCallSignatureForAny(sig: TSESTree.TSCallSignatureDeclaration | TSESTree.TSConstructSignatureDeclaration): AnyOrUnknownNode[] {
+function checkCallSignatureForAny(
+  sig:
+    | TSESTree.TSCallSignatureDeclaration
+    | TSESTree.TSConstructSignatureDeclaration,
+): AnyOrUnknownNode[] {
   const results: AnyOrUnknownNode[] = [];
   for (const param of sig.params) {
     const typeAnn = getParamTypeAnnotation(param);
@@ -119,11 +137,17 @@ function checkCallSignatureForAny(sig: TSESTree.TSCallSignatureDeclaration | TSE
   return results;
 }
 
-function checkMethodSignatureForAny(sig: TSESTree.TSMethodSignature): AnyOrUnknownNode[] {
-  return checkCallSignatureForAny(sig as unknown as TSESTree.TSCallSignatureDeclaration);
+function checkMethodSignatureForAny(
+  sig: TSESTree.TSMethodSignature,
+): AnyOrUnknownNode[] {
+  return checkCallSignatureForAny(
+    sig as unknown as TSESTree.TSCallSignatureDeclaration,
+  );
 }
 
-function findAnyOrUnknownInInterfaceBody(body: TSESTree.TSInterfaceBody): AnyOrUnknownNode[] {
+function findAnyOrUnknownInInterfaceBody(
+  body: TSESTree.TSInterfaceBody,
+): AnyOrUnknownNode[] {
   const results: AnyOrUnknownNode[] = [];
   for (const m of body.body) {
     if (m.type === "TSPropertySignature" && m.typeAnnotation) {
@@ -144,10 +168,12 @@ export default createRule({
   meta: {
     type: "problem",
     docs: {
-      description: "Disallow `any` or `unknown` inside self-referential recursive types, which defeats type-safe recursion.",
+      description:
+        "Disallow `any` or `unknown` inside self-referential recursive types, which defeats type-safe recursion.",
     },
     messages: {
-      anyInRecursive: "Found `{{keyword}}` inside a self-referential recursive type. Replace with a concrete type to preserve type safety. See: {{url}}",
+      anyInRecursive:
+        "Found `{{keyword}}` inside a self-referential recursive type. Replace with a concrete type to preserve type safety. See: {{url}}",
     },
     fixable: undefined,
     schema: [],

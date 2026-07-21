@@ -26,7 +26,11 @@ export default createRule({
 
     function reportShadow(name: string, node: TSESTree.Node) {
       if (activeNames.has(name)) {
-        context.report({ node, messageId: "shadowedTypeParam", data: { name, url: URL } });
+        context.report({
+          node,
+          messageId: "shadowedTypeParam",
+          data: { name, url: URL },
+        });
       }
     }
 
@@ -42,7 +46,9 @@ export default createRule({
       }
     }
 
-    function enterTypeParams(typeParams: TSESTree.TSTypeParameterDeclaration | undefined) {
+    function enterTypeParams(
+      typeParams: TSESTree.TSTypeParameterDeclaration | undefined,
+    ) {
       if (!typeParams || typeParams.params.length === 0) return;
 
       const params = typeParams.params;
@@ -55,7 +61,9 @@ export default createRule({
       trackScope(names);
     }
 
-    function exitTypeParams(typeParams: TSESTree.TSTypeParameterDeclaration | undefined) {
+    function exitTypeParams(
+      typeParams: TSESTree.TSTypeParameterDeclaration | undefined,
+    ) {
       if (typeParams && typeParams.params.length > 0) {
         untrackScope();
       }
@@ -92,11 +100,17 @@ export default createRule({
     }
 
     function enterConditionalType(node: TSESTree.TSConditionalType) {
-      enterTypeParams((node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters);
+      enterTypeParams(
+        (node as { typeParameters?: TSESTree.TSTypeParameterDeclaration })
+          .typeParameters,
+      );
     }
 
     function exitConditionalType(node: TSESTree.TSConditionalType) {
-      exitTypeParams((node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters);
+      exitTypeParams(
+        (node as { typeParameters?: TSESTree.TSTypeParameterDeclaration })
+          .typeParameters,
+      );
     }
 
     function enterMappedType(node: TSESTree.TSMappedType) {
@@ -111,11 +125,17 @@ export default createRule({
     }
 
     function enterMethodSignature(node: TSESTree.TSMethodSignature) {
-      enterTypeParams((node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters);
+      enterTypeParams(
+        (node as { typeParameters?: TSESTree.TSTypeParameterDeclaration })
+          .typeParameters,
+      );
     }
 
     function exitMethodSignature(node: TSESTree.TSMethodSignature) {
-      exitTypeParams((node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters);
+      exitTypeParams(
+        (node as { typeParameters?: TSESTree.TSTypeParameterDeclaration })
+          .typeParameters,
+      );
     }
 
     function enterFunctionType(node: TSESTree.TSFunctionType) {
@@ -127,11 +147,17 @@ export default createRule({
     }
 
     function enterMethodDefinition(node: TSESTree.MethodDefinition) {
-      enterTypeParams((node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters);
+      enterTypeParams(
+        (node as { typeParameters?: TSESTree.TSTypeParameterDeclaration })
+          .typeParameters,
+      );
     }
 
     function exitMethodDefinition(node: TSESTree.MethodDefinition) {
-      exitTypeParams((node as { typeParameters?: TSESTree.TSTypeParameterDeclaration }).typeParameters);
+      exitTypeParams(
+        (node as { typeParameters?: TSESTree.TSTypeParameterDeclaration })
+          .typeParameters,
+      );
     }
 
     return {

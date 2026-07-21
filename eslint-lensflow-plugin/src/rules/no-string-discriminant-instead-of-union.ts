@@ -11,8 +11,7 @@ function checkDiscriminant(
   node: MemberNode,
   kind: "Interface" | "Type",
 ) {
-  const members =
-    node.type === "TSInterfaceBody" ? node.body : node.members;
+  const members = node.type === "TSInterfaceBody" ? node.body : node.members;
 
   if (members.length <= 1) return;
 
@@ -44,8 +43,11 @@ function checkDiscriminant(
 
   const ancestors = context.sourceCode.getAncestors(node);
   const decl = ancestors.find(
-    (a): a is TSESTree.TSInterfaceDeclaration | TSESTree.TSTypeAliasDeclaration =>
-      (a.type === "TSInterfaceDeclaration" || a.type === "TSTypeAliasDeclaration") &&
+    (
+      a,
+    ): a is TSESTree.TSInterfaceDeclaration | TSESTree.TSTypeAliasDeclaration =>
+      (a.type === "TSInterfaceDeclaration" ||
+        a.type === "TSTypeAliasDeclaration") &&
       a.id?.type === "Identifier",
   );
   const name = decl ? decl.id.name : "?";

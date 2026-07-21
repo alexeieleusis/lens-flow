@@ -32,7 +32,12 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ minUnionMembers: 3 }],
-  create(context: TSESLint.RuleContext<"preferContravariance", [{ minUnionMembers?: number }]>) {
+  create(
+    context: TSESLint.RuleContext<
+      "preferContravariance",
+      [{ minUnionMembers?: number }]
+    >,
+  ) {
     const [{ minUnionMembers } = { minUnionMembers: 3 }] = context.options ?? [
       { minUnionMembers: 3 },
     ];

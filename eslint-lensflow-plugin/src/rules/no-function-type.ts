@@ -24,10 +24,7 @@ export default createRule({
     return {
       TSTypeReference(node) {
         const { typeName } = node;
-        if (
-          typeName.type === "Identifier" &&
-          typeName.name === "Function"
-        ) {
+        if (typeName.type === "Identifier" && typeName.name === "Function") {
           context.report({
             node,
             messageId: "noFunctionType",

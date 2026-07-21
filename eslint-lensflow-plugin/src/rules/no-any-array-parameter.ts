@@ -8,8 +8,15 @@ function isAnyType(node: { type: string }): boolean {
   return node.type === "TSAnyKeyword";
 }
 
-function isAnyArrayType(node: { type: string; elementType?: { type: string } }): boolean {
-  return node.type === "TSArrayType" && node.elementType != null && isAnyType(node.elementType);
+function isAnyArrayType(node: {
+  type: string;
+  elementType?: { type: string };
+}): boolean {
+  return (
+    node.type === "TSArrayType" &&
+    node.elementType != null &&
+    isAnyType(node.elementType)
+  );
 }
 
 function isTupleWithAny(node: {
@@ -29,12 +36,29 @@ function isAnyTypeReference(node: {
   typeArguments?: { params?: Array<{ type: string }> };
 }): boolean {
   if (node.type !== "TSTypeReference") return false;
-  const name = node.typeName?.type === "Identifier" ? node.typeName.name : undefined;
+  const name =
+    node.typeName?.type === "Identifier" ? node.typeName.name : undefined;
   if (name !== "Array" && name !== "ReadonlyArray") return false;
   return node.typeArguments?.params?.some((p) => isAnyType(p)) ?? false;
 }
 
-function hasAnyType(typeAnnotation: { type: string; elementType?: { type: string }; elementTypes?: Array<{ type: string }>; typeAnnotation?: { type: string; elementType?: { type: string }; elementTypes?: Array<{ type: string }> }; typeName?: { type: string; name?: string }; typeArguments?: { params?: Array<{ type: string }> }; types?: Array<{ type: string }> } | undefined): boolean {
+function hasAnyType(
+  typeAnnotation:
+    | {
+        type: string;
+        elementType?: { type: string };
+        elementTypes?: Array<{ type: string }>;
+        typeAnnotation?: {
+          type: string;
+          elementType?: { type: string };
+          elementTypes?: Array<{ type: string }>;
+        };
+        typeName?: { type: string; name?: string };
+        typeArguments?: { params?: Array<{ type: string }> };
+        types?: Array<{ type: string }>;
+      }
+    | undefined,
+): boolean {
   if (!typeAnnotation) return false;
   if (
     isAnyType(typeAnnotation) ||
@@ -54,18 +78,22 @@ function hasAnyType(typeAnnotation: { type: string; elementType?: { type: string
     typeAnnotation.typeArguments?.params
   ) {
     return typeAnnotation.typeArguments.params.some(
-      (p) => p && hasAnyType(p as Parameters<typeof hasAnyType>[0])
+      (p) => p && hasAnyType(p as Parameters<typeof hasAnyType>[0]),
     );
   }
   if (typeAnnotation.type === "TSUnionType") {
-    return typeAnnotation.types?.some(
-      (t) => t && hasAnyType(t as Parameters<typeof hasAnyType>[0])
-    ) ?? false;
+    return (
+      typeAnnotation.types?.some(
+        (t) => t && hasAnyType(t as Parameters<typeof hasAnyType>[0]),
+      ) ?? false
+    );
   }
   if (typeAnnotation.type === "TSIntersectionType") {
-    return typeAnnotation.types?.some(
-      (t) => t && hasAnyType(t as Parameters<typeof hasAnyType>[0])
-    ) ?? false;
+    return (
+      typeAnnotation.types?.some(
+        (t) => t && hasAnyType(t as Parameters<typeof hasAnyType>[0]),
+      ) ?? false
+    );
   }
   return false;
 }
@@ -109,16 +137,27 @@ export default createRule({
 
         const base =
           (param as { type: string }).type === "AssignmentPattern"
-            ? (param as { left: { name?: string; typeAnnotation?: { typeAnnotation?: unknown } } }).left
+            ? (
+                param as {
+                  left: {
+                    name?: string;
+                    typeAnnotation?: { typeAnnotation?: unknown };
+                  };
+                }
+              ).left
             : param;
-        const typeName = ((base as { name?: string })?.name) ?? "unnamed";
-        const typeAnn = (base as { typeAnnotation?: { typeAnnotation?: unknown } })?.typeAnnotation?.typeAnnotation as {
-          type: string;
-          elementType?: { type: string };
-          elementTypes?: Array<{ type: string }>;
-          typeName?: { type: string; name?: string };
-          typeArguments?: { params?: Array<{ type: string }> };
-        } | undefined;
+        const typeName = (base as { name?: string })?.name ?? "unnamed";
+        const typeAnn = (
+          base as { typeAnnotation?: { typeAnnotation?: unknown } }
+        )?.typeAnnotation?.typeAnnotation as
+          | {
+              type: string;
+              elementType?: { type: string };
+              elementTypes?: Array<{ type: string }>;
+              typeName?: { type: string; name?: string };
+              typeArguments?: { params?: Array<{ type: string }> };
+            }
+          | undefined;
 
         if (hasAnyType(typeAnn)) {
           context.report({
@@ -129,7 +168,10 @@ export default createRule({
         }
       }
 
-      if (node.returnType?.typeAnnotation && isAnyType(node.returnType.typeAnnotation as { type: string })) {
+      if (
+        node.returnType?.typeAnnotation &&
+        isAnyType(node.returnType.typeAnnotation as { type: string })
+      ) {
         context.report({
           node: node.returnType as never,
           messageId: "anyReturn",

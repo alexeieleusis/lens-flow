@@ -24,7 +24,8 @@ const DISCRIMINANT_NAMES = new Set([
 function getPropertyName(key: TSESTree.Expression): string | null {
   if (key.type === "Identifier") return key.name;
   if (key.type === "Literal" && typeof key.value === "string") return key.value;
-  if (key.type === "Literal" && typeof key.value === "number") return String(key.value);
+  if (key.type === "Literal" && typeof key.value === "number")
+    return String(key.value);
   return null;
 }
 
@@ -72,10 +73,7 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"nonLiteralDiscriminant", []>) {
-    const parserServices = ESLintUtils.getParserServices(
-      context,
-      true,
-    );
+    const parserServices = ESLintUtils.getParserServices(context, true);
     const program = parserServices.program;
     const hasTypeChecker = !!program;
     const checker = program ? program.getTypeChecker() : null;
@@ -131,9 +129,7 @@ export default createRule({
           }
         }
 
-        function analyzePropertySignature(
-          member: TSESTree.TypeElement,
-        ): {
+        function analyzePropertySignature(member: TSESTree.TypeElement): {
           propName: string;
           sig: TSESTree.TSPropertySignature;
           widened: WidenedKind;
@@ -241,7 +237,12 @@ export default createRule({
 
         const allLiterals: TSESTree.TSTypeLiteral[] = [];
         for (const member of members) {
-          processType(member, new Set<TSESTree.TSTypeReference>(), allLiterals, new Map());
+          processType(
+            member,
+            new Set<TSESTree.TSTypeReference>(),
+            allLiterals,
+            new Map(),
+          );
         }
         const totalCount = allLiterals.length;
 

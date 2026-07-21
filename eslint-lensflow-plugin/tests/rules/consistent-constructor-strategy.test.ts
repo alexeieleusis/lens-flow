@@ -49,23 +49,23 @@ ruleTester.run("consistent-constructor-strategy", rule, {
      }`,
 
     // Throw inside nested callback — not attributed to outer constructor
-     `type Email = string & { _brand: "Email" };
+    `type Email = string & { _brand: "Email" };
 
       function parseEmail(s: string): Email {
         const inner = () => { throw new Error("inner"); };
         return s as Email;
       }`,
 
-     // FunctionExpression with throwing strategy
-      `type Email = string & { _brand: "Email" };
+    // FunctionExpression with throwing strategy
+    `type Email = string & { _brand: "Email" };
 
        const parseEmail = function(s: string): Email {
          if (!s.includes("@")) throw new Error("invalid");
          return s as Email;
        };`,
 
-     // All throwing, exported — consistent strategy
-     `type Email = string & { _brand: "Email" };
+    // All throwing, exported — consistent strategy
+    `type Email = string & { _brand: "Email" };
       type Port = number & { _brand: "Port" };
 
       export function parseEmail(s: string): Email {
@@ -78,21 +78,21 @@ ruleTester.run("consistent-constructor-strategy", rule, {
         return n as Port;
       }`,
 
-   // All result-returning, exported — consistent strategy
-      `type Email = string & { _brand: "Email" };
+    // All result-returning, exported — consistent strategy
+    `type Email = string & { _brand: "Email" };
 
        export function tryParseEmail(s: string): Email | Error {
          if (!s.includes("@")) return new Error("invalid");
          return s as Email;
        }`,
 
-     // Valid — quoted brand property key
-     `type Email = string & { "_brand": "Email" };
+    // Valid — quoted brand property key
+    `type Email = string & { "_brand": "Email" };
       function parseEmail(s: string): Email {
         if (!s.includes("@")) throw new Error("invalid");
         return s as Email;
       }`,
-    ],
+  ],
   invalid: [
     {
       code: `type Email = string & { _brand: "Email" };
@@ -107,10 +107,7 @@ function tryParsePort(n: number): Port | Error {
   if (n < 1 || n > 65535) return new Error("out of range");
   return n as Port;
 }`,
-      errors: [
-        { messageId: "inconsistent" },
-        { messageId: "inconsistent" },
-      ],
+      errors: [{ messageId: "inconsistent" }, { messageId: "inconsistent" }],
     },
     {
       code: `type UserId = string & { _brand: "UserId" };
@@ -179,10 +176,7 @@ export function tryParsePort(n: number): Port | Error {
   if (n < 1 || n > 65535) return new Error("out of range");
   return n as Port;
 }`,
-      errors: [
-        { messageId: "inconsistent" },
-        { messageId: "inconsistent" },
-      ],
+      errors: [{ messageId: "inconsistent" }, { messageId: "inconsistent" }],
     },
   ],
 });

@@ -65,11 +65,16 @@ function isParameterTypedWith(
 
   if (!hasTypeAnnotation) return false;
 
-  const typeAnn = (normalized as unknown as { typeAnnotation: { typeAnnotation: TSESTree.TypeNode } }).typeAnnotation;
+  const typeAnn = (
+    normalized as unknown as {
+      typeAnnotation: { typeAnnotation: TSESTree.TypeNode };
+    }
+  ).typeAnnotation;
 
   function getRightmostIdentifier(entity: TSESTree.EntityName): string | null {
     if (entity.type === "Identifier") return entity.name;
-    if (entity.type === "TSQualifiedName") return getRightmostIdentifier(entity.right);
+    if (entity.type === "TSQualifiedName")
+      return getRightmostIdentifier(entity.right);
     return null;
   }
 
@@ -141,8 +146,8 @@ export default createRule({
         "Disallow generic type parameters with constraint members that are never accessed in the function body",
     },
     messages: {
-     unusedConstraintMembers:
-         "Generic type parameter '{{typeParam}}' has unused constraint members: {{members}}. The constraint is not enforced by any access in the function body. See: {{url}}",
+      unusedConstraintMembers:
+        "Generic type parameter '{{typeParam}}' has unused constraint members: {{members}}. The constraint is not enforced by any access in the function body. See: {{url}}",
     },
     schema: [
       {
@@ -159,7 +164,12 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ minUnusedMembers: 1 }],
-  create(context: TSESLint.RuleContext<"unusedConstraintMembers", [{ minUnusedMembers: number }]>) {
+  create(
+    context: TSESLint.RuleContext<
+      "unusedConstraintMembers",
+      [{ minUnusedMembers: number }]
+    >,
+  ) {
     const [{ minUnusedMembers } = { minUnusedMembers: 1 }] =
       context.options ?? [{ minUnusedMembers: 1 }];
 
@@ -168,9 +178,7 @@ export default createRule({
       memberNames: string[],
       accessedMembers: Set<string>,
     ) {
-      const unusedMembers = memberNames.filter(
-        (m) => !accessedMembers.has(m),
-      );
+      const unusedMembers = memberNames.filter((m) => !accessedMembers.has(m));
       if (
         unusedMembers.length === memberNames.length &&
         unusedMembers.length >= minUnusedMembers

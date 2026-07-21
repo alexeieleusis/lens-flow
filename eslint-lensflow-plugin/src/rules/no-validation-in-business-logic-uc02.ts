@@ -29,7 +29,10 @@ const COMPARISON_OPERATORS = new Set([
 function isCallback(
   node: TSESTree.Node,
 ): node is TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression {
-  return node.type === "ArrowFunctionExpression" || node.type === "FunctionExpression";
+  return (
+    node.type === "ArrowFunctionExpression" ||
+    node.type === "FunctionExpression"
+  );
 }
 
 function extractIdentifiers(node: TSESTree.Node, names: Set<string>): void {
@@ -119,13 +122,19 @@ function walk(node: TSESTree.Node): TSESTree.Node[] {
   return result;
 }
 
-function isValidationComparison(bin: TSESTree.BinaryExpression, params: Set<string>): boolean {
-  const hasParam = involvesParam(bin.left, params) || involvesParam(bin.right, params);
+function isValidationComparison(
+  bin: TSESTree.BinaryExpression,
+  params: Set<string>,
+): boolean {
+  const hasParam =
+    involvesParam(bin.left, params) || involvesParam(bin.right, params);
   const hasLiteral = isLiteralLike(bin.left) || isLiteralLike(bin.right);
   return hasParam && hasLiteral;
 }
 
-function findThrowInBothBranches(ifNode: TSESTree.IfStatement): TSESTree.ThrowStatement | null {
+function findThrowInBothBranches(
+  ifNode: TSESTree.IfStatement,
+): TSESTree.ThrowStatement | null {
   let throwNode = findThrow(ifNode.consequent);
   if (!throwNode && ifNode.alternate) {
     throwNode = findThrow(ifNode.alternate);
@@ -135,7 +144,9 @@ function findThrowInBothBranches(ifNode: TSESTree.IfStatement): TSESTree.ThrowSt
 
 function reportValidationInCallback(
   cb: TSESTree.ArrowFunctionExpression | TSESTree.FunctionExpression,
-  context: Readonly<Parameters<NonNullable<Parameters<typeof createRule>[0]["create"]>>[0]>,
+  context: Readonly<
+    Parameters<NonNullable<Parameters<typeof createRule>[0]["create"]>>[0]
+  >,
 ) {
   const params = getParamNames(cb);
   if (params.size === 0) return;

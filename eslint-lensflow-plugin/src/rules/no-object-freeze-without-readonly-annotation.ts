@@ -8,7 +8,8 @@ const URL = knowledgeUrl("catalog/T32-immutability-markers.md");
 function getTypeNameIdentifier(node: TSESTree.Node | undefined): string | null {
   if (!node) return null;
   if (node.type === AST_NODE_TYPES.Identifier) return node.name;
-  if (node.type === AST_NODE_TYPES.TSQualifiedName) return getTypeNameIdentifier(node.right);
+  if (node.type === AST_NODE_TYPES.TSQualifiedName)
+    return getTypeNameIdentifier(node.right);
   return null;
 }
 
@@ -25,7 +26,9 @@ function hasAsConst(declarator: TSESTree.VariableDeclarator): boolean {
   return false;
 }
 
-function hasReadonlyAnnotation(declarator: TSESTree.VariableDeclarator): boolean {
+function hasReadonlyAnnotation(
+  declarator: TSESTree.VariableDeclarator,
+): boolean {
   if (declarator.id?.typeAnnotation) {
     const ann = declarator.id.typeAnnotation;
     if (
@@ -59,7 +62,10 @@ function isObjectFreezeCall(node: TSESTree.CallExpression): boolean {
   );
 }
 
-function isDirectInit(declarator: TSESTree.VariableDeclarator, target: TSESTree.Node): boolean {
+function isDirectInit(
+  declarator: TSESTree.VariableDeclarator,
+  target: TSESTree.Node,
+): boolean {
   if (!declarator.init) return false;
   let unwrapped = declarator.init;
   while (
@@ -103,27 +109,41 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"missingReadonly", []>) {
-    function findDirectDeclarator(node: TSESTree.Node): TSESTree.VariableDeclarator | null {
+    function findDirectDeclarator(
+      node: TSESTree.Node,
+    ): TSESTree.VariableDeclarator | null {
       const ancestors = context.sourceCode.getAncestors(node);
       for (const ancestor of ancestors) {
-        if (ancestor.type === AST_NODE_TYPES.VariableDeclarator) return ancestor;
+        if (ancestor.type === AST_NODE_TYPES.VariableDeclarator)
+          return ancestor;
       }
       return null;
     }
 
-    function handleIndirectInit(declarator: TSESTree.VariableDeclarator, node: TSESTree.CallExpression): void {
+    function handleIndirectInit(
+      declarator: TSESTree.VariableDeclarator,
+      node: TSESTree.CallExpression,
+    ): void {
       const ancestors = context.sourceCode.getAncestors(node);
       for (let i = ancestors.length - 1; i >= 0; i--) {
         const ancestor = ancestors[i];
         if (ancestor === declarator) break;
         if (isPerAncestor(ancestor)) return;
         if (isFunctionAncestor(ancestor)) {
-          context.report({ node, messageId: "missingReadonly", data: { url: URL } });
+          context.report({
+            node,
+            messageId: "missingReadonly",
+            data: { url: URL },
+          });
           return;
         }
       }
       if (hasAsConst(declarator) || hasReadonlyAnnotation(declarator)) return;
-      context.report({ node, messageId: "missingReadonly", data: { url: URL } });
+      context.report({
+        node,
+        messageId: "missingReadonly",
+        data: { url: URL },
+      });
     }
 
     return {
@@ -134,8 +154,13 @@ export default createRule({
         if (!declarator) return;
 
         if (isDirectInit(declarator, node)) {
-          if (hasAsConst(declarator) || hasReadonlyAnnotation(declarator)) return;
-          context.report({ node, messageId: "missingReadonly", data: { url: URL } });
+          if (hasAsConst(declarator) || hasReadonlyAnnotation(declarator))
+            return;
+          context.report({
+            node,
+            messageId: "missingReadonly",
+            data: { url: URL },
+          });
         } else {
           handleIndirectInit(declarator, node);
         }

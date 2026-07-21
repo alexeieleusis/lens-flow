@@ -9,8 +9,7 @@ export default createRule({
   meta: {
     type: "suggestion",
     docs: {
-      description:
-        "Disallow intersection type chains with too many members",
+      description: "Disallow intersection type chains with too many members",
     },
     messages: {
       excessiveChain:
@@ -31,7 +30,9 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ maxMembers: 4 }],
-  create(context: TSESLint.RuleContext<"excessiveChain", [{ maxMembers: number }]>) {
+  create(
+    context: TSESLint.RuleContext<"excessiveChain", [{ maxMembers: number }]>,
+  ) {
     const options = context.options[0] ?? { maxMembers: 4 };
 
     return {

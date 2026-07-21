@@ -92,8 +92,8 @@ export default createRule({
         "Disallow functions with return type `never` that have a reachable endpoint",
     },
     messages: {
-     reachableEnd:
-         "A function returning 'never' must not have a reachable endpoint. Every code path must throw, loop infinitely, or call another never-returning function. See: {{url}}",
+      reachableEnd:
+        "A function returning 'never' must not have a reachable endpoint. Every code path must throw, loop infinitely, or call another never-returning function. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -130,11 +130,7 @@ export default createRule({
     return {
       FunctionDeclaration(node) {
         const returnType = node.returnType?.typeAnnotation;
-        if (
-          node.id &&
-          returnType &&
-          isNeverReturnType(returnType)
-        ) {
+        if (node.id && returnType && isNeverReturnType(returnType)) {
           neverFunctions.add(node.id.name);
         }
         checkFunctionBody(node);

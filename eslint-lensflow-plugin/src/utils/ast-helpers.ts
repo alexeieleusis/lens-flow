@@ -178,16 +178,16 @@ export function getComparisonInfo(
   test: TSESTree.Node | undefined,
   esTreeNodeToTSNodeMap: ParserServices["esTreeNodeToTSNodeMap"],
 ): ComparisonInfo | null {
-  if (test?.type !== "BinaryExpression" || !COMPARISON_OPERATORS.has(test.operator))
+  if (
+    test?.type !== "BinaryExpression" ||
+    !COMPARISON_OPERATORS.has(test.operator)
+  )
     return null;
 
   let varNode: TSESTree.Node | undefined;
   let value: string | undefined;
 
-  if (
-    test.right.type === "Literal" &&
-    typeof test.right.value === "string"
-  ) {
+  if (test.right.type === "Literal" && typeof test.right.value === "string") {
     varNode = test.left;
     value = test.right.value;
   } else if (
@@ -212,7 +212,8 @@ export function getComparisonInfo(
   if (varNode.computed || varNode.property.type !== "Identifier") return null;
 
   const memberName = getMemberName(varNode);
-  if (!memberName || memberName.startsWith(".") || memberName.startsWith("..")) return null;
+  if (!memberName || memberName.startsWith(".") || memberName.startsWith(".."))
+    return null;
 
   const tsVarNode = esTreeNodeToTSNodeMap.get(varNode);
   if (!tsVarNode) return null;
@@ -292,10 +293,7 @@ function isContinuationOfChain(
   const prev = statements[index - 1];
   if (prev.type !== "IfStatement") return false;
 
-  const prevInfo = getComparisonInfo(
-    prev.test,
-    esTreeNodeToTSNodeMap,
-  );
+  const prevInfo = getComparisonInfo(prev.test, esTreeNodeToTSNodeMap);
   return prevInfo?.varName === currentVarName;
 }
 
@@ -323,10 +321,14 @@ function collectConsecutiveValues(
   return { consecutiveValues, nextIndex: j };
 }
 
-function collectNestedStatementArrays(stmt: TSESTree.Statement): TSESTree.Statement[][] {
+function collectNestedStatementArrays(
+  stmt: TSESTree.Statement,
+): TSESTree.Statement[][] {
   const results: TSESTree.Statement[][] = [];
 
-  function extract(stmts: TSESTree.Statement | TSESTree.Statement[] | null | undefined) {
+  function extract(
+    stmts: TSESTree.Statement | TSESTree.Statement[] | null | undefined,
+  ) {
     if (!stmts) return;
     if (Array.isArray(stmts)) {
       results.push(stmts);
@@ -404,7 +406,9 @@ export function findIfChainStarts(
     const info = getComparisonInfo(stmt.test, esTreeNodeToTSNodeMap);
     if (!info) continue;
 
-    if (isContinuationOfChain(statements, i, info.varName, esTreeNodeToTSNodeMap)) {
+    if (
+      isContinuationOfChain(statements, i, info.varName, esTreeNodeToTSNodeMap)
+    ) {
       continue;
     }
 

@@ -80,7 +80,7 @@ ruleTester.run("no-excessively-nested-conditional-types", rule, {
 }`,
       errors: [{ messageId: "excessiveNesting" }],
     },
-   // Conditional type as a generic constraint (depth 3 > default maxDepth 2)
+    // Conditional type as a generic constraint (depth 3 > default maxDepth 2)
     {
       code: `type Constrained<U, T extends U extends { x: infer X }
   ? X extends { y: infer Y }

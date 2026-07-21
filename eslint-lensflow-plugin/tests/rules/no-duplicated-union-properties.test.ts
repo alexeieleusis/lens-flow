@@ -68,14 +68,14 @@ type Entity =
   | { kind: "failed"; id: number; error: string };`,
       errors: [{ messageId: "duplicatedProperties" }],
     },
-   // Intersection-based members: id: number duplicated across both arms
+    // Intersection-based members: id: number duplicated across both arms
     {
       code: `type IntersectDup =
    | ({ kind: "a" } & { id: number; extraA: string })
    | ({ kind: "b" } & { id: number; extraB: boolean });`,
       errors: [{ messageId: "duplicatedProperties" }],
     },
-   // Quoted (string-literal) property keys: "id" duplicated across both members
+    // Quoted (string-literal) property keys: "id" duplicated across both members
     {
       code: `type QuotedDup =
     | { "kind": "a"; "id": string; "extraA": number }

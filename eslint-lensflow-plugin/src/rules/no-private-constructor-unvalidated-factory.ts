@@ -6,9 +6,7 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 const ValidationPattern = /^(?:valid|check|assert|parse)/;
 const URL = knowledgeUrl("usecases/UC10-encapsulation.md");
 
-function extractMemberParts(
-  callee: TSESTree.MemberExpression,
-): string[] {
+function extractMemberParts(callee: TSESTree.MemberExpression): string[] {
   const parts: string[] = [];
   let cur: TSESTree.MemberExpression | TSESTree.Identifier = callee;
   while (true) {

@@ -25,7 +25,12 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"emptyDefault" | "breakOnlyDefault" | "missingAssertNever", []>) {
+  create(
+    context: TSESLint.RuleContext<
+      "emptyDefault" | "breakOnlyDefault" | "missingAssertNever",
+      []
+    >,
+  ) {
     return {
       SwitchStatement(node) {
         const discriminant = node.discriminant;
@@ -51,10 +56,7 @@ export default createRule({
           return;
         }
 
-        if (
-          conseq.length === 1 &&
-          conseq[0].type === "BreakStatement"
-        ) {
+        if (conseq.length === 1 && conseq[0].type === "BreakStatement") {
           context.report({
             node: defaultCase,
             messageId: "breakOnlyDefault",

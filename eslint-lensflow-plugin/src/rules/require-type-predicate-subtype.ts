@@ -40,11 +40,13 @@ export default createRule({
         );
       if (!ancestor) return;
 
-      const tsAncestor =
-        parserServices.esTreeNodeToTSNodeMap.get(ancestor);
+      const tsAncestor = parserServices.esTreeNodeToTSNodeMap.get(ancestor);
       if (!tsAncestor) return;
 
-      if (ts.isClassDeclaration(tsAncestor) || ts.isClassExpression(tsAncestor)) {
+      if (
+        ts.isClassDeclaration(tsAncestor) ||
+        ts.isClassExpression(tsAncestor)
+      ) {
         const classLike = tsAncestor as ts.ClassLikeDeclaration;
         if (classLike.name) {
           const classSym = checker.getSymbolAtLocation(classLike.name);
@@ -56,7 +58,9 @@ export default createRule({
       }
     }
 
-    function checkTypePredicate(node: TSESTree.Node & { returnType?: TSESTree.TSTypeAnnotation }) {
+    function checkTypePredicate(
+      node: TSESTree.Node & { returnType?: TSESTree.TSTypeAnnotation },
+    ) {
       const returnAnn = node.returnType?.typeAnnotation;
       if (returnAnn?.type !== "TSTypePredicate") return;
 
@@ -64,8 +68,7 @@ export default createRule({
       const paramNameNode = pred.parameterName;
       if (paramNameNode.type !== "TSThisType") return;
 
-      const tsPredNode =
-        parserServices.esTreeNodeToTSNodeMap.get(pred);
+      const tsPredNode = parserServices.esTreeNodeToTSNodeMap.get(pred);
       if (!tsPredNode) return;
 
       const tsTypeNode = tsPredNode.type;
@@ -85,9 +88,16 @@ export default createRule({
         try {
           const bases = checker.getBaseTypes(pred as ts.InterfaceType);
           for (const base of bases) {
-            if (base === enc || (base.symbol?.escapedName as string) === encName || isSubtype(base, enc)) return true;
+            if (
+              base === enc ||
+              (base.symbol?.escapedName as string) === encName ||
+              isSubtype(base, enc)
+            )
+              return true;
           }
-        } catch { /* no base types */ }
+        } catch {
+          /* no base types */
+        }
         return false;
       }
 
@@ -104,7 +114,9 @@ export default createRule({
       }
     }
 
-    const handler = (node: TSESTree.Node & { returnType?: TSESTree.TSTypeAnnotation }) => checkTypePredicate(node);
+    const handler = (
+      node: TSESTree.Node & { returnType?: TSESTree.TSTypeAnnotation },
+    ) => checkTypePredicate(node);
 
     return {
       TSMethodSignature: handler,

@@ -47,7 +47,7 @@ function containsTypeLiteral(node: TSESTree.TypeNode): boolean {
     return node.types.some(containsTypeLiteral);
   }
 
-   return false;
+  return false;
 }
 
 export default createRule({

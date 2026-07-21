@@ -9,11 +9,14 @@ function hasInferInConstructor(node: TSESTree.TypeNode): boolean {
   if (node.type !== "TSConstructorType") return false;
   const ctor = node as unknown as TSESTree.TSConstructorType;
   const params = ctor.params ?? [];
-  if (params.some((p: TSESTree.Parameter) => {
-    const inner = p.type === "TSParameterProperty" ? p.parameter : p;
-    const ta = inner.typeAnnotation?.typeAnnotation;
-    return ta ? containsInfer(ta) : false;
-  })) return true;
+  if (
+    params.some((p: TSESTree.Parameter) => {
+      const inner = p.type === "TSParameterProperty" ? p.parameter : p;
+      const ta = inner.typeAnnotation?.typeAnnotation;
+      return ta ? containsInfer(ta) : false;
+    })
+  )
+    return true;
   const ret = ctor.returnType?.typeAnnotation;
   return ret ? containsInfer(ret) : false;
 }
@@ -48,8 +51,9 @@ function checkChildForInfer(child: unknown): boolean {
   return false;
 }
 
-
-function hasTemplateInferExtendsType(node: TSESTree.TSConditionalType): boolean {
+function hasTemplateInferExtendsType(
+  node: TSESTree.TSConditionalType,
+): boolean {
   let ext = node.extendsType;
   return (
     ext.type === "TSTemplateLiteralType" &&
@@ -83,8 +87,8 @@ export default createRule({
         "Disallow recursive conditional types with `infer` and deeply nested conditional branches exceeding the configured max depth.",
     },
     messages: {
-     complexInferChain:
-         "Found a recursive conditional type with `infer` nested {{depth}} levels deep (max allowed: {{maxDepth}}). Consider simplifying or using a function-based approach. See: {{url}}",
+      complexInferChain:
+        "Found a recursive conditional type with `infer` nested {{depth}} levels deep (max allowed: {{maxDepth}}). Consider simplifying or using a function-based approach. See: {{url}}",
     },
     schema: [
       {
@@ -101,8 +105,12 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ maxDepth: 3 }],
-  create(context: TSESLint.RuleContext<"complexInferChain", [{ maxDepth?: number }]>) {
-    const [{ maxDepth } = { maxDepth: 3 }] = context.options ?? [{ maxDepth: 3 }];
+  create(
+    context: TSESLint.RuleContext<"complexInferChain", [{ maxDepth?: number }]>,
+  ) {
+    const [{ maxDepth } = { maxDepth: 3 }] = context.options ?? [
+      { maxDepth: 3 },
+    ];
     const effectiveMaxDepth = maxDepth ?? 3;
 
     return {

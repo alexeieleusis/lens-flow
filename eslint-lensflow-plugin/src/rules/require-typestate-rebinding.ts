@@ -11,9 +11,7 @@ const FUNCTION_BOUNDARY_TYPES = new Set([
   "ArrowFunctionExpression",
 ]);
 
-function isCallOnObject(
-  node: TSESTree.Expression,
-): TSESTree.Identifier | null {
+function isCallOnObject(node: TSESTree.Expression): TSESTree.Identifier | null {
   let call: TSESTree.CallExpression | null = null;
   if (node.type === "CallExpression") {
     call = node;
@@ -28,7 +26,10 @@ function isCallOnObject(
   return null;
 }
 
-function nodeMatchesTarget(n: TSESTree.Node, targetName: string): "use" | "rebind" | null {
+function nodeMatchesTarget(
+  n: TSESTree.Node,
+  targetName: string,
+): "use" | "rebind" | null {
   if (n.type === "Identifier" && n.name === targetName) return "use";
   if (
     n.type === "VariableDeclarator" &&
@@ -80,7 +81,9 @@ function findNodeIndexInStatements(
 ): number {
   for (let i = 0; i < statements.length; i++) {
     if (statements[i] === target) return i;
-    for (const child of getChildren(statements[i], { skipTypeAnnotations: true })) {
+    for (const child of getChildren(statements[i], {
+      skipTypeAnnotations: true,
+    })) {
       if (FUNCTION_BOUNDARY_TYPES.has(child.type)) continue;
       const nestedIdx = findNodeIndexInNode(child, target);
       if (nestedIdx !== -1) return nestedIdx;
@@ -129,7 +132,9 @@ export default createRule({
       stmtBody: TSESTree.Statement[] | null;
     }
 
-    const scopeStack: ScopeFrame[] = [{ letBindings: new Map(), stmtBody: null }];
+    const scopeStack: ScopeFrame[] = [
+      { letBindings: new Map(), stmtBody: null },
+    ];
 
     function getCurrentScope(): ScopeFrame {
       return scopeStack[scopeStack.length - 1];
@@ -158,7 +163,9 @@ export default createRule({
       }
     }
 
-    function findLetBinding(bindingName: string): { binding: LetBinding; scopeIdx: number } | null {
+    function findLetBinding(
+      bindingName: string,
+    ): { binding: LetBinding; scopeIdx: number } | null {
       for (let i = scopeStack.length - 1; i >= 0; i--) {
         const b = scopeStack[i].letBindings.get(bindingName);
         if (b) return { binding: b, scopeIdx: i };
@@ -190,7 +197,11 @@ export default createRule({
       letScopeIdx: number,
       currentScope: ScopeFrame,
       idx: number,
-    ): { letScopeBody: TSESTree.Statement[]; startCheckIdx: number; constDeclBlock: TSESTree.Node | null } | null {
+    ): {
+      letScopeBody: TSESTree.Statement[];
+      startCheckIdx: number;
+      constDeclBlock: TSESTree.Node | null;
+    } | null {
       if (currentScope.stmtBody === foundBinding.scopeBody) {
         if (foundBinding.letIdx >= idx) return null;
         return {
@@ -237,10 +248,23 @@ export default createRule({
         if (!found) continue;
 
         const { binding: foundBinding, scopeIdx: letScopeIdx } = found;
-        const params = resolveScopeCheckParams(node, foundBinding, letScopeIdx, currentScope, idx);
+        const params = resolveScopeCheckParams(
+          node,
+          foundBinding,
+          letScopeIdx,
+          currentScope,
+          idx,
+        );
         if (!params) continue;
 
-        if (hasSubsequentUse(params.letScopeBody, params.startCheckIdx, objId.name, params.constDeclBlock)) {
+        if (
+          hasSubsequentUse(
+            params.letScopeBody,
+            params.startCheckIdx,
+            objId.name,
+            params.constDeclBlock,
+          )
+        ) {
           context.report({
             node: declarator,
             messageId: "staleStateRef",

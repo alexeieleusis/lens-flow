@@ -15,7 +15,7 @@ export default createRule({
     },
     messages: {
       anyProperty:
-        "Property \"{{name}}\" uses `any` type, defeating structural typing. Replace with a specific type. See: {{url}}",
+        'Property "{{name}}" uses `any` type, defeating structural typing. Replace with a specific type. See: {{url}}',
     },
     schema: [],
     fixable: undefined,

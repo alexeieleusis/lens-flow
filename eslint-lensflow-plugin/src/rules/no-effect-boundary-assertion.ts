@@ -31,10 +31,7 @@ function isSuccessFromFirstParam(effectName: string): boolean {
 
 function isFunctionLikeNode(
   dec: ts.Node,
-): dec is
-  | ts.FunctionDeclaration
-  | ts.MethodDeclaration
-  | ts.FunctionTypeNode {
+): dec is ts.FunctionDeclaration | ts.MethodDeclaration | ts.FunctionTypeNode {
   return (
     ts.isFunctionDeclaration(dec) ||
     ts.isMethodDeclaration(dec) ||
@@ -69,7 +66,7 @@ export default createRule({
     docs: {
       description:
         "Disallow using type assertion (as T) to extract the inner value from an effect type, bypassing the effect wrapper entirely.",
-     },
+    },
     messages: {
       effectBoundaryBypass:
         "Using `as {{assertedType}}` to extract inner value from effect type `{{effectType}}`. Use pattern matching (e.g., _tag check) instead of type assertion. See: {{url}}",
@@ -114,8 +111,9 @@ export default createRule({
         const successIndex = isSuccessFromFirstParam(name) ? 0 : 1;
         const successType = typeArgs[successIndex];
 
-        const typeNodeTs =
-          parserServices.esTreeNodeToTSNodeMap.get(node.typeAnnotation);
+        const typeNodeTs = parserServices.esTreeNodeToTSNodeMap.get(
+          node.typeAnnotation,
+        );
         if (!typeNodeTs) return;
 
         const assertedType = checker.getTypeFromTypeNode(

@@ -1,4 +1,4 @@
-import { TSESTree, TSESLint } from '@typescript-eslint/utils';
+import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
@@ -37,9 +37,13 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ minOptionalFields: 5, maxTotalFields: 8 }],
-  create(context: TSESLint.RuleContext<"tooManyOptional" | "tooManyTotal", [{ minOptionalFields?: number, maxTotalFields?: number }]>) {
-    const [{ minOptionalFields, maxTotalFields } = {}] =
-      context.options ?? [];
+  create(
+    context: TSESLint.RuleContext<
+      "tooManyOptional" | "tooManyTotal",
+      [{ minOptionalFields?: number; maxTotalFields?: number }]
+    >,
+  ) {
+    const [{ minOptionalFields, maxTotalFields } = {}] = context.options ?? [];
     const thresholdOptional = minOptionalFields ?? 5;
     const thresholdTotal = maxTotalFields ?? 8;
 
@@ -56,8 +60,15 @@ export default createRule({
       const totalCount = properties.length;
 
       const parent = node.parent;
-      let declarationAncestor: TSESTree.TSInterfaceDeclaration | TSESTree.TSTypeAliasDeclaration | undefined;
-      if (parent && (parent.type === "TSInterfaceDeclaration" || parent.type === "TSTypeAliasDeclaration")) {
+      let declarationAncestor:
+        | TSESTree.TSInterfaceDeclaration
+        | TSESTree.TSTypeAliasDeclaration
+        | undefined;
+      if (
+        parent &&
+        (parent.type === "TSInterfaceDeclaration" ||
+          parent.type === "TSTypeAliasDeclaration")
+      ) {
         declarationAncestor = parent;
       }
 

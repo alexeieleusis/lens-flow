@@ -28,7 +28,12 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"outInInputPosition" | "inInOutputPosition", []>) {
+  create(
+    context: TSESLint.RuleContext<
+      "outInInputPosition" | "inInOutputPosition",
+      []
+    >,
+  ) {
     function checkDeclaration(
       typeParams: TSESTree.TSTypeParameter[],
       body: TSESTree.TSInterfaceBody | TSESTree.TSTypeLiteral,

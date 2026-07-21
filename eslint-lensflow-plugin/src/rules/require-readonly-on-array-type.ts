@@ -24,7 +24,12 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"mutableArrayOnReadonlyProp" | "mutableArrayRefOnReadonlyProp", []>) {
+  create(
+    context: TSESLint.RuleContext<
+      "mutableArrayOnReadonlyProp" | "mutableArrayRefOnReadonlyProp",
+      []
+    >,
+  ) {
     return {
       TSPropertySignature(node) {
         const isReadonly = node.readonly;

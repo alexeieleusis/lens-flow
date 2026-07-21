@@ -104,10 +104,7 @@ function checkArrayMethodCallOnParam(
   return false;
 }
 
-function countRuntimeChecks(
-  body: TSESTree.Node,
-  paramName: string,
-): number {
+function countRuntimeChecks(body: TSESTree.Node, paramName: string): number {
   const seenMemberExprs = new Set<TSESTree.Node>();
   let arrayCallChecks = 0;
   let hasComputedAccess = 0;
@@ -144,8 +141,8 @@ export default createRule({
         "Prefer `satisfies` for compile-time config shape validation over runtime checks on `any`-typed parameters",
     },
     messages: {
-     preferSatisfies:
-         "Found {{count}} runtime property checks on `any`-typed parameter '{{paramName}}'. Use the `satisfies` operator for compile-time shape validation instead. See: {{url}}",
+      preferSatisfies:
+        "Found {{count}} runtime property checks on `any`-typed parameter '{{paramName}}'. Use the `satisfies` operator for compile-time shape validation instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,

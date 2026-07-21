@@ -7,7 +7,8 @@ const URL = knowledgeUrl("catalog/T59-existential-types.md");
 function countOptionalProps(members: TSESTree.Node[]) {
   return members.filter(
     (member) =>
-      (member as any).type === "TSPropertySignature" && (member as any).optional,
+      (member as any).type === "TSPropertySignature" &&
+      (member as any).optional,
   );
 }
 
@@ -38,7 +39,9 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ maxOptional: 10 }],
-  create(context: TSESLint.RuleContext<"tooManyOptional", [{ maxOptional: number }]>) {
+  create(
+    context: TSESLint.RuleContext<"tooManyOptional", [{ maxOptional: number }]>,
+  ) {
     const { maxOptional = 10 } = context.options[0] ?? {};
 
     return {

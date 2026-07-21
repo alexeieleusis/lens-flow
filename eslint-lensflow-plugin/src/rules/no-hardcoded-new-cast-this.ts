@@ -4,7 +4,8 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 
 const URL = knowledgeUrl("catalog/T33-self-type.md");
 
-type MethodNode = TSESTree.MethodDefinition | TSESTree.TSAbstractMethodDefinition;
+type MethodNode =
+  TSESTree.MethodDefinition | TSESTree.TSAbstractMethodDefinition;
 
 function hasThisReturnType(node: TSESTree.MethodDefinition["value"]): boolean {
   const retType =
@@ -33,7 +34,9 @@ function findEnclosingMethodWithThisReturn(
     }
     if (
       ancestor.type === "TSAbstractMethodDefinition" &&
-      hasThisReturnType(ancestor as unknown as TSESTree.MethodDefinition["value"])
+      hasThisReturnType(
+        ancestor as unknown as TSESTree.MethodDefinition["value"],
+      )
     ) {
       return ancestor as MethodNode;
     }
@@ -61,7 +64,11 @@ export default createRule({
     return {
       ReturnStatement(node) {
         if (!node.argument) return;
-        if (findEnclosingMethodWithThisReturn(context.sourceCode.getAncestors(node))) {
+        if (
+          findEnclosingMethodWithThisReturn(
+            context.sourceCode.getAncestors(node),
+          )
+        ) {
           if (
             node.argument.type === "TSAsExpression" &&
             node.argument.typeAnnotation.type === "TSThisType" &&

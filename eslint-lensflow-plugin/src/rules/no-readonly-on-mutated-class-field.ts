@@ -11,11 +11,16 @@ function extractFieldName(key: TSESTree.Node): string | null {
   return null;
 }
 
-function isReadonlyField(member: TSESTree.ClassElement): member is TSESTree.PropertyDefinition {
+function isReadonlyField(
+  member: TSESTree.ClassElement,
+): member is TSESTree.PropertyDefinition {
   return member.type === "PropertyDefinition" && member.readonly;
 }
 
-function collectConstructorParamFields(member: TSESTree.MethodDefinition, fields: Set<string>) {
+function collectConstructorParamFields(
+  member: TSESTree.MethodDefinition,
+  fields: Set<string>,
+) {
   if (member.kind !== "constructor" || !member.value) return;
   for (const param of member.value.params) {
     if (param.type === "TSParameterProperty") {
@@ -36,8 +41,8 @@ export default createRule({
         "Disallow mutating a readonly class field outside the constructor",
     },
     messages: {
-     mutationOfReadonly:
-         "Cannot assign to readonly field '{{field}}' outside the constructor. readonly fields can only be assigned at declaration or in the constructor. See: {{url}}",
+      mutationOfReadonly:
+        "Cannot assign to readonly field '{{field}}' outside the constructor. readonly fields can only be assigned at declaration or in the constructor. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -47,7 +52,9 @@ export default createRule({
     const readonlyFieldsMap = new Map<TSESTree.ClassBody, Set<string>>();
     const constructorClassBodies: TSESTree.ClassBody[] = [];
 
-    function findEnclosingClassBody(node: TSESTree.Node): TSESTree.ClassBody | null {
+    function findEnclosingClassBody(
+      node: TSESTree.Node,
+    ): TSESTree.ClassBody | null {
       let current: TSESTree.Node | undefined = node;
       while (current) {
         if (current.type === "ClassBody") return current;
@@ -56,16 +63,22 @@ export default createRule({
       return null;
     }
 
-    function isInsideMatchingConstructor(enclosingClass: TSESTree.ClassBody): boolean {
+    function isInsideMatchingConstructor(
+      enclosingClass: TSESTree.ClassBody,
+    ): boolean {
       return constructorClassBodies.includes(enclosingClass);
     }
 
-    function getConstructorClassBody(node: TSESTree.MethodDefinition): TSESTree.ClassBody | null {
+    function getConstructorClassBody(
+      node: TSESTree.MethodDefinition,
+    ): TSESTree.ClassBody | null {
       if (node.kind !== "constructor") return null;
       return node.parent;
     }
 
-    function checkAssignment(node: TSESTree.AssignmentExpression | TSESTree.UpdateExpression) {
+    function checkAssignment(
+      node: TSESTree.AssignmentExpression | TSESTree.UpdateExpression,
+    ) {
       let prop: TSESTree.Node;
 
       if (node.type === "AssignmentExpression") {

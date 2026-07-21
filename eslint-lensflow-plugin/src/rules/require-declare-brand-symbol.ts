@@ -36,7 +36,10 @@ const checkDeclarator = (
       ...(isSingleDeclarator
         ? {
             fix(fixer) {
-              return fixer.replaceText(node, `declare const ${varName}: unique symbol;`);
+              return fixer.replaceText(
+                node,
+                `declare const ${varName}: unique symbol;`,
+              );
             },
           }
         : {}),
@@ -72,7 +75,12 @@ export default createRule({
     fixable: "code",
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"requireDeclareBrand" | "symbolTypedBrand", []>) {
+  create(
+    context: TSESLint.RuleContext<
+      "requireDeclareBrand" | "symbolTypedBrand",
+      []
+    >,
+  ) {
     return {
       VariableDeclaration(node) {
         if (node.declare || node.declarations.length === 0) return;

@@ -12,7 +12,8 @@ function hasBrandMarker(member: TSESTree.TypeNode): boolean {
     if (m.type !== "TSPropertySignature") return false;
     const key = m.key;
     if (key.type === "Identifier") return brandPattern.test(key.name);
-    if (key.type === "Literal" && typeof key.value === "string") return brandPattern.test(key.value);
+    if (key.type === "Literal" && typeof key.value === "string")
+      return brandPattern.test(key.value);
     return false;
   });
 }
@@ -44,7 +45,12 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ maxBrandsPerPrimitive: 3 }],
-  create(context: TSESLint.RuleContext<"overBranding", [{ maxBrandsPerPrimitive: number }]>) {
+  create(
+    context: TSESLint.RuleContext<
+      "overBranding",
+      [{ maxBrandsPerPrimitive: number }]
+    >,
+  ) {
     const [{ maxBrandsPerPrimitive } = { maxBrandsPerPrimitive: 3 }] =
       context.options ?? [{ maxBrandsPerPrimitive: 3 }];
 
@@ -55,14 +61,29 @@ export default createRule({
 
     return {
       "Program:exit"() {
-        const byPrimitive = new Map<"string" | "number", typeof brandedAliases>();
+        const byPrimitive = new Map<
+          "string" | "number",
+          typeof brandedAliases
+        >();
         for (const b of brandedAliases) {
-          byPrimitive.set(b.primitive, [...(byPrimitive.get(b.primitive) || []), b]);
+          byPrimitive.set(b.primitive, [
+            ...(byPrimitive.get(b.primitive) || []),
+            b,
+          ]);
         }
         for (const [primitive, group] of byPrimitive) {
           if (group.length > maxBrandsPerPrimitive) {
             for (const branded of group) {
-              context.report({ node: branded.node, messageId: "overBranding", data: { count: String(group.length), primitive, max: String(maxBrandsPerPrimitive), url: URL } });
+              context.report({
+                node: branded.node,
+                messageId: "overBranding",
+                data: {
+                  count: String(group.length),
+                  primitive,
+                  max: String(maxBrandsPerPrimitive),
+                  url: URL,
+                },
+              });
             }
           }
         }

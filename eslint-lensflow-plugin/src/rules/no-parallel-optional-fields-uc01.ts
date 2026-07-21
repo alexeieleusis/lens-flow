@@ -1,6 +1,9 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
-import { getMembers, countOptionalFields } from "../utils/optional-fields-helper.js";
+import {
+  getMembers,
+  countOptionalFields,
+} from "../utils/optional-fields-helper.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const URL = knowledgeUrl("usecases/UC01-invalid-states.md");
@@ -42,9 +45,8 @@ export default createRule({
       [{ minOptionalFields: number; minTotalFields?: number }]
     >,
   ) {
-    const [
-      { minOptionalFields, minTotalFields } = { minOptionalFields: 3 },
-    ] = context.options ?? [{ minOptionalFields: 3 }];
+    const [{ minOptionalFields, minTotalFields } = { minOptionalFields: 3 }] =
+      context.options ?? [{ minOptionalFields: 3 }];
 
     function checkNode(
       node: TSESTree.TSInterfaceBody | TSESTree.TSTypeLiteral,

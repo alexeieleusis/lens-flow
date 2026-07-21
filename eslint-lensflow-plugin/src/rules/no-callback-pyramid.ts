@@ -6,19 +6,14 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 const URL = knowledgeUrl("usecases/UC21-async-concurrency.md");
 
 const isCallback = (node: TSESTree.Node): boolean =>
-  node.type === "ArrowFunctionExpression" ||
-  node.type === "FunctionExpression";
+  node.type === "ArrowFunctionExpression" || node.type === "FunctionExpression";
 
 const isCallbackCall = (node: TSESTree.Node): node is TSESTree.CallExpression =>
   node.type === "CallExpression" &&
   "arguments" in node &&
   Array.isArray(node.arguments) &&
   node.arguments.length > 0 &&
-  isCallback(
-    node.arguments[
-      node.arguments.length - 1
-    ],
-  );
+  isCallback(node.arguments[node.arguments.length - 1]);
 
 const getCallbackBody = (node: TSESTree.CallExpression): TSESTree.Node[] => {
   const lastArg = node.arguments[node.arguments.length - 1];
@@ -56,10 +51,7 @@ const processIfStatement = (
   return maxDepth;
 };
 
-const processChildProperties = (
-  node: TSESTree.Node,
-  depth: number,
-): number => {
+const processChildProperties = (node: TSESTree.Node, depth: number): number => {
   let maxDepth = depth;
   for (const child of getChildren(node)) {
     maxDepth = Math.max(maxDepth, findNestedCallbackCalls([child], depth));
@@ -94,7 +86,10 @@ const findNestedCallbackCalls = (
 
     if (isCallbackCall(node)) {
       const bodyNodes = getCallbackBody(node);
-      maxDepth = Math.max(maxDepth, findNestedCallbackCalls(bodyNodes, depth + 1));
+      maxDepth = Math.max(
+        maxDepth,
+        findNestedCallbackCalls(bodyNodes, depth + 1),
+      );
     } else if (
       node.type === "ExpressionStatement" &&
       isCallbackCall(node.expression)
@@ -146,7 +141,9 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ minDepth: 3 }],
-  create(context: TSESLint.RuleContext<"callbackPyramid", [{ minDepth: number }]>) {
+  create(
+    context: TSESLint.RuleContext<"callbackPyramid", [{ minDepth: number }]>,
+  ) {
     const [{ minDepth = 3 } = {}] = context.options;
 
     const callbackCalls: CallbackCall[] = [];

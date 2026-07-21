@@ -1,5 +1,9 @@
 import ts from "typescript";
-import { AST_NODE_TYPES, ESLintUtils, TSESLint } from "@typescript-eslint/utils";
+import {
+  AST_NODE_TYPES,
+  ESLintUtils,
+  TSESLint,
+} from "@typescript-eslint/utils";
 import type { TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
@@ -13,9 +17,7 @@ function containsInfer(node: TSESTree.Node): boolean {
   });
 }
 
-function typeReferenceToString(
-  node: TSESTree.TSTypeReference,
-): string | null {
+function typeReferenceToString(node: TSESTree.TSTypeReference): string | null {
   if (node.typeArguments) return null;
   if (node.typeName.type === AST_NODE_TYPES.Identifier) {
     return node.typeName.name;
@@ -87,8 +89,10 @@ export default createRule({
         // never` would be flagged even when T is unconstrained, in which case
         // the conditional is a legitimate narrowing (e.g.,
         // `type Filter<T> = T extends string | number ? T : never`).
-        const checkTypeNode = parserServices.esTreeNodeToTSNodeMap.get(checkType);
-        const extendsTypeNode = parserServices.esTreeNodeToTSNodeMap.get(extendsType);
+        const checkTypeNode =
+          parserServices.esTreeNodeToTSNodeMap.get(checkType);
+        const extendsTypeNode =
+          parserServices.esTreeNodeToTSNodeMap.get(extendsType);
         if (!checkTypeNode || !extendsTypeNode) return;
 
         const checkTsType = checker.getTypeFromTypeNode(

@@ -15,14 +15,22 @@ type ParamNode =
 
 function getBaseNode(
   param: Exclude<ParamNode, TSESTree.RestElement>,
-): TSESTree.Identifier | TSESTree.ObjectPattern | TSESTree.ArrayPattern | TSESTree.AssignmentPattern {
+):
+  | TSESTree.Identifier
+  | TSESTree.ObjectPattern
+  | TSESTree.ArrayPattern
+  | TSESTree.AssignmentPattern {
   if (param.type === "AssignmentPattern") return param.left;
   if (param.type === "TSParameterProperty") return param.parameter;
   return param;
 }
 
 function getParamName(
-  base: TSESTree.Identifier | TSESTree.ObjectPattern | TSESTree.ArrayPattern | TSESTree.AssignmentPattern,
+  base:
+    | TSESTree.Identifier
+    | TSESTree.ObjectPattern
+    | TSESTree.ArrayPattern
+    | TSESTree.AssignmentPattern,
   sourceCode: TSESLint.SourceCode,
 ): string {
   return base.type === "Identifier" ? base.name : sourceCode.getText(base);
@@ -39,7 +47,10 @@ function collectAnyParams(
       const typeAnn = param.typeAnnotation?.typeAnnotation;
       if (typeAnn?.type === "TSAnyKeyword") {
         anyParams.push({
-          name: param.argument.type === "Identifier" ? param.argument.name : sourceCode.getText(param.argument),
+          name:
+            param.argument.type === "Identifier"
+              ? param.argument.name
+              : sourceCode.getText(param.argument),
           anyNode: typeAnn,
         });
       }
@@ -48,7 +59,10 @@ function collectAnyParams(
     const base = getBaseNode(param);
     const typeAnn = base.typeAnnotation?.typeAnnotation;
     if (typeAnn?.type === "TSAnyKeyword") {
-      anyParams.push({ name: getParamName(base, sourceCode), anyNode: typeAnn });
+      anyParams.push({
+        name: getParamName(base, sourceCode),
+        anyNode: typeAnn,
+      });
     }
   }
 
@@ -60,14 +74,20 @@ function isTypeguardNode(
 ): { paramName: string; kind: string } | null {
   if (node.type === "UnaryExpression") {
     const unaryNode = node as TSESTree.UnaryExpression;
-    if (unaryNode.operator === "typeof" && unaryNode.argument.type === "Identifier") {
+    if (
+      unaryNode.operator === "typeof" &&
+      unaryNode.argument.type === "Identifier"
+    ) {
       return { paramName: unaryNode.argument.name, kind: "typeof" };
     }
     return null;
   }
   if (node.type === "BinaryExpression") {
     const binNode = node as TSESTree.BinaryExpression;
-    if (binNode.operator === "instanceof" && binNode.left.type === "Identifier") {
+    if (
+      binNode.operator === "instanceof" &&
+      binNode.left.type === "Identifier"
+    ) {
       return { paramName: binNode.left.name, kind: "instanceof" };
     }
     return null;
@@ -90,9 +110,11 @@ function collectTypeguardTargets(
 
     const children = getChildren(node, { stopAtFunctionBoundaries: true });
     for (const child of children) {
-      if (child.type === "FunctionDeclaration" ||
-          child.type === "FunctionExpression" ||
-          child.type === "ArrowFunctionExpression") {
+      if (
+        child.type === "FunctionDeclaration" ||
+        child.type === "FunctionExpression" ||
+        child.type === "ArrowFunctionExpression"
+      ) {
         continue;
       }
       innerWalk(child);
@@ -131,9 +153,7 @@ export default createRule({
       for (const tg of typeguards) {
         if (anyParamNames.has(tg.paramName) && !reported.has(tg.paramName)) {
           reported.add(tg.paramName);
-          const paramInfo = anyParams.find(
-            (p) => p.name === tg.paramName,
-          );
+          const paramInfo = anyParams.find((p) => p.name === tg.paramName);
           if (paramInfo) {
             context.report({
               node: paramInfo.anyNode,
@@ -155,7 +175,10 @@ export default createRule({
       | TSESTree.ArrowFunctionExpression;
 
     function visitFunction(node: FunctionLike) {
-      const anyParams = collectAnyParams(node.params as ParamNode[], context.sourceCode);
+      const anyParams = collectAnyParams(
+        node.params as ParamNode[],
+        context.sourceCode,
+      );
 
       if (anyParams.length === 0) return;
 
@@ -167,10 +190,15 @@ export default createRule({
       // BlockStatement so the traversal treats it consistently with block bodies.
       const normalizedBody =
         node.type === "ArrowFunctionExpression" && node.expression
-          ? { type: "BlockStatement", body: [body] } as TSESTree.BlockStatement
+          ? ({
+              type: "BlockStatement",
+              body: [body],
+            } as TSESTree.BlockStatement)
           : body;
 
-      const typeguards = collectTypeguardTargets(normalizedBody as TSESTree.Node);
+      const typeguards = collectTypeguardTargets(
+        normalizedBody as TSESTree.Node,
+      );
 
       reportAnyParamTypeguards(anyParams, typeguards);
     }

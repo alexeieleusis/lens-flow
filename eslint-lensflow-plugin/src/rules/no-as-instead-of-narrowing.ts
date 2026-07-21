@@ -39,8 +39,9 @@ export default createRule({
       TSAsExpression(node) {
         if (isAsConst(node)) return;
 
-        const exprTs =
-          parserServices.esTreeNodeToTSNodeMap.get(node.expression);
+        const exprTs = parserServices.esTreeNodeToTSNodeMap.get(
+          node.expression,
+        );
         if (!exprTs) return;
 
         const exprType = checker.getTypeAtLocation(exprTs as ts.Expression);
@@ -52,8 +53,9 @@ export default createRule({
 
         if (constituents.length < 2) return;
 
-        const typeNodeTs =
-          parserServices.esTreeNodeToTSNodeMap.get(node.typeAnnotation);
+        const typeNodeTs = parserServices.esTreeNodeToTSNodeMap.get(
+          node.typeAnnotation,
+        );
         if (!typeNodeTs) return;
 
         const targetType = checker.getTypeFromTypeNode(

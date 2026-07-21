@@ -39,7 +39,11 @@ export default createRule({
 
         if (!isThisMemberExpression(target)) return;
 
-        context.report({ node, messageId: "runtimeInitGuard", data: { url: URL } });
+        context.report({
+          node,
+          messageId: "runtimeInitGuard",
+          data: { url: URL },
+        });
       },
     };
   },
@@ -61,7 +65,10 @@ function findEnclosingMethod(ancestors: TSESTree.Node[]) {
   if (parent.type === "MethodDefinition") return { parent };
   if (parent.type === "PropertyDefinition") {
     const valType = parent.value?.type;
-    if (valType === "ArrowFunctionExpression" || valType === "FunctionExpression") {
+    if (
+      valType === "ArrowFunctionExpression" ||
+      valType === "FunctionExpression"
+    ) {
       return { parent };
     }
   }
@@ -77,7 +84,7 @@ function isFunctionNode(node: TSESTree.Node): boolean {
 }
 
 function extractThrowInfo(
-  node: TSESTree.IfStatement
+  node: TSESTree.IfStatement,
 ): { throwStmt: TSESTree.ThrowStatement; throwInAlternate: boolean } | null {
   if (node.consequent.type === "ThrowStatement") {
     return { throwStmt: node.consequent, throwInAlternate: false };
@@ -110,7 +117,7 @@ function isErrorConstructor(throwStmt: TSESTree.ThrowStatement): boolean {
 
 function extractTestTarget(
   node: TSESTree.IfStatement,
-  throwInAlternate: boolean
+  throwInAlternate: boolean,
 ): TSESTree.Node | null {
   if (node.test.type === "UnaryExpression" && node.test.operator === "!") {
     return node.test.argument;
@@ -123,7 +130,6 @@ function extractTestTarget(
 
 function isThisMemberExpression(node: TSESTree.Node): boolean {
   return (
-    node.type === "MemberExpression" &&
-    node.object.type === "ThisExpression"
+    node.type === "MemberExpression" && node.object.type === "ThisExpression"
   );
 }

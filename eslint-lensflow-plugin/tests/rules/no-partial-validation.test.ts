@@ -1,4 +1,4 @@
-import path from "node:path";   
+import path from "node:path";
 import { RuleTester } from "@typescript-eslint/rule-tester";
 import { afterAll, describe, it } from "vitest";
 import * as tsParser from "@typescript-eslint/parser";
@@ -148,9 +148,12 @@ if ("theme" in raw) {
     },
     {
       filename: TEST_FILENAME,
-      code: `interface Settings { theme: string; lang: string; fontSize: number }
+      code:
+        `interface Settings { theme: string; lang: string; fontSize: number }
 declare const raw: Settings;
-if (` + '`"theme"`' + ` in raw) {
+if (` +
+        '`"theme"`' +
+        ` in raw) {
   /* process */
 }`,
       errors: [{ messageId: "partialValidation" }],

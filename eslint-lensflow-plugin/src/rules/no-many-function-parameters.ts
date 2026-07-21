@@ -31,7 +31,9 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ maxParams: 5 }],
-  create(context: TSESLint.RuleContext<"tooManyParams", [{ maxParams: number }]>) {
+  create(
+    context: TSESLint.RuleContext<"tooManyParams", [{ maxParams: number }]>,
+  ) {
     const [{ maxParams } = { maxParams: 5 }] = context.options ?? [];
 
     function checkParams(node: TSESTree.FunctionLike) {

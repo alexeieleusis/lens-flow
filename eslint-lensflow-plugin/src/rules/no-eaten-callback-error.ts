@@ -127,8 +127,7 @@ export default createRule({
   meta: {
     type: "problem",
     docs: {
-      description:
-        "Disallow .catch() handlers that silently swallow errors",
+      description: "Disallow .catch() handlers that silently swallow errors",
     },
     messages: {
       emptyCatch:
@@ -162,7 +161,12 @@ export default createRule({
         const errorParamIds = collectParamIdentifiers(firstParam);
         const paramName = getParamDisplayName(firstParam);
 
-        reportEatenErrorIfApplicable(callback, errorParamIds, paramName, context);
+        reportEatenErrorIfApplicable(
+          callback,
+          errorParamIds,
+          paramName,
+          context,
+        );
       },
     };
   },

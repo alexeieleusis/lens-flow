@@ -40,7 +40,7 @@ ruleTester.run("prefer-branded-over-repeated-guard", rule, {
     function addRecipient(email: string) {
       if (!isvalid(email)) throw new Error();
     }`,
-   // Already using branded type — no guard calls at all
+    // Already using branded type — no guard calls at all
     `type Email = string & { __brand: "Email" };
     function notifyUser(email: string) { send(email); }
     function addRecipient(email: string) { recipients.push(email); }`,

@@ -21,7 +21,7 @@ export default createRule({
     docs: {
       description:
         "Disallow optional chaining (`?.`) without handling the undefined case via `??` (in variable declarations)",
-     },
+    },
     messages: {
       undefinedType:
         "The type of `{{name}}` includes `undefined` from optional chaining. Use `??` to provide a default. See: {{url}}",
@@ -45,10 +45,7 @@ export default createRule({
         if (init.type !== "ChainExpression") return;
 
         const parent = init.parent;
-        if (
-          parent?.type === "LogicalExpression" &&
-          parent.operator === "??"
-        ) {
+        if (parent?.type === "LogicalExpression" && parent.operator === "??") {
           return;
         }
 

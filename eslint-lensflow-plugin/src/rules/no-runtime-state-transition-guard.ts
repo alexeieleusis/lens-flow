@@ -50,9 +50,15 @@ export default createRule({
         if (node.consequent.type !== "ThrowStatement") return;
 
         let thisMember = null;
-        if (left.type === "MemberExpression" && left.object.type === "ThisExpression") {
+        if (
+          left.type === "MemberExpression" &&
+          left.object.type === "ThisExpression"
+        ) {
           thisMember = left;
-        } else if (right.type === "MemberExpression" && right.object.type === "ThisExpression") {
+        } else if (
+          right.type === "MemberExpression" &&
+          right.object.type === "ThisExpression"
+        ) {
           thisMember = right;
         }
         if (!thisMember) return;

@@ -30,10 +30,7 @@ ruleTester.run("prefer-property-function-signature", rule, {
         onSuccess(data: string): void;
         onError(err: Error): void;
       }`,
-      errors: [
-        { messageId: "methodSyntax" },
-        { messageId: "methodSyntax" },
-      ],
+      errors: [{ messageId: "methodSyntax" }, { messageId: "methodSyntax" }],
     },
     {
       code: `interface Generic<T> {
@@ -46,26 +43,19 @@ ruleTester.run("prefer-property-function-signature", rule, {
         get(url: string): Promise<string>;
         post(url: string, body: unknown): Promise<void>;
       }`,
-      errors: [
-        { messageId: "methodSyntax" },
-        { messageId: "methodSyntax" },
-      ],
+      errors: [{ messageId: "methodSyntax" }, { messageId: "methodSyntax" }],
     },
     {
       code: `interface Handler {
         "handle"(req: Request): void;
       }`,
-      errors: [
-        { messageId: "methodSyntax" },
-      ],
+      errors: [{ messageId: "methodSyntax" }],
     },
     {
       code: `interface Handler {
         handle?(req: Request): void;
       }`,
-      errors: [
-        { messageId: "methodSyntax" },
-      ],
+      errors: [{ messageId: "methodSyntax" }],
     },
     {
       code: `type Handler = {

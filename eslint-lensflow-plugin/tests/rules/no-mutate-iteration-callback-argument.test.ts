@@ -44,7 +44,10 @@ items.map(fn);`,
   item.count = item.count + 1;
   return item;
 });`,
-      errors: [{ messageId: "mutateCallbackArg" }, { messageId: "mutateCallbackArg" }],
+      errors: [
+        { messageId: "mutateCallbackArg" },
+        { messageId: "mutateCallbackArg" },
+      ],
     },
     {
       code: `items.reduce((acc, item) => {

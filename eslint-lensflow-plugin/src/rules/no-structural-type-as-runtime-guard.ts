@@ -4,7 +4,9 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const URL = knowledgeUrl("usecases/UC05-structural-contracts.md");
 
-function isAsAnyExpression(node: TSESTree.Node): node is TSESTree.TSAsExpression {
+function isAsAnyExpression(
+  node: TSESTree.Node,
+): node is TSESTree.TSAsExpression {
   return (
     node.type === "TSAsExpression" &&
     node.typeAnnotation.type === "TSAnyKeyword"
@@ -15,7 +17,9 @@ function isASTNode(value: unknown): value is TSESTree.Node {
   return value != null && typeof value === "object" && "type" in value;
 }
 
-function* iterateChildNodes(node: TSESTree.Node): IterableIterator<TSESTree.Node> {
+function* iterateChildNodes(
+  node: TSESTree.Node,
+): IterableIterator<TSESTree.Node> {
   const record = node as unknown as Record<string, unknown>;
   for (const key of Object.keys(record)) {
     if (key === "parent" || key === "loc" || key === "range") continue;
@@ -34,7 +38,9 @@ function* iterateChildNodes(node: TSESTree.Node): IterableIterator<TSESTree.Node
   }
 }
 
-function findAsAnyInReturn(node: TSESTree.Node): TSESTree.TSAsExpression | null {
+function findAsAnyInReturn(
+  node: TSESTree.Node,
+): TSESTree.TSAsExpression | null {
   if (isAsAnyExpression(node)) {
     return node;
   }
@@ -46,7 +52,9 @@ function findAsAnyInReturn(node: TSESTree.Node): TSESTree.TSAsExpression | null 
   return null;
 }
 
-function* findAllReturnStatements(node: TSESTree.Node): IterableIterator<TSESTree.ReturnStatement> {
+function* findAllReturnStatements(
+  node: TSESTree.Node,
+): IterableIterator<TSESTree.ReturnStatement> {
   if (node.type === "ReturnStatement") {
     yield node;
   }
@@ -57,12 +65,19 @@ function* findAllReturnStatements(node: TSESTree.Node): IterableIterator<TSESTre
 
 function containsUnknown(typeAnnotation: TSESTree.TypeNode): boolean {
   if (typeAnnotation.type === "TSUnknownKeyword") return true;
-  if (typeAnnotation.type === "TSArrayType" && containsUnknown(typeAnnotation.elementType)) return true;
+  if (
+    typeAnnotation.type === "TSArrayType" &&
+    containsUnknown(typeAnnotation.elementType)
+  )
+    return true;
   return false;
 }
 
 function hasUnknownParam(
-  node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression,
+  node:
+    | TSESTree.FunctionDeclaration
+    | TSESTree.FunctionExpression
+    | TSESTree.ArrowFunctionExpression,
 ): boolean {
   return node.params.some((param) => {
     // Identifier: `(v: unknown)`
@@ -70,7 +85,10 @@ function hasUnknownParam(
       return containsUnknown(param.typeAnnotation.typeAnnotation);
     }
     // ObjectPattern / ArrayPattern (destructuring): `({ x }: unknown)` or `([x]: unknown[])`
-    if ((param.type === "ObjectPattern" || param.type === "ArrayPattern") && param.typeAnnotation?.typeAnnotation) {
+    if (
+      (param.type === "ObjectPattern" || param.type === "ArrayPattern") &&
+      param.typeAnnotation?.typeAnnotation
+    ) {
       return containsUnknown(param.typeAnnotation.typeAnnotation);
     }
     // RestElement: `(...args: unknown[])`
@@ -83,7 +101,10 @@ function hasUnknownParam(
       if (left.type === "Identifier" && left.typeAnnotation?.typeAnnotation) {
         return containsUnknown(left.typeAnnotation.typeAnnotation);
       }
-      if ((left.type === "ObjectPattern" || left.type === "ArrayPattern") && left.typeAnnotation?.typeAnnotation) {
+      if (
+        (left.type === "ObjectPattern" || left.type === "ArrayPattern") &&
+        left.typeAnnotation?.typeAnnotation
+      ) {
         return containsUnknown(left.typeAnnotation.typeAnnotation);
       }
     }
@@ -100,8 +121,8 @@ export default createRule({
         "Disallows casting `unknown` to `any` as a fake runtime guard, which performs no actual validation because types are erased at runtime.",
     },
     messages: {
-     structuralAsAnyGuard:
-         "Casting `unknown` to `any` performs no runtime validation. Write an actual type guard or parser instead. See: {{url}}",
+      structuralAsAnyGuard:
+        "Casting `unknown` to `any` performs no runtime validation. Write an actual type guard or parser instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -109,7 +130,10 @@ export default createRule({
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"structuralAsAnyGuard", []>) {
     function checkFunction(
-      node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression,
+      node:
+        | TSESTree.FunctionDeclaration
+        | TSESTree.FunctionExpression
+        | TSESTree.ArrowFunctionExpression,
     ): void {
       if (!hasUnknownParam(node)) return;
 

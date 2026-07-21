@@ -12,7 +12,12 @@ function hasBrandProperty(constituent: ts.Type): boolean {
     const props = (constituent as ts.ObjectType).getProperties();
     return props.some((p) => {
       const name = p.escapedName.toString();
-      return name === "_brand" || name === "__brand" || name.endsWith("_brand") || name.endsWith("Brand");
+      return (
+        name === "_brand" ||
+        name === "__brand" ||
+        name.endsWith("_brand") ||
+        name.endsWith("Brand")
+      );
     });
   }
   return false;
@@ -52,8 +57,7 @@ export default createRule({
         "Disallow arithmetic operations on branded numbers that silently drop the brand.",
     },
     messages: {
-      leak:
-        "Arithmetic operation on branded number produces plain `number`, dropping the brand. Re-wrap the result with `as {{brandType}}` or use a dedicated function that preserves the brand. See: {{url}}",
+      leak: "Arithmetic operation on branded number produces plain `number`, dropping the brand. Re-wrap the result with `as {{brandType}}` or use a dedicated function that preserves the brand. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -79,7 +83,10 @@ export default createRule({
         if (!leftBranded && !rightBranded) return;
 
         const parent = node.parent;
-        if (parent?.type === "TSAsExpression" || parent?.type === "TSTypeAssertion") {
+        if (
+          parent?.type === "TSAsExpression" ||
+          parent?.type === "TSTypeAssertion"
+        ) {
           const castResultType = parserServices.getTypeAtLocation(parent);
           if (isBrandedNumber(checker, castResultType)) return;
         }

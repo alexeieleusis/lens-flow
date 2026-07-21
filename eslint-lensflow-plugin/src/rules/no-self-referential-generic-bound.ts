@@ -38,17 +38,22 @@ function checkFunctionOrConstructorType(
     }
   }
   for (const param of node.params) {
-    if (
-      param.type === "Identifier" &&
-      param.typeAnnotation?.typeAnnotation
-    ) {
-      if (containsTypeParamReference(param.typeAnnotation.typeAnnotation, paramName)) {
+    if (param.type === "Identifier" && param.typeAnnotation?.typeAnnotation) {
+      if (
+        containsTypeParamReference(
+          param.typeAnnotation.typeAnnotation,
+          paramName,
+        )
+      ) {
         return true;
       }
     }
   }
   if (node.returnType?.typeAnnotation) {
-    return containsTypeParamReference(node.returnType.typeAnnotation, paramName);
+    return containsTypeParamReference(
+      node.returnType.typeAnnotation,
+      paramName,
+    );
   }
   return false;
 }
@@ -73,12 +78,12 @@ function checkTypeLiteralMember(
   if (member.type === "TSPropertySignature" && member.typeAnnotation) {
     return containsTypeParamReference(
       member.typeAnnotation.typeAnnotation,
-      paramName
+      paramName,
     );
   }
   if (member.type === "TSMethodSignature" && member.typeParameters) {
     return member.typeParameters.params.some((tp) =>
-      containsTypeParamReference(tp, paramName)
+      containsTypeParamReference(tp, paramName),
     );
   }
   return false;
@@ -89,7 +94,7 @@ function checkTypeLiteral(
   paramName: string,
 ): boolean {
   return node.members.some((member) =>
-    checkTypeLiteralMember(member, paramName)
+    checkTypeLiteralMember(member, paramName),
   );
 }
 
@@ -129,7 +134,10 @@ function checkTypeParameterNode(
   paramName: string,
 ): boolean {
   if (node.name.name === paramName) return true;
-  if (node.constraint && containsTypeParamReference(node.constraint, paramName)) {
+  if (
+    node.constraint &&
+    containsTypeParamReference(node.constraint, paramName)
+  ) {
     return true;
   }
   if (node.default && containsTypeParamReference(node.default, paramName)) {
@@ -148,30 +156,27 @@ const typeHandlers: Record<
     checkTypeReference(node as TSESTree.TSTypeReference, paramName),
   TSUnionType: (node, paramName) =>
     (node as TSESTree.TSUnionType).types.some((t) =>
-      containsTypeParamReference(t, paramName)
+      containsTypeParamReference(t, paramName),
     ),
   TSIntersectionType: (node, paramName) =>
     (node as TSESTree.TSIntersectionType).types.some((t) =>
-      containsTypeParamReference(t, paramName)
+      containsTypeParamReference(t, paramName),
     ),
   TSArrayType: (node, paramName) =>
     containsTypeParamReference(
       (node as TSESTree.TSArrayType).elementType,
-      paramName
+      paramName,
     ),
   TSTupleType: (node, paramName) =>
     (node as TSESTree.TSTupleType).elementTypes.some((e) =>
-      containsTypeParamReference(e, paramName)
+      containsTypeParamReference(e, paramName),
     ),
   TSFunctionType: (node, paramName) =>
-    checkFunctionOrConstructorType(
-      node as TSESTree.TSFunctionType,
-      paramName
-    ),
+    checkFunctionOrConstructorType(node as TSESTree.TSFunctionType, paramName),
   TSConstructorType: (node, paramName) =>
     checkFunctionOrConstructorType(
       node as TSESTree.TSConstructorType,
-      paramName
+      paramName,
     ),
   TSTypeQuery: (node, paramName) =>
     checkTypeQuery(node as TSESTree.TSTypeQuery, paramName),

@@ -29,8 +29,7 @@ export default createRule({
         | TSESTree.FunctionExpression
         | TSESTree.ArrowFunctionExpression,
     ) {
-      const returnType =
-        "returnType" in node ? node.returnType : undefined;
+      const returnType = "returnType" in node ? node.returnType : undefined;
       if (returnType?.typeAnnotation.type !== "TSAnyKeyword") {
         return;
       }
@@ -49,19 +48,25 @@ export default createRule({
 
       if (!body) return;
 
-      if (walkNodes(body, (node) => {
-        if (node.type !== "CallExpression") return false;
-        const ce = node;
-        return (
-          ce.callee.type === "MemberExpression" &&
-          !ce.callee.computed &&
-          ce.callee.property.type === "Identifier" &&
-          ce.callee.property.name === "parse" &&
-          ce.callee.object.type === "Identifier" &&
-          ce.callee.object.name === "JSON"
-        );
-      })) {
-        context.report({ node, messageId: "anyJsonParseReturn", data: { url: URL } });
+      if (
+        walkNodes(body, (node) => {
+          if (node.type !== "CallExpression") return false;
+          const ce = node;
+          return (
+            ce.callee.type === "MemberExpression" &&
+            !ce.callee.computed &&
+            ce.callee.property.type === "Identifier" &&
+            ce.callee.property.name === "parse" &&
+            ce.callee.object.type === "Identifier" &&
+            ce.callee.object.name === "JSON"
+          );
+        })
+      ) {
+        context.report({
+          node,
+          messageId: "anyJsonParseReturn",
+          data: { url: URL },
+        });
       }
     }
 

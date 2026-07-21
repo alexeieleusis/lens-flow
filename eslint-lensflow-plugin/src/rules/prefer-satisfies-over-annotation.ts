@@ -32,7 +32,10 @@ const PRIMITIVE_KEYWORDS: Record<string, string> = {
   TSIntrinsicKeyword: "intrinsic",
 };
 
-function extractTypeName(typeNode: TSESTree.TypeNode, sourceCode: TSESLint.SourceCode): string {
+function extractTypeName(
+  typeNode: TSESTree.TypeNode,
+  sourceCode: TSESLint.SourceCode,
+): string {
   if (typeNode.type === "TSTypeReference") {
     const tn = typeNode.typeName;
     if (tn.type === "Identifier") return tn.name;
@@ -83,10 +86,7 @@ export default createRule({
     return {
       VariableDeclarator(node) {
         const parent = node.parent;
-        if (
-          parent?.type !== "VariableDeclaration" ||
-          parent.kind !== "const"
-        ) {
+        if (parent?.type !== "VariableDeclaration" || parent.kind !== "const") {
           return;
         }
 

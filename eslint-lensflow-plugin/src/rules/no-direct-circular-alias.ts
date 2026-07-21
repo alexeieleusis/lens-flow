@@ -5,7 +5,10 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const URL = knowledgeUrl("catalog/T23-type-aliases.md");
 
-function getTypeName(typeName: TSESTree.Identifier | TSESTree.ThisExpression | TSESTree.TSQualifiedName): string | null {
+function getTypeName(
+  typeName:
+    TSESTree.Identifier | TSESTree.ThisExpression | TSESTree.TSQualifiedName,
+): string | null {
   if (typeName.type === "Identifier") {
     return typeName.name;
   }
@@ -15,12 +18,13 @@ function getTypeName(typeName: TSESTree.Identifier | TSESTree.ThisExpression | T
   return null;
 }
 
-type SelfRef = { node: TSESTree.TSTypeReference; ancestors: TSESTree.TypeNode[] };
+type SelfRef = {
+  node: TSESTree.TSTypeReference;
+  ancestors: TSESTree.TypeNode[];
+};
 
 function getTSChildren(node: TSESTree.Node): TSESTree.Node[] {
-  return getChildren(node).filter(
-    (child) => child.type.startsWith("TS"),
-  );
+  return getChildren(node).filter((child) => child.type.startsWith("TS"));
 }
 
 function collectSelfRefs(
@@ -43,7 +47,9 @@ function collectSelfRefs(
 
   const extendedAncestors = [...ancestors, node as TSESTree.TypeNode];
   for (const child of getTSChildren(node)) {
-    results.push(...collectSelfRefs(child, aliasName, extendedAncestors, visited));
+    results.push(
+      ...collectSelfRefs(child, aliasName, extendedAncestors, visited),
+    );
   }
 
   return results;

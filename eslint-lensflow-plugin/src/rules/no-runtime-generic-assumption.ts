@@ -12,7 +12,10 @@ const runtimeMetadataProps = new Set([
 ]);
 
 function getTypeText(node: unknown): string {
-  const n = node as { type: string; typeName?: { type: string; name?: string } };
+  const n = node as {
+    type: string;
+    typeName?: { type: string; name?: string };
+  };
   switch (n.type) {
     case "TSStringKeyword":
       return "string";
@@ -83,11 +86,9 @@ function getGenericParamNames(node: unknown): string[] {
     if (!ta) continue;
     if (
       ta.type === "TSTypeReference" &&
-      (
-        (ta.typeName?.name && typeParamNames.has(ta.typeName.name)) ||
+      ((ta.typeName?.name && typeParamNames.has(ta.typeName.name)) ||
         (ta.typeArguments?.params &&
-          typeArgsContainTypeParam(ta.typeArguments.params, typeParamNames))
-      )
+          typeArgsContainTypeParam(ta.typeArguments.params, typeParamNames)))
     ) {
       result.push(p.name);
     }
@@ -107,7 +108,9 @@ function getAllParamNames(node: unknown): string[] {
   return result;
 }
 
-function getBaseIdentifier(node: TSESTree.MemberExpression): TSESTree.Identifier | null {
+function getBaseIdentifier(
+  node: TSESTree.MemberExpression,
+): TSESTree.Identifier | null {
   let current: TSESTree.Expression = node;
   while (current.type === "MemberExpression") {
     current = (current as TSESTree.MemberExpression).object;
@@ -138,8 +141,16 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"runtimeMetadataAccess" | "runtimeMetadataOnCall" | "unsafeCastOnGeneric", []>) {
-    const scopeStack: { genericFns: Set<string>; params: Map<string, boolean> }[] = [];
+  create(
+    context: TSESLint.RuleContext<
+      "runtimeMetadataAccess" | "runtimeMetadataOnCall" | "unsafeCastOnGeneric",
+      []
+    >,
+  ) {
+    const scopeStack: {
+      genericFns: Set<string>;
+      params: Map<string, boolean>;
+    }[] = [];
 
     function isGenericParam(name: string): boolean {
       for (let i = scopeStack.length - 1; i >= 0; i--) {
@@ -149,7 +160,9 @@ export default createRule({
       return false;
     }
 
-    function findScopeVariable(node: TSESTree.Identifier): TSESLint.Scope.Variable | null {
+    function findScopeVariable(
+      node: TSESTree.Identifier,
+    ): TSESLint.Scope.Variable | null {
       const scope = context.sourceCode.getScope(node);
       let currentScope: TSESLint.Scope.Scope | null = scope;
       while (currentScope) {
@@ -164,7 +177,8 @@ export default createRule({
     function isGenericFn(callee: TSESTree.Identifier): boolean {
       const found = findScopeVariable(callee);
       if (!found) return false;
-      for (const id of (found as { identifiers: TSESTree.Identifier[] }).identifiers) {
+      for (const id of (found as { identifiers: TSESTree.Identifier[] })
+        .identifiers) {
         const parent = (id as { parent?: unknown }).parent;
         if (!parent) continue;
         const p = parent as {
@@ -195,7 +209,9 @@ export default createRule({
       const hasTypeParams =
         n.typeParameters && n.typeParameters.params.length > 0;
       const outerGenericFns =
-        scopeStack.length > 0 ? scopeStack[scopeStack.length - 1].genericFns : new Set<string>();
+        scopeStack.length > 0
+          ? scopeStack[scopeStack.length - 1].genericFns
+          : new Set<string>();
       const currentGenericFns = new Set(outerGenericFns);
       if (hasTypeParams && n.id) {
         currentGenericFns.add(n.id.name);
@@ -236,7 +252,11 @@ export default createRule({
           context.report({
             node: memberNode,
             messageId: "runtimeMetadataOnCall",
-            data: { property: prop.name, funcName: baseIdentifier.name, url: URL },
+            data: {
+              property: prop.name,
+              funcName: baseIdentifier.name,
+              url: URL,
+            },
           });
         }
       }
@@ -254,7 +274,11 @@ export default createRule({
 
       MemberExpression(node: TSESTree.MemberExpression) {
         const mn = node as {
-          object: { type: string; name?: string; callee?: { type: string; name?: string } };
+          object: {
+            type: string;
+            name?: string;
+            callee?: { type: string; name?: string };
+          };
           property: { type: string; name: string };
         };
         const property = mn.property;

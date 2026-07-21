@@ -6,7 +6,9 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 const URL = knowledgeUrl("usecases/UC10-encapsulation.md");
 
 function analyzeFunction(
-  context: Parameters<NonNullable<Parameters<typeof createRule>[0]["create"]>>[0],
+  context: Parameters<
+    NonNullable<Parameters<typeof createRule>[0]["create"]>
+  >[0],
   params: TSESTree.Parameter[],
   body: TSESTree.Node | null,
 ) {
@@ -22,32 +24,36 @@ function analyzeFunction(
     const accessedProperties = new Set<string>();
     let hasBareCallArg = false;
 
-    walk(body, (n) => {
-      if (
-        n.type === "MemberExpression" &&
-        n.object.type === "Identifier" &&
-        n.object.name === paramName
-      ) {
-        const { property, computed } = n;
-        if (property.type === "Identifier" && !computed) {
-          accessedProperties.add(property.name);
-        } else if (
-          property.type === "Literal" &&
-          computed &&
-          typeof property.value === "string"
+    walk(
+      body,
+      (n) => {
+        if (
+          n.type === "MemberExpression" &&
+          n.object.type === "Identifier" &&
+          n.object.name === paramName
         ) {
-          accessedProperties.add(property.value);
-        }
-      }
-
-      if (n.type === "CallExpression") {
-        for (const arg of n.arguments) {
-          if (arg.type === "Identifier" && arg.name === paramName) {
-            hasBareCallArg = true;
+          const { property, computed } = n;
+          if (property.type === "Identifier" && !computed) {
+            accessedProperties.add(property.name);
+          } else if (
+            property.type === "Literal" &&
+            computed &&
+            typeof property.value === "string"
+          ) {
+            accessedProperties.add(property.value);
           }
         }
-      }
-    }, { skipTypeAnnotations: true });
+
+        if (n.type === "CallExpression") {
+          for (const arg of n.arguments) {
+            if (arg.type === "Identifier" && arg.name === paramName) {
+              hasBareCallArg = true;
+            }
+          }
+        }
+      },
+      { skipTypeAnnotations: true },
+    );
 
     if (accessedProperties.size !== 1 || hasBareCallArg) continue;
 

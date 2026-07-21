@@ -26,7 +26,7 @@ export default createRule({
     },
     messages: {
       preferInstanceof:
-        "Use `this instanceof {{className}}` instead of `this.constructor.name === \"{{className}}\"`. The constructor name is fragile across bundlers and minifiers. See: {{url}}",
+        'Use `this instanceof {{className}}` instead of `this.constructor.name === "{{className}}"`. The constructor name is fragile across bundlers and minifiers. See: {{url}}',
     },
     schema: [],
     fixable: undefined,
@@ -43,10 +43,7 @@ export default createRule({
         if (!leftIsPattern && !rightIsPattern) return;
 
         const stringLit = leftIsPattern ? node.right : node.left;
-        if (
-          stringLit.type !== "Literal" ||
-          typeof stringLit.value !== "string"
-        )
+        if (stringLit.type !== "Literal" || typeof stringLit.value !== "string")
           return;
 
         context.report({

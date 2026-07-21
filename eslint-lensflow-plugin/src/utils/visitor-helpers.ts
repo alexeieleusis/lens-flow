@@ -1,5 +1,9 @@
 import { ESLintUtils } from "@typescript-eslint/utils";
-import type { ParserServices, TSESTree, TSESLint } from "@typescript-eslint/utils";
+import type {
+  ParserServices,
+  TSESTree,
+  TSESLint,
+} from "@typescript-eslint/utils";
 import type ts from "typescript";
 
 type ParameterCheckCallback = (param: TSESTree.Parameter) => void;
@@ -156,7 +160,9 @@ export function createBooleanFlagChecker(
   minCount: number,
   memberFilter: (member: TSESTree.TypeElement) => member is BooleanFlagMember,
   messageId: string,
-): (context: TSESLint.RuleContext<string, unknown[]>) => Record<string, (node: TSESTree.Node) => void> {
+): (
+  context: TSESLint.RuleContext<string, unknown[]>,
+) => Record<string, (node: TSESTree.Node) => void> {
   return (context) => {
     function checkNode(
       node: TSESTree.TSInterfaceBody | TSESTree.TSTypeLiteral,
@@ -168,7 +174,8 @@ export function createBooleanFlagChecker(
         const flagNames = boolFlags
           .map((m) => {
             if (m.key.type === "Identifier") return m.key.name;
-            if (m.key.type === "Literal" && typeof m.key.value === "string") return m.key.value;
+            if (m.key.type === "Literal" && typeof m.key.value === "string")
+              return m.key.value;
             return String(m.key?.value ?? "?");
           })
           .join(", ");
@@ -215,7 +222,9 @@ type FunctionBodyVisitorCheckFn = (
 
 export function createFunctionBodyVisitor(
   checkBody: FunctionBodyVisitorCheckFn,
-): (context: TSESLint.RuleContext<string, unknown[]>) => Record<string, (node: TSESTree.Node) => void> {
+): (
+  context: TSESLint.RuleContext<string, unknown[]>,
+) => Record<string, (node: TSESTree.Node) => void> {
   return (context): Record<string, (node: TSESTree.Node) => void> => {
     const parserServices = ESLintUtils.getParserServices(context, true);
     if (!parserServices.program) return {};

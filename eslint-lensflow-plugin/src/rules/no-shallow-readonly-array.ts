@@ -22,12 +22,19 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"shallowReadonlyArray" | "shallowReadonlyArrayRef", []>) {
+  create(
+    context: TSESLint.RuleContext<
+      "shallowReadonlyArray" | "shallowReadonlyArrayRef",
+      []
+    >,
+  ) {
     function getPropName(
       node: TSESTree.TSPropertySignature | TSESTree.PropertyDefinition,
       source: TSESLint.SourceCode,
     ) {
-      return node.key.type === "Identifier" ? node.key.name : source.getText(node.key);
+      return node.key.type === "Identifier"
+        ? node.key.name
+        : source.getText(node.key);
     }
 
     function checkShallowReadonlyArray(

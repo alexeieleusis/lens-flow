@@ -31,7 +31,9 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ maxMembers: 7 }],
-  create(context: TSESLint.RuleContext<"tooManyMembers", [{ maxMembers: number }]>) {
+  create(
+    context: TSESLint.RuleContext<"tooManyMembers", [{ maxMembers: number }]>,
+  ) {
     const [{ maxMembers } = { maxMembers: 7 }] = context.options ?? [];
 
     return {

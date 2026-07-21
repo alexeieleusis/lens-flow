@@ -6,16 +6,10 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 const URL = knowledgeUrl("usecases/UC16-nullability.md");
 
 function isNullishLiteral(node: TSESTree.Node): boolean {
-  if (
-    node.type === AST_NODE_TYPES.Literal &&
-    node.value === null
-  ) {
+  if (node.type === AST_NODE_TYPES.Literal && node.value === null) {
     return true;
   }
-  if (
-    node.type === AST_NODE_TYPES.Identifier &&
-    node.name === "undefined"
-  ) {
+  if (node.type === AST_NODE_TYPES.Identifier && node.name === "undefined") {
     return true;
   }
   return false;
@@ -26,8 +20,7 @@ function isNullishCoalesceWithLiteral(node: TSESTree.Node): boolean {
   return (
     node.type === AST_NODE_TYPES.LogicalExpression &&
     logicalNode.operator === "??" &&
-    (isNullishLiteral(logicalNode.left) ||
-      isNullishLiteral(logicalNode.right))
+    (isNullishLiteral(logicalNode.left) || isNullishLiteral(logicalNode.right))
   );
 }
 
@@ -50,10 +43,7 @@ function checkFunction(
   }
 
   // Arrow function with expression body: () => expr ?? null
-  if (
-    node.type === AST_NODE_TYPES.ArrowFunctionExpression &&
-    node.expression
-  ) {
+  if (node.type === AST_NODE_TYPES.ArrowFunctionExpression && node.expression) {
     return containsNullishCoalesce(node.body);
   }
 

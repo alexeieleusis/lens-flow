@@ -78,8 +78,9 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"noCommonShape", []>) {
-    let parserServices: ReturnType<typeof ESLintUtils.getParserServices> | null =
-      null;
+    let parserServices: ReturnType<
+      typeof ESLintUtils.getParserServices
+    > | null = null;
     let checker: ts.TypeChecker | null = null;
 
     try {
@@ -98,11 +99,13 @@ export default createRule({
           checker && parserServices
             ? gatherPropertySets(node, checker, parserServices)
             : node.types
-                  .filter(
-                    (m): m is import("@typescript-eslint/types").TSESTree.TSTypeLiteral =>
-                      m.type === "TSTypeLiteral",
-                  )
-                  .map(extractPropsFromLiteral);
+                .filter(
+                  (
+                    m,
+                  ): m is import("@typescript-eslint/types").TSESTree.TSTypeLiteral =>
+                    m.type === "TSTypeLiteral",
+                )
+                .map(extractPropsFromLiteral);
 
         if (propertySets.length < 2) return;
 

@@ -31,7 +31,12 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ maxProduct: 20 }],
-  create(context: TSESLint.RuleContext<"cartesianProduct", [{ maxProduct?: number }]>) {
+  create(
+    context: TSESLint.RuleContext<
+      "cartesianProduct",
+      [{ maxProduct?: number }]
+    >,
+  ) {
     const { maxProduct = 20 } = context.options[0] ?? {};
 
     const typeAliasMap = new Map<string, number>();
@@ -44,10 +49,7 @@ export default createRule({
             (member) => member.type === "TSLiteralType",
           )
         ) {
-          typeAliasMap.set(
-            node.id.name,
-            node.typeAnnotation.types.length,
-          );
+          typeAliasMap.set(node.id.name, node.typeAnnotation.types.length);
         }
       },
 

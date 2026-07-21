@@ -17,7 +17,12 @@ function unwrapExpression(node: TSESTree.Node): TSESTree.Node {
   return node;
 }
 
-function isFuncNode(node: TSESTree.Node): node is TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression {
+function isFuncNode(
+  node: TSESTree.Node,
+): node is
+  | TSESTree.FunctionDeclaration
+  | TSESTree.FunctionExpression
+  | TSESTree.ArrowFunctionExpression {
   return (
     node.type === "FunctionDeclaration" ||
     node.type === "FunctionExpression" ||
@@ -26,7 +31,10 @@ function isFuncNode(node: TSESTree.Node): node is TSESTree.FunctionDeclaration |
 }
 
 function hasStringParam(
-  func: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression,
+  func:
+    | TSESTree.FunctionDeclaration
+    | TSESTree.FunctionExpression
+    | TSESTree.ArrowFunctionExpression,
   paramName: string,
 ): boolean {
   for (const param of func.params) {
@@ -82,7 +90,12 @@ export default createRule({
       tableNames: ["handlers", "dispatchers", "mappings", "registry"],
     },
   ],
-  create(context: TSESLint.RuleContext<"runtimeStringConcatKey", [{ tableNames: string[] }]>) {
+  create(
+    context: TSESLint.RuleContext<
+      "runtimeStringConcatKey",
+      [{ tableNames: string[] }]
+    >,
+  ) {
     const { tableNames } = context.options[0] ?? {
       tableNames: ["handlers", "dispatchers", "mappings", "registry"],
     };

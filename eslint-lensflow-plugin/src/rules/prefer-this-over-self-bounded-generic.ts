@@ -21,7 +21,9 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"selfBoundedGeneric", []>) {
-    function checkSelfBound(node: TSESTree.ClassDeclaration | TSESTree.ClassExpression) {
+    function checkSelfBound(
+      node: TSESTree.ClassDeclaration | TSESTree.ClassExpression,
+    ) {
       const className = node.id ? node.id.name : null;
 
       if (!className) return;
@@ -45,7 +47,11 @@ export default createRule({
       if (innerParam.type !== "TSTypeReference") return;
 
       const innerTypeName = innerParam.typeName;
-      if (innerTypeName.type !== "Identifier" || innerTypeName.name !== param.name.name) return;
+      if (
+        innerTypeName.type !== "Identifier" ||
+        innerTypeName.name !== param.name.name
+      )
+        return;
 
       context.report({
         node: param,

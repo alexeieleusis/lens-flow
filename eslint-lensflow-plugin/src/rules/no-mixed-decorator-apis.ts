@@ -34,9 +34,7 @@ function isStage3ContextType(param: TSESTree.Parameter): boolean {
   return false;
 }
 
-function extractDecoratorName(
-  expr: TSESTree.Expression,
-): string | null {
+function extractDecoratorName(expr: TSESTree.Expression): string | null {
   if (expr.type === "Identifier") {
     return expr.name;
   }
@@ -104,7 +102,7 @@ export default createRule({
             node,
             messageId: "mixedDecoratorApis",
             data: {
-              name: (node.id?.name ?? "<anonymous>"),
+              name: node.id?.name ?? "<anonymous>",
               stage3Decos: [...stage3Used].join(", "),
               experimentalDecos: [...experimentalUsed].join(", "),
               url: URL,

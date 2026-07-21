@@ -36,7 +36,7 @@ function second<T>(x: T) { return x; }`,
   }
   return inner;
 }`,
-   // Separate declare functions with same type param name — not nested
+    // Separate declare functions with same type param name — not nested
     `declare function outer<T>(x: T): void;
  declare function inner<T>(y: T): void;`,
     // Declare function with non-shadowing nested function

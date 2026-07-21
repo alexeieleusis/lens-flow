@@ -7,24 +7,26 @@ const URL = knowledgeUrl("usecases/UC01-invalid-states.md");
 
 const VALIDATION_NAME_RE = /^(is|validate|check)[A-Z]/;
 
-type FunctionNode = TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression;
+type FunctionNode =
+  | TSESTree.FunctionDeclaration
+  | TSESTree.FunctionExpression
+  | TSESTree.ArrowFunctionExpression;
 
-function isBooleanReturn(
-  node: FunctionNode,
-): boolean {
+function isBooleanReturn(node: FunctionNode): boolean {
   return node.returnType?.typeAnnotation.type === "TSBooleanKeyword";
 }
 
-function getName(
-  node: FunctionNode,
-): string | null {
+function getName(node: FunctionNode): string | null {
   if (node.type === "FunctionDeclaration" && node.id) return node.id.name;
   if (node.type === "FunctionExpression" && node.id) return node.id.name;
   if (node.parent?.type === "Property") {
     if (node.parent.key.type === "Identifier") {
       return node.parent.key.name;
     }
-    if (node.parent.key.type === "Literal" && typeof node.parent.key.value === "string") {
+    if (
+      node.parent.key.type === "Literal" &&
+      typeof node.parent.key.value === "string"
+    ) {
       return node.parent.key.value;
     }
   }
@@ -42,9 +44,11 @@ function hasValidationLogic(body: TSESTree.Node): boolean {
   return walkNodes(body, (node) => {
     if (node.type === "CallExpression") {
       const callee = node.callee;
-      if (callee.type === "MemberExpression" &&
-          callee.property.type === "Identifier" &&
-          callee.property.name === "test") {
+      if (
+        callee.type === "MemberExpression" &&
+        callee.property.type === "Identifier" &&
+        callee.property.name === "test"
+      ) {
         return true;
       }
     }

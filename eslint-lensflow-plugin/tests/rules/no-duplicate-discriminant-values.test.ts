@@ -38,61 +38,94 @@ ruleTester.run("no-duplicate-discriminant-values", rule, {
       code: `type Bad =
       | { kind: "a"; x: number }
       | { kind: "a"; y: string };`,
-      errors: [{ messageId: "duplicateDiscriminant" }, { messageId: "duplicateDiscriminant" }],
+      errors: [
+        { messageId: "duplicateDiscriminant" },
+        { messageId: "duplicateDiscriminant" },
+      ],
     },
     {
       code: `type Status =
       | { status: "pending"; time: number }
       | { status: "pending"; retry: boolean }
       | { status: "done"; result: string };`,
-      errors: [{ messageId: "duplicateDiscriminant" }, { messageId: "duplicateDiscriminant" }],
+      errors: [
+        { messageId: "duplicateDiscriminant" },
+        { messageId: "duplicateDiscriminant" },
+      ],
     },
     {
       code: `type Event =
       | { type: "click"; x: number; y: number }
       | { type: "hover"; x: number; y: number }
       | { type: "click"; target: string };`,
-      errors: [{ messageId: "duplicateDiscriminant" }, { messageId: "duplicateDiscriminant" }],
+      errors: [
+        { messageId: "duplicateDiscriminant" },
+        { messageId: "duplicateDiscriminant" },
+      ],
     },
     {
       code: `type Action =
       | { type: \`init\`; payload: number }
       | { type: \`init\`; payload: string };`,
-      errors: [{ messageId: "duplicateDiscriminant" }, { messageId: "duplicateDiscriminant" }],
+      errors: [
+        { messageId: "duplicateDiscriminant" },
+        { messageId: "duplicateDiscriminant" },
+      ],
     },
     {
       code: `type QuotedKeyDup =
       | { "kind": "a"; x: number }
       | { "kind": "a"; y: string };`,
-      errors: [{ messageId: "duplicateDiscriminant" }, { messageId: "duplicateDiscriminant" }],
+      errors: [
+        { messageId: "duplicateDiscriminant" },
+        { messageId: "duplicateDiscriminant" },
+      ],
     },
     {
       code: `type NumericDup =
       | { kind: 1; x: number }
       | { kind: 1; y: string };`,
-      errors: [{ messageId: "duplicateDiscriminant" }, { messageId: "duplicateDiscriminant" }],
+      errors: [
+        { messageId: "duplicateDiscriminant" },
+        { messageId: "duplicateDiscriminant" },
+      ],
     },
     {
       code: `type BooleanDup =
       | { kind: true; enabled: number }
       | { kind: true; disabled: string };`,
-      errors: [{ messageId: "duplicateDiscriminant" }, { messageId: "duplicateDiscriminant" }],
+      errors: [
+        { messageId: "duplicateDiscriminant" },
+        { messageId: "duplicateDiscriminant" },
+      ],
     },
     {
       code: `function fn(): { kind: "a" } | { kind: "a" } { throw new Error(); }`,
-      errors: [{ messageId: "duplicateDiscriminant" }, { messageId: "duplicateDiscriminant" }],
+      errors: [
+        { messageId: "duplicateDiscriminant" },
+        { messageId: "duplicateDiscriminant" },
+      ],
     },
     {
       code: `function fn(x: { kind: "a" } | { kind: "a" }) {}`,
-      errors: [{ messageId: "duplicateDiscriminant" }, { messageId: "duplicateDiscriminant" }],
+      errors: [
+        { messageId: "duplicateDiscriminant" },
+        { messageId: "duplicateDiscriminant" },
+      ],
     },
     {
       code: `const x: { kind: "a" } | { kind: "a" } = {} as any;`,
-      errors: [{ messageId: "duplicateDiscriminant" }, { messageId: "duplicateDiscriminant" }],
+      errors: [
+        { messageId: "duplicateDiscriminant" },
+        { messageId: "duplicateDiscriminant" },
+      ],
     },
     {
       code: `interface I { field: { kind: "a" } | { kind: "a" }; }`,
-      errors: [{ messageId: "duplicateDiscriminant" }, { messageId: "duplicateDiscriminant" }],
+      errors: [
+        { messageId: "duplicateDiscriminant" },
+        { messageId: "duplicateDiscriminant" },
+      ],
     },
   ],
 });

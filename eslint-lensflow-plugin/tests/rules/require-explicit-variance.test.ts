@@ -61,10 +61,7 @@ ruleTester.run("require-explicit-variance", rule, {
       code: `interface Mapper<A, B> {
         map(input: B): A;
       }`,
-      errors: [
-        { messageId: "suggestOut" },
-        { messageId: "suggestIn" },
-      ],
+      errors: [{ messageId: "suggestOut" }, { messageId: "suggestIn" }],
     },
     // T in array of return types — still covariant
     {

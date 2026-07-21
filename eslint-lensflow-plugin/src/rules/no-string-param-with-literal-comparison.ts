@@ -21,7 +21,8 @@ function normalizeParam(param: TSESTree.Parameter): TSESTree.Node {
 }
 
 function getLiteralStringValue(node: TSESTree.Node): string | null {
-  if (node.type === "Literal" && typeof node.value === "string") return node.value;
+  if (node.type === "Literal" && typeof node.value === "string")
+    return node.value;
   if (
     node.type === "TemplateLiteral" &&
     node.quasis.length === 1 &&
@@ -34,12 +35,16 @@ function getLiteralStringValue(node: TSESTree.Node): string | null {
 
 function getStringParamIdent(
   param: TSESTree.Parameter,
-): (TSESTree.Identifier & { typeAnnotation: TSESTree.TSTypeAnnotation }) | null {
+):
+  (TSESTree.Identifier & { typeAnnotation: TSESTree.TSTypeAnnotation }) | null {
   const inner = normalizeParam(param);
   if (inner.type !== "Identifier") return null;
   if (!inner.typeAnnotation) return null;
-  if (inner.typeAnnotation.typeAnnotation.type !== "TSStringKeyword") return null;
-  return inner as TSESTree.Identifier & { typeAnnotation: TSESTree.TSTypeAnnotation };
+  if (inner.typeAnnotation.typeAnnotation.type !== "TSStringKeyword")
+    return null;
+  return inner as TSESTree.Identifier & {
+    typeAnnotation: TSESTree.TSTypeAnnotation;
+  };
 }
 
 export default createRule({
@@ -88,7 +93,8 @@ export default createRule({
         if (ident) {
           params.push({
             paramIdent: ident,
-            typeNode: ident.typeAnnotation.typeAnnotation as TSESTree.TSStringKeyword,
+            typeNode: ident.typeAnnotation
+              .typeAnnotation as TSESTree.TSStringKeyword,
             literals: new Set(),
           });
         }
@@ -125,7 +131,12 @@ export default createRule({
     ): ParamScope | undefined {
       const scope = sourceCode.getScope(identifier);
       const binding = scope.set.get(identifier.name);
-      if (!binding || binding.defs.length === 0 || binding.defs[0].type !== "Parameter") return undefined;
+      if (
+        !binding ||
+        binding.defs.length === 0 ||
+        binding.defs[0].type !== "Parameter"
+      )
+        return undefined;
       const current = currentScope();
       if (!current) return undefined;
       return current.params.find((p) => p.paramIdent === binding.defs[0].name);
@@ -176,16 +187,10 @@ export default createRule({
         const rightLiteral = getLiteralStringValue(right);
         const leftLiteral = getLiteralStringValue(left);
 
-        if (
-          left.type === "Identifier" &&
-          rightLiteral !== null
-        ) {
+        if (left.type === "Identifier" && rightLiteral !== null) {
           paramScope = resolveParamScope(left);
           literalValue = paramScope ? rightLiteral : undefined;
-        } else if (
-          right.type === "Identifier" &&
-          leftLiteral !== null
-        ) {
+        } else if (right.type === "Identifier" && leftLiteral !== null) {
           paramScope = resolveParamScope(right);
           literalValue = paramScope ? leftLiteral : undefined;
         }

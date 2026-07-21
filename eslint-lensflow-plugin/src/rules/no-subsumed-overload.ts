@@ -14,8 +14,7 @@ function getParamTypeAnnotation(
   param: TSESTree.Parameter,
 ): TSESTree.TypeNode | undefined {
   if (param.type === "AssignmentPattern") {
-    return (param.left as TSESTree.Identifier).typeAnnotation
-      ?.typeAnnotation;
+    return (param.left as TSESTree.Identifier).typeAnnotation?.typeAnnotation;
   }
   if (param.type === "RestElement") {
     return param.typeAnnotation?.typeAnnotation;
@@ -76,20 +75,13 @@ function isTypeParameterRef(
     }
   }
   if (typeNode.type === "TSArrayType") {
-    return isTypeParameterRef(
-      typeNode.elementType,
-      typeParamNames,
-    );
+    return isTypeParameterRef(typeNode.elementType, typeParamNames);
   }
   if (typeNode.type === "TSUnionType") {
-    return typeNode.types.some((t) =>
-      isTypeParameterRef(t, typeParamNames),
-    );
+    return typeNode.types.some((t) => isTypeParameterRef(t, typeParamNames));
   }
   if (typeNode.type === "TSIntersectionType") {
-    return typeNode.types.some((t) =>
-      isTypeParameterRef(t, typeParamNames),
-    );
+    return typeNode.types.some((t) => isTypeParameterRef(t, typeParamNames));
   }
   if (typeNode.type === "TSFunctionType") {
     return checkFunctionTypeForTypeParamRef(typeNode, typeParamNames);
@@ -290,9 +282,7 @@ function hasExtraUsedTypeParams(
 ): boolean {
   if (bTypeParams.length <= aTypeParams.length) return false;
 
-  const extraBParams = bTypeParams.filter(
-    (tp) => !aTypeParams.includes(tp),
-  );
+  const extraBParams = bTypeParams.filter((tp) => !aTypeParams.includes(tp));
 
   if (extraBParams.length === 0) return false;
 
@@ -326,12 +316,7 @@ function allParamsAssignable(
 ): boolean {
   for (let p = 0; p < aParamAnns.length; p++) {
     if (
-      !isAssignableTo(
-        aParamAnns[p],
-        bParamAnns[p],
-        aTypeParams,
-        bTypeParams,
-      )
+      !isAssignableTo(aParamAnns[p], bParamAnns[p], aTypeParams, bTypeParams)
     ) {
       return false;
     }
@@ -339,10 +324,7 @@ function allParamsAssignable(
   return true;
 }
 
-function isOverloadSubsumed(
-  aNode: FnLikeNode,
-  bNode: FnLikeNode,
-): boolean {
+function isOverloadSubsumed(aNode: FnLikeNode, bNode: FnLikeNode): boolean {
   const aParamAnns = getParamTypeAnnotations(aNode);
   const bParamAnns = getParamTypeAnnotations(bNode);
 
@@ -371,12 +353,7 @@ function isOverloadSubsumed(
     return true;
   }
 
-  return hasExtraUsedTypeParams(
-    aTypeParams,
-    bTypeParams,
-    bRet,
-    bParamAnns,
-  );
+  return hasExtraUsedTypeParams(aTypeParams, bTypeParams, bRet, bParamAnns);
 }
 
 export default createRule({
@@ -409,7 +386,8 @@ export default createRule({
       overloads: FnLikeNode[],
     ): void {
       if (
-        (impl.type !== "FunctionDeclaration" && impl.type !== "TSDeclareFunction") ||
+        (impl.type !== "FunctionDeclaration" &&
+          impl.type !== "TSDeclareFunction") ||
         impl.id?.type !== "Identifier"
       ) {
         return;

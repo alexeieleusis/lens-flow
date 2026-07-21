@@ -95,7 +95,8 @@ ruleTester.run("no-static-async-generator", rule, {
     },
     // Template literals (without expressions) are considered literal nodes
     {
-      code: "async function* withTemplateLiterals(): AsyncGenerator<string> {\n" +
+      code:
+        "async function* withTemplateLiterals(): AsyncGenerator<string> {\n" +
         "  const strs = ['a', `hello`];\n" +
         "  for (const s of strs) yield s;\n" +
         "}",

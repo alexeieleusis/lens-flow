@@ -8,10 +8,7 @@ function hasDeeplyNestedInfer(
   extendsType: TSESTree.TypeNode,
   maxDepth: number,
 ): boolean {
-  function check(
-    node: TSESTree.TypeNode,
-    depth: number,
-  ): boolean {
+  function check(node: TSESTree.TypeNode, depth: number): boolean {
     switch (node.type) {
       case "TSInferType":
         return depth >= maxDepth;
@@ -26,7 +23,9 @@ function hasDeeplyNestedInfer(
 
       case "TSIndexedAccessType": {
         const nextDepth = depth + 1;
-        return check(node.objectType, nextDepth) || check(node.indexType, nextDepth);
+        return (
+          check(node.objectType, nextDepth) || check(node.indexType, nextDepth)
+        );
       }
 
       case "TSArrayType": {
@@ -89,7 +88,9 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ maxDepth: 2 }],
-  create(context: TSESLint.RuleContext<"deeplyNestedInfer", [{ maxDepth: number }]>) {
+  create(
+    context: TSESLint.RuleContext<"deeplyNestedInfer", [{ maxDepth: number }]>,
+  ) {
     const [{ maxDepth } = { maxDepth: 2 }] = context.options ?? [];
 
     return {

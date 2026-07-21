@@ -25,7 +25,7 @@ export default createRule({
     docs: {
       description:
         "Disallow collecting an AsyncIterable into an array with await then iterating with synchronous for...of",
-     },
+    },
     messages: {
       collectThenSyncIterate:
         "Collecting an AsyncIterable into an array then iterating with synchronous for...of defeats streaming. Use for await...of on the original source instead. See: {{url}}",
@@ -41,31 +41,23 @@ export default createRule({
 
     const checker = program.getTypeChecker();
 
-    function checkAwaitedCall(
-      awaitedExpr: TSESTree.Node,
-    ): boolean {
+    function checkAwaitedCall(awaitedExpr: TSESTree.Node): boolean {
       if (awaitedExpr.type !== "CallExpression") return false;
 
       const firstArg = awaitedExpr.arguments[0];
       if (firstArg?.type !== "Identifier") return false;
 
-      const tsFirstArg =
-        parserServices.esTreeNodeToTSNodeMap.get(firstArg);
+      const tsFirstArg = parserServices.esTreeNodeToTSNodeMap.get(firstArg);
       if (!tsFirstArg) return false;
 
-      const argType = checker.getTypeAtLocation(
-        tsFirstArg as ts.Expression,
-      );
+      const argType = checker.getTypeAtLocation(tsFirstArg as ts.Expression);
 
       if (!hasAsyncIteratorSignature(argType, checker)) return false;
 
-      const tsCallNode =
-        parserServices.esTreeNodeToTSNodeMap.get(awaitedExpr);
+      const tsCallNode = parserServices.esTreeNodeToTSNodeMap.get(awaitedExpr);
       if (!tsCallNode) return false;
 
-      const callType = checker.getTypeAtLocation(
-        tsCallNode as ts.Expression,
-      );
+      const callType = checker.getTypeAtLocation(tsCallNode as ts.Expression);
 
       const awaitedType = checker.getAwaitedType(callType);
       return awaitedType ? isCollectionArray(awaitedType) : false;
@@ -98,8 +90,7 @@ export default createRule({
 
         if (!checkAwaitedCall(awaitedExpr)) return;
 
-        const tsRight =
-          parserServices.esTreeNodeToTSNodeMap.get(rightIdent);
+        const tsRight = parserServices.esTreeNodeToTSNodeMap.get(rightIdent);
         if (!tsRight) return;
 
         const rightType = checker.getTypeAtLocation(tsRight as ts.Expression);

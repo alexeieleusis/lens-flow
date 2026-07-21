@@ -54,7 +54,9 @@ const TS_WRAPPER_TYPES = new Set([
   "TSTypeAssertion",
 ]);
 
-function isTSWrapperType(node: TSESTree.Node): node is TSESTree.Node & { expression: TSESTree.Node } {
+function isTSWrapperType(
+  node: TSESTree.Node,
+): node is TSESTree.Node & { expression: TSESTree.Node } {
   return TS_WRAPPER_TYPES.has(node.type);
 }
 
@@ -81,7 +83,10 @@ function getNullableTypeSignature(typeAnn: TSESTree.TypeNode): string | null {
   return "other-nullable";
 }
 
-function pushNodeArrayChildren(value: unknown[], children: TSESTree.Node[]): void {
+function pushNodeArrayChildren(
+  value: unknown[],
+  children: TSESTree.Node[],
+): void {
   for (const item of value) {
     if (item && typeof item === "object" && "type" in item)
       children.push(item as TSESTree.Node);
@@ -91,7 +96,9 @@ function pushNodeArrayChildren(value: unknown[], children: TSESTree.Node[]): voi
 function collectChildNodes(node: TSESTree.Node): TSESTree.Node[] {
   const children: TSESTree.Node[] = [];
   const skipProps = new Set(["loc", "range", "parent", "start", "end"]);
-  for (const [key, value] of Object.entries(node as unknown as Record<string, unknown>)) {
+  for (const [key, value] of Object.entries(
+    node as unknown as Record<string, unknown>,
+  )) {
     if (skipProps.has(key) || !value || typeof value !== "object") continue;
     if ("type" in value) {
       if (Array.isArray(value)) {
@@ -105,29 +112,49 @@ function collectChildNodes(node: TSESTree.Node): TSESTree.Node[] {
 }
 
 function hasNestedFunction(node: TSESTree.Node): boolean {
-  if (node.type === "ArrowFunctionExpression" || node.type === "FunctionExpression")
+  if (
+    node.type === "ArrowFunctionExpression" ||
+    node.type === "FunctionExpression"
+  )
     return true;
   return collectChildNodes(node).some(hasNestedFunction);
 }
 
-function referencesParam(expr: TSESTree.Expression | TSESTree.PrivateIdentifier | null | undefined, paramName: string): boolean {
+function referencesParam(
+  expr: TSESTree.Expression | TSESTree.PrivateIdentifier | null | undefined,
+  paramName: string,
+): boolean {
   if (!expr) return false;
   if (expr.type === "Identifier") return expr.name === paramName;
   if (expr.type === "MemberExpression")
     return referencesParam(expr.object, paramName);
-  if (expr.type === "UnaryExpression") return referencesParam(expr.argument, paramName);
+  if (expr.type === "UnaryExpression")
+    return referencesParam(expr.argument, paramName);
   if (expr.type === "BinaryExpression")
-    return referencesParam(expr.left, paramName) || referencesParam(expr.right, paramName);
+    return (
+      referencesParam(expr.left, paramName) ||
+      referencesParam(expr.right, paramName)
+    );
   if (expr.type === "LogicalExpression")
-    return referencesParam(expr.left, paramName) || referencesParam(expr.right, paramName);
-  if (expr.type === "TSNonNullExpression") return referencesParam(expr.expression, paramName);
-  if (expr.type === "TSAsExpression") return referencesParam(expr.expression, paramName);
-  if (expr.type === "TSSatisfiesExpression") return referencesParam(expr.expression, paramName);
-  if (expr.type === "TSTypeAssertion") return referencesParam(expr.expression, paramName);
+    return (
+      referencesParam(expr.left, paramName) ||
+      referencesParam(expr.right, paramName)
+    );
+  if (expr.type === "TSNonNullExpression")
+    return referencesParam(expr.expression, paramName);
+  if (expr.type === "TSAsExpression")
+    return referencesParam(expr.expression, paramName);
+  if (expr.type === "TSSatisfiesExpression")
+    return referencesParam(expr.expression, paramName);
+  if (expr.type === "TSTypeAssertion")
+    return referencesParam(expr.expression, paramName);
   return false;
 }
 
-function normalizeGuardPattern(test: TSESTree.Expression, paramName: string): string | null {
+function normalizeGuardPattern(
+  test: TSESTree.Expression,
+  paramName: string,
+): string | null {
   if (!referencesParam(test, paramName)) return null;
 
   const parts: string[] = [];
@@ -135,8 +162,7 @@ function normalizeGuardPattern(test: TSESTree.Expression, paramName: string): st
 
   function isNegatedParamIdentifier(node: TSESTree.UnaryExpression): boolean {
     return (
-      node.argument.type === "Identifier" &&
-      node.argument.name === paramName
+      node.argument.type === "Identifier" && node.argument.name === paramName
     );
   }
 
@@ -165,7 +191,10 @@ function normalizeGuardPattern(test: TSESTree.Expression, paramName: string): st
         walk(node.object);
         walk(node.property);
       }
-    } else if (node.type === "BinaryExpression" || node.type === "LogicalExpression") {
+    } else if (
+      node.type === "BinaryExpression" ||
+      node.type === "LogicalExpression"
+    ) {
       walk(node.left);
       walk(node.right);
     } else if (isTSWrapperType(node)) {
@@ -216,11 +245,19 @@ function walkIfStatement(
   const pattern = normalizeGuardPattern(stmt.test, paramName);
   if (pattern) return pattern;
   if (stmt.consequent) {
-    const nested = walkStatements(extractStatements(stmt.consequent), depth + 1, paramName);
+    const nested = walkStatements(
+      extractStatements(stmt.consequent),
+      depth + 1,
+      paramName,
+    );
     if (nested) return nested;
   }
   if (stmt.alternate) {
-    const nested = walkStatements(extractStatements(stmt.alternate), depth + 1, paramName);
+    const nested = walkStatements(
+      extractStatements(stmt.alternate),
+      depth + 1,
+      paramName,
+    );
     if (nested) return nested;
   }
   return null;
@@ -233,7 +270,11 @@ function walkChildStatements(
 ): string | null {
   const children = getChildStatements(stmt);
   for (const child of children) {
-    const nested = walkStatements(extractStatements(child), depth + 1, paramName);
+    const nested = walkStatements(
+      extractStatements(child),
+      depth + 1,
+      paramName,
+    );
     if (nested) return nested;
   }
   return null;
@@ -249,11 +290,18 @@ const SIMPLE_BODY_TYPES = new Set([
   "LabeledStatement",
 ]);
 
-function hasBody(stmt: TSESTree.Statement): stmt is TSESTree.Statement & { body: TSESTree.Statement } {
-  return SIMPLE_BODY_TYPES.has(stmt.type) && (stmt as unknown as { body?: unknown }).body !== undefined;
+function hasBody(
+  stmt: TSESTree.Statement,
+): stmt is TSESTree.Statement & { body: TSESTree.Statement } {
+  return (
+    SIMPLE_BODY_TYPES.has(stmt.type) &&
+    (stmt as unknown as { body?: unknown }).body !== undefined
+  );
 }
 
-function getSwitchStatements(stmt: TSESTree.SwitchStatement): TSESTree.Statement[] {
+function getSwitchStatements(
+  stmt: TSESTree.SwitchStatement,
+): TSESTree.Statement[] {
   const result: TSESTree.Statement[] = [];
   for (const caseClause of stmt.cases) {
     if (caseClause.consequent) {
@@ -287,7 +335,10 @@ function getChildStatements(stmt: TSESTree.Statement): TSESTree.Statement[] {
   return [];
 }
 
-function findGuardInBody(body: TSESTree.BlockStatement, paramName: string): string | null {
+function findGuardInBody(
+  body: TSESTree.BlockStatement,
+  paramName: string,
+): string | null {
   if (!body?.body) return null;
   return walkStatements(body.body, 0, paramName);
 }
@@ -319,7 +370,12 @@ export default createRule({
   create(context: TSESLint.RuleContext<"redundantGuard", []>) {
     const functions: FuncInfo[] = [];
 
-    function visitFunction(node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression) {
+    function visitFunction(
+      node:
+        | TSESTree.FunctionDeclaration
+        | TSESTree.FunctionExpression
+        | TSESTree.ArrowFunctionExpression,
+    ) {
       if (!node.params || !node.body) return;
       if (node.body.type !== "BlockStatement") return;
 

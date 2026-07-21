@@ -4,9 +4,7 @@ import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 const URL = knowledgeUrl("usecases/UC04-generic-constraints.md");
 
-function unwrapExpression(
-  node: TSESTree.Expression,
-): TSESTree.Expression {
+function unwrapExpression(node: TSESTree.Expression): TSESTree.Expression {
   if (node.type === "TSNonNullExpression") return node.expression;
   if (node.type === "ChainExpression") return node.expression;
   return node;
@@ -23,9 +21,7 @@ function findTSTypeLiteralInTypes(
   return undefined;
 }
 
-function unwrapTypeAnnotation(
-  node: TSESTree.TypeNode,
-): TSESTree.TypeNode {
+function unwrapTypeAnnotation(node: TSESTree.TypeNode): TSESTree.TypeNode {
   if (node.type === "TSIntersectionType" || node.type === "TSUnionType") {
     const found = findTSTypeLiteralInTypes(node.types);
     if (found) return found;

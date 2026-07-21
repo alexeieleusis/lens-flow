@@ -43,7 +43,7 @@ ruleTester.run("no-object-freeze-without-readonly-annotation", rule, {
       code: `let config = Object.freeze({ a: 1 });`,
       errors: [{ messageId: "missingReadonly" }],
     },
-   {
+    {
       code: `var config = Object.freeze({ a: 1 });`,
       errors: [{ messageId: "missingReadonly" }],
     },

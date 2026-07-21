@@ -17,7 +17,9 @@ function reportIfMissing(
   comparedValues: Set<string>,
   fallbackNode: TSESTree.Node,
   checker: ts.TypeChecker,
-  context: Parameters<NonNullable<Parameters<typeof createRule>[0]["create"]>>[0],
+  context: Parameters<
+    NonNullable<Parameters<typeof createRule>[0]["create"]>
+  >[0],
 ): void {
   if (comparedValues.size < 2) return;
 
@@ -72,12 +74,15 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [],
-  create: createFunctionBodyVisitor((body, checker, esTreeNodeToTSNodeMap, context) => {
+  create: createFunctionBodyVisitor(
+    (body, checker, esTreeNodeToTSNodeMap, context) => {
       function checkIfElseChain(
         ifStmt: TSESTree.IfStatement,
         firstInfo: ComparisonInfo,
         checker: ts.TypeChecker,
-        context: Parameters<NonNullable<Parameters<typeof createRule>[0]["create"]>>[0],
+        context: Parameters<
+          NonNullable<Parameters<typeof createRule>[0]["create"]>
+        >[0],
       ): void {
         const comparedValues = new Set<string>();
         comparedValues.add(firstInfo.value);
@@ -90,7 +95,7 @@ export default createRule({
           if (alt.type !== "IfStatement") {
             if (alt.type === "ReturnStatement" && comparedValues.size >= 2) {
               const fallback = alt.argument;
-           if (fallback?.type === "Literal") {
+              if (fallback?.type === "Literal") {
                 reportIfMissing(
                   firstInfo.varName,
                   firstInfo.tsVarNode,
@@ -114,27 +119,32 @@ export default createRule({
         }
       }
 
-      findIfChainStarts(body.body, esTreeNodeToTSNodeMap, ({ ifStmt, info, consecutiveValues, nextIndex }) => {
-        if (!ifStmt.alternate && consecutiveValues.size >= 2) {
-          const nextStmt = body.body[nextIndex];
-          if (nextStmt?.type === "ReturnStatement") {
-            const fallback = nextStmt.argument;
-            if (fallback?.type === "Literal") {
-              reportIfMissing(
-                info.varName,
-                info.tsVarNode,
-                consecutiveValues,
-                nextStmt,
-                checker,
-                context,
-              );
+      findIfChainStarts(
+        body.body,
+        esTreeNodeToTSNodeMap,
+        ({ ifStmt, info, consecutiveValues, nextIndex }) => {
+          if (!ifStmt.alternate && consecutiveValues.size >= 2) {
+            const nextStmt = body.body[nextIndex];
+            if (nextStmt?.type === "ReturnStatement") {
+              const fallback = nextStmt.argument;
+              if (fallback?.type === "Literal") {
+                reportIfMissing(
+                  info.varName,
+                  info.tsVarNode,
+                  consecutiveValues,
+                  nextStmt,
+                  checker,
+                  context,
+                );
+              }
             }
           }
-        }
 
-        if (ifStmt.alternate) {
-          checkIfElseChain(ifStmt, info, checker, context);
-        }
-      });
-    }),
+          if (ifStmt.alternate) {
+            checkIfElseChain(ifStmt, info, checker, context);
+          }
+        },
+      );
+    },
+  ),
 });

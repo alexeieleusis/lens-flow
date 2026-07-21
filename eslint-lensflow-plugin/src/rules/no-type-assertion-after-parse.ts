@@ -44,9 +44,11 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"directAssertion" | "indirectAssertion", []>) {
+  create(
+    context: TSESLint.RuleContext<"directAssertion" | "indirectAssertion", []>,
+  ) {
     function checkTypeNarrowing(
-      node: TSESTree.TSAsExpression | TSESTree.TSSatisfiesExpression
+      node: TSESTree.TSAsExpression | TSESTree.TSSatisfiesExpression,
     ) {
       const expr = unwrapExpression(node.expression);
 
@@ -61,7 +63,7 @@ export default createRule({
 
       if (expr.type === "Identifier") {
         const scope = context.sourceCode.getScope(node);
-        const variable = scope.variables.find(v => v.name === expr.name);
+        const variable = scope.variables.find((v) => v.name === expr.name);
         const def = variable?.defs[0];
         const parent = def?.parent;
         if (

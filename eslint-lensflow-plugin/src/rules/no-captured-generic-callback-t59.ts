@@ -37,13 +37,19 @@ function isGenericCallbackType(typeAnn: TSESTree.TypeNode): boolean {
 
 function extractParamIdentifier(
   param: TSESTree.Parameter,
-): (TSESTree.Identifier & { typeAnnotation?: TSESTree.TSTypeAnnotation }) | null {
+):
+  | (TSESTree.Identifier & { typeAnnotation?: TSESTree.TSTypeAnnotation })
+  | null {
   if (param.type === AST_NODE_TYPES.Identifier) return param;
   if (param.type === AST_NODE_TYPES.TSParameterProperty)
-    return param.parameter.type === AST_NODE_TYPES.Identifier ? param.parameter : null;
+    return param.parameter.type === AST_NODE_TYPES.Identifier
+      ? param.parameter
+      : null;
   if (param.type === AST_NODE_TYPES.RestElement)
     return param.argument.type === AST_NODE_TYPES.Identifier
-      ? param.argument as TSESTree.Identifier & { typeAnnotation?: TSESTree.TSTypeAnnotation }
+      ? (param.argument as TSESTree.Identifier & {
+          typeAnnotation?: TSESTree.TSTypeAnnotation;
+        })
       : null;
   if (param.type === AST_NODE_TYPES.AssignmentPattern)
     return param.left.type === AST_NODE_TYPES.Identifier ? param.left : null;
@@ -61,10 +67,15 @@ function getParamTypeAnnotation(
   name: string,
   fn: FunctionNode,
 ): TSESTree.TypeNode | undefined {
-  const ident = fn.params.map((p) => extractParamIdentifier(p)).find(
-    (i): i is TSESTree.Identifier & { typeAnnotation?: TSESTree.TSTypeAnnotation } =>
-      i !== null && i.name === name,
-  );
+  const ident = fn.params
+    .map((p) => extractParamIdentifier(p))
+    .find(
+      (
+        i,
+      ): i is TSESTree.Identifier & {
+        typeAnnotation?: TSESTree.TSTypeAnnotation;
+      } => i !== null && i.name === name,
+    );
   return ident?.typeAnnotation?.typeAnnotation;
 }
 
@@ -198,11 +209,7 @@ export default createRule({
           node.id.type === AST_NODE_TYPES.Identifier &&
           node.init?.type === AST_NODE_TYPES.Identifier
         ) {
-          checkCapture(
-            node.id.name,
-            node.init,
-            node,
-          );
+          checkCapture(node.id.name, node.init, node);
         }
       },
     };

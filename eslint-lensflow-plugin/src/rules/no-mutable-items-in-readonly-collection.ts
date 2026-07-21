@@ -20,9 +20,7 @@ function isDeclarationMutable(decl: ts.Node): boolean {
     decl.kind === ts.SyntaxKind.PropertyDeclaration
   ) {
     const modifiers = ts.getModifiers(decl as ts.HasModifiers);
-    return !modifiers?.some(
-      (m) => m.kind === ts.SyntaxKind.ReadonlyKeyword,
-    );
+    return !modifiers?.some((m) => m.kind === ts.SyntaxKind.ReadonlyKeyword);
   }
   return false;
 }
@@ -56,7 +54,7 @@ export default createRule({
     docs: {
       description:
         "Disallow ReadonlyArray<T> or Readonly<T> wrapping a mutable type T that contains writable properties or methods, which defeats the immutability guarantee.",
-     },
+    },
     messages: {
       mutableInnerType:
         "The type '{{typeName}}' inside this readonly collection contains mutable members (writable properties or methods). Use a fully immutable inner type. See: {{url}}",
@@ -76,7 +74,8 @@ export default createRule({
         const name = node.typeName.name;
         if (name !== "ReadonlyArray" && name !== "Readonly") return;
 
-        if (!node.typeArguments || node.typeArguments.params.length === 0) return;
+        if (!node.typeArguments || node.typeArguments.params.length === 0)
+          return;
 
         const innerTypeNode = node.typeArguments.params[0];
         const innerTsType = parserServices.getTypeAtLocation(innerTypeNode);
@@ -97,7 +96,8 @@ export default createRule({
 
       TSTypeOperator(node: TSESTree.TSTypeOperator) {
         if (node.operator !== "readonly") return;
-        if (node.typeAnnotation?.type !== TSESTree.AST_NODE_TYPES.TSArrayType) return;
+        if (node.typeAnnotation?.type !== TSESTree.AST_NODE_TYPES.TSArrayType)
+          return;
 
         const innerTypeNode = node.typeAnnotation.elementType;
         const innerTsType = parserServices.getTypeAtLocation(innerTypeNode);

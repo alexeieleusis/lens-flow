@@ -15,7 +15,7 @@ export default createRule({
     },
     messages: {
       truthinessNullNarrowing:
-        "Using truthiness check on a variable whose type includes null/undefined and falsy values (0, \"\", false). Use !== null or != null instead. See: {{url}}",
+        'Using truthiness check on a variable whose type includes null/undefined and falsy values (0, "", false). Use !== null or != null instead. See: {{url}}',
     },
     schema: [],
   },
@@ -38,14 +38,18 @@ export default createRule({
 
       for (const member of allTypes) {
         const flags = member.flags;
-        if (flags & ts.TypeFlags.Null || flags & ts.TypeFlags.Undefined) hasNullable = true;
+        if (flags & ts.TypeFlags.Null || flags & ts.TypeFlags.Undefined)
+          hasNullable = true;
         if (
-          flags & ts.TypeFlags.Number
-          || flags & ts.TypeFlags.String
-          || flags & ts.TypeFlags.Boolean
-          || (flags & ts.TypeFlags.NumberLiteral && checker.typeToString(member) === "0")
-          || (flags & ts.TypeFlags.StringLiteral && checker.typeToString(member) === "\"\"")
-          || (flags & ts.TypeFlags.BooleanLiteral && checker.typeToString(member) === "false")
+          flags & ts.TypeFlags.Number ||
+          flags & ts.TypeFlags.String ||
+          flags & ts.TypeFlags.Boolean ||
+          (flags & ts.TypeFlags.NumberLiteral &&
+            checker.typeToString(member) === "0") ||
+          (flags & ts.TypeFlags.StringLiteral &&
+            checker.typeToString(member) === '""') ||
+          (flags & ts.TypeFlags.BooleanLiteral &&
+            checker.typeToString(member) === "false")
         ) {
           hasFalsy = true;
         }

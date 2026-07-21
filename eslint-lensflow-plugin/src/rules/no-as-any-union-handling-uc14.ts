@@ -21,13 +21,20 @@ function isUnionType(typeAnnotation: TSESTree.TypeNode | undefined): boolean {
   return typeAnnotation?.type === "TSUnionType";
 }
 
-type ExtractablePattern = TSESTree.Identifier | TSESTree.ObjectPattern | TSESTree.ArrayPattern;
+type ExtractablePattern =
+  TSESTree.Identifier | TSESTree.ObjectPattern | TSESTree.ArrayPattern;
 
 function isExtractablePattern(node: TSESTree.Node): node is ExtractablePattern {
-  return node.type === "Identifier" || node.type === "ObjectPattern" || node.type === "ArrayPattern";
+  return (
+    node.type === "Identifier" ||
+    node.type === "ObjectPattern" ||
+    node.type === "ArrayPattern"
+  );
 }
 
-function unwrapParam(param: TSESTree.Parameter): ExtractablePattern | undefined {
+function unwrapParam(
+  param: TSESTree.Parameter,
+): ExtractablePattern | undefined {
   if (param.type === "RestElement") {
     return isExtractablePattern(param.argument) ? param.argument : undefined;
   }
@@ -38,9 +45,13 @@ function unwrapParam(param: TSESTree.Parameter): ExtractablePattern | undefined 
   return param;
 }
 
-function getParamTypeAnnotation(param: TSESTree.Parameter): TSESTree.TypeNode | undefined {
+function getParamTypeAnnotation(
+  param: TSESTree.Parameter,
+): TSESTree.TypeNode | undefined {
   if (param.type === "AssignmentPattern") {
-    return isExtractablePattern(param.left) ? param.left.typeAnnotation?.typeAnnotation : undefined;
+    return isExtractablePattern(param.left)
+      ? param.left.typeAnnotation?.typeAnnotation
+      : undefined;
   }
   if (param.type === "TSParameterProperty") return undefined;
   return param.typeAnnotation?.typeAnnotation;
@@ -61,14 +72,19 @@ function extractIdentifiers(node: ExtractablePattern): TSESTree.Identifier[] {
   for (const prop of node.properties) {
     if (prop.type === "Property" && isExtractablePattern(prop.value)) {
       ids.push(...extractIdentifiers(prop.value));
-    } else if (prop.type === "RestElement" && prop.argument.type === "Identifier") {
+    } else if (
+      prop.type === "RestElement" &&
+      prop.argument.type === "Identifier"
+    ) {
       ids.push(prop.argument);
     }
   }
   return ids;
 }
 
-function getUnionParamIdentifiers(fnNode: FunctionNode): Set<TSESTree.Identifier> {
+function getUnionParamIdentifiers(
+  fnNode: FunctionNode,
+): Set<TSESTree.Identifier> {
   const identifiers = new Set<TSESTree.Identifier>();
   for (const param of fnNode.params) {
     if (!isUnionType(getParamTypeAnnotation(param))) continue;
@@ -119,7 +135,7 @@ export default createRule({
     },
     messages: {
       asAnyBypassNarrowing:
-        "Avoid casting `{{expr}}` to `any` inside a function with a union-typed parameter. Use proper type narrowing (e.g., `if (s.kind === \"circle\")`) instead. See: {{url}}",
+        'Avoid casting `{{expr}}` to `any` inside a function with a union-typed parameter. Use proper type narrowing (e.g., `if (s.kind === "circle")`) instead. See: {{url}}',
     },
     schema: [],
     fixable: undefined,
@@ -147,7 +163,8 @@ export default createRule({
         if (unionParamIdentifiers.size === 0) return;
 
         const expression = node.expression;
-        if (!isDerivedFromParam(expression, unionParamIdentifiers, sourceCode)) return;
+        if (!isDerivedFromParam(expression, unionParamIdentifiers, sourceCode))
+          return;
 
         const exprName =
           expression.type === "Identifier" ? expression.name : "expression";

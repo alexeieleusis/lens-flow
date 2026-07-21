@@ -5,10 +5,16 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 const URL = knowledgeUrl("catalog/T03-newtypes-opaque.md");
 
 function getCastTypeName(typeNode: TSESTree.TypeNode): string {
-  if (typeNode.type === "TSTypeReference" && typeNode.typeName.type === "Identifier") {
+  if (
+    typeNode.type === "TSTypeReference" &&
+    typeNode.typeName.type === "Identifier"
+  ) {
     return typeNode.typeName.name;
   }
-  if (typeNode.type === "TSTypeReference" && typeNode.typeName.type === "TSQualifiedName") {
+  if (
+    typeNode.type === "TSTypeReference" &&
+    typeNode.typeName.type === "TSQualifiedName"
+  ) {
     return typeNode.typeName.right.name;
   }
   if (typeNode.type === "TSIntersectionType") {
@@ -115,7 +121,9 @@ export default createRule({
               ref.identifier.loc &&
               ref.identifier.loc.start.line <= targetLoc.line
             ) {
-              writeSources.push(ref.writeExpr as unknown as TSESTree.Expression);
+              writeSources.push(
+                ref.writeExpr as unknown as TSESTree.Expression,
+              );
             }
           }
         });
@@ -127,7 +135,10 @@ export default createRule({
 
         if (writeSources.length === 0) return false;
 
-        return originatesFromJsonParse(writeSources[writeSources.length - 1], visitedIds);
+        return originatesFromJsonParse(
+          writeSources[writeSources.length - 1],
+          visitedIds,
+        );
       }
 
       return false;

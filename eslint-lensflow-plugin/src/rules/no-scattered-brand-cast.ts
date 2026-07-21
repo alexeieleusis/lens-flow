@@ -8,10 +8,7 @@ function getTypeNameString(typeNode: TSESTree.TypeNode): string | null {
   if (typeNode.type === "TSTypeReference") {
     const tn = typeNode.typeName;
     if (tn.type === "Identifier") return tn.name;
-    if (
-      tn.type === "TSQualifiedName" &&
-      tn.right.type === "Identifier"
-    )
+    if (tn.type === "TSQualifiedName" && tn.right.type === "Identifier")
       return tn.right.name;
   }
   if (typeNode.type === "TSIntersectionType") {
@@ -67,7 +64,10 @@ function findEnclosingFunction(
 }
 
 function getCastTypeName(typeNode: TSESTree.TypeNode): string {
-  if (typeNode.type === "TSTypeReference" && typeNode.typeName.type === "Identifier") {
+  if (
+    typeNode.type === "TSTypeReference" &&
+    typeNode.typeName.type === "Identifier"
+  ) {
     return typeNode.typeName.name;
   }
   if (
@@ -109,9 +109,7 @@ function isTypeNameBranded(
   return false;
 }
 
-function getTypeIdentifier(
-  typeNameNode: TSESTree.EntityName,
-): string | null {
+function getTypeIdentifier(typeNameNode: TSESTree.EntityName): string | null {
   if (typeNameNode.type === "Identifier") return typeNameNode.name;
   if (
     typeNameNode.type === "TSQualifiedName" &&

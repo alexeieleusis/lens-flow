@@ -31,33 +31,50 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ minFunctions: 2 }],
-  create(context: TSESLint.RuleContext<"repeatedGuard", [{ minFunctions: number }]>) {
+  create(
+    context: TSESLint.RuleContext<"repeatedGuard", [{ minFunctions: number }]>,
+  ) {
     const [{ minFunctions = 2 } = {}] = context.options;
 
     const guardNames = new Set<string>();
 
-    function isGuardCandidate(name: string, returnTypeNode: TSESTree.TypeNode | undefined): boolean {
+    function isGuardCandidate(
+      name: string,
+      returnTypeNode: TSESTree.TypeNode | undefined,
+    ): boolean {
       if (!/^is[A-Z]/.test(name)) return false;
       if (!returnTypeNode) return false;
       return returnTypeNode.type === "TSBooleanKeyword";
     }
 
-    function findEnclosingClassName(ancestors: TSESTree.Node[], startIndex: number): string {
+    function findEnclosingClassName(
+      ancestors: TSESTree.Node[],
+      startIndex: number,
+    ): string {
       for (let i = startIndex - 1; i >= 0; i--) {
         const ancestor = ancestors[i];
-        if (ancestor.type === "ClassDeclaration" && ancestor.id) return ancestor.id.name;
-        if (ancestor.type === "ClassExpression" && ancestor.id) return ancestor.id.name;
+        if (ancestor.type === "ClassDeclaration" && ancestor.id)
+          return ancestor.id.name;
+        if (ancestor.type === "ClassExpression" && ancestor.id)
+          return ancestor.id.name;
       }
       return "anonymous";
     }
 
-    function findArrowFunctionName(ancestors: TSESTree.Node[], startIndex: number): string | null {
-      const varDecl = ancestors.slice(startIndex + 1).find((a) => a.type === "VariableDeclarator");
+    function findArrowFunctionName(
+      ancestors: TSESTree.Node[],
+      startIndex: number,
+    ): string | null {
+      const varDecl = ancestors
+        .slice(startIndex + 1)
+        .find((a) => a.type === "VariableDeclarator");
       if (varDecl?.id.type === "Identifier") return varDecl.id.name;
       return null;
     }
 
-    function findEnclosingFunction(callNode: TSESTree.CallExpression): string | null {
+    function findEnclosingFunction(
+      callNode: TSESTree.CallExpression,
+    ): string | null {
       const ancestors = context.sourceCode.getAncestors(callNode);
       for (const [index, node] of ancestors.entries()) {
         if (node.type === "FunctionDeclaration" && node.id) {
@@ -66,7 +83,10 @@ export default createRule({
         if (node.type === "FunctionExpression" && node.id) {
           return node.id.name;
         }
-        if (node.type === "MethodDefinition" && node.key.type === "Identifier") {
+        if (
+          node.type === "MethodDefinition" &&
+          node.key.type === "Identifier"
+        ) {
           return `${findEnclosingClassName(ancestors, index)}.${node.key.name}`;
         }
         if (node.type === "ArrowFunctionExpression") {
@@ -112,7 +132,8 @@ export default createRule({
       MethodDefinition(node) {
         if (node.key.type !== "Identifier") return;
         const name = node.key.name;
-        const retType = (node.value as TSESTree.FunctionExpression).returnType?.typeAnnotation;
+        const retType = (node.value as TSESTree.FunctionExpression).returnType
+          ?.typeAnnotation;
         if (name && isGuardCandidate(name, retType)) {
           guardNames.add(name);
         }
@@ -147,7 +168,10 @@ export default createRule({
         const guardToFunctions = new Map<string, Set<string | null>>();
         const guardToCalls = new Map<
           string,
-          Array<{ callNode: TSESTree.CallExpression; enclosingFunc: string | null }>
+          Array<{
+            callNode: TSESTree.CallExpression;
+            enclosingFunc: string | null;
+          }>
         >();
 
         for (const call of guardCalls) {

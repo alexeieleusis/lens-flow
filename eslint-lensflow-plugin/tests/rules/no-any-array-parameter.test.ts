@@ -52,10 +52,7 @@ ruleTester.run("no-any-array-parameter", rule, {
       code: `function firstItem(items: any[]): any {
   return items[0];
 }`,
-      errors: [
-        { messageId: "anyParam" },
-        { messageId: "anyReturn" },
-      ],
+      errors: [{ messageId: "anyParam" }, { messageId: "anyReturn" }],
     },
     // any[] in arrow function parameter
     {
@@ -110,20 +107,14 @@ ruleTester.run("no-any-array-parameter", rule, {
       code: `function merge(a: any[], b: any[]): any[] {
   return [...a, ...b];
 }`,
-      errors: [
-        { messageId: "anyParam" },
-        { messageId: "anyParam" },
-      ],
+      errors: [{ messageId: "anyParam" }, { messageId: "anyParam" }],
     },
     // any return with any[] param
     {
       code: `function getData(items: any[]): any {
   return items;
 }`,
-      errors: [
-        { messageId: "anyParam" },
-        { messageId: "anyReturn" },
-      ],
+      errors: [{ messageId: "anyParam" }, { messageId: "anyReturn" }],
     },
     // Array<any> should be flagged
     {
@@ -163,10 +154,7 @@ ruleTester.run("no-any-array-parameter", rule, {
     // Multiple plain `any` params
     {
       code: `function merge(a: any, b: any): void {}`,
-      errors: [
-        { messageId: "anyParam" },
-        { messageId: "anyParam" },
-      ],
+      errors: [{ messageId: "anyParam" }, { messageId: "anyParam" }],
     },
     // Mixed: plain `any` alongside typed param
     {

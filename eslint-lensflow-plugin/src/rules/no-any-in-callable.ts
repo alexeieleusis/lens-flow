@@ -40,13 +40,24 @@ export default createRule({
         | TSESTree.TSCallSignatureDeclaration,
     ) {
       if ("declare" in node && node.declare) return;
-      if (node.returnType?.typeAnnotation && containsAnyType(node.returnType.typeAnnotation)) {
-        context.report({ node: node.returnType, messageId: "anyReturn", data: { url: URL } });
+      if (
+        node.returnType?.typeAnnotation &&
+        containsAnyType(node.returnType.typeAnnotation)
+      ) {
+        context.report({
+          node: node.returnType,
+          messageId: "anyReturn",
+          data: { url: URL },
+        });
       }
     }
 
-    const paramChecker = createNoAnyParamChecker("anyParam", { url: URL })(context);
-    const typeParamChecker = createNoAnyParamTypeChecker("anyParam", { url: URL })(context);
+    const paramChecker = createNoAnyParamChecker("anyParam", { url: URL })(
+      context,
+    );
+    const typeParamChecker = createNoAnyParamTypeChecker("anyParam", {
+      url: URL,
+    })(context);
 
     return {
       ...typeParamChecker,

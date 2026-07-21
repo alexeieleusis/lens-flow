@@ -9,7 +9,8 @@ const SKIPPED_KEYS = new Set(["type", "loc", "range", "parent"]);
 function visitChildValue(child: unknown, out: TSESTree.Identifier[]): void {
   if (Array.isArray(child)) {
     for (const item of child) {
-      if (item && typeof item === "object") collectIdentifiers(item as TSESTree.Node, out);
+      if (item && typeof item === "object")
+        collectIdentifiers(item as TSESTree.Node, out);
     }
   } else if (child && typeof child === "object") {
     collectIdentifiers(child as TSESTree.Node, out);
@@ -53,7 +54,8 @@ function testsEqual(
 ): boolean {
   if (a.type !== b.type) return false;
 
-  if (context.sourceCode.getText(a) !== context.sourceCode.getText(b)) return false;
+  if (context.sourceCode.getText(a) !== context.sourceCode.getText(b))
+    return false;
 
   const idsA = collectIdentifiers(a);
   const idsB = collectIdentifiers(b);
@@ -78,8 +80,8 @@ export default createRule({
         "Disallow redundant narrowing checks that repeat an outer block's identical check (binary comparisons, typeof, instanceof, truthiness, and call expressions)",
     },
     messages: {
-     redundantNarrowing:
-         "This narrowing check is redundant because an outer block already performed the same check. See: {{url}}",
+      redundantNarrowing:
+        "This narrowing check is redundant because an outer block already performed the same check. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -97,7 +99,10 @@ export default createRule({
     ] as const;
 
     function checkAndWalk(node: TSESTree.Node, outerTest: TSESTree.Node): void {
-      if (node.type === "IfStatement" && testsEqual(context, outerTest, node.test)) {
+      if (
+        node.type === "IfStatement" &&
+        testsEqual(context, outerTest, node.test)
+      ) {
         context.report({
           node,
           messageId: "redundantNarrowing",

@@ -28,7 +28,10 @@ function unwrapTypeNode(node: TSESTree.TypeNode): TSESTree.TypeNode[] {
 function isReadonlyTypeAnnotation(node: TSESTree.TypeNode): boolean {
   return unwrapTypeNode(node).some((unwrapped) => {
     // readonly T[] → TSTypeOperator { operator: "readonly" }
-    if (unwrapped.type === "TSTypeOperator" && unwrapped.operator === "readonly")
+    if (
+      unwrapped.type === "TSTypeOperator" &&
+      unwrapped.operator === "readonly"
+    )
       return true;
 
     // ReadonlyArray<T>
@@ -56,9 +59,7 @@ function findVariableInScope(
   return null;
 }
 
-function isReadonlyVariable(
-  variable: TSESLint.Scope.Variable,
-): boolean {
+function isReadonlyVariable(variable: TSESLint.Scope.Variable): boolean {
   return variable.defs.some((def) => {
     const typeAnn = getTypeAnnotationFromDef(def);
     return typeAnn != null && isReadonlyTypeAnnotation(typeAnn);
@@ -67,10 +68,7 @@ function isReadonlyVariable(
 
 function getParamName(param: TSESTree.Parameter): string | null {
   if (param.type === "Identifier") return param.name;
-  if (
-    param.type === "AssignmentPattern" &&
-    param.left.type === "Identifier"
-  )
+  if (param.type === "AssignmentPattern" && param.left.type === "Identifier")
     return param.left.name;
   return null;
 }
@@ -90,7 +88,10 @@ function getTypeAnnotationFromParamNode(
 }
 
 function findParamTypeAnnotation(
-  fn: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression,
+  fn:
+    | TSESTree.FunctionDeclaration
+    | TSESTree.FunctionExpression
+    | TSESTree.ArrowFunctionExpression,
   def: TSESLint.Scope.Definition,
 ): TSESTree.TypeNode | null {
   const defName = def.name.type === "Identifier" ? def.name.name : null;
@@ -122,7 +123,10 @@ function getTypeAnnotationFromDef(
         node.type === "ArrowFunctionExpression"
       ) {
         return findParamTypeAnnotation(
-          node as TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression,
+          node as
+            | TSESTree.FunctionDeclaration
+            | TSESTree.FunctionExpression
+            | TSESTree.ArrowFunctionExpression,
           def,
         );
       }

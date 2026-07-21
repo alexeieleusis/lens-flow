@@ -4,7 +4,9 @@ import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 const URL = knowledgeUrl("usecases/UC10-encapsulation.md");
 
-function isIndexSignatureSealed(member: TSESTree.TSInterfaceBody["body"][number]): boolean {
+function isIndexSignatureSealed(
+  member: TSESTree.TSInterfaceBody["body"][number],
+): boolean {
   if (member.type !== "TSIndexSignature" || member.parameters.length === 0) {
     return false;
   }
@@ -19,7 +21,9 @@ function isIndexSignatureSealed(member: TSESTree.TSInterfaceBody["body"][number]
   return paramType.type === "TSTypeQuery";
 }
 
-function isComputedSealedProperty(member: TSESTree.TSInterfaceBody["body"][number]): boolean {
+function isComputedSealedProperty(
+  member: TSESTree.TSInterfaceBody["body"][number],
+): boolean {
   if (member.type !== "TSPropertySignature" || !member.computed) return false;
 
   let keyName: string | null = null;
@@ -33,7 +37,9 @@ function isComputedSealedProperty(member: TSESTree.TSInterfaceBody["body"][numbe
   return member.typeAnnotation?.typeAnnotation?.type === "TSNeverKeyword";
 }
 
-function isSealedSymbolMember(member: TSESTree.TSInterfaceBody["body"][number]): boolean {
+function isSealedSymbolMember(
+  member: TSESTree.TSInterfaceBody["body"][number],
+): boolean {
   return isIndexSignatureSealed(member) || isComputedSealedProperty(member);
 }
 
@@ -46,8 +52,8 @@ export default createRule({
         "Disallow sealed interfaces (unique symbol property) without optional evolution members",
     },
     messages: {
-     sealedNoEvolution:
-         "Interface '{{name}}' uses a sealed symbol but has no optional members for backward-compatible evolution. Add optional members or use a class. See: {{url}}",
+      sealedNoEvolution:
+        "Interface '{{name}}' uses a sealed symbol but has no optional members for backward-compatible evolution. Add optional members or use a class. See: {{url}}",
     },
     schema: [],
     fixable: undefined,

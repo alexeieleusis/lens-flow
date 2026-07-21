@@ -127,7 +127,7 @@ if (!result.ok) {
 }`,
       errors: [{ messageId: "stringMatchOnError" }],
     },
-   {
+    {
       code: `try {
   fetchData();
 } catch (err) {

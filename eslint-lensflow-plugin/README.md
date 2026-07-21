@@ -1,5 +1,7 @@
 # eslint-plugin-eslint-lensflow
 
+![CI](https://github.com/alexeieleusis/lens-flow/actions/workflows/ci.yml/badge.svg)
+
 Leverage the type system for better software design and implementation
 
 ## Installation
@@ -33,7 +35,6 @@ export default defineConfig([
 ]);
 ```
 
-
 Then configure the rules you want to use under the `rules` key.
 
 ```js
@@ -52,20 +53,16 @@ export default defineConfig([
 ]);
 ```
 
-
-
 ## Configurations
 
 <!-- begin auto-generated configs list -->
+
 TODO: Run eslint-doc-generator to generate the configs list (or delete this section if no configs are offered).
 <!-- end auto-generated configs list -->
-
-
 
 ## Rules
 
 <!-- begin auto-generated rules list -->
+
 TODO: Run eslint-doc-generator to generate the rules list.
 <!-- end auto-generated rules list -->
-
-

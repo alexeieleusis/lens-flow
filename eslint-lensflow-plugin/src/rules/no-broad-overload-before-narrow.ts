@@ -14,8 +14,14 @@ function isNarrowerType(
 ) {
   const len = Math.min(broadParams.length, narrowParams.length);
   for (let j = 0; j < len; j++) {
-    const narrowToBroad = checker.isTypeAssignableTo(narrowParams[j], broadParams[j]);
-    const broadToNarrow = checker.isTypeAssignableTo(broadParams[j], narrowParams[j]);
+    const narrowToBroad = checker.isTypeAssignableTo(
+      narrowParams[j],
+      broadParams[j],
+    );
+    const broadToNarrow = checker.isTypeAssignableTo(
+      broadParams[j],
+      narrowParams[j],
+    );
     if (narrowToBroad && !broadToNarrow) return true;
   }
   return false;
@@ -68,7 +74,9 @@ export default createRule({
     ): OverloadInfo[] => {
       const posMap = all.map((fn) => ({
         estree: fn,
-        pos: (parserServices.esTreeNodeToTSNodeMap.get(fn) as ts.Node).getStart(),
+        pos: (
+          parserServices.esTreeNodeToTSNodeMap.get(fn) as ts.Node
+        ).getStart(),
       }));
 
       const overloads: OverloadInfo[] = [];
@@ -80,7 +88,10 @@ export default createRule({
 
         const params = sig.getParameters();
         const tsParams = params.map((p) =>
-          checker.getTypeOfSymbolAtLocation(p, (p.valueDeclaration ?? p) as ts.Node),
+          checker.getTypeOfSymbolAtLocation(
+            p,
+            (p.valueDeclaration ?? p) as ts.Node,
+          ),
         );
         overloads.push({ node: match.estree, tsParams, pos: declPos });
       }
@@ -96,7 +107,10 @@ export default createRule({
       const symbol = resolveSymbol(impl);
       if (!symbol) return;
 
-      const fnType = checker.getTypeOfSymbolAtLocation(symbol, symbol.valueDeclaration!);
+      const fnType = checker.getTypeOfSymbolAtLocation(
+        symbol,
+        symbol.valueDeclaration!,
+      );
       const callSigs = fnType.getCallSignatures();
       if (callSigs.length < 2) return;
 
@@ -105,7 +119,13 @@ export default createRule({
       if (overloads.length < 2) return;
 
       for (let i = 0; i < overloads.length - 1; i++) {
-        if (isNarrowerType(checker, overloads[i].tsParams, overloads[i + 1].tsParams)) {
+        if (
+          isNarrowerType(
+            checker,
+            overloads[i].tsParams,
+            overloads[i + 1].tsParams,
+          )
+        ) {
           context.report({
             node: overloads[i + 1].node,
             messageId: "broadBeforeNarrow",

@@ -14,7 +14,7 @@ export default createRule({
     },
     messages: {
       preferNullishCoalescing:
-        "Use ?? instead of || for default values. The || operator treats 0, \"\", and false as falsy. See: {{url}}",
+        'Use ?? instead of || for default values. The || operator treats 0, "", and false as falsy. See: {{url}}',
     },
     schema: [],
     fixable: "code",
@@ -35,7 +35,11 @@ export default createRule({
           node,
           messageId: "preferNullishCoalescing",
           data: { url: URL },
-          fix: (fixer) => fixer.replaceText(node, `${context.sourceCode.getText(node.left)} ?? ${context.sourceCode.getText(node.right)}`),
+          fix: (fixer) =>
+            fixer.replaceText(
+              node,
+              `${context.sourceCode.getText(node.left)} ?? ${context.sourceCode.getText(node.right)}`,
+            ),
         });
       },
     };

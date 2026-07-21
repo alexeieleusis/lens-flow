@@ -24,8 +24,11 @@ export default createRule({
     return {
       TSIntersectionType(node) {
         const functionTypes = node.types.filter(
-          (member): member is TSESTree.TSFunctionType | TSESTree.TSConstructorType =>
-            member.type === "TSFunctionType" || member.type === "TSConstructorType",
+          (
+            member,
+          ): member is TSESTree.TSFunctionType | TSESTree.TSConstructorType =>
+            member.type === "TSFunctionType" ||
+            member.type === "TSConstructorType",
         );
         if (functionTypes.length >= 2) {
           context.report({

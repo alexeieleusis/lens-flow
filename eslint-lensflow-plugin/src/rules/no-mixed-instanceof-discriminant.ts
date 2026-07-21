@@ -22,7 +22,7 @@ export default createRule({
     docs: {
       description:
         "Disallow discriminated unions that mix class types (instanceof narrowing) with plain object literal types (discriminant narrowing).",
-     },
+    },
     messages: {
       mixed:
         "This union mixes class types (narrowed via instanceof) with plain object types (narrowed via discriminant literal). Use a consistent narrowing strategy — either all class types or all literal-discriminant types. See: {{url}}",
@@ -55,8 +55,13 @@ export default createRule({
 
     return {
       TSTypeAliasDeclaration(node) {
-        let typeAnnotation: TSESTree.TypeNode | undefined | null = node.typeAnnotation;
-        while (typeAnnotation && "typeAnnotation" in typeAnnotation && typeAnnotation.typeAnnotation) {
+        let typeAnnotation: TSESTree.TypeNode | undefined | null =
+          node.typeAnnotation;
+        while (
+          typeAnnotation &&
+          "typeAnnotation" in typeAnnotation &&
+          typeAnnotation.typeAnnotation
+        ) {
           typeAnnotation = typeAnnotation.typeAnnotation as TSESTree.TypeNode;
         }
         if (!typeAnnotation) return;
@@ -76,7 +81,10 @@ export default createRule({
 
           if (isClassType(memberTsType)) {
             hasClassMember = true;
-          } else if ((memberTsType.flags & ts.TypeFlags.Object) !== 0 && hasLiteralDiscriminant(memberTsType)) {
+          } else if (
+            (memberTsType.flags & ts.TypeFlags.Object) !== 0 &&
+            hasLiteralDiscriminant(memberTsType)
+          ) {
             hasLiteralObjectMember = true;
           }
         }

@@ -59,9 +59,7 @@ function isArrayType(checker: ts.TypeChecker, type: ts.Type): boolean {
   return checker.typeToString(type).startsWith("ReadonlyArray<");
 }
 
-function unwrapToAwait(
-  n: TSESTree.Node,
-): TSESTree.AwaitExpression | null {
+function unwrapToAwait(n: TSESTree.Node): TSESTree.AwaitExpression | null {
   let current: TSESTree.Node = n;
   while (
     current.type === "TSAsExpression" ||
@@ -81,10 +79,9 @@ export default createRule({
     docs: {
       description:
         "Disallow collecting an AsyncIterable into an array with await then applying .map() or similar array transformation",
-     },
+    },
     messages: {
-      collectThenTransform:
-        `Collecting an AsyncIterable into an array then applying "{{method}}" consumes O(n) memory instead of streaming. Use an async generator pipeline with for await...of instead. See: {{url}}`,
+      collectThenTransform: `Collecting an AsyncIterable into an array then applying "{{method}}" consumes O(n) memory instead of streaming. Use an async generator pipeline with for await...of instead. See: {{url}}`,
     },
     schema: [],
     fixable: undefined,
@@ -103,13 +100,10 @@ export default createRule({
       const firstArg = awaitedExpr.arguments[0];
       if (!firstArg) return false;
 
-      const tsFirstArg =
-        parserServices.esTreeNodeToTSNodeMap.get(firstArg);
+      const tsFirstArg = parserServices.esTreeNodeToTSNodeMap.get(firstArg);
       if (!tsFirstArg) return false;
 
-      const argType = checker.getTypeAtLocation(
-        tsFirstArg as ts.Expression,
-      );
+      const argType = checker.getTypeAtLocation(tsFirstArg as ts.Expression);
 
       return hasAsyncIteratorSignature(argType, checker);
     }
@@ -141,7 +135,13 @@ export default createRule({
       const tsVarIdent = parserServices.esTreeNodeToTSNodeMap.get(obj);
       if (!tsVarIdent) return;
 
-      if (!isArrayType(checker, checker.getTypeAtLocation(tsVarIdent as ts.Expression))) return;
+      if (
+        !isArrayType(
+          checker,
+          checker.getTypeAtLocation(tsVarIdent as ts.Expression),
+        )
+      )
+        return;
 
       context.report({
         node: init,
@@ -150,10 +150,7 @@ export default createRule({
       });
     }
 
-    function checkDirectObject(
-      obj: TSESTree.Node,
-      methodName: string,
-    ) {
+    function checkDirectObject(obj: TSESTree.Node, methodName: string) {
       const awaited = unwrapToAwait(obj);
       if (!awaited) return;
 
@@ -167,7 +164,13 @@ export default createRule({
       const tsAwaited = parserServices.esTreeNodeToTSNodeMap.get(awaited);
       if (!tsAwaited) return;
 
-      if (!isArrayType(checker, checker.getTypeAtLocation(tsAwaited as ts.Expression))) return;
+      if (
+        !isArrayType(
+          checker,
+          checker.getTypeAtLocation(tsAwaited as ts.Expression),
+        )
+      )
+        return;
 
       context.report({
         node: awaited,

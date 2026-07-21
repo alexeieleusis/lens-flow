@@ -39,7 +39,10 @@ export default createRule({
     return {
       CallExpression(node) {
         if (node.callee.type !== "Identifier") return;
-        if (!/^assertNever$/.test(node.callee.name) && !/^assertExhaustive$/.test(node.callee.name)) {
+        if (
+          !/^assertNever$/.test(node.callee.name) &&
+          !/^assertExhaustive$/.test(node.callee.name)
+        ) {
           return;
         }
         for (const arg of node.arguments) {

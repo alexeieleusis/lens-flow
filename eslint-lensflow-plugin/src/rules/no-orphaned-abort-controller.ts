@@ -52,9 +52,7 @@ const SIGNAL_ACCEPTING_FUNCTIONS = new Set([
   "once",
 ]);
 
-function isSignalAcceptingCallee(
-  callee: TSESTree.Expression,
-): boolean {
+function isSignalAcceptingCallee(callee: TSESTree.Expression): boolean {
   if (
     callee.type === "Identifier" &&
     SIGNAL_ACCEPTING_FUNCTIONS.has(callee.name)
@@ -110,13 +108,17 @@ function passedToFunction(
 ): boolean {
   if (!body) return false;
 
-  return walkNodes(body, (node) => {
-    if (node.type !== "CallExpression") return false;
-    if (!isSignalAcceptingCallee(node.callee)) return false;
-    return node.arguments.some((arg) =>
-      isSignalArg(arg, controllerVar, sourceCode),
-    );
-  }, { stopAtFunctionBoundaries: true });
+  return walkNodes(
+    body,
+    (node) => {
+      if (node.type !== "CallExpression") return false;
+      if (!isSignalAcceptingCallee(node.callee)) return false;
+      return node.arguments.some((arg) =>
+        isSignalArg(arg, controllerVar, sourceCode),
+      );
+    },
+    { stopAtFunctionBoundaries: true },
+  );
 }
 
 function hasAbortCall(
@@ -126,19 +128,19 @@ function hasAbortCall(
 ): boolean {
   if (!body) return false;
 
-  return walkNodes(body, (node) => {
-    return (
-      node.type === "CallExpression" &&
-      node.callee.type === "MemberExpression" &&
-      node.callee.property.type === "Identifier" &&
-      node.callee.property.name === "abort" &&
-      isSameVariableMemberExpression(
-        node.callee,
-        controllerVar,
-        sourceCode,
-      )
-    );
-  }, { stopAtFunctionBoundaries: true });
+  return walkNodes(
+    body,
+    (node) => {
+      return (
+        node.type === "CallExpression" &&
+        node.callee.type === "MemberExpression" &&
+        node.callee.property.type === "Identifier" &&
+        node.callee.property.name === "abort" &&
+        isSameVariableMemberExpression(node.callee, controllerVar, sourceCode)
+      );
+    },
+    { stopAtFunctionBoundaries: true },
+  );
 }
 
 function findEnclosingFunctionBody(
@@ -155,10 +157,7 @@ function findEnclosingFunctionBody(
         | TSESTree.FunctionDeclaration
         | TSESTree.FunctionExpression
         | TSESTree.ArrowFunctionExpression;
-      if (
-        fn.body.type === "BlockStatement" &&
-        fn.body.body.length > 0
-      ) {
+      if (fn.body.type === "BlockStatement" && fn.body.body.length > 0) {
         return fn.body;
       }
       return null;

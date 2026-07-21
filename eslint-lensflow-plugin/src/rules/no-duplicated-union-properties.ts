@@ -22,7 +22,7 @@ export default createRule({
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"duplicatedProperties", []>) {
     const collectMemberLiterals = (
-      node: TSESTree.TSUnionType
+      node: TSESTree.TSUnionType,
     ): TSESTree.TSTypeLiteral[][] => {
       const memberGroups: TSESTree.TSTypeLiteral[][] = [];
       for (const member of node.types) {
@@ -45,7 +45,7 @@ export default createRule({
 
     const findDuplicatedProperties = (
       propMap: Map<string, Map<string, Set<number>>>,
-      discriminants: Set<string>
+      discriminants: Set<string>,
     ): string[] => {
       const duplicated: string[] = [];
       for (const [propName, typeMap] of propMap) {
@@ -70,7 +70,10 @@ export default createRule({
         const propMap = new Map<string, Map<string, Set<number>>>();
         const litValues = new Map<string, Set<string>>();
 
-        const processMember = (literal: TSESTree.TSTypeLiteral, idx: number) => {
+        const processMember = (
+          literal: TSESTree.TSTypeLiteral,
+          idx: number,
+        ) => {
           for (const mem of literal.members) {
             if (mem.type !== "TSPropertySignature") continue;
             if (!mem.typeAnnotation) continue;
@@ -86,13 +89,18 @@ export default createRule({
           }
         };
 
-        const extractPropertyName = (key: TSESTree.PropertyName): string | null => {
+        const extractPropertyName = (
+          key: TSESTree.PropertyName,
+        ): string | null => {
           if (key.type === "Identifier") return key.name;
           if (key.type === "Literal") return String(key.value);
           return null;
         };
 
-        const trackLiteralValue = (typeAnn: TSESTree.TSTypeAnnotation["typeAnnotation"], propName: string) => {
+        const trackLiteralValue = (
+          typeAnn: TSESTree.TSTypeAnnotation["typeAnnotation"],
+          propName: string,
+        ) => {
           if (typeAnn.type !== "TSLiteralType") return;
           if (typeAnn.literal.type !== "Literal") return;
           const val = String(typeAnn.literal.value);
@@ -102,8 +110,13 @@ export default createRule({
           litValues.set(propName, set);
         };
 
-        const trackPropertyOccurrence = (propName: string, typeText: string, idx: number) => {
-          const typeMap = propMap.get(propName) ?? new Map<string, Set<number>>();
+        const trackPropertyOccurrence = (
+          propName: string,
+          typeText: string,
+          idx: number,
+        ) => {
+          const typeMap =
+            propMap.get(propName) ?? new Map<string, Set<number>>();
           const idxSet = typeMap.get(typeText) ?? new Set<number>();
           idxSet.add(idx);
           typeMap.set(typeText, idxSet);

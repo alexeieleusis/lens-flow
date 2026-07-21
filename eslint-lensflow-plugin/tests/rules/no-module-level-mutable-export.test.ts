@@ -24,10 +24,7 @@ export function increment() { COUNTER++; }`,
     },
     {
       code: `export let a = 1, b = 2;`,
-      errors: [
-        { messageId: "mutableExport" },
-        { messageId: "mutableExport" },
-      ],
+      errors: [{ messageId: "mutableExport" }, { messageId: "mutableExport" }],
     },
     {
       code: `export let { x } = obj;`,

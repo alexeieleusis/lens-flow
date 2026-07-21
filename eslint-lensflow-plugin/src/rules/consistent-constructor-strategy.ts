@@ -8,35 +8,31 @@ function isBrandedIntersection(typeNode: TSESTree.TypeNode): boolean {
   if (typeNode.type !== "TSIntersectionType") return false;
   return typeNode.types.some((t) => {
     if (t.type !== "TSTypeLiteral") return false;
-    return t.members.some(
-      (m) => {
-        if (m.type !== "TSPropertySignature") return false;
-        if (m.key.type === "Identifier") {
-          return (
-            m.key.name === "_brand" ||
-            m.key.name === "__brand" ||
-            m.key.name.endsWith("Brand")
-          );
-        }
-        if (m.key.type === "Literal" && typeof m.key.value === "string") {
-          return (
-            m.key.value === "_brand" ||
-            m.key.value === "__brand" ||
-            m.key.value.endsWith("Brand")
-          );
-        }
-        return false;
-      },
-    );
+    return t.members.some((m) => {
+      if (m.type !== "TSPropertySignature") return false;
+      if (m.key.type === "Identifier") {
+        return (
+          m.key.name === "_brand" ||
+          m.key.name === "__brand" ||
+          m.key.name.endsWith("Brand")
+        );
+      }
+      if (m.key.type === "Literal" && typeof m.key.value === "string") {
+        return (
+          m.key.value === "_brand" ||
+          m.key.value === "__brand" ||
+          m.key.value.endsWith("Brand")
+        );
+      }
+      return false;
+    });
   });
 }
 
 function isPascalCaseIdentifier(typeNode: TSESTree.TypeNode): boolean {
   if (typeNode.type !== "TSTypeReference") return false;
   const tn = typeNode.typeName;
-  return (
-    tn.type === "Identifier" && /^[A-Z][A-Za-z0-9]/.test(tn.name)
-  );
+  return tn.type === "Identifier" && /^[A-Z][A-Za-z0-9]/.test(tn.name);
 }
 
 function isPotentiallyBrandedType(typeNode: TSESTree.TypeNode): boolean {
@@ -164,9 +160,8 @@ export default createRule({
         | TSESTree.ArrowFunctionExpression
         | TSESTree.FunctionExpression,
     ): void {
-      const returnType = (
-        fn as TSESTree.FunctionDeclaration
-      ).returnType?.typeAnnotation;
+      const returnType = (fn as TSESTree.FunctionDeclaration).returnType
+        ?.typeAnnotation;
       const body = fn.body;
       if (body?.type === "BlockStatement") {
         const strategy = classifyStrategy(returnType, body);

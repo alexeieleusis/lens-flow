@@ -30,7 +30,9 @@ function checkTypeReference(
   return null;
 }
 
-function containsAnyKeyword(node: TSESTree.TypeNode): TSESTree.TSAnyKeyword | null {
+function containsAnyKeyword(
+  node: TSESTree.TypeNode,
+): TSESTree.TSAnyKeyword | null {
   if (node.type === "TSAnyKeyword") return node;
   if (node.type === "TSArrayType") {
     return containsAnyKeyword(node.elementType);
@@ -131,9 +133,7 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"anyParam" | "anyArrayParam", []>) {
-    function checkFunctionNode(
-      node: { params: TSESTree.Parameter[] },
-    ) {
+    function checkFunctionNode(node: { params: TSESTree.Parameter[] }) {
       for (const param of node.params) {
         const info = extractTypeInfo(param);
         if (!info) continue;

@@ -6,7 +6,8 @@ const URL = knowledgeUrl("usecases/UC01-invalid-states.md");
 
 function getPropertyName(key: TSESTree.TSPropertySignature["key"]): string {
   if (key.type === "Identifier") return key.name;
-  if (key.type === "Literal" && typeof key.value === "string") return String(key.value);
+  if (key.type === "Literal" && typeof key.value === "string")
+    return String(key.value);
   return "";
 }
 
@@ -26,9 +27,7 @@ function isNestedDiscriminatedUnion(typeNode: TSESTree.TypeNode): boolean {
   }
   if (typeNode.type === "TSUnionType") {
     return typeNode.types.some(
-      (member) =>
-        member.type === "TSTypeLiteral" &&
-        hasKindProperty(member),
+      (member) => member.type === "TSTypeLiteral" && hasKindProperty(member),
     );
   }
   return false;
@@ -42,7 +41,7 @@ export default createRule({
       description:
         "Disallow union members whose direct property types contain a discriminated union",
     },
-   messages: {
+    messages: {
       nestedDiscriminatedUnion:
         "Found a nested discriminated union inside a union member. Flatten the discriminant variants into separate top-level union members instead. See: {{url}}",
     },
@@ -59,16 +58,13 @@ export default createRule({
           let reported = false;
 
           for (const prop of member.members) {
-            if (
-              prop.type !== "TSPropertySignature" ||
-              !prop.typeAnnotation
-            )
+            if (prop.type !== "TSPropertySignature" || !prop.typeAnnotation)
               continue;
 
             const annotation = prop.typeAnnotation.typeAnnotation;
             if (isNestedDiscriminatedUnion(annotation)) {
               if (!reported) {
-               context.report({
+                context.report({
                   node: member,
                   messageId: "nestedDiscriminatedUnion",
                   data: { url: URL },

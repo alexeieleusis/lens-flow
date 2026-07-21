@@ -33,18 +33,12 @@ function getRadius(radius: string) { /* ... */ }`,
     {
       code: `function getUser(id: string) { /* ... */ }
 function getOrder(id: string) { /* ... */ }`,
-      errors: [
-        { messageId: "plainStringId" },
-        { messageId: "plainStringId" },
-      ],
+      errors: [{ messageId: "plainStringId" }, { messageId: "plainStringId" }],
     },
     {
       code: `function getUser(userId: string) { /* ... */ }
 function getOrder(orderId: string) { /* ... */ }`,
-      errors: [
-        { messageId: "plainStringId" },
-        { messageId: "plainStringId" },
-      ],
+      errors: [{ messageId: "plainStringId" }, { messageId: "plainStringId" }],
     },
     {
       code: `function getUser(id: string) { /* ... */ }
@@ -59,18 +53,12 @@ function getProduct(productId: string) { /* ... */ }`,
     {
       code: `const getUser = (id: string) => { /* ... */ };
 const getOrder = (id: string) => { /* ... */ };`,
-      errors: [
-        { messageId: "plainStringId" },
-        { messageId: "plainStringId" },
-      ],
+      errors: [{ messageId: "plainStringId" }, { messageId: "plainStringId" }],
     },
     {
       code: `processArray(items, function(id: string) { return id; });
 processArray(orders, function(id: string) { return id; });`,
-      errors: [
-        { messageId: "plainStringId" },
-        { messageId: "plainStringId" },
-      ],
+      errors: [{ messageId: "plainStringId" }, { messageId: "plainStringId" }],
     },
   ],
 });

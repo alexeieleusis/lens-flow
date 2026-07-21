@@ -27,7 +27,8 @@ function isStringMatchCall(
   const obj = callee.object;
   if (obj.type !== "MemberExpression" || obj.computed) return false;
   if (obj.property.type !== "Identifier") return false;
-  if (obj.property.name !== "message" && obj.property.name !== "name") return false;
+  if (obj.property.name !== "message" && obj.property.name !== "name")
+    return false;
   if (obj.object.type !== "Identifier") return false;
   if (obj.object.name !== catchParamName) return false;
 

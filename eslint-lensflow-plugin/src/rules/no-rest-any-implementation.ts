@@ -4,9 +4,7 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const RULE_DOCS_URL = knowledgeUrl("catalog/T22-callable-typing.md");
 
-type FnLikeNode =
-  | TSESTree.FunctionDeclaration
-  | TSESTree.TSDeclareFunction;
+type FnLikeNode = TSESTree.FunctionDeclaration | TSESTree.TSDeclareFunction;
 
 function isImplementation(node: FnLikeNode): boolean {
   return node.type === "FunctionDeclaration" && node.body !== null;

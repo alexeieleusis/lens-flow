@@ -4,7 +4,9 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const URL = knowledgeUrl("catalog/T47-gradual-typing.md");
 
-function getMemberCallee(node: TSESTree.CallExpression): TSESTree.MemberExpression | null {
+function getMemberCallee(
+  node: TSESTree.CallExpression,
+): TSESTree.MemberExpression | null {
   let callee = node.callee;
   if (callee.type === "ChainExpression") callee = callee.expression;
   if (callee.type === "MemberExpression") return callee;

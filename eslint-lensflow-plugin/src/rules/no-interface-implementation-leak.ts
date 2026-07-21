@@ -121,7 +121,9 @@ export default createRule({
     schema: [],
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"internalName" | "exposedCollection", []>) {
+  create(
+    context: TSESLint.RuleContext<"internalName" | "exposedCollection", []>,
+  ) {
     return {
       TSInterfaceBody(node) {
         const { internalNameProps, exposedCollectionProps } =

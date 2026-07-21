@@ -10,13 +10,8 @@ const URL = knowledgeUrl("usecases/UC21-async-concurrency.md");
  * Check whether any descendant of the given node is an Identifier with the specified name.
  * Stops at function boundaries to avoid crossing scope.
  */
-function nodeContainsIdentifier(
-  node: TSESTree.Node,
-  name: string,
-): boolean {
-  return walkNodes(node, (n) =>
-    n.type === "Identifier" && n.name === name,
-  );
+function nodeContainsIdentifier(node: TSESTree.Node, name: string): boolean {
+  return walkNodes(node, (n) => n.type === "Identifier" && n.name === name);
 }
 
 /**
@@ -84,22 +79,20 @@ export default createRule({
 
         // All references must be inside console.* calls.
         const sourceCode = context.sourceCode;
-        if (!errorRefs.every((ref) => isInsideConsoleCall(sourceCode, ref))) return;
+        if (!errorRefs.every((ref) => isInsideConsoleCall(sourceCode, ref)))
+          return;
 
         // There must be a ThrowStatement with `new Error(...)` that does NOT
         // include the caught error parameter in its arguments.
         const hasGenericThrow = throwStmts.some((stmt) => {
           const arg = stmt.argument;
           if (arg?.type !== "NewExpression") return false;
-          if (
-            arg.callee.type !== "Identifier" ||
-            arg.callee.name !== "Error"
-          )
+          if (arg.callee.type !== "Identifier" || arg.callee.name !== "Error")
             return false;
 
           // Check that none of the Error constructor args contain the error param.
-          const hasErrorRef = arg.arguments.some(
-            (argNode) => nodeContainsIdentifier(argNode, paramName),
+          const hasErrorRef = arg.arguments.some((argNode) =>
+            nodeContainsIdentifier(argNode, paramName),
           );
           return !hasErrorRef;
         });

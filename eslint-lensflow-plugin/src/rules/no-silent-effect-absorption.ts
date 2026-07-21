@@ -52,8 +52,11 @@ function isEffectType(type: ts.Type): boolean {
   const propNames = new Set(props.map((p) => p.name));
 
   // Structural: need BOTH transform AND error-handling methods
-  const hasTransform = propNames.has("map") || propNames.has("flatMap") || propNames.has("chain");
-  const hasErrorHandling = Array.from(ERROR_HANDLING_METHODS).some((n) => propNames.has(n));
+  const hasTransform =
+    propNames.has("map") || propNames.has("flatMap") || propNames.has("chain");
+  const hasErrorHandling = Array.from(ERROR_HANDLING_METHODS).some((n) =>
+    propNames.has(n),
+  );
 
   return hasTransform && hasErrorHandling;
 }
@@ -106,7 +109,10 @@ export default createRule({
     },
   ],
   create(
-    context: TSESLint.RuleContext<"silentAbsorption", [{ allowedTerminators: string[] }]>
+    context: TSESLint.RuleContext<
+      "silentAbsorption",
+      [{ allowedTerminators: string[] }]
+    >,
   ) {
     const parserServices = ESLintUtils.getParserServices(context, true);
     if (!parserServices.program) return {};
@@ -126,7 +132,8 @@ export default createRule({
       "getOrElse",
       "orElse",
     ];
-    const { allowedTerminators = DEFAULT_TERMINATORS } = context.options[0] ?? {};
+    const { allowedTerminators = DEFAULT_TERMINATORS } =
+      context.options[0] ?? {};
     const terminatorSet = new Set(allowedTerminators);
 
     return {

@@ -4,7 +4,9 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const URL = knowledgeUrl("usecases/UC04-generic-constraints.md");
 
-function getParamTypeAnnotation(p: TSESTree.Parameter): TSESTree.TypeNode | null {
+function getParamTypeAnnotation(
+  p: TSESTree.Parameter,
+): TSESTree.TypeNode | null {
   if (
     p.type === "Identifier" ||
     p.type === "ArrayPattern" ||
@@ -27,16 +29,24 @@ function serializeParamList(params: TSESTree.Parameter[]): string {
   return params.map((p) => serializeType(getParamTypeAnnotation(p))).join(",");
 }
 
-function serializeReturnType(node: { returnType?: { typeAnnotation?: TSESTree.TypeNode } }): string {
-  return node.returnType?.typeAnnotation ? serializeType(node.returnType.typeAnnotation) : "";
+function serializeReturnType(node: {
+  returnType?: { typeAnnotation?: TSESTree.TypeNode };
+}): string {
+  return node.returnType?.typeAnnotation
+    ? serializeType(node.returnType.typeAnnotation)
+    : "";
 }
 
-function serializePropertySignature(member: TSESTree.TSPropertySignature): string {
+function serializePropertySignature(
+  member: TSESTree.TSPropertySignature,
+): string {
   const keyName = extractKeyName(member.key);
   const typeStr = member.typeAnnotation?.typeAnnotation
     ? serializeType(member.typeAnnotation.typeAnnotation)
     : "";
-  const mods = [member.readonly ? "r" : "", member.optional ? "?" : ""].filter(Boolean).join("");
+  const mods = [member.readonly ? "r" : "", member.optional ? "?" : ""]
+    .filter(Boolean)
+    .join("");
   return `prop:${keyName}:${typeStr}${mods}`;
 }
 
@@ -47,13 +57,17 @@ function serializeMethodSignature(member: TSESTree.TSMethodSignature): string {
   return `method:${keyName}(${params}):${returnType}`;
 }
 
-function serializeCallSignature(member: TSESTree.TSCallSignatureDeclaration): string {
+function serializeCallSignature(
+  member: TSESTree.TSCallSignatureDeclaration,
+): string {
   const returnType = serializeReturnType(member);
   const params = serializeParamList(member.params);
   return `call(${params}):${returnType}`;
 }
 
-function serializeConstructSignature(member: TSESTree.TSConstructSignatureDeclaration): string {
+function serializeConstructSignature(
+  member: TSESTree.TSConstructSignatureDeclaration,
+): string {
   const returnType = serializeReturnType(member);
   const params = serializeParamList(member.params);
   return `new(${params}):${returnType}`;
@@ -114,17 +128,26 @@ function serializeType(node: TSESTree.TypeNode | null): string {
     case "TSLiteralType":
       return `literal:${JSON.stringify(node.literal)}`;
     case "TSTypeReference": {
-      const name = node.typeName.type === "Identifier" ? node.typeName.name : "complex";
-      const tp = (node as unknown as { typeParameters?: { params: TSESTree.TypeNode[] } })?.typeParameters;
+      const name =
+        node.typeName.type === "Identifier" ? node.typeName.name : "complex";
+      const tp = (
+        node as unknown as { typeParameters?: { params: TSESTree.TypeNode[] } }
+      )?.typeParameters;
       const params = tp?.params[0]
         ? `[${tp.params.map(serializeType).join(",")}]`
         : "";
       return `ref:${name}${params}`;
     }
     case "TSUnionType":
-      return `union:[${node.types.map(serializeType).sort((a, b) => a.localeCompare(b)).join("|")}]`;
+      return `union:[${node.types
+        .map(serializeType)
+        .sort((a, b) => a.localeCompare(b))
+        .join("|")}]`;
     case "TSIntersectionType":
-      return `intersection:[${node.types.map(serializeType).sort((a, b) => a.localeCompare(b)).join("&")}]`;
+      return `intersection:[${node.types
+        .map(serializeType)
+        .sort((a, b) => a.localeCompare(b))
+        .join("&")}]`;
     case "TSArrayType":
       return `array:${serializeType(node.elementType)}`;
     case "TSConditionalType":
@@ -143,36 +166,36 @@ function serializeType(node: TSESTree.TypeNode | null): string {
 }
 
 function collectConditionals(
-    scope: TSESTree.Program["body"],
+  scope: TSESTree.Program["body"],
 ): { conditional: TSESTree.TSConditionalType; key: string }[] {
-    const result: { conditional: TSESTree.TSConditionalType; key: string }[] = [];
+  const result: { conditional: TSESTree.TSConditionalType; key: string }[] = [];
 
-    for (const stmt of scope) {
-        if (stmt.type !== "TSTypeAliasDeclaration") continue;
+  for (const stmt of scope) {
+    if (stmt.type !== "TSTypeAliasDeclaration") continue;
 
-        const ann = stmt.typeAnnotation;
-        if (ann?.type !== "TSConditionalType") continue;
+    const ann = stmt.typeAnnotation;
+    if (ann?.type !== "TSConditionalType") continue;
 
-        const typeParamNames = new Set(
-            stmt.typeParameters?.params
-                ?.map((p) => p.name.name)
-                .filter(Boolean) ?? [],
-        );
+    const typeParamNames = new Set(
+      stmt.typeParameters?.params?.map((p) => p.name.name).filter(Boolean) ??
+        [],
+    );
 
-        if (
-            ann.checkType.type !== "TSTypeReference" ||
-            ann.checkType.typeName.type !== "Identifier" ||
-            !typeParamNames.has(ann.checkType.typeName.name)
-        ) continue;
+    if (
+      ann.checkType.type !== "TSTypeReference" ||
+      ann.checkType.typeName.type !== "Identifier" ||
+      !typeParamNames.has(ann.checkType.typeName.name)
+    )
+      continue;
 
-        let extendsType: TSESTree.TypeNode = ann.extendsType;
-        if (extendsType.type !== "TSTypeLiteral") continue;
+    let extendsType: TSESTree.TypeNode = ann.extendsType;
+    if (extendsType.type !== "TSTypeLiteral") continue;
 
-        const key = serializeTypeLiteral(extendsType);
-        result.push({ conditional: ann, key });
-    }
+    const key = serializeTypeLiteral(extendsType);
+    result.push({ conditional: ann, key });
+  }
 
-    return result;
+  return result;
 }
 
 export default createRule({
@@ -202,9 +225,15 @@ export default createRule({
     fixable: undefined,
   },
   defaultOptions: [{ minDuplicates: 2 }],
-  create(context: TSESLint.RuleContext<"duplicatedConstraint", [{ minDuplicates: number }]>) {
-    const [{ minDuplicates } = { minDuplicates: 2 }] =
-      context.options ?? [{ minDuplicates: 2 }];
+  create(
+    context: TSESLint.RuleContext<
+      "duplicatedConstraint",
+      [{ minDuplicates: number }]
+    >,
+  ) {
+    const [{ minDuplicates } = { minDuplicates: 2 }] = context.options ?? [
+      { minDuplicates: 2 },
+    ];
 
     return {
       "Program:exit"() {
