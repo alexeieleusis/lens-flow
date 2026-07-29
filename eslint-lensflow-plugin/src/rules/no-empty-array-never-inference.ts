@@ -2,7 +2,7 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T34-never-bottom.md");
+const URL = knowledgeUrl("catalog/T34-never-bottom.md", "Type 'never[]' is not assignable to type 'string[]' (or similar)");
 
 export default createRule({
   name: "no-empty-array-never-inference",
