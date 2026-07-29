@@ -2,7 +2,7 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC04-generic-constraints.md");
+const URL = knowledgeUrl("usecases/UC04-generic-constraints.md", "Antipatterns with Other Techniques (Where Constraints Help) > Antipattern D — Separate utility types that duplicate constraints");
 
 function getParamTypeAnnotation(
   p: TSESTree.Parameter,
