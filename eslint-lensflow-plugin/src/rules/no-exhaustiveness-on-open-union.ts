@@ -4,7 +4,7 @@ import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const DOCS_URL = knowledgeUrl("catalog/T14-type-narrowing.md");
+const DOCS_URL = knowledgeUrl("catalog/T14-type-narrowing.md", "When Not to Use It");
 
 function hasNeverCast(stmt: TSESTree.Statement): boolean {
   return walkNodes(
