@@ -2,7 +2,7 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T34-never-bottom.md");
+const URL = knowledgeUrl("catalog/T34-never-bottom.md", "Pattern: `as any` instead of narrowing to proven branch");
 
 function getBaseIdentifierNode(
   node: TSESTree.Node,
