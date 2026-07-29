@@ -2,7 +2,7 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC08-error-handling.md");
+const URL = knowledgeUrl("usecases/UC08-error-handling.md", "Antipattern E — Boolean return with forgotten check");
 
 export default createRule({
   name: "no-boolean-parse-return",
