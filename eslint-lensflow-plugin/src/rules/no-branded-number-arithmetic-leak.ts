@@ -3,7 +3,7 @@ import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T03-newtypes-opaque.md");
+const URL = knowledgeUrl("catalog/T03-newtypes-opaque.md", "Arithmetic result is no longer branded");
 
 const ARITHMETIC_OPS = new Set(["+", "-", "*", "/", "%"]);
 
