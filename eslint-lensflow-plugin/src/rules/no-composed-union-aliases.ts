@@ -3,7 +3,7 @@ import { ESLintUtils, type TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T02-union-intersection.md");
+const URL = knowledgeUrl("catalog/T02-union-intersection.md", "Antipatterns When Using It > Union: Union of Unions Without Discriminant");
 
 export default createRule({
   name: "no-composed-union-aliases",
