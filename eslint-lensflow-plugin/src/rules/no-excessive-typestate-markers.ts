@@ -3,7 +3,7 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 import type { TSESTree } from "@typescript-eslint/types";
 
-const URL = knowledgeUrl("usecases/UC09-builder-config.md");
+const URL = knowledgeUrl("usecases/UC09-builder-config.md", "❌ Overusing typestate for simple configs");
 
 const PRIMITIVES = new Set([
   "string",
