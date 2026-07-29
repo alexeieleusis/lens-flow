@@ -2,7 +2,7 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC03-exhaustiveness.md");
+const URL = knowledgeUrl("usecases/UC03-exhaustiveness.md", "3. Runtime `any` for extensible data");
 
 const DISCRIMINANT_NAMES = new Set([
   "kind",
