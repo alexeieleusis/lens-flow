@@ -2,7 +2,7 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("usecases/UC14-extensibility.md");
+const URL = knowledgeUrl("usecases/UC14-extensibility.md", "Antipatterns When Using Extensibility");
 
 type Options = [{ maxAbstractMethods?: number }];
 type MessageIds = "abstractOverkill";
