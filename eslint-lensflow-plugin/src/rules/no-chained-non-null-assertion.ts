@@ -2,7 +2,7 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC16-nullability.md");
+const URL = knowledgeUrl("usecases/UC16-nullability.md", "3. Deep nesting with `!` on each level");
 
 function getChain(node: TSESTree.TSNonNullExpression): {
   count: number;
