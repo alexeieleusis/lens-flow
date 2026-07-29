@@ -3,7 +3,7 @@ import { createRule } from "../utils/rule-creator.js";
 import { containsAny } from "../utils/ts-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T31-record-types.md");
+const URL = knowledgeUrl("catalog/T31-record-types.md", "Antipattern A: Overusing `any` in index signatures");
 
 export default createRule({
   name: "no-any-index-signature",
