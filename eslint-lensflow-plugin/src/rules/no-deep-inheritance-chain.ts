@@ -3,7 +3,7 @@ import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T36-trait-objects.md");
+const URL = knowledgeUrl("catalog/T36-trait-objects.md", "B. Deep inheritance hierarchies instead of composition");
 
 export default createRule({
   name: "no-deep-inheritance-chain",
