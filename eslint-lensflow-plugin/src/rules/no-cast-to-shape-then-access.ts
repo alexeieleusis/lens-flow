@@ -2,7 +2,7 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("usecases/UC04-generic-constraints.md");
+const URL = knowledgeUrl("usecases/UC04-generic-constraints.md", "Antipatterns with Other Techniques (Where Constraints Help) > Antipattern B — `any` to bypass type errors");
 
 function unwrapExpression(node: TSESTree.Expression): TSESTree.Expression {
   if (node.type === "TSNonNullExpression") return node.expression;
