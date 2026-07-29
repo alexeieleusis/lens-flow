@@ -2,7 +2,7 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T17-macros-metaprogramming.md");
+const URL = knowledgeUrl("catalog/T17-macros-metaprogramming.md", "Deep nesting without intermediate types");
 
 export default createRule({
   name: "no-deeply-nested-conditional-types",
