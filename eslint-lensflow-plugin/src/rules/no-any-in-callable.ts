@@ -7,7 +7,7 @@ import {
   createNoAnyParamTypeChecker,
 } from "../utils/no-any-param-checker.js";
 
-const URL = knowledgeUrl("catalog/T22-callable-typing.md");
+const URL = knowledgeUrl("catalog/T22-callable-typing.md", "Using `any` instead of proper types");
 
 export default createRule({
   name: "no-any-in-callable",
