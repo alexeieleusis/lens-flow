@@ -2,7 +2,7 @@ import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T02-union-intersection.md");
+const URL = knowledgeUrl("catalog/T02-union-intersection.md", "Intersection: Conflicting Properties");
 
 const PRIMITIVE_TYPES = new Set([
   "TSBooleanKeyword",
