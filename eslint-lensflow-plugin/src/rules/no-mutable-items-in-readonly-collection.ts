@@ -3,7 +3,7 @@ import { ESLintUtils, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC06-immutability.md");
+const URL = knowledgeUrl("usecases/UC06-immutability.md", "Antipattern 3: Mixing mutable state inside `Readonly<T>`");
 
 function isDeclarationMutable(decl: ts.Node): boolean {
   if (decl.kind === ts.SyntaxKind.SetAccessor) {
