@@ -3,7 +3,7 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 import type { TSESTree } from "@typescript-eslint/types";
 
-const URL = knowledgeUrl("catalog/T32-immutability-markers.md");
+const URL = knowledgeUrl("catalog/T32-immutability-markers.md", "❌ readonly on primitives that are always immutable");
 
 const PRIMITIVE_TYPE_NODES = new Set([
   "TSStringKeyword",
