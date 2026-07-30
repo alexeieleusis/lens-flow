@@ -2,7 +2,7 @@ import { ruleTester } from "../helpers/rule-tester.js";
 import rule from "../../src/rules/no-any-in-utility-function.js";
 import { knowledgeUrl } from "../../src/utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T04-generics-bounds.md");
+const URL = knowledgeUrl("catalog/T04-generics-bounds.md", "`any` in utility functions");
 
 ruleTester.run("no-any-in-utility-function", rule, {
   valid: [

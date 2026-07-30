@@ -2,7 +2,7 @@ import { ruleTester } from "../helpers/rule-tester.js";
 import rule from "../../src/rules/require-readonly-domain-props-uc02.js";
 import { knowledgeUrl } from "../../src/utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC02-domain-modeling.md");
+const URL = knowledgeUrl("usecases/UC02-domain-modeling.md", "Antipattern 3 — Mutable domain objects");
 
 ruleTester.run("require-readonly-domain-props-uc02", rule, {
   valid: [
