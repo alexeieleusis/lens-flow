@@ -3,7 +3,7 @@ import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC16-nullability.md");
+const URL = knowledgeUrl("usecases/UC16-nullability.md", "Antipatterns Where Nullability Helps > 4. Mutating optionals without checks");
 
 function getObjAndProp(node: unknown): { obj: unknown; prop: string } | null {
   if (!node || typeof node !== "object" || !("type" in node)) return null;
