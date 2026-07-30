@@ -2,7 +2,7 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T33-self-type.md");
+const URL = knowledgeUrl("catalog/T33-self-type.md", "Bound generics workaround (verbose, error-prone)");
 
 export default createRule({
   name: "prefer-this-over-self-bounded-generic",
