@@ -2,7 +2,7 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T05-type-classes.md");
+const URL = knowledgeUrl("catalog/T05-type-classes.md", "Antipattern H: Passing Multiple Separate Arguments Instead of Interface");
 
 export default createRule({
   name: "no-many-function-parameters",
