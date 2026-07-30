@@ -2,7 +2,7 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T52-literal-types.md");
+const URL = knowledgeUrl("catalog/T52-literal-types.md", "D. Template literal explosion");
 
 export default createRule({
   name: "no-large-literal-union",
