@@ -2,7 +2,7 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC01-invalid-states.md");
+const URL = knowledgeUrl("usecases/UC01-invalid-states.md", "Documentation as spec");
 
 const CONSTRAINT_PATTERNS = [
   /"(?:\w+)"\s*\|/,
