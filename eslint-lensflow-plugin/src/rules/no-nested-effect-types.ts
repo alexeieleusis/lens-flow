@@ -2,7 +2,7 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T12-effect-tracking.md");
+const URL = knowledgeUrl("catalog/T12-effect-tracking.md", "2. Nested effect types");
 
 const DEFAULT_EFFECT_TYPES = new Set([
   "Promise",
