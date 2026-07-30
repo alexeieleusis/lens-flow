@@ -2,7 +2,7 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T03-newtypes-opaque.md");
+const URL = knowledgeUrl("catalog/T03-newtypes-opaque.md", "Antipattern 1: Exposing the brand symbol");
 
 const checkDeclarator = (
   decl: TSESTree.VariableDeclarator,
