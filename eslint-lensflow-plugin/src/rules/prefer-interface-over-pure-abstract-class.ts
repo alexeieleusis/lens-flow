@@ -2,7 +2,7 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("usecases/UC05-structural-contracts.md");
+const URL = knowledgeUrl("usecases/UC05-structural-contracts.md", "Pattern F — Interface (structural) vs abstract class (nominal)");
 
 export default createRule({
   name: "prefer-interface-over-pure-abstract-class",
