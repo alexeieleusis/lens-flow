@@ -4,7 +4,7 @@ import { walkNodes } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const BrandedTypePattern = /^[A-Z]/;
-const URL = knowledgeUrl("usecases/UC09-builder-config.md");
+const URL = knowledgeUrl("usecases/UC09-builder-config.md", "❌ Missing error handling in smart constructors");
 
 function getBrandName(
   typeName:
