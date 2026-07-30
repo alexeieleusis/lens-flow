@@ -2,7 +2,7 @@ import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC08-error-handling.md");
+const URL = knowledgeUrl("usecases/UC08-error-handling.md", "Antipattern C — Overly broad error types");
 const DISCRIMINANT_PATTERN = /^(kind|tag|code|type)$/;
 const ERROR_NAME_PATTERN = /Error|Fail|Exception/;
 
