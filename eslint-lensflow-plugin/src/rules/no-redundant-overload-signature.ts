@@ -5,7 +5,7 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { FnLikeNode } from "../utils/overload-grouping.js";
 import { createOverloadGroupVisitor } from "../utils/overload-grouping.js";
 
-const URL = knowledgeUrl("catalog/T22-callable-typing.md");
+const URL = knowledgeUrl("catalog/T22-callable-typing.md", "11. When Not to Use");
 
 function isNodeLike(v: unknown): v is TSESTree.Node {
   return v != null && typeof v === "object" && "type" in v;
