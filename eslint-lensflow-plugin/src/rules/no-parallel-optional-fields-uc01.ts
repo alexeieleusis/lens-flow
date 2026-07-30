@@ -6,7 +6,7 @@ import {
 } from "../utils/optional-fields-helper.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC01-invalid-states.md");
+const URL = knowledgeUrl("usecases/UC01-invalid-states.md", "Antipattern 4 — Using optional fields instead of state");
 
 export default createRule({
   name: "no-parallel-optional-fields-uc01",
