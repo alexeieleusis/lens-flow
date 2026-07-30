@@ -2,7 +2,7 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T26-refinement-types.md");
+const URL = knowledgeUrl("catalog/T26-refinement-types.md", "Over-branding trivial values");
 
 const PRIMITIVE_TYPES = new Set([
   "TSStringKeyword",
