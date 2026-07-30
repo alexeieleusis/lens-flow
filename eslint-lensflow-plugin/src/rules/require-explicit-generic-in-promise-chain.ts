@@ -3,7 +3,7 @@ import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const DOC_URL = knowledgeUrl("catalog/T04-generics-bounds.md");
+const DOC_URL = knowledgeUrl("catalog/T04-generics-bounds.md", "Nested callbacks with callback-specific types");
 
 export default createRule({
   name: "require-explicit-generic-in-promise-chain",
