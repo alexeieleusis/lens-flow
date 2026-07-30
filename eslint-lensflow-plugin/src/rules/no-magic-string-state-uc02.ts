@@ -2,7 +2,7 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC02-domain-modeling.md");
+const URL = knowledgeUrl("usecases/UC02-domain-modeling.md", "Antipattern 3 — Magic strings for states");
 
 type Comparison = {
   node: TSESTree.BinaryExpression;
