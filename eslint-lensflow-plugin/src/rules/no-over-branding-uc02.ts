@@ -2,7 +2,7 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("usecases/UC02-domain-modeling.md");
+const URL = knowledgeUrl("usecases/UC02-domain-modeling.md", "Antipattern 1 — Over-branding");
 
 const brandPattern = /^(.*_*brand|brand.*)$/i;
 
