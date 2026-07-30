@@ -3,7 +3,7 @@ import type { TSESLint } from "@typescript-eslint/utils";
 import { containsAny } from "../utils/ts-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T49-associated-types.md");
+const URL = knowledgeUrl("catalog/T49-associated-types.md", "14. Antipatterns When Using Associated Types");
 
 export default createRule({
   name: "no-overly-broad-generic-constraints",
