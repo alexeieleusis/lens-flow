@@ -3,7 +3,7 @@ import { getChildren } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("usecases/UC02-domain-modeling.md");
+const URL = knowledgeUrl("usecases/UC02-domain-modeling.md", "Antipattern 4 — Validation in business logic");
 
 const ITERATOR_METHODS = new Set([
   "reduce",
