@@ -11,7 +11,7 @@ import {
   checkSwitchExhaustiveness,
 } from "../utils/ts-helpers.js";
 
-const DISCRIMINANT_DOC_URL = knowledgeUrl("usecases/UC13-state-machines.md");
+const DISCRIMINANT_DOC_URL = knowledgeUrl("usecases/UC13-state-machines.md", "Antipattern 4: Forgetting to update all switch branches");
 
 interface IfChainInfo {
   discriminantVar: string;
