@@ -3,7 +3,7 @@ import { getChildren } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T57-typestate.md");
+const URL = knowledgeUrl("catalog/T57-typestate.md", "A. Keeping stale references around");
 
 const FUNCTION_BOUNDARY_TYPES = new Set([
   "FunctionDeclaration",
