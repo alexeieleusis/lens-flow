@@ -3,7 +3,7 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 import type { TSESTree } from "@typescript-eslint/types";
 
-const URL = knowledgeUrl("usecases/UC07-callable-contracts.md");
+const URL = knowledgeUrl("usecases/UC07-callable-contracts.md", "Overload explosion");
 
 type FnLikeNode = TSESTree.FunctionDeclaration | TSESTree.TSDeclareFunction;
 
