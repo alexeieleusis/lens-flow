@@ -4,7 +4,7 @@ import { createRule } from "../utils/rule-creator.js";
 import { getChildren } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T34-never-bottom.md");
+const URL = knowledgeUrl("catalog/T34-never-bottom.md", "12. When NOT to Use");
 
 function isInsideDefaultSwitchCase(node: TSESTree.Node): boolean {
   let cur: TSESTree.Node | undefined = node.parent;
