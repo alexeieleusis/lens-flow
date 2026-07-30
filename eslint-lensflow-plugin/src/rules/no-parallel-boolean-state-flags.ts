@@ -3,7 +3,7 @@ import { createRule } from "../utils/rule-creator.js";
 import { getInterfaceMembers } from "../utils/visitor-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC13-state-machines.md");
+const URL = knowledgeUrl("usecases/UC13-state-machines.md", "Antipattern 2: Union of boolean flags");
 
 export default createRule({
   name: "no-parallel-boolean-state-flags",
