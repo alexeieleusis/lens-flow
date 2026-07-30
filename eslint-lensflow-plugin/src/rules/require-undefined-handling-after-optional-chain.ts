@@ -4,7 +4,7 @@ import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC16-nullability.md");
+const URL = knowledgeUrl("usecases/UC16-nullability.md", "Antipatterns Where Nullability Helps > 3. Optional chaining without handling `undefined`");
 
 function typeIncludesUndefined(type: ts.Type): boolean {
   if ((type.flags & ts.TypeFlags.Undefined) !== 0) return true;
