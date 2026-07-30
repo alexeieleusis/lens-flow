@@ -2,7 +2,7 @@ import { createRule } from "../utils/rule-creator.js";
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T31-record-types.md");
+const URL = knowledgeUrl("catalog/T31-record-types.md", "Antipatterns Where Record Types Are Better > Antipattern A: Using unions of literal objects");
 
 function extractPropName(
   key: TSESTree.TSPropertySignature["key"],
