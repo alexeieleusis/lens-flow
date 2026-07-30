@@ -3,7 +3,7 @@ import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T23-type-aliases.md");
+const URL = knowledgeUrl("catalog/T23-type-aliases.md", "6. Gotchas and Limitations");
 
 export default createRule({
   name: "no-typeof-in-type-alias",
