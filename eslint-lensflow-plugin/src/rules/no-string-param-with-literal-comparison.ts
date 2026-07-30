@@ -2,7 +2,7 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T52-literal-types.md");
+const URL = knowledgeUrl("catalog/T52-literal-types.md", "Antipatterns Solved by Literal Types > A. Magic strings everywhere");
 
 interface ParamScope {
   paramIdent: TSESTree.Identifier;
