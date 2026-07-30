@@ -3,7 +3,7 @@ import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC08-error-handling.md");
+const URL = knowledgeUrl("usecases/UC08-error-handling.md", "Antipattern G — try/catch with generic Error");
 
 const stringMatchMethods = new Set([
   "includes",
