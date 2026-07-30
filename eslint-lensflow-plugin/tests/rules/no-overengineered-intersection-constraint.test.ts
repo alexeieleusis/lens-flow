@@ -2,7 +2,7 @@ import { ruleTester } from "../helpers/rule-tester.js";
 import rule from "../../src/rules/no-overengineered-intersection-constraint.js";
 import { knowledgeUrl } from "../../src/utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC04-generic-constraints.md");
+const URL = knowledgeUrl("usecases/UC04-generic-constraints.md", "Antipatterns When Using Constraints > Antipattern D — Complex intersection for simple cases");
 
 ruleTester.run("no-overengineered-intersection-constraint", rule, {
   valid: [
