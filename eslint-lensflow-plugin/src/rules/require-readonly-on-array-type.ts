@@ -4,7 +4,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("usecases/UC06-immutability.md", "Antipattern 2: Forgetting `readonly` on array values");
+const URL = knowledgeUrl(
+  "usecases/UC06-immutability.md",
+  "Antipattern 2: Forgetting `readonly` on array values",
+);
 
 export default createRule({
   name: "require-readonly-on-array-type",

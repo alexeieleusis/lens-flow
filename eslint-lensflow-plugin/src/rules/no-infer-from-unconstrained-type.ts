@@ -2,7 +2,10 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T49-associated-types.md", "When NOT to Use Associated Types");
+const URL = knowledgeUrl(
+  "catalog/T49-associated-types.md",
+  "When NOT to Use Associated Types",
+);
 
 function extractTypeParams(
   node: TSESTree.Node,

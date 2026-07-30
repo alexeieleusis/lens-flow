@@ -3,7 +3,10 @@ import { TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T22-callable-typing.md", "5. Gotchas and Limitations");
+const URL = knowledgeUrl(
+  "catalog/T22-callable-typing.md",
+  "5. Gotchas and Limitations",
+);
 
 function findInterfaceTypeParams(
   node: TSESTree.TSMethodSignature,

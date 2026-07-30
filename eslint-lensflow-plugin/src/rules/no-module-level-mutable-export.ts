@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T21-encapsulation.md", "Without encapsulation: Global mutable state");
+const URL = knowledgeUrl(
+  "catalog/T21-encapsulation.md",
+  "Without encapsulation: Global mutable state",
+);
 
 export default createRule({
   name: "no-module-level-mutable-export",

@@ -4,7 +4,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import { walkNodes } from "../utils/ast-helpers.js";
 
-const URL = knowledgeUrl("catalog/T12-effect-tracking.md", "When NOT To Use It");
+const URL = knowledgeUrl(
+  "catalog/T12-effect-tracking.md",
+  "When NOT To Use It",
+);
 
 function getTypeArgs(
   node: TSESTree.TSTypeReference,

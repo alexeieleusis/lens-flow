@@ -2,7 +2,10 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC10-encapsulation.md", "Mutable returns from getters");
+const URL = knowledgeUrl(
+  "usecases/UC10-encapsulation.md",
+  "Mutable returns from getters",
+);
 const MUTABLE_COLLECTIONS = new Set(["Map", "Set", "Array"]);
 const READONLY_COLLECTIONS = new Set([
   "ReadonlyMap",

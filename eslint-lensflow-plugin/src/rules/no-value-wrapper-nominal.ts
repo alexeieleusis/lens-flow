@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T07-structural-typing.md", "Antipatterns with Other Techniques: Where Structural Typing Helps > Antipattern: Deep Nesting to Avoid Structural Conflicts");
+const URL = knowledgeUrl(
+  "catalog/T07-structural-typing.md",
+  "Antipatterns with Other Techniques: Where Structural Typing Helps > Antipattern: Deep Nesting to Avoid Structural Conflicts",
+);
 
 function getPropertyKey(
   key: TSESTree.TSPropertySignature["key"],

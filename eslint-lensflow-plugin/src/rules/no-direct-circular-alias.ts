@@ -3,7 +3,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { getChildren } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T23-type-aliases.md", "Circular aliases without object indirection");
+const URL = knowledgeUrl(
+  "catalog/T23-type-aliases.md",
+  "Circular aliases without object indirection",
+);
 
 function getTypeName(
   typeName:

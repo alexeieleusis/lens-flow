@@ -2,7 +2,10 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T04-generics-bounds.md", "Conditional types with excessive nesting");
+const URL = knowledgeUrl(
+  "catalog/T04-generics-bounds.md",
+  "Conditional types with excessive nesting",
+);
 
 function getConditionalNestingDepth(node: TSESTree.TypeNode): number {
   if (node.type !== "TSConditionalType") return 0;

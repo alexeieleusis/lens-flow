@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T57-typestate.md", "13. Antipatterns Fixed by Typestate > B. Invalid state transition via runtime guards");
+const URL = knowledgeUrl(
+  "catalog/T57-typestate.md",
+  "13. Antipatterns Fixed by Typestate > B. Invalid state transition via runtime guards",
+);
 
 export default createRule({
   name: "no-runtime-state-transition-guard",

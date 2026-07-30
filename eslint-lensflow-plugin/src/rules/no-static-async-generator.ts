@@ -3,7 +3,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T64-async-iteration.md", "7. When Not to Use It");
+const URL = knowledgeUrl(
+  "catalog/T64-async-iteration.md",
+  "7. When Not to Use It",
+);
 
 function extractYieldExpr(
   forOfBody: TSESTree.BlockStatement | TSESTree.ExpressionStatement,

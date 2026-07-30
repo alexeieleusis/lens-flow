@@ -3,7 +3,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { createFunctionParamVisitor } from "../utils/visitor-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC17-variance.md", "Antipatterns with Other Techniques");
+const URL = knowledgeUrl(
+  "usecases/UC17-variance.md",
+  "Antipatterns with Other Techniques",
+);
 
 export default createRule({
   name: "prefer-contravariance-over-union-uc17",

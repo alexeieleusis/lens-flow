@@ -6,7 +6,10 @@ import * as tsParser from "@typescript-eslint/parser";
 import rule from "../../src/rules/no-silent-effect-absorption.js";
 import { knowledgeUrl } from "../../src/utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T12-effect-tracking.md", "3. **Silent effect absorption**");
+const URL = knowledgeUrl(
+  "catalog/T12-effect-tracking.md",
+  "3. **Silent effect absorption**",
+);
 
 RuleTester.afterAll = afterAll;
 RuleTester.describe = describe;

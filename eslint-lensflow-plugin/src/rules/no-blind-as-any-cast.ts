@@ -2,7 +2,10 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC13-state-machines.md", "Antipattern 3: `as any` everywhere");
+const URL = knowledgeUrl(
+  "usecases/UC13-state-machines.md",
+  "Antipattern 3: `as any` everywhere",
+);
 
 function containsEarlyExitOrBlock(node: TSESTree.Node): boolean {
   if (

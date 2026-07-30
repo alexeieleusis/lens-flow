@@ -3,7 +3,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { collectChildTypes } from "../utils/ts-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const DOC_URL = knowledgeUrl("catalog/T49-associated-types.md", "14. Antipatterns When Using Associated Types");
+const DOC_URL = knowledgeUrl(
+  "catalog/T49-associated-types.md",
+  "14. Antipatterns When Using Associated Types",
+);
 
 function hasInfer(node: TSESTree.TypeNode): boolean {
   if (node.type === "TSInferType") return true;

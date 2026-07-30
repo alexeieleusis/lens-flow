@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T63-template-literal-types.md", "Case Transforms for Non-Constants");
+const URL = knowledgeUrl(
+  "catalog/T63-template-literal-types.md",
+  "Case Transforms for Non-Constants",
+);
 
 const INTRINSIC_TRANSFORMS = new Set([
   "Uppercase",

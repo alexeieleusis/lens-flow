@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T23-type-aliases.md", "Over-naming simple types (clutter, no benefit)");
+const URL = knowledgeUrl(
+  "catalog/T23-type-aliases.md",
+  "Over-naming simple types (clutter, no benefit)",
+);
 
 const primitiveTypes = new Set([
   "TSStringKeyword",

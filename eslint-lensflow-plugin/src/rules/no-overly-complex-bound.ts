@@ -2,7 +2,10 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T04-generics-bounds.md", "Overly complex bound intersections");
+const URL = knowledgeUrl(
+  "catalog/T04-generics-bounds.md",
+  "Overly complex bound intersections",
+);
 
 function getMaxPropertyDepth(members: TSESTree.TypeElement[]): number {
   let maxDepth = 0;

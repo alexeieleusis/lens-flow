@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("usecases/UC13-state-machines.md", "Antipattern 3: Magic string state values");
+const URL = knowledgeUrl(
+  "usecases/UC13-state-machines.md",
+  "Antipattern 3: Magic string state values",
+);
 
 function extractPropertyName(key: TSESTree.PropertyName): string | null {
   if (key.type === "Identifier") return key.name;

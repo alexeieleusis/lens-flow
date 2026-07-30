@@ -3,7 +3,10 @@ import { ESLintUtils, TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T14-type-narrowing.md", "3. Type guard on a non-discriminative property");
+const URL = knowledgeUrl(
+  "catalog/T14-type-narrowing.md",
+  "3. Type guard on a non-discriminative property",
+);
 
 type TypeGuardCtx = {
   unionTypes: ts.Type[];

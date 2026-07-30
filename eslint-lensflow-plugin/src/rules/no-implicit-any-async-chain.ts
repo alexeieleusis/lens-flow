@@ -2,7 +2,10 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T13-null-safety.md", "11. Antipatterns Where Null Safety Fixes Code > Pattern: Implicit `any` in async/await chains");
+const URL = knowledgeUrl(
+  "catalog/T13-null-safety.md",
+  "11. Antipatterns Where Null Safety Fixes Code > Pattern: Implicit `any` in async/await chains",
+);
 
 function isFetchLike(node: TSESTree.Expression): boolean {
   if (

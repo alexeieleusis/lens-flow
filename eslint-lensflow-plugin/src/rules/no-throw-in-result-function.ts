@@ -4,7 +4,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { hasThrow, walkNodes } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC08-error-handling.md", "Antipattern D — Re-throwing to escape error handling");
+const URL = knowledgeUrl(
+  "usecases/UC08-error-handling.md",
+  "Antipattern D — Re-throwing to escape error handling",
+);
 
 const RESULT_TYPES = new Set(["Result", "Either", "TaskEither"]);
 

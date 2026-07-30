@@ -3,7 +3,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC16-nullability.md", "4. Returning `any` from nullable getters");
+const URL = knowledgeUrl(
+  "usecases/UC16-nullability.md",
+  "4. Returning `any` from nullable getters",
+);
 
 function isNullishLiteral(node: TSESTree.Node): boolean {
   if (node.type === AST_NODE_TYPES.Literal && node.value === null) {

@@ -2,7 +2,10 @@ import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T54-functor-applicative-monad.md", "1. **Using `chain` for independent computations**");
+const URL = knowledgeUrl(
+  "catalog/T54-functor-applicative-monad.md",
+  "1. **Using `chain` for independent computations**",
+);
 
 function extractIdentifier(
   param: TSESTree.Parameter | TSESTree.Expression,

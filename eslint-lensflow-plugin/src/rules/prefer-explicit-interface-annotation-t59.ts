@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T59-existential-types.md", "5. Gotchas and Limitations");
+const URL = knowledgeUrl(
+  "catalog/T59-existential-types.md",
+  "5. Gotchas and Limitations",
+);
 
 export default createRule({
   name: "prefer-explicit-interface-annotation-t59",

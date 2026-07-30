@@ -2,7 +2,10 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T36-trait-objects.md", "C. Repeating type definitions per union variant");
+const URL = knowledgeUrl(
+  "catalog/T36-trait-objects.md",
+  "C. Repeating type definitions per union variant",
+);
 
 export default createRule({
   name: "no-duplicated-union-properties",

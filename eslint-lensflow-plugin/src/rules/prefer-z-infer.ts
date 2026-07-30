@@ -7,7 +7,10 @@ import {
   looksLikeZodSchema,
 } from "../utils/schema-inference-helper.js";
 
-const URL = knowledgeUrl("catalog/T06-derivation.md", "❌ Duplicate type definition");
+const URL = knowledgeUrl(
+  "catalog/T06-derivation.md",
+  "❌ Duplicate type definition",
+);
 
 function isZInferType(node: TSESTree.TypeNode): boolean {
   if (node.type !== "TSTypeReference") return false;

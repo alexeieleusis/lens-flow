@@ -4,7 +4,10 @@ import { walkNodes } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const ValidationPattern = /^(?:valid|check|assert|parse)/;
-const URL = knowledgeUrl("usecases/UC10-encapsulation.md", "Private constructor with no validation");
+const URL = knowledgeUrl(
+  "usecases/UC10-encapsulation.md",
+  "Private constructor with no validation",
+);
 
 function extractMemberParts(callee: TSESTree.MemberExpression): string[] {
   const parts: string[] = [];

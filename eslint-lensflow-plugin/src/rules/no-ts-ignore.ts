@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T47-gradual-typing.md", "2. Overusing `@ts-ignore` without tracking");
+const URL = knowledgeUrl(
+  "catalog/T47-gradual-typing.md",
+  "2. Overusing `@ts-ignore` without tracking",
+);
 
 export default createRule({
   name: "no-ts-ignore",

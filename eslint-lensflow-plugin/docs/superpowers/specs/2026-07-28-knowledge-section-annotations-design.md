@@ -20,7 +20,7 @@ sections, "Example A/B/C", "Pattern A"/"Antipattern A" repeated under
 different parents, plain prose subsections with no numbering at all;
 structure is not consistent from file to file). There are 48 unique
 knowledge files referenced across the 282 rules (up to 11 rules sharing one
-file), and nothing in the code currently records *which part* of a shared
+file), and nothing in the code currently records _which part_ of a shared
 file a given rule's rationale actually came from. A developer (or an LLM)
 reading a lint message and following the link has to read the entire file
 to find the relevant example.
@@ -49,7 +49,7 @@ These were settled through discussion before writing this spec:
    on files that don't already have one.
 4. **Fallback allowed:** if no Example/Pattern/Antipattern subsection fits,
    opencode may point to the closest relevant general/conceptual heading
-   instead. Every rule should end up with *some* section — this is not a
+   instead. Every rule should end up with _some_ section — this is not a
    "flag for manual review" case.
 5. **Batching: one opencode invocation per rule** (282 total), not batched
    per shared knowledge file. Simpler prompt/response shape, isolated
@@ -131,17 +131,17 @@ For each entry, in file order:
      read arbitrary absolute paths on disk).
    - Instruct it to:
      a. Identify the single `##`/`###` heading in the knowledge file whose
-        content most directly explains why this rule exists (an Example,
-        Pattern, or Antipattern subsection preferred; a general/conceptual
-        heading is an acceptable fallback if nothing more specific fits).
+     content most directly explains why this rule exists (an Example,
+     Pattern, or Antipattern subsection preferred; a general/conceptual
+     heading is an acceptable fallback if nothing more specific fits).
      b. Use that heading's exact text as written, including any existing
-        number/letter prefix. If that exact text is not unique within the
-        file, prefix it with its nearest `##` ancestor heading, joined by
-        `" > "`.
+     number/letter prefix. If that exact text is not unique within the
+     file, prefix it with its nearest `##` ancestor heading, joined by
+     `" > "`.
      c. Find the existing `knowledgeUrl("<path>")` call in
-        `src/rules/<rule>.ts` (whatever its constant is named) and add the
-        resolved section string as a second argument, matching the updated
-        `knowledgeUrl(path, section)` signature.
+     `src/rules/<rule>.ts` (whatever its constant is named) and add the
+     resolved section string as a second argument, matching the updated
+     `knowledgeUrl(path, section)` signature.
      d. Change nothing else in the file.
 2. Run `opencode run "<prompt>"` with cwd set to `REPO_DIR`.
 3. **Verify:** `npm run typecheck` and
@@ -166,8 +166,7 @@ verification, or committing.
 ### `--start` / `--end`
 
 Alphabetical slicing by rule name, same as `restore_help_urls.py`, for
-sanity-checking a handful of files before letting the script loose on all
-282.
+sanity-checking a handful of files before letting the script loose on all 282.
 
 ## Error handling
 

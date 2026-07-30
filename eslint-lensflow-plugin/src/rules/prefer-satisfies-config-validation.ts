@@ -3,7 +3,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { walk, walkNodes } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC09-builder-config.md", "❌ Plain object configs with runtime validation");
+const URL = knowledgeUrl(
+  "usecases/UC09-builder-config.md",
+  "❌ Plain object configs with runtime validation",
+);
 
 function getNameFromPattern(pattern: TSESTree.Node): string | null {
   if (pattern.type === AST_NODE_TYPES.Identifier) return pattern.name;

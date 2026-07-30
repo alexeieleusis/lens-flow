@@ -2,7 +2,10 @@ import { ruleTester } from "../helpers/rule-tester.js";
 import rule from "../../src/rules/no-eaten-callback-error.js";
 import { knowledgeUrl } from "../../src/utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T12-effect-tracking.md", "3. **Callbacks or event-style APIs hiding errors**");
+const URL = knowledgeUrl(
+  "catalog/T12-effect-tracking.md",
+  "3. **Callbacks or event-style APIs hiding errors**",
+);
 
 ruleTester.run("no-eaten-callback-error", rule, {
   valid: [

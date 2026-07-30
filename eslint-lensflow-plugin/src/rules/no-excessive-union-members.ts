@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T36-trait-objects.md", "5. Gotchas and Limitations");
+const URL = knowledgeUrl(
+  "catalog/T36-trait-objects.md",
+  "5. Gotchas and Limitations",
+);
 
 export default createRule({
   name: "no-excessive-union-members",

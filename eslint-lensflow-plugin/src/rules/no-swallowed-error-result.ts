@@ -2,7 +2,10 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC08-error-handling.md", "Antipattern A — Swallowing errors with empty branches");
+const URL = knowledgeUrl(
+  "usecases/UC08-error-handling.md",
+  "Antipattern A — Swallowing errors with empty branches",
+);
 
 function isOkCheck(node: TSESTree.Expression): boolean {
   if (node.type === "MemberExpression") {

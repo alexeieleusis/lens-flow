@@ -2,7 +2,10 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T02-union-intersection.md", "Union: Nested or Deeply Branching Guards");
+const URL = knowledgeUrl(
+  "catalog/T02-union-intersection.md",
+  "Union: Nested or Deeply Branching Guards",
+);
 
 function computeMaxDepth(node: TSESTree.TSTypeLiteral): number {
   let depth = 1;

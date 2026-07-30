@@ -3,7 +3,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { walk } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC19-serialization.md", "Antipatterns replaced by serialization:");
+const URL = knowledgeUrl(
+  "usecases/UC19-serialization.md",
+  "Antipatterns replaced by serialization:",
+);
 
 function countGuardChecks(node: TSESTree.Node): number {
   let count = 0;

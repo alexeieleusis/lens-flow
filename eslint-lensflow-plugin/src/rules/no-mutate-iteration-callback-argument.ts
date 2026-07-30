@@ -3,7 +3,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { walk } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC06-immutability.md", "Pattern 2: Accidental mutation in callbacks");
+const URL = knowledgeUrl(
+  "usecases/UC06-immutability.md",
+  "Pattern 2: Accidental mutation in callbacks",
+);
 
 const iterationMethods = new Set([
   "map",

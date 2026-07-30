@@ -3,7 +3,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { getChildren } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T61-recursive-types.md", "Antipattern B: Using `any` or `unknown` to terminate recursion");
+const URL = knowledgeUrl(
+  "catalog/T61-recursive-types.md",
+  "Antipattern B: Using `any` or `unknown` to terminate recursion",
+);
 
 function collectTypeRefNames(node: TSESTree.Node, refs: Set<string>): void {
   if (node.type === "TSTypeReference") {

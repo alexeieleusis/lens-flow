@@ -2,7 +2,10 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC14-extensibility.md", "Antipatterns When Using Extensibility");
+const URL = knowledgeUrl(
+  "usecases/UC14-extensibility.md",
+  "Antipatterns When Using Extensibility",
+);
 const BUILTIN_INTERFACES = new Set([
   "Window",
   "Document",

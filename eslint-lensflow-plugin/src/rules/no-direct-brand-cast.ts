@@ -3,7 +3,10 @@ import { ESLintUtils, type TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T26-refinement-types.md", "Bypassing the constructor");
+const URL = knowledgeUrl(
+  "catalog/T26-refinement-types.md",
+  "Bypassing the constructor",
+);
 
 const SMART_CONSTRUCTOR_RE = /^(parse[A-Z]|tryParse|mustParse)/;
 

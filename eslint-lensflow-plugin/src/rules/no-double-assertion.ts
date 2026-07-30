@@ -2,7 +2,10 @@ import type { TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T18-conversions-coercions.md", "5. Gotchas and Limitations");
+const URL = knowledgeUrl(
+  "catalog/T18-conversions-coercions.md",
+  "5. Gotchas and Limitations",
+);
 
 export default createRule({
   name: "no-double-assertion",

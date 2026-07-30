@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T21-encapsulation.md", "Without encapsulation: Brittle inheritance with protected state");
+const URL = knowledgeUrl(
+  "catalog/T21-encapsulation.md",
+  "Without encapsulation: Brittle inheritance with protected state",
+);
 
 const PRIMITIVE_KEYWORDS = new Set([
   "TSNumberKeyword",

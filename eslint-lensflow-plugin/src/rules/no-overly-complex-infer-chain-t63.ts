@@ -3,7 +3,10 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T63-template-literal-types.md", "Overly Complex Infer Chaining");
+const URL = knowledgeUrl(
+  "catalog/T63-template-literal-types.md",
+  "Overly Complex Infer Chaining",
+);
 
 function hasInferInConstructor(node: TSESTree.TypeNode): boolean {
   if (node.type !== "TSConstructorType") return false;

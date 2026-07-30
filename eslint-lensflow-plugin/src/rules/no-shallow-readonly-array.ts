@@ -2,7 +2,10 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T32-immutability-markers.md", "❌ Shallow readonly without deep immutability");
+const URL = knowledgeUrl(
+  "catalog/T32-immutability-markers.md",
+  "❌ Shallow readonly without deep immutability",
+);
 
 export default createRule({
   name: "no-shallow-readonly-array",

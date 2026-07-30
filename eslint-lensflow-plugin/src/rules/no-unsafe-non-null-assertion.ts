@@ -3,7 +3,10 @@ import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC16-nullability.md", "1. Non-null assertion `!` to suppress errors");
+const URL = knowledgeUrl(
+  "usecases/UC16-nullability.md",
+  "1. Non-null assertion `!` to suppress errors",
+);
 
 export default createRule({
   name: "no-unsafe-non-null-assertion",

@@ -2,7 +2,10 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T32-immutability-markers.md", "❌ Nesting as const too deeply");
+const URL = knowledgeUrl(
+  "catalog/T32-immutability-markers.md",
+  "❌ Nesting as const too deeply",
+);
 
 function computeNestingDepth(
   node: TSESTree.ObjectExpression | TSESTree.ArrayExpression,

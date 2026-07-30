@@ -3,7 +3,10 @@ import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T14-type-narrowing.md", "1. Truthiness narrowing for `0` or `\"\"`");
+const URL = knowledgeUrl(
+  "catalog/T14-type-narrowing.md",
+  '1. Truthiness narrowing for `0` or `""`',
+);
 
 export default createRule({
   name: "no-truthiness-null-narrowing",

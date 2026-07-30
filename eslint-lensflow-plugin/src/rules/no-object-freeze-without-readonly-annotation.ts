@@ -3,7 +3,10 @@ import { AST_NODE_TYPES } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T32-immutability-markers.md", "5. Gotchas and Limitations");
+const URL = knowledgeUrl(
+  "catalog/T32-immutability-markers.md",
+  "5. Gotchas and Limitations",
+);
 
 function getTypeNameIdentifier(node: TSESTree.Node | undefined): string | null {
   if (!node) return null;

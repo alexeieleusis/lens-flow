@@ -9,7 +9,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T49-associated-types.md", "13. When NOT to Use Associated Types");
+const URL = knowledgeUrl(
+  "catalog/T49-associated-types.md",
+  "13. When NOT to Use Associated Types",
+);
 
 function containsInfer(node: TSESTree.Node): boolean {
   return walkNodes(node, (n) => n.type === AST_NODE_TYPES.TSInferType, {

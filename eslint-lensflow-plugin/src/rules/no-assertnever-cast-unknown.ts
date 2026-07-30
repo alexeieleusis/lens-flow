@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T34-never-bottom.md", "Pattern: Catching all with `unknown` then calling `assertNever`");
+const URL = knowledgeUrl(
+  "catalog/T34-never-bottom.md",
+  "Pattern: Catching all with `unknown` then calling `assertNever`",
+);
 
 function containsUnknownCast(node: TSESTree.Node): boolean {
   if (node.type === "TSAsExpression") {

@@ -9,7 +9,10 @@ import {
   ComparisonInfo,
 } from "../utils/ast-helpers.js";
 
-const DOC_URL = knowledgeUrl("usecases/UC03-exhaustiveness.md", "1. Default fallback instead of exhaustive switch");
+const DOC_URL = knowledgeUrl(
+  "usecases/UC03-exhaustiveness.md",
+  "1. Default fallback instead of exhaustive switch",
+);
 
 function reportIfMissing(
   varName: string,

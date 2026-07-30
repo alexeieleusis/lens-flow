@@ -6,7 +6,10 @@ import {
 } from "../utils/no-any-param-checker.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T14-type-narrowing.md", "2. `any` for \"external data\"");
+const URL = knowledgeUrl(
+  "catalog/T14-type-narrowing.md",
+  '2. `any` for "external data"',
+);
 
 export default createRule({
   name: "no-any-external-data",

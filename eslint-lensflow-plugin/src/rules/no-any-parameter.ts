@@ -6,7 +6,10 @@ import {
 } from "../utils/no-any-param-checker.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T47-gradual-typing.md", "The `any` cascade — letting `any` propagate");
+const URL = knowledgeUrl(
+  "catalog/T47-gradual-typing.md",
+  "The `any` cascade — letting `any` propagate",
+);
 
 export default createRule({
   name: "no-any-parameter",

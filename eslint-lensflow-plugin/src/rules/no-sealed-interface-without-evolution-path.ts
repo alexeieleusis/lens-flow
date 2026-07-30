@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("usecases/UC10-encapsulation.md", "Overusing sealed interfaces");
+const URL = knowledgeUrl(
+  "usecases/UC10-encapsulation.md",
+  "Overusing sealed interfaces",
+);
 
 function isIndexSignatureSealed(
   member: TSESTree.TSInterfaceBody["body"][number],

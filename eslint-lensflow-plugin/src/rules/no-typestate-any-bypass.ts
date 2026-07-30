@@ -3,7 +3,10 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC09-builder-config.md", "❌ Using `any` or `as any` to bypass typestate");
+const URL = knowledgeUrl(
+  "usecases/UC09-builder-config.md",
+  "❌ Using `any` or `as any` to bypass typestate",
+);
 
 function isMethodChain(node: TSESTree.Node): boolean {
   if (node.type === AST_NODE_TYPES.ChainExpression) {

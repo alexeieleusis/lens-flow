@@ -4,7 +4,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import { walk } from "../utils/ast-helpers.js";
 
-const KNOWLEDGE_URL = knowledgeUrl("usecases/UC16-nullability.md", "When Not to Use It");
+const KNOWLEDGE_URL = knowledgeUrl(
+  "usecases/UC16-nullability.md",
+  "When Not to Use It",
+);
 
 function hasNullableMember(typeAnnotation: TSESTree.TypeNode): boolean {
   if (

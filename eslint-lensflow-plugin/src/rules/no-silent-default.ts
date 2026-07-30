@@ -3,7 +3,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { hasAssertNever, hasThrow } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T01-algebraic-data-types.md", "Antipatterns When Using ADTs");
+const URL = knowledgeUrl(
+  "catalog/T01-algebraic-data-types.md",
+  "Antipatterns When Using ADTs",
+);
 
 function isEmptyOrBreak(conseq: TSESTree.Statement[]): boolean {
   if (conseq.length === 0) return true;

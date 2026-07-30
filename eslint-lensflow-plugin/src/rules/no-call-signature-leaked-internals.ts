@@ -2,7 +2,10 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC07-callable-contracts.md", "Interface call signature with implementation details");
+const URL = knowledgeUrl(
+  "usecases/UC07-callable-contracts.md",
+  "Interface call signature with implementation details",
+);
 
 function getPropertyName(key: TSESTree.PropertyName): string | null {
   if (key.type === "Identifier") return key.name;

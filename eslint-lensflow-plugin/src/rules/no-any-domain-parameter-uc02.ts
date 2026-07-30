@@ -2,7 +2,10 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC02-domain-modeling.md", "Antipatterns with Other Techniques (Where Domain Modeling Helps) > Antipattern 1 — `any` for unknown shapes");
+const URL = knowledgeUrl(
+  "usecases/UC02-domain-modeling.md",
+  "Antipatterns with Other Techniques (Where Domain Modeling Helps) > Antipattern 1 — `any` for unknown shapes",
+);
 
 function findAnyInTypeList(
   types: TSESTree.TypeNode[],

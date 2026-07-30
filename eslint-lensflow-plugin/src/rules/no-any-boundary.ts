@@ -2,7 +2,10 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T18-conversions-coercions.md", "Antipatterns Where This Technique Fixes Other Approaches");
+const URL = knowledgeUrl(
+  "catalog/T18-conversions-coercions.md",
+  "Antipatterns Where This Technique Fixes Other Approaches",
+);
 
 const FUNCTION_TYPE_NODES = new Set([
   "FunctionDeclaration",

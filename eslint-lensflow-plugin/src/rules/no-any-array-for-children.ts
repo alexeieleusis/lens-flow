@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T61-recursive-types.md", "Antipattern B: Using `any[]` for children");
+const URL = knowledgeUrl(
+  "catalog/T61-recursive-types.md",
+  "Antipattern B: Using `any[]` for children",
+);
 
 export default createRule({
   name: "no-any-array-for-children",

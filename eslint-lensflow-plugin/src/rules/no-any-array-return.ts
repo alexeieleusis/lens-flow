@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T45-paramspec-variadic.md", "8. Antipatterns Where This Technique Fixes Them");
+const URL = knowledgeUrl(
+  "catalog/T45-paramspec-variadic.md",
+  "8. Antipatterns Where This Technique Fixes Them",
+);
 
 function unwrapReadonly(node: any): any {
   if (node?.type === "TSTypeOperator" && node.operator === "readonly") {

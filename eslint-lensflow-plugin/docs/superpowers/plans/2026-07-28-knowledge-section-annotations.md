@@ -18,7 +18,7 @@
 - Commit message for each per-file fix: `fix: add knowledge section to <rule-name>`.
 - Retry budget per file: 3 attempts (configurable via `--max-retries`) before reverting that file and logging it to `needs-section-review.txt`, never aborting the whole run.
 - No test-file mocking libraries beyond what's already used in `test_restore_help_urls.py` (plain `pytest`, `capsys`, `monkeypatch`, dependency-injected callables/`dry_run`) — keep the same lightweight testing style already established in `~/scripts/`.
-- `section` is an **optional** parameter on `knowledgeUrl()` during the migration (default: omit the suffix) specifically so that files not yet migrated keep typechecking while the script works through the other 281 — this is an implementation detail, not a change to the approved design (which specifies the two-argument, combined-string call as the *end state* every rule converges to).
+- `section` is an **optional** parameter on `knowledgeUrl()` during the migration (default: omit the suffix) specifically so that files not yet migrated keep typechecking while the script works through the other 281 — this is an implementation detail, not a change to the approved design (which specifies the two-argument, combined-string call as the _end state_ every rule converges to).
 
 ---
 

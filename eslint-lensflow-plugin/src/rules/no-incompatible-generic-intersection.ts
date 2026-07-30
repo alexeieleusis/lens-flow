@@ -11,7 +11,10 @@ interface ESTreeToTSNodeMap {
   get<K extends TSESTree.Node>(key: K): ts.Node | undefined;
 }
 
-const URL = knowledgeUrl("catalog/T02-union-intersection.md", "Intersection: Intersecting Incompatible Generics");
+const URL = knowledgeUrl(
+  "catalog/T02-union-intersection.md",
+  "Intersection: Intersecting Incompatible Generics",
+);
 
 function extractRightmostIdentifier(
   node:

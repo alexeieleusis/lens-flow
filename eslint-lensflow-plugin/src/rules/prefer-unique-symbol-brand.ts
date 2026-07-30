@@ -3,7 +3,10 @@ import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T03-newtypes-opaque.md", "5. Gotchas and Limitations");
+const URL = knowledgeUrl(
+  "catalog/T03-newtypes-opaque.md",
+  "5. Gotchas and Limitations",
+);
 
 const BRAND_PATTERN = /^__?(?:brand|Branded)$|Brand$/;
 

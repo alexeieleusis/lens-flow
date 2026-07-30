@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("usecases/UC10-encapsulation.md", "Public state mutation everywhere");
+const URL = knowledgeUrl(
+  "usecases/UC10-encapsulation.md",
+  "Public state mutation everywhere",
+);
 
 const statefulEntityPattern =
   /account|wallet|balance|counter|state|inventory|cart|session|store|registry|pool|cache|buffer|accumulator|collector/i;

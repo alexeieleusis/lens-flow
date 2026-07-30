@@ -2,7 +2,10 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T36-trait-objects.md", "A. Using generics when interface is sufficient");
+const URL = knowledgeUrl(
+  "catalog/T36-trait-objects.md",
+  "A. Using generics when interface is sufficient",
+);
 
 function typeLiteralContainsRef(
   node: TSESTree.TSTypeLiteral,

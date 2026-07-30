@@ -3,7 +3,10 @@ import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { walk } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T59-existential-types.md", "13. Antipatterns When Using This Technique");
+const URL = knowledgeUrl(
+  "catalog/T59-existential-types.md",
+  "13. Antipatterns When Using This Technique",
+);
 
 type FunctionNode =
   | TSESTree.FunctionDeclaration

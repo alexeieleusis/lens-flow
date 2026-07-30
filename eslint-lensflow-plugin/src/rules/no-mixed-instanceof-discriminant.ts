@@ -3,7 +3,10 @@ import { ESLintUtils, TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T01-algebraic-data-types.md", "6. Gotchas and Limitations");
+const URL = knowledgeUrl(
+  "catalog/T01-algebraic-data-types.md",
+  "6. Gotchas and Limitations",
+);
 
 function isClassType(tsType: ts.Type): boolean {
   const symbol = tsType.getSymbol() || tsType.aliasSymbol;

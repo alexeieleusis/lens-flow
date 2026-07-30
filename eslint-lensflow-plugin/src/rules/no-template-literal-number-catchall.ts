@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T63-template-literal-types.md", "Using `${number}` as a Catch-All");
+const URL = knowledgeUrl(
+  "catalog/T63-template-literal-types.md",
+  "Using `${number}` as a Catch-All",
+);
 
 export default createRule({
   name: "no-template-literal-number-catchall",

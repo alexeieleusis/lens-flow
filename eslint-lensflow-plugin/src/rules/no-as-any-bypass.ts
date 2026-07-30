@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("usecases/UC01-invalid-states.md", "Antipattern 2 — Bypassing with `any`");
+const URL = knowledgeUrl(
+  "usecases/UC01-invalid-states.md",
+  "Antipattern 2 — Bypassing with `any`",
+);
 
 export default createRule({
   name: "no-as-any-bypass",

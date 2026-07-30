@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T08-variance-subtyping.md", "Bivariant method vs. contravariant function property");
+const URL = knowledgeUrl(
+  "catalog/T08-variance-subtyping.md",
+  "Bivariant method vs. contravariant function property",
+);
 
 function reportMethod(
   context: TSESLint.RuleContext<"methodSyntax", []>,

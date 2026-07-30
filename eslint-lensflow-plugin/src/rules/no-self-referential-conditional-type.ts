@@ -3,7 +3,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { collectChildTypes } from "../utils/ts-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T45-paramspec-variadic.md", "7. Antipatterns When Using It");
+const URL = knowledgeUrl(
+  "catalog/T45-paramspec-variadic.md",
+  "7. Antipatterns When Using It",
+);
 
 function getRefName(node: TSESTree.TypeNode): string | null {
   if (node.type !== "TSTypeReference") return null;

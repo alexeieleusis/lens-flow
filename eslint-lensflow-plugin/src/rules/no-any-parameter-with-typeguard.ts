@@ -3,7 +3,10 @@ import { getChildren } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T02-union-intersection.md", "Using `any` Instead of Unions");
+const URL = knowledgeUrl(
+  "catalog/T02-union-intersection.md",
+  "Using `any` Instead of Unions",
+);
 
 type ParamNode =
   | TSESTree.Identifier

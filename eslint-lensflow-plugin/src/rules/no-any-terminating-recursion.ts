@@ -3,7 +3,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { getChildren } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T61-recursive-types.md", "9. Antipatterns When Using Recursive Types > Antipattern B: Using `any` or `unknown` to terminate recursion");
+const URL = knowledgeUrl(
+  "catalog/T61-recursive-types.md",
+  "9. Antipatterns When Using Recursive Types > Antipattern B: Using `any` or `unknown` to terminate recursion",
+);
 
 type AnyOrUnknownNode =
   TSESTree.TSAnyKeyword | TSESTree.TSUnknownKeyword | null;

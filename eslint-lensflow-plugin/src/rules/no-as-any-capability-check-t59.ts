@@ -3,7 +3,10 @@ import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T59-existential-types.md", "14. Antipatterns Where This Technique Is Better");
+const URL = knowledgeUrl(
+  "catalog/T59-existential-types.md",
+  "14. Antipatterns Where This Technique Is Better",
+);
 
 export default createRule({
   name: "no-as-any-capability-check-t59",

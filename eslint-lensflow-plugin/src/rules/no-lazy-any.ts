@@ -3,7 +3,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { containsAnyType } from "../utils/no-any-param-checker.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T47-gradual-typing.md", "3. For lazy typing (procrastination)");
+const URL = knowledgeUrl(
+  "catalog/T47-gradual-typing.md",
+  "3. For lazy typing (procrastination)",
+);
 
 function getParamTypeAnnotation(
   param: TSESTree.Parameter,

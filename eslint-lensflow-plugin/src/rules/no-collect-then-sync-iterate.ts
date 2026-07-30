@@ -8,7 +8,10 @@ import {
   findVariableByReference,
 } from "../utils/async-iteration.js";
 
-const URL = knowledgeUrl("catalog/T64-async-iteration.md", "Blocking until full collection");
+const URL = knowledgeUrl(
+  "catalog/T64-async-iteration.md",
+  "Blocking until full collection",
+);
 
 function isCollectionArray(type: ts.Type): boolean {
   const props = type.getProperties();

@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T61-recursive-types.md", "Antipattern C: Runtime validation instead of compile-time types");
+const URL = knowledgeUrl(
+  "catalog/T61-recursive-types.md",
+  "Antipattern C: Runtime validation instead of compile-time types",
+);
 
 type FunctionLikeNode =
   | TSESTree.FunctionDeclaration

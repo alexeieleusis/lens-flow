@@ -5,7 +5,10 @@ import type { FnLikeNode } from "../utils/overload-grouping.js";
 import { createOverloadGroupVisitor } from "../utils/overload-grouping.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T22-callable-typing.md", "Overload ordering mistake");
+const URL = knowledgeUrl(
+  "catalog/T22-callable-typing.md",
+  "Overload ordering mistake",
+);
 
 function isNarrowerType(
   checker: ts.TypeChecker,

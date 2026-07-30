@@ -2,7 +2,10 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC05-structural-contracts.md", "Antipatterns with Other Techniques > Antipattern C — Multiple type annotations instead of one structural type");
+const URL = knowledgeUrl(
+  "usecases/UC05-structural-contracts.md",
+  "Antipatterns with Other Techniques > Antipattern C — Multiple type annotations instead of one structural type",
+);
 
 type Entry = {
   canonical: string;

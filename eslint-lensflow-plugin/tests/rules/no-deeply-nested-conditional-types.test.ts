@@ -2,7 +2,10 @@ import { ruleTester } from "../helpers/rule-tester.js";
 import rule from "../../src/rules/no-deeply-nested-conditional-types.js";
 import { knowledgeUrl } from "../../src/utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T17-macros-metaprogramming.md", "Deep nesting without intermediate types");
+const URL = knowledgeUrl(
+  "catalog/T17-macros-metaprogramming.md",
+  "Deep nesting without intermediate types",
+);
 
 ruleTester.run("no-deeply-nested-conditional-types", rule, {
   valid: [

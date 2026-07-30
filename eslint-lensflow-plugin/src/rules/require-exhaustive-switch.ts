@@ -1,7 +1,10 @@
 import { createSwitchExhaustivenessRule } from "../utils/switch-exhaustiveness-rule.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const DOCS_URL = knowledgeUrl("catalog/T14-type-narrowing.md", "4. Partial switch without exhaustiveness");
+const DOCS_URL = knowledgeUrl(
+  "catalog/T14-type-narrowing.md",
+  "4. Partial switch without exhaustiveness",
+);
 
 export default createSwitchExhaustivenessRule({
   name: "require-exhaustive-switch",

@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T64-async-iteration.md", "Reusing a generator");
+const URL = knowledgeUrl(
+  "catalog/T64-async-iteration.md",
+  "Reusing a generator",
+);
 
 function findBinding(
   scope: TSESLint.Scope.Scope | null,
