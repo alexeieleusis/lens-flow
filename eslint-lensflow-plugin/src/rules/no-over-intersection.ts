@@ -2,7 +2,7 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC05-structural-contracts.md");
+const URL = knowledgeUrl("usecases/UC05-structural-contracts.md", "Antipatterns When Using It > Antipattern B — Overusing intersection types");
 
 function countFlattenedMembers(node: TSESTree.TypeNode): number {
   if (node.type === "TSIntersectionType") {
