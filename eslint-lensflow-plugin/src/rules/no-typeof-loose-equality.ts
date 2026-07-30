@@ -2,7 +2,7 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T14-type-narrowing.md");
+const URL = knowledgeUrl("catalog/T14-type-narrowing.md", "3. Runtime `typeof` without narrowing");
 
 export default createRule({
   name: "no-typeof-loose-equality",
