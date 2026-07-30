@@ -3,7 +3,7 @@ import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC01-invalid-states.md");
+const URL = knowledgeUrl("usecases/UC01-invalid-states.md", "Pattern E — Parse, don't validate");
 
 const VALIDATION_NAME_RE = /^(is|validate|check)[A-Z]/;
 
