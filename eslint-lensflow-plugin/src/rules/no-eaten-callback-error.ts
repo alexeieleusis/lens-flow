@@ -2,7 +2,7 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T12-effect-tracking.md");
+const URL = knowledgeUrl("catalog/T12-effect-tracking.md", "3. **Callbacks or event-style APIs hiding errors**");
 
 function collectParamIdentifiers(node: TSESTree.Node): string[] {
   if (node.type === "Identifier") return [node.name];
