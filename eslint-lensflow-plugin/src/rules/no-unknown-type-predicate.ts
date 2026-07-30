@@ -3,7 +3,7 @@ import { ESLintUtils, TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T14-type-narrowing.md");
+const URL = knowledgeUrl("catalog/T14-type-narrowing.md", "When Not to Use It");
 
 type FunctionLikeNode =
   TSESTree.FunctionLike | TSESTree.TSFunctionType | TSESTree.TSMethodSignature;
