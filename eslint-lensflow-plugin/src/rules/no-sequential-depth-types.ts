@@ -2,7 +2,7 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T61-recursive-types.md");
+const URL = knowledgeUrl("catalog/T61-recursive-types.md", "Antipattern D: Duplicate types with varying nesting levels");
 
 export default createRule({
   name: "no-sequential-depth-types",
