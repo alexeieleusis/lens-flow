@@ -2,7 +2,7 @@ import { ESLintUtils, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const KNOWLEDGE_URL = knowledgeUrl("catalog/T07-structural-typing.md");
+const KNOWLEDGE_URL = knowledgeUrl("catalog/T07-structural-typing.md", "Antipattern: Excessive Type Assertions");
 
 function isInsideTypePredicateFn(
   context: TSESLint.RuleContext<"unsafeCast", []>,
