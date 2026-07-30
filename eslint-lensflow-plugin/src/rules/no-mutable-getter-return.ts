@@ -2,7 +2,7 @@ import { AST_NODE_TYPES, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T21-encapsulation.md");
+const URL = knowledgeUrl("catalog/T21-encapsulation.md", 'Mutable return from "readonly" getter');
 
 export default createRule({
   name: "no-mutable-getter-return",
