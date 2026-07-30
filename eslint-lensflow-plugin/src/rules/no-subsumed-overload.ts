@@ -4,7 +4,7 @@ import type { FnLikeNode } from "../utils/overload-grouping.js";
 import { createOverloadGroupVisitor } from "../utils/overload-grouping.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const KNOWLEDGE_URL = knowledgeUrl("catalog/T22-callable-typing.md");
+const KNOWLEDGE_URL = knowledgeUrl("catalog/T22-callable-typing.md", "Overload ordering mistake");
 
 function getTypeParamNames(node: FnLikeNode): string[] {
   return (node.typeParameters?.params ?? []).map((tp) => tp.name.name);
