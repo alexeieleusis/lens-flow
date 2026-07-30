@@ -2,7 +2,7 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T57-typestate.md");
+const URL = knowledgeUrl("catalog/T57-typestate.md", "A. Runtime null checks for required initialization");
 
 export default createRule({
   name: "no-runtime-init-guard",
