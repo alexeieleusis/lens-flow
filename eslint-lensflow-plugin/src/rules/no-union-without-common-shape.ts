@@ -3,7 +3,7 @@ import { ESLintUtils, type TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T02-union-intersection.md");
+const URL = knowledgeUrl("catalog/T02-union-intersection.md", "Union: Overly Broad Member Types");
 
 const PRIMITIVE_TYPE_FLAGS =
   ts.TypeFlags.Any |
