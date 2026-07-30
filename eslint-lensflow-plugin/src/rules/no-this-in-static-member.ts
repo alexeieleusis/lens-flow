@@ -2,7 +2,7 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T33-self-type.md");
+const URL = knowledgeUrl("catalog/T33-self-type.md", "`error TS2526: A 'this' type is available only in a non-static member of a class or interface.`");
 
 function containsTSThisType(node: TSESTree.TypeNode): boolean {
   if (node.type === "TSThisType") return true;
