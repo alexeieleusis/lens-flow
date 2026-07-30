@@ -2,7 +2,7 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T33-self-type.md");
+const URL = knowledgeUrl("catalog/T33-self-type.md", "Overusing `this is T` with broad checks");
 
 function isThisConstructorName(node: TSESTree.Node): boolean {
   if (node.type !== "MemberExpression") return false;
