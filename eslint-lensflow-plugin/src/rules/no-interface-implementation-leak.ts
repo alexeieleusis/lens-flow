@@ -2,7 +2,7 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T21-encapsulation.md");
+const URL = knowledgeUrl("catalog/T21-encapsulation.md", "Exposing implementation details through interface");
 
 const INTERNAL_COLLECTIONS = new Set(["Map", "Set", "WeakMap", "WeakSet"]);
 
