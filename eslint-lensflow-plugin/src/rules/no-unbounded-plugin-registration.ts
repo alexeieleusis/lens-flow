@@ -3,7 +3,7 @@ import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { getKeys } from "eslint-visitor-keys";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC14-extensibility.md");
+const URL = knowledgeUrl("usecases/UC14-extensibility.md", "Antipatterns When Using Extensibility");
 
 const DUPLICATE_CHECK_METHODS = new Set([
   "has",
