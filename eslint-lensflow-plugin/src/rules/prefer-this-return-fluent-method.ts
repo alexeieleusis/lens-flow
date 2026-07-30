@@ -3,7 +3,7 @@ import { createRule } from "../utils/rule-creator.js";
 import { getChildren } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T33-self-type.md");
+const URL = knowledgeUrl("catalog/T33-self-type.md", "Losing subclass type in method chains");
 
 function collectReturns(node: TSESTree.Node): TSESTree.ReturnStatement[] {
   const results: TSESTree.ReturnStatement[] = [];
