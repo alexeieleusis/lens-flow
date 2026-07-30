@@ -3,7 +3,7 @@ import { createRule } from "../utils/rule-creator.js";
 import { collectChildTypes } from "../utils/ts-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T61-recursive-types.md");
+const URL = knowledgeUrl("catalog/T61-recursive-types.md", "Antipattern A: Missing termination in recursive type computations");
 
 type TypeNode = TSESTree.TypeNode;
 
