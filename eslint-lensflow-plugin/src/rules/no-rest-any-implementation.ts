@@ -2,7 +2,7 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const RULE_DOCS_URL = knowledgeUrl("catalog/T22-callable-typing.md");
+const RULE_DOCS_URL = knowledgeUrl("catalog/T22-callable-typing.md", "Antipatterns When Using Callable Typing > Shadowing overloads with rest");
 
 type FnLikeNode = TSESTree.FunctionDeclaration | TSESTree.TSDeclareFunction;
 
