@@ -2,7 +2,7 @@ import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T04-generics-bounds.md");
+const URL = knowledgeUrl("catalog/T04-generics-bounds.md", "Antipatterns with Other Techniques (Where This Helps) > Union types without type coupling");
 const TS_UNION = "TSUnionType";
 const IDENTIFIER = "Identifier";
 const TS_PARAM_PROP = "TSParameterProperty";
