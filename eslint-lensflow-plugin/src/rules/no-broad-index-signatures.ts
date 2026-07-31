@@ -3,7 +3,10 @@ import type { TSESLint } from "@typescript-eslint/utils";
 import { containsAny, containsUnknown } from "../utils/ts-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T07-structural-typing.md");
+const URL = knowledgeUrl(
+  "catalog/T07-structural-typing.md",
+  "Antipattern: Overly Broad Index Signatures",
+);
 
 export default createRule({
   name: "no-broad-index-signatures",

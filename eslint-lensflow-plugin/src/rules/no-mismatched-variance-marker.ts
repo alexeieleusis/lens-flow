@@ -8,7 +8,10 @@ import {
 } from "../utils/variance-checker.js";
 import type { TSESTree } from "@typescript-eslint/types";
 
-const URL = knowledgeUrl("catalog/T08-variance-subtyping.md");
+const URL = knowledgeUrl(
+  "catalog/T08-variance-subtyping.md",
+  "Wrong marker for actual usage",
+);
 
 export default createRule({
   name: "no-mismatched-variance-marker",

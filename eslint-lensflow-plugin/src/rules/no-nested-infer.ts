@@ -2,7 +2,10 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T49-associated-types.md");
+const URL = knowledgeUrl(
+  "catalog/T49-associated-types.md",
+  "Antipattern 4: Nested `infer` creates hard-to-read types",
+);
 
 function hasDeeplyNestedInfer(
   extendsType: TSESTree.TypeNode,

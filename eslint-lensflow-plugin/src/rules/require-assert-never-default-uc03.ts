@@ -3,7 +3,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { hasAssertNever } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC03-exhaustiveness.md");
+const URL = knowledgeUrl(
+  "usecases/UC03-exhaustiveness.md",
+  "1. Omitting the `assertNever` default",
+);
 
 export default createRule({
   name: "require-assert-never-default-uc03",

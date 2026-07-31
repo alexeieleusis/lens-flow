@@ -4,7 +4,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import { walk, walkNodes } from "../utils/ast-helpers.js";
 
-const DOCS_URL = knowledgeUrl("catalog/T26-refinement-types.md");
+const DOCS_URL = knowledgeUrl(
+  "catalog/T26-refinement-types.md",
+  "Re-validating branded values",
+);
 
 const CONDITIONAL_TYPES = new Set<string>([
   "IfStatement",

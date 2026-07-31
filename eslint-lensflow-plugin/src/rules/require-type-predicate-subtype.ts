@@ -3,7 +3,10 @@ import { ESLintUtils, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const DOCS_URL = knowledgeUrl("catalog/T33-self-type.md");
+const DOCS_URL = knowledgeUrl(
+  "catalog/T33-self-type.md",
+  "9. Common Type-Checker Errors > `error TS2677: A type predicate's type must be assignable from its parameter type`",
+);
 
 export default createRule({
   name: "require-type-predicate-subtype",

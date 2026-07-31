@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T04-generics-bounds.md");
+const URL = knowledgeUrl(
+  "catalog/T04-generics-bounds.md",
+  "Gotchas and Limitations",
+);
 
 function containsAnyType(node: TSESTree.TypeNode): boolean {
   if (node.type === "TSAnyKeyword") return true;

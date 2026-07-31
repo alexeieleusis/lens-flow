@@ -4,7 +4,10 @@ import type { TSESLint } from "@typescript-eslint/utils";
 import { TSESTree } from "@typescript-eslint/utils";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC21-async-concurrency.md");
+const URL = knowledgeUrl(
+  "usecases/UC21-async-concurrency.md",
+  "B2 — Silent `catch` with `any` error type",
+);
 
 /**
  * Check whether any descendant of the given node is an Identifier with the specified name.

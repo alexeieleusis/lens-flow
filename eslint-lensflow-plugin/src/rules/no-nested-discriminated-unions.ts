@@ -2,7 +2,10 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC01-invalid-states.md");
+const URL = knowledgeUrl(
+  "usecases/UC01-invalid-states.md",
+  "Antipattern 1 — Over-nesting unions",
+);
 
 function getPropertyName(key: TSESTree.TSPropertySignature["key"]): string {
   if (key.type === "Identifier") return key.name;

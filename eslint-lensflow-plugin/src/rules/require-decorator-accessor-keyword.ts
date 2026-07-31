@@ -3,7 +3,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { walk } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T17-macros-metaprogramming.md");
+const URL = knowledgeUrl(
+  "catalog/T17-macros-metaprogramming.md",
+  "8. Gotchas and Limitations",
+);
 
 const ACCESSOR_CONTEXT_TYPES = new Set([
   "ClassAccessorDecoratorContext",

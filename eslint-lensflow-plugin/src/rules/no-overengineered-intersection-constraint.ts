@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("usecases/UC04-generic-constraints.md");
+const URL = knowledgeUrl(
+  "usecases/UC04-generic-constraints.md",
+  "Antipatterns When Using Constraints > Antipattern D — Complex intersection for simple cases",
+);
 
 export default createRule({
   name: "no-overengineered-intersection-constraint",

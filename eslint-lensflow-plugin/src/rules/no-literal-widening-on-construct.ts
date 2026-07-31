@@ -3,7 +3,10 @@ import { ESLintUtils, TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T01-algebraic-data-types.md");
+const URL = knowledgeUrl(
+  "catalog/T01-algebraic-data-types.md",
+  "Literal widening",
+);
 
 const DISCRIMINANT_NAMES = new Set([
   "kind",

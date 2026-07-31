@@ -2,7 +2,10 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T03-newtypes-opaque.md");
+const URL = knowledgeUrl(
+  "catalog/T03-newtypes-opaque.md",
+  "Antipattern 2: Bypassing smart constructors",
+);
 
 function getTypeNameString(typeNode: TSESTree.TypeNode): string | null {
   if (typeNode.type === "TSTypeReference") {

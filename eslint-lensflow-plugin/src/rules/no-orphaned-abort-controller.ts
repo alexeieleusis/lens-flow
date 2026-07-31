@@ -3,7 +3,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC21-async-concurrency.md");
+const URL = knowledgeUrl(
+  "usecases/UC21-async-concurrency.md",
+  "A4 — Memory leak with uncanceled `AbortSignal`",
+);
 
 function isSameVariable(
   ident: TSESTree.Identifier,

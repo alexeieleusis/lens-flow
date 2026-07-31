@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T18-conversions-coercions.md");
+const URL = knowledgeUrl(
+  "catalog/T18-conversions-coercions.md",
+  "Antipatterns Where This Technique Fixes Other Approaches > Excessive type annotations",
+);
 
 function isWidenedPrimitiveType(typeNode: TSESTree.TypeNode): boolean {
   if (

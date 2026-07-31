@@ -3,7 +3,10 @@ import type { TSESLint } from "@typescript-eslint/utils";
 import { containsAny } from "../utils/ts-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T05-type-classes.md");
+const URL = knowledgeUrl(
+  "catalog/T05-type-classes.md",
+  "Antipattern 4: Overusing `any` Inside Interfaces",
+);
 
 export default createRule({
   name: "no-any-in-interface",

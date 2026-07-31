@@ -3,7 +3,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T13-null-safety.md");
+const URL = knowledgeUrl(
+  "catalog/T13-null-safety.md",
+  "Pattern: Shadowing nullability with `any`",
+);
 
 export default createRule({
   name: "no-any-json-parse-return",

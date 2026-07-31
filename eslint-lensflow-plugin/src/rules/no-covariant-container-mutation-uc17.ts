@@ -8,7 +8,10 @@ import {
   paramsContainAnyTypeRef,
 } from "../utils/variance-checker.js";
 
-const URL = knowledgeUrl("usecases/UC17-variance.md");
+const URL = knowledgeUrl(
+  "usecases/UC17-variance.md",
+  "Pattern C — Invariant (read + write position)",
+);
 
 function findMatchedCovariantParam(
   params: TSESTree.Parameter[],

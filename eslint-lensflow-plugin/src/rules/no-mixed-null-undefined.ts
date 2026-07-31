@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T13-null-safety.md");
+const URL = knowledgeUrl(
+  "catalog/T13-null-safety.md",
+  "Pattern: Mixing `null` and `undefined` without intent",
+);
 
 export default createRule({
   name: "no-mixed-null-undefined",

@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { createBivariantMethodVisitor } from "../utils/bivariant-method-checker.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T08-variance-subtyping.md");
+const URL = knowledgeUrl(
+  "catalog/T08-variance-subtyping.md",
+  "Bivariant method vs. contravariant function property",
+);
 
 export default createRule({
   name: "prefer-property-function-signature",

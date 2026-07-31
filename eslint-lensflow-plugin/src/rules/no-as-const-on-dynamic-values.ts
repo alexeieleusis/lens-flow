@@ -2,7 +2,10 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC06-immutability.md");
+const URL = knowledgeUrl(
+  "usecases/UC06-immutability.md",
+  "Antipattern 4: Using `as const` on runtime-computed values",
+);
 
 /**
  * Recursively checks whether an expression contains runtime-computed values.

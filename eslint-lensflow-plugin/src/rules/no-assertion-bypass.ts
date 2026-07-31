@@ -3,7 +3,10 @@ import { ESLintUtils, type TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T07-structural-typing.md");
+const URL = knowledgeUrl(
+  "catalog/T07-structural-typing.md",
+  "Antipattern: Ignoring Excess Property Check Bypass",
+);
 
 function getObjectLiteralProps(obj: TSESTree.ObjectExpression): string[] {
   return obj.properties

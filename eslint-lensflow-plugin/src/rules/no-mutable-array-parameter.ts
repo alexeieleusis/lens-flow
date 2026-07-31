@@ -6,7 +6,10 @@ import {
   checkMutableArrayParam,
 } from "../utils/visitor-helpers.js";
 
-const URL = knowledgeUrl("catalog/T08-variance-subtyping.md");
+const URL = knowledgeUrl(
+  "catalog/T08-variance-subtyping.md",
+  "Example A — Read-only vs mutable container",
+);
 
 export default createRule({
   name: "no-mutable-array-parameter",

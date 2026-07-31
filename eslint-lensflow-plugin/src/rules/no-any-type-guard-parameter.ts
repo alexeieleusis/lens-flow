@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T47-gradual-typing.md");
+const URL = knowledgeUrl(
+  "catalog/T47-gradual-typing.md",
+  "3. With Type Guards — checking `any` vs `unknown`",
+);
 
 type FunctionLikeNode =
   | TSESTree.FunctionDeclaration

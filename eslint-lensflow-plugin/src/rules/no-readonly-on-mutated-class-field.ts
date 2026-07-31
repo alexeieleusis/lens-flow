@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T32-immutability-markers.md");
+const URL = knowledgeUrl(
+  "catalog/T32-immutability-markers.md",
+  "`Cannot assign to 'x' because it is a read-only property` (on class field)",
+);
 
 function extractFieldName(key: TSESTree.Node): string | null {
   if (key.type === "Identifier") return key.name;

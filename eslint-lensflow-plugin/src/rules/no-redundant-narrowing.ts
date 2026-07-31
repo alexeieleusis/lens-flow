@@ -2,7 +2,10 @@ import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T14-type-narrowing.md");
+const URL = knowledgeUrl(
+  "catalog/T14-type-narrowing.md",
+  "2. Repeated redundant narrowing",
+);
 
 const SKIPPED_KEYS = new Set(["type", "loc", "range", "parent"]);
 

@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T02-union-intersection.md");
+const URL = knowledgeUrl(
+  "catalog/T02-union-intersection.md",
+  "Intersection: Over-Composition Leading to Complexity",
+);
 
 export default createRule({
   name: "no-excessive-intersection-chain",

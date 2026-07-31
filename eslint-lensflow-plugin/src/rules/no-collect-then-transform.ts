@@ -8,7 +8,10 @@ import {
   findVariableByReference,
 } from "../utils/async-iteration.js";
 
-const URL = knowledgeUrl("catalog/T64-async-iteration.md");
+const URL = knowledgeUrl(
+  "catalog/T64-async-iteration.md",
+  "Promise.all over large async iterables",
+);
 
 const ARRAY_TRANSFORM_METHODS = new Set([
   "map",

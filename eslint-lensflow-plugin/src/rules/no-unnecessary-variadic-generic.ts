@@ -2,7 +2,10 @@ import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T45-paramspec-variadic.md");
+const URL = knowledgeUrl(
+  "catalog/T45-paramspec-variadic.md",
+  "6. When NOT to Use It",
+);
 
 export default createRule({
   name: "no-unnecessary-variadic-generic",

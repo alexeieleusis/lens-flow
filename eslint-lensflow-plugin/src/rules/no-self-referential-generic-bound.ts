@@ -2,7 +2,10 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T04-generics-bounds.md");
+const URL = knowledgeUrl(
+  "catalog/T04-generics-bounds.md",
+  "Circular F-bounds in data structures",
+);
 
 function checkTypeReference(
   node: TSESTree.TSTypeReference,

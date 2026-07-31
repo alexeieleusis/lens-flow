@@ -3,7 +3,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T59-existential-types.md");
+const URL = knowledgeUrl(
+  "catalog/T59-existential-types.md",
+  "13. Antipatterns When Using This Technique > P3: Storing continuation for later",
+);
 
 type FunctionNode =
   | TSESTree.FunctionDeclaration

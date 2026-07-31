@@ -1,7 +1,10 @@
 import requireExplicitVariance from "./require-explicit-variance.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC17-variance.md");
+const URL = knowledgeUrl(
+  "usecases/UC17-variance.md",
+  "Pattern D — Explicit `in`/`out` markers (TypeScript 4.7)",
+);
 
 /**
  * @deprecated Use `require-explicit-variance` instead.

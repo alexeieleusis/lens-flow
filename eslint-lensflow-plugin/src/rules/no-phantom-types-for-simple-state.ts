@@ -2,7 +2,10 @@ import { AST_NODE_TYPES, TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC01-invalid-states.md");
+const URL = knowledgeUrl(
+  "usecases/UC01-invalid-states.md",
+  "Antipattern 3 — Overusing phantom types",
+);
 
 const PHANTOM_NAMES = new Set([
   "_phantom",

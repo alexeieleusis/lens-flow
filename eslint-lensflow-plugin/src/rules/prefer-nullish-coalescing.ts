@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("usecases/UC16-nullability.md");
+const URL = knowledgeUrl(
+  "usecases/UC16-nullability.md",
+  "2. Using `||` instead of `??`",
+);
 
 export default createRule({
   name: "prefer-nullish-coalescing",

@@ -2,7 +2,10 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T63-template-literal-types.md");
+const URL = knowledgeUrl(
+  "catalog/T63-template-literal-types.md",
+  "Magic String Switch Without Type Narrowing",
+);
 
 const NAMESPACE_SEPARATORS = [":", "."];
 

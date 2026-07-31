@@ -5,7 +5,10 @@ import type { FnLikeNode } from "../utils/overload-grouping.js";
 import { createOverloadGroupVisitor } from "../utils/overload-grouping.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T22-callable-typing.md");
+const URL = knowledgeUrl(
+  "catalog/T22-callable-typing.md",
+  "Implementation narrows return type",
+);
 
 function getFnName(node: FnLikeNode): string | null {
   if (node.id?.type === "Identifier") {

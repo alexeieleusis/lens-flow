@@ -2,7 +2,10 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T34-never-bottom.md");
+const URL = knowledgeUrl(
+  "catalog/T34-never-bottom.md",
+  "Pattern: Asserting exhaustiveness without a `never` return",
+);
 
 function getActualTypeName(
   node: TSESTree.TypeNode,

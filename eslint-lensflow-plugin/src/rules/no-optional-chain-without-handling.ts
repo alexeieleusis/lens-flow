@@ -3,7 +3,10 @@ import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T13-null-safety.md");
+const URL = knowledgeUrl(
+  "catalog/T13-null-safety.md",
+  "Pattern: Optional chaining that loses types",
+);
 
 function typeIncludesUndefined(type: ts.Type): boolean {
   if ((type.flags & ts.TypeFlags.Undefined) !== 0) return true;

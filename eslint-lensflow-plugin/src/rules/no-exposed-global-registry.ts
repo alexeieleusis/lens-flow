@@ -2,7 +2,10 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC10-encapsulation.md");
+const URL = knowledgeUrl(
+  "usecases/UC10-encapsulation.md",
+  "Global mutable registry",
+);
 
 export default createRule({
   name: "no-exposed-global-registry",

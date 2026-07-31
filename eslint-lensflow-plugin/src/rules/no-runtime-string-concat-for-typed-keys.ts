@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T63-template-literal-types.md");
+const URL = knowledgeUrl(
+  "catalog/T63-template-literal-types.md",
+  "Runtime String Concatenation Without Validation",
+);
 
 function unwrapExpression(node: TSESTree.Node): TSESTree.Node {
   while (

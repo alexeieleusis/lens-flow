@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("usecases/UC10-encapsulation.md");
+const URL = knowledgeUrl(
+  "usecases/UC10-encapsulation.md",
+  "Partially constructed objects",
+);
 
 export default createRule({
   name: "no-partial-construction-pattern",

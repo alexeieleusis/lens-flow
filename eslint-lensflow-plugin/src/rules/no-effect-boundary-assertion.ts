@@ -3,7 +3,10 @@ import ts from "typescript";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T12-effect-tracking.md");
+const URL = knowledgeUrl(
+  "catalog/T12-effect-tracking.md",
+  "4. Breaking the type boundary with assertions",
+);
 
 const KNOWN_EFFECT_NAMES = new Set([
   "Result",

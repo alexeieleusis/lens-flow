@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T31-record-types.md");
+const URL = knowledgeUrl(
+  "catalog/T31-record-types.md",
+  "13. Antipatterns When Using Record Types > Antipattern D: Missing exhaustiveness on `Record`",
+);
 
 function getLastName(typeName: TSESTree.EntityName): string {
   if (typeName.type === "Identifier") return typeName.name;

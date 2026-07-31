@@ -2,7 +2,10 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T49-associated-types.md");
+const URL = knowledgeUrl(
+  "catalog/T49-associated-types.md",
+  'Gotchas and Limitations > Variance of the "associated" generic parameter',
+);
 
 function hasVarianceAnnotation(tp: TSESTree.TSTypeParameter): boolean {
   return (

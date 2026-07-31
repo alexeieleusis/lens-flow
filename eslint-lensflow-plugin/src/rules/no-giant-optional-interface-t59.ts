@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T59-existential-types.md");
+const URL = knowledgeUrl(
+  "catalog/T59-existential-types.md",
+  "14. Antipatterns Where This Technique Is Better",
+);
 
 function countOptionalProps(members: TSESTree.Node[]) {
   return members.filter(

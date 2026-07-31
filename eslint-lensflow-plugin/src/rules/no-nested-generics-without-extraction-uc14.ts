@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("usecases/UC14-extensibility.md");
+const URL = knowledgeUrl(
+  "usecases/UC14-extensibility.md",
+  "Antipatterns With Other Techniques",
+);
 
 function returnTypeReferencesInterface(
   returnType: import("@typescript-eslint/types").TSESTree.TypeNode | null,

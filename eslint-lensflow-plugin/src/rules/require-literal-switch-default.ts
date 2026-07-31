@@ -1,7 +1,10 @@
 import { createSwitchExhaustivenessRule } from "../utils/switch-exhaustiveness-rule.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const DOC_URL = knowledgeUrl("catalog/T52-literal-types.md");
+const DOC_URL = knowledgeUrl(
+  "catalog/T52-literal-types.md",
+  "C. Unexhaustive `switch`",
+);
 
 export default createSwitchExhaustivenessRule({
   name: "require-literal-switch-default",

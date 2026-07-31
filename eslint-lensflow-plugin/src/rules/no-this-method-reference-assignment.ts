@@ -3,7 +3,10 @@ import { ESLintUtils, type TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T33-self-type.md");
+const URL = knowledgeUrl(
+  "catalog/T33-self-type.md",
+  "Losing `this` in detached methods",
+);
 
 function typeNodeHasThisReturnType(typeNode: TSESTree.TypeNode): boolean {
   if (typeNode.type === "TSThisType") return true;

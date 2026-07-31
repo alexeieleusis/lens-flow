@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T08-variance-subtyping.md");
+const URL = knowledgeUrl(
+  "catalog/T08-variance-subtyping.md",
+  "Copying data to match invariant types",
+);
 
 function unwrapTSExpressions(node: TSESTree.Expression): TSESTree.Expression {
   let current = node;

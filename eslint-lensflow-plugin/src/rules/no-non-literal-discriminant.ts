@@ -3,7 +3,10 @@ import { ESLintUtils, type TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T01-algebraic-data-types.md");
+const URL = knowledgeUrl(
+  "catalog/T01-algebraic-data-types.md",
+  "Type is not assignable — literal widening",
+);
 
 type WidenedKind = "string" | "number" | null;
 

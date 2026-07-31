@@ -3,7 +3,10 @@ import type { TSESTree } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC14-extensibility.md");
+const URL = knowledgeUrl(
+  "usecases/UC14-extensibility.md",
+  "Antipatterns With Other Techniques",
+);
 
 function hasParamTypeAnnotation(
   p: TSESTree.Parameter,

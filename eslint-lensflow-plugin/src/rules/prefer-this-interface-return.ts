@@ -2,7 +2,10 @@ import { AST_NODE_TYPES, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T33-self-type.md");
+const URL = knowledgeUrl(
+  "catalog/T33-self-type.md",
+  "Interface implementations return base type",
+);
 
 function getTypeName(node: TSESTree.TSTypeReference): string | null {
   if (node.typeName.type === AST_NODE_TYPES.Identifier) {

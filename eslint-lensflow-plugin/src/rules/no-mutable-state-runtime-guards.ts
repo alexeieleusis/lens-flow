@@ -4,7 +4,10 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 import { TSESTree } from "@typescript-eslint/utils";
 import type { TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("usecases/UC13-state-machines.md");
+const URL = knowledgeUrl(
+  "usecases/UC13-state-machines.md",
+  "Antipatterns with Other Techniques (where State Machines Help) > Antipattern 4: Mutable state object with runtime guards",
+);
 
 function isStringLiteralUnion(node: any): node is { types: any[] } {
   return (

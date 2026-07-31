@@ -6,7 +6,10 @@ import {
   checkMutableArrayParam,
 } from "../utils/visitor-helpers.js";
 
-const URL = knowledgeUrl("usecases/UC17-variance.md");
+const URL = knowledgeUrl(
+  "usecases/UC17-variance.md",
+  "Antipatterns with Other Techniques > Using mutable arrays instead of `readonly` + covariance",
+);
 
 export default createRule({
   name: "no-mutable-array-parameter-uc17",

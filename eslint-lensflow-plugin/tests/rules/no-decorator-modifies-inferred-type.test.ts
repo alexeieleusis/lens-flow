@@ -2,7 +2,10 @@ import { ruleTester } from "../helpers/rule-tester.js";
 import rule from "../../src/rules/no-decorator-modifies-inferred-type.js";
 import { knowledgeUrl } from "../../src/utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T17-macros-metaprogramming.md");
+const URL = knowledgeUrl(
+  "catalog/T17-macros-metaprogramming.md",
+  "You need to modify the TypeScript-inferred type of a class",
+);
 
 ruleTester.run("no-decorator-modifies-inferred-type", rule, {
   valid: [

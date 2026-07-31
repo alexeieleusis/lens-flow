@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T13-null-safety.md");
+const URL = knowledgeUrl(
+  "catalog/T13-null-safety.md",
+  "Pattern: Boolean-coercion instead of `??`",
+);
 
 function isLikelyTarget(node: TSESTree.Node): boolean {
   if (node.type === "ChainExpression") {

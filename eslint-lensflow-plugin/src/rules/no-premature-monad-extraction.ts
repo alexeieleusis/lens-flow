@@ -2,7 +2,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 
-const URL = knowledgeUrl("catalog/T54-functor-applicative-monad.md");
+const URL = knowledgeUrl(
+  "catalog/T54-functor-applicative-monad.md",
+  "2. **Premature `.fold()` extraction**",
+);
 
 const EXTRACT_METHODS = new Set([
   "fold",

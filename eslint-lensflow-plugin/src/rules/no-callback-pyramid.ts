@@ -3,7 +3,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { getChildren } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC21-async-concurrency.md");
+const URL = knowledgeUrl(
+  "usecases/UC21-async-concurrency.md",
+  "B1 — Callback pyramids (pre-async/await)",
+);
 
 const isCallback = (node: TSESTree.Node): boolean =>
   node.type === "ArrowFunctionExpression" || node.type === "FunctionExpression";

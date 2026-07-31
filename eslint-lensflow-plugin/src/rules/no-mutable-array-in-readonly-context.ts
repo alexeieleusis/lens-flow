@@ -3,7 +3,10 @@ import { ESLintUtils, TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T32-immutability-markers.md");
+const URL = knowledgeUrl(
+  "catalog/T32-immutability-markers.md",
+  "The type 'readonly string[]' is 'readonly' and cannot be assigned to the mutable type 'string[]'",
+);
 
 function createTypeCheckers(checker: ts.TypeChecker) {
   function isArrayType(type: ts.Type) {

@@ -2,7 +2,10 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T31-record-types.md");
+const URL = knowledgeUrl(
+  "catalog/T31-record-types.md",
+  "Bad: using record for dynamic keys",
+);
 
 export default createRule({
   name: "prefer-record-over-index-signature",

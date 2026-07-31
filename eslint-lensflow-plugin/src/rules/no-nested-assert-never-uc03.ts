@@ -3,7 +3,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { getMemberName, hasAssertNever } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC03-exhaustiveness.md");
+const URL = knowledgeUrl(
+  "usecases/UC03-exhaustiveness.md",
+  "Antipatterns When Using This Technique > 3. AssertNever at wrong nesting level",
+);
 
 function extractMemberFromBinary(
   node: TSESTree.BinaryExpression,

@@ -7,7 +7,10 @@ import {
   isUsedAsOutputInBody,
 } from "../utils/variance-checker.js";
 
-const URL = knowledgeUrl("catalog/T08-variance-subtyping.md");
+const URL = knowledgeUrl(
+  "catalog/T08-variance-subtyping.md",
+  "Over-constraining with `in out`",
+);
 
 export default createRule({
   name: "no-unnecessary-invariance",

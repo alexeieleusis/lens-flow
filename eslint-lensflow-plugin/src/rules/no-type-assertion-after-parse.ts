@@ -2,7 +2,10 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const KNOWLEDGE_URL = knowledgeUrl("catalog/T14-type-narrowing.md");
+const KNOWLEDGE_URL = knowledgeUrl(
+  "catalog/T14-type-narrowing.md",
+  "1. Type assertion (`as`) instead of guards",
+);
 
 function isJsonParseCall(node: TSESTree.CallExpression): boolean {
   return (

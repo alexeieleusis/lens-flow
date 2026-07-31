@@ -36,7 +36,10 @@ function extractParamTypeAnnotation(
   return null;
 }
 
-const URL = knowledgeUrl("catalog/T26-refinement-types.md");
+const URL = knowledgeUrl(
+  "catalog/T26-refinement-types.md",
+  "Partially validated unions",
+);
 
 const PRIMITIVE_KEYWORDS = new Set([
   "TSStringKeyword",

@@ -3,7 +3,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { walk } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC01-invalid-states.md");
+const URL = knowledgeUrl(
+  "usecases/UC01-invalid-states.md",
+  "Runtime guards repeated everywhere",
+);
 
 interface FunctionInfo {
   node:

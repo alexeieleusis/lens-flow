@@ -2,7 +2,10 @@ import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC13-state-machines.md");
+const URL = knowledgeUrl(
+  "usecases/UC13-state-machines.md",
+  "Antipattern 1: Nested if/else chains for state",
+);
 
 type MemberKey = {
   base: string;

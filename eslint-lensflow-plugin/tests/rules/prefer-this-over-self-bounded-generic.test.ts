@@ -2,7 +2,10 @@ import { ruleTester } from "../helpers/rule-tester.js";
 import rule from "../../src/rules/prefer-this-over-self-bounded-generic.js";
 import { knowledgeUrl } from "../../src/utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T33-self-type.md");
+const URL = knowledgeUrl(
+  "catalog/T33-self-type.md",
+  "Bound generics workaround (verbose, error-prone)",
+);
 
 ruleTester.run("prefer-this-over-self-bounded-generic", rule, {
   valid: [

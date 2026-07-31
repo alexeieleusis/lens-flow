@@ -3,7 +3,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC10-encapsulation.md");
+const URL = knowledgeUrl(
+  "usecases/UC10-encapsulation.md",
+  "Exposed algorithm internals",
+);
 
 const INTERNAL_NAME_PATTERN =
   /^(?:buffer|cache|state|internal|_internal|accumulator|_pool)$/;

@@ -3,7 +3,10 @@ import { createRule } from "../utils/rule-creator.js";
 import { walkNodes } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("catalog/T14-type-narrowing.md");
+const URL = knowledgeUrl(
+  "catalog/T14-type-narrowing.md",
+  "4. Assertion function without proper throw",
+);
 
 function hasThrowStatement(
   body: TSESTree.Statement | TSESTree.BlockStatement | null,

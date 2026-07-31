@@ -3,7 +3,10 @@ import { ESLintUtils, type TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const DOCS_URL = knowledgeUrl("catalog/T18-conversions-coercions.md");
+const DOCS_URL = knowledgeUrl(
+  "catalog/T18-conversions-coercions.md",
+  "Antipatterns When Using This Technique",
+);
 
 function isAsConst(node: TSESTree.TSAsExpression): boolean {
   const ta = node.typeAnnotation;

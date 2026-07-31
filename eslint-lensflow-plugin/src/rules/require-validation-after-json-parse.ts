@@ -2,7 +2,10 @@ import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
-const URL = knowledgeUrl("usecases/UC19-serialization.md");
+const URL = knowledgeUrl(
+  "usecases/UC19-serialization.md",
+  "No validation on JSON.parse",
+);
 
 export default createRule({
   name: "require-validation-after-json-parse",
