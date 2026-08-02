@@ -159,7 +159,6 @@ import noProtectedMutablePrimitiveState from "./rules/no-protected-mutable-primi
 import noPublicAlgorithmInternal from "./rules/no-public-algorithm-internal.js";
 import noPublicMutableStateObject from "./rules/no-public-mutable-state-object.js";
 import noReadonlyOnMutatedClassField from "./rules/no-readonly-on-mutated-class-field.js";
-import noReadonlyOnPrimitives from "./rules/no-readonly-on-primitives.js";
 import noRecordStringAny from "./rules/no-record-string-any.js";
 import noRecursiveTypeWithoutBaseCase from "./rules/no-recursive-type-without-base-case.js";
 import noRedundantInferConditional from "./rules/no-redundant-infer-conditional.js";
@@ -450,7 +449,6 @@ const plugin: {
     "no-public-algorithm-internal": noPublicAlgorithmInternal,
     "no-public-mutable-state-object": noPublicMutableStateObject,
     "no-readonly-on-mutated-class-field": noReadonlyOnMutatedClassField,
-    "no-readonly-on-primitives": noReadonlyOnPrimitives,
     "no-record-string-any": noRecordStringAny,
     "no-recursive-type-without-base-case": noRecursiveTypeWithoutBaseCase,
     "no-redundant-infer-conditional": noRedundantInferConditional,
