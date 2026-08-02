@@ -43,3 +43,6 @@ target/
 .gradle/
 __pycache__
 rerequest_reviews.py
+
+# Generated AI-harness prompts (scripts/update-vibe-types-commit.py)
+eslint-lensflow-plugin/scripts/prompts/
