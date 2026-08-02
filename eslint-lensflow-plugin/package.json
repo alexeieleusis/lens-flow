@@ -32,7 +32,7 @@
     "eslint-visitor-keys": "^4.0.0"
   },
   "devDependencies": {
-    "@types/node": "^25.9.1",
+    "@types/node": "^26.1.1",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "@typescript-eslint/rule-tester": "^8.0.0",
