@@ -303,11 +303,12 @@ def main() -> None:
 
     changes = diff_knowledge_files(vibe_repo, old_commit, new_commit)
     rule_index = build_rule_index()
-    matched = match_rules(changes, rule_index)
+    all_matched = match_rules(changes, rule_index)
 
     print(f"\n{len(changes)} knowledge file(s) changed under catalog/usecases; "
-          f"{len(matched)} rule(s) reference a changed file.")
+          f"{len(all_matched)} rule(s) reference a changed file.")
 
+    matched = all_matched
     if args.rules:
         wanted = {name.strip() for name in args.rules.split(",") if name.strip()}
         matched = [(rf, c) for rf, c in matched if rf.stem in wanted]
@@ -315,6 +316,10 @@ def main() -> None:
     if args.limit is not None:
         matched = matched[: args.limit]
         print(f"Limited to --limit {args.limit}: {len(matched)} rule(s).")
+
+    processed_stems = {rf.stem for rf, _ in matched}
+    outstanding = list(dict.fromkeys(rf.stem for rf, _ in all_matched if rf.stem not in processed_stems))
+    scoped = bool(outstanding)
 
     PROMPTS_DIR.mkdir(parents=True, exist_ok=True)
     prompts: list[tuple[Path, str]] = []
@@ -329,7 +334,11 @@ def main() -> None:
     if not prompts:
         print("\nNo rules matched — nothing to send to the harness.")
         if not args.dry_run:
-            bump_pinned_commit(new_commit)
+            if scoped:
+                print(f"Pin left at {old_commit} — {len(outstanding)} matched rule(s) were "
+                      f"excluded by --limit/--rules and still need attention: {', '.join(outstanding)}")
+            else:
+                bump_pinned_commit(new_commit)
         return
 
     if args.dry_run:
@@ -352,7 +361,11 @@ def main() -> None:
                   "for manual use.")
             return
 
-    bump_pinned_commit(new_commit)
+    if scoped:
+        print(f"\nPin left at {old_commit} — this run only processed {len(matched)}/{len(all_matched)} "
+              f"matched rule(s). Outstanding: {', '.join(outstanding)}")
+    else:
+        bump_pinned_commit(new_commit)
     print()
 
     failures = []
