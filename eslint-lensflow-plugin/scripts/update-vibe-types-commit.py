@@ -178,10 +178,15 @@ def build_prompt(rule_file: Path, change: Change, vibe_repo: Path, old_commit: s
     ]
 
     if status == "renamed":
+        old_key = knowledge_key(old_path)
+        new_key = knowledge_key(new_path)
         parts += [
             f"## Knowledge source `{knowledge_path}` — renamed upstream",
             f"This file was renamed from `{old_path}` to `{new_path}`. If you keep "
-            "the rule, update its `knowledgeUrl(...)` path argument to the new path.",
+            f"the rule, update its `knowledgeUrl(...)` path argument from "
+            f"`{old_key}` to `{new_key}` — the path relative to `{TYPESCRIPT_SEGMENT}/`, "
+            "which is what `knowledgeUrl()` expects (do not include that prefix, "
+            "or the generated URL will duplicate it).",
             "",
         ]
     else:
