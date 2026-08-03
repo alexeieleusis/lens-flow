@@ -11,10 +11,19 @@ can update — or delete — the rule to match the new guidance. The harness has
 no access to the vibe-types repo itself, so all relevant content is inlined
 in the prompt.
 
+Trust assumption: the inlined content (diffs and full file contents) comes
+straight from the vibe-types clone at --vibe-types-repo, unreviewed. With
+--tool claude, --dangerously-skip-permissions disables Claude Code's
+tool-approval gate, so a malicious or compromised commit on vibe-types' main
+could inject instructions that get acted on with no human in the loop. Only
+pass --dangerously-skip-permissions against a vibe-types clone/branch you
+trust; the default (opencode, or claude without that flag) keeps normal
+per-action approval.
+
 Usage:
   ./scripts/update-vibe-types-commit.py [--dry-run] [--yes]
-      [--tool {opencode,claude}] [--limit N] [--rules NAME[,NAME...]]
-      [--vibe-types-repo PATH]
+      [--tool {opencode,claude}] [--dangerously-skip-permissions]
+      [--limit N] [--rules NAME[,NAME...]] [--vibe-types-repo PATH]
 
 Example:
   ./scripts/update-vibe-types-commit.py --dry-run
@@ -243,11 +252,14 @@ def build_prompt(rule_file: Path, change: Change, vibe_repo: Path, old_commit: s
 
 # ── Harness invocation ────────────────────────────────────────────────────────
 
-def invoke_harness(tool: str, prompt: str) -> int:
+def invoke_harness(tool: str, prompt: str, dangerously_skip_permissions: bool) -> int:
     if tool == "opencode":
         cmd = ["opencode", "run", prompt]
     else:
-        cmd = ["claude", "--dangerously-skip-permissions", "-p", prompt]
+        cmd = ["claude"]
+        if dangerously_skip_permissions:
+            cmd.append("--dangerously-skip-permissions")
+        cmd += ["-p", prompt]
     return subprocess.run(cmd, cwd=TARGET_REPO, check=False).returncode
 
 # ── CLI ───────────────────────────────────────────────────────────────────────
@@ -264,6 +276,11 @@ def parse_args() -> argparse.Namespace:
                    help="Write prompt files but don't bump the pinned commit or invoke the harness")
     p.add_argument("--yes", action="store_true",
                    help="Skip the confirmation prompt before invoking the harness")
+    p.add_argument("--dangerously-skip-permissions", action="store_true",
+                   help="With --tool claude, pass --dangerously-skip-permissions to disable "
+                        "its tool-approval gate. The prompt inlines unreviewed content from "
+                        "--vibe-types-repo, so only set this against a vibe-types clone/branch "
+                        "you trust. Separate from --yes; has no effect with --tool opencode.")
     return p.parse_args()
 
 
@@ -341,7 +358,7 @@ def main() -> None:
     failures = []
     for idx, (rule_file, prompt) in enumerate(prompts, 1):
         print(f"[{idx}/{len(prompts)}] {rule_file.stem}")
-        code = invoke_harness(args.tool, prompt)
+        code = invoke_harness(args.tool, prompt, args.dangerously_skip_permissions)
         if code != 0:
             failures.append(rule_file.stem)
             print(f"  [!] {args.tool} exited with code {code}")
