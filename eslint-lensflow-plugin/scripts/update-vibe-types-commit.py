@@ -129,15 +129,19 @@ def bump_pinned_commit(new_commit: str) -> None:
 
 def knowledge_key(path: str) -> str:
     """Strip the plugin/skills/typescript/ prefix to match knowledgeUrl() path args."""
-    prefix = TYPESCRIPT_SEGMENT + "/"
-    return path[len(prefix):] if path.startswith(prefix) else path
+    return path.removeprefix(TYPESCRIPT_SEGMENT + "/")
+
+
+@lru_cache(maxsize=None)
+def read_rule_file(rule_file: Path) -> str:
+    return rule_file.read_text(encoding="utf-8")
 
 
 def build_rule_index() -> dict[str, list[Path]]:
     """Map a knowledgeUrl() path argument to the rule file(s) that cite it."""
     mapping: dict[str, list[Path]] = {}
     for rule_file in sorted(RULES_DIR.glob("*.ts")):
-        m = KNOWLEDGE_URL_CALL_RE.search(rule_file.read_text(encoding="utf-8"))
+        m = KNOWLEDGE_URL_CALL_RE.search(read_rule_file(rule_file))
         if m:
             mapping.setdefault(m.group(1), []).append(rule_file)
     return mapping
@@ -181,7 +185,7 @@ def build_prompt(rule_file: Path, change: Change, vibe_repo: Path, old_commit: s
         f"## Current rule file: `{rule_relpath}`",
         "",
         "```typescript",
-        rule_file.read_text(encoding="utf-8"),
+        read_rule_file(rule_file),
         "```",
         "",
     ]
@@ -252,14 +256,18 @@ def build_prompt(rule_file: Path, change: Change, vibe_repo: Path, old_commit: s
 
 # ── Harness invocation ────────────────────────────────────────────────────────
 
-def invoke_harness(tool: str, prompt: str, dangerously_skip_permissions: bool) -> int:
+def invoke_harness(tool: str, prompt_path: Path, dangerously_skip_permissions: bool) -> int:
+    """Point the harness at prompt_path rather than passing the prompt inline,
+    so the invocation command stays short and doesn't blow past shell/argv
+    length limits for large diffs."""
+    instruction = f"Load and follow the instructions in the file at {prompt_path}"
     if tool == "opencode":
-        cmd = ["opencode", "run", prompt]
+        cmd = ["opencode", "run", instruction]
     else:
         cmd = ["claude"]
         if dangerously_skip_permissions:
             cmd.append("--dangerously-skip-permissions")
-        cmd += ["-p", prompt]
+        cmd += ["-p", instruction]
     return subprocess.run(cmd, cwd=TARGET_REPO, check=False).returncode
 
 # ── CLI ───────────────────────────────────────────────────────────────────────
@@ -322,12 +330,12 @@ def main() -> None:
     scoped = bool(outstanding)
 
     PROMPTS_DIR.mkdir(parents=True, exist_ok=True)
-    prompts: list[tuple[Path, str]] = []
+    prompts: list[tuple[Path, Path]] = []
     for rule_file, change in matched:
         prompt = build_prompt(rule_file, change, vibe_repo, old_commit, new_commit)
         prompt_path = PROMPTS_DIR / f"{rule_file.stem}.md"
         prompt_path.write_text(prompt, encoding="utf-8")
-        prompts.append((rule_file, prompt))
+        prompts.append((rule_file, prompt_path))
     if prompts:
         print(f"Wrote {len(prompts)} prompt file(s) to {PROMPTS_DIR.relative_to(TARGET_REPO)}/")
 
@@ -369,9 +377,9 @@ def main() -> None:
     print()
 
     failures = []
-    for idx, (rule_file, prompt) in enumerate(prompts, 1):
+    for idx, (rule_file, prompt_path) in enumerate(prompts, 1):
         print(f"[{idx}/{len(prompts)}] {rule_file.stem}")
-        code = invoke_harness(args.tool, prompt, args.dangerously_skip_permissions)
+        code = invoke_harness(args.tool, prompt_path, args.dangerously_skip_permissions)
         if code != 0:
             failures.append(rule_file.stem)
             print(f"  [!] {args.tool} exited with code {code}")
