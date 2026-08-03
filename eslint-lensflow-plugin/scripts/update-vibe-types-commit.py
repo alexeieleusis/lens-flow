@@ -94,7 +94,7 @@ def diff_knowledge_files(vibe_repo: Path, old_commit: str, new_commit: str) -> l
 
 @lru_cache(maxsize=None)
 def file_diff(vibe_repo: Path, old_commit: str, new_commit: str, old_path: str, new_path: str) -> str:
-    return git("diff", old_commit, new_commit, "--", old_path, new_path, cwd=vibe_repo)
+    return git("diff", "-M", old_commit, new_commit, "--", old_path, new_path, cwd=vibe_repo)
 
 # ── Pinned-commit file ────────────────────────────────────────────────────────
 
