@@ -62,7 +62,7 @@ export default createRule({
     },
     messages: {
       mutableLetVar:
-        "`typeof` on `{{name}}` which is declared with `{{kind}}`. The runtime value can be reassigned and the derived type will silently drift. Declare with `const ... as const` instead. See: {{url}}",
+        "`typeof` on `{{name}}` which is declared with `{{kind}}`. The literal values widen and the runtime value can be mutated, causing the derived type to drift. Declare with `const ... as const` instead. See: {{url}}",
       missingAsConst:
         "`typeof` on `{{name}}` declared with `const` but missing `as const` assertion. The object's properties will widen to non-literal types. Add `as const` to freeze the type. See: {{url}}",
     },

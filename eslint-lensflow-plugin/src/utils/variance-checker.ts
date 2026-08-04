@@ -401,6 +401,38 @@ function propertyTypeHasInputRef(
   }
 }
 
+function memberContainsInputRef(
+  member: TSESTree.TypeElement,
+  paramName: string,
+): boolean {
+  if (member.type === AST_NODE_TYPES.TSMethodSignature) {
+    return paramsContainTypeRef(
+      (member as TSESTree.TSMethodSignature).params,
+      paramName,
+    );
+  }
+  if (member.type === AST_NODE_TYPES.TSPropertySignature) {
+    const typeAnn = (member as TSESTree.TSPropertySignature).typeAnnotation
+      ?.typeAnnotation;
+    if (typeAnn) {
+      return propertyTypeHasInputRef(typeAnn, paramName);
+    }
+  }
+  if (member.type === AST_NODE_TYPES.TSCallSignatureDeclaration) {
+    return paramsContainTypeRef(member.params, paramName);
+  }
+  if (member.type === AST_NODE_TYPES.TSConstructSignatureDeclaration) {
+    return paramsContainTypeRef(member.params, paramName);
+  }
+  if (member.type === AST_NODE_TYPES.TSIndexSignature) {
+    return member.parameters.some((p) => {
+      const tp = paramTypeAnnotation(p);
+      return tp ? containsTypeRef(tp, paramName) : false;
+    });
+  }
+  return false;
+}
+
 export function isUsedAsInputInBody(
   body: TSESTree.TSInterfaceBody | TSESTree.TSTypeLiteral,
   paramName: string,
@@ -408,34 +440,7 @@ export function isUsedAsInputInBody(
   const members =
     body.type === AST_NODE_TYPES.TSInterfaceBody ? body.body : body.members;
 
-  return members.some((member) => {
-    if (member.type === AST_NODE_TYPES.TSMethodSignature) {
-      return paramsContainTypeRef(
-        (member as TSESTree.TSMethodSignature).params,
-        paramName,
-      );
-    }
-    if (member.type === AST_NODE_TYPES.TSPropertySignature) {
-      const typeAnn = (member as TSESTree.TSPropertySignature).typeAnnotation
-        ?.typeAnnotation;
-      if (typeAnn) {
-        return propertyTypeHasInputRef(typeAnn, paramName);
-      }
-    }
-    if (member.type === AST_NODE_TYPES.TSCallSignatureDeclaration) {
-      return paramsContainTypeRef(member.params, paramName);
-    }
-    if (member.type === AST_NODE_TYPES.TSConstructSignatureDeclaration) {
-      return paramsContainTypeRef(member.params, paramName);
-    }
-    if (member.type === AST_NODE_TYPES.TSIndexSignature) {
-      return member.parameters.some((p) => {
-        const tp = paramTypeAnnotation(p);
-        return tp ? containsTypeRef(tp, paramName) : false;
-      });
-    }
-    return false;
-  });
+  return members.some((member) => memberContainsInputRef(member, paramName));
 }
 
 /**
@@ -468,6 +473,54 @@ export function createVarianceDeclarationVisitor(
       }
     },
   };
+}
+
+function fpMemberContainsOutputRef(
+  member: TSESTree.TypeElement,
+  paramName: string,
+  depth: number,
+): boolean {
+  // TSMethodSignature is excluded: TypeScript does not check variance markers
+  // against method syntax because methods are bivariant.
+  if (member.type === AST_NODE_TYPES.TSMethodSignature) {
+    return false;
+  }
+  return memberContainsOutputRef(member, paramName, depth);
+}
+
+function fpMemberContainsInputRef(
+  member: TSESTree.TypeElement,
+  paramName: string,
+): boolean {
+  // TSMethodSignature is excluded: TypeScript only checks variance markers
+  // against function-property positions. Method syntax is bivariant, so
+  // `out T` with a T-consuming method is accepted silently.
+  if (member.type === AST_NODE_TYPES.TSMethodSignature) {
+    return false;
+  }
+  return memberContainsInputRef(member, paramName);
+}
+
+export function isUsedAsInputInBodyFunctionPropertyOnly(
+  body: TSESTree.TSInterfaceBody | TSESTree.TSTypeLiteral,
+  paramName: string,
+): boolean {
+  const members =
+    body.type === AST_NODE_TYPES.TSInterfaceBody ? body.body : body.members;
+
+  return members.some((member) => fpMemberContainsInputRef(member, paramName));
+}
+
+export function isUsedAsOutputInBodyFunctionPropertyOnly(
+  body: TSESTree.TSInterfaceBody | TSESTree.TSTypeLiteral,
+  paramName: string,
+): boolean {
+  const members =
+    body.type === AST_NODE_TYPES.TSInterfaceBody ? body.body : body.members;
+
+  return members.some((member) =>
+    fpMemberContainsOutputRef(member, paramName, 0),
+  );
 }
 
 export function isUsedAsOutputInBody(

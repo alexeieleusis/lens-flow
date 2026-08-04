@@ -4,7 +4,7 @@ import type { TSESLint } from "@typescript-eslint/utils";
 
 const URL = knowledgeUrl(
   "catalog/T03-newtypes-opaque.md",
-  "Antipattern 1: Exposing the brand symbol",
+  "Antipattern 1: Scattering `as` casts instead of routing through the constructor",
 );
 
 function isBrandSymbolName(name: string): boolean {
@@ -21,11 +21,11 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow exporting brand symbol constants, which allows callers to forge branded values.",
+        "Disallow exporting brand symbol constants, which enables accidental branded value construction and brand collisions.",
     },
     messages: {
       exportedBrandSymbol:
-        'Exporting the brand symbol "{{name}}" allows callers to forge branded values, bypassing smart constructor validation. Use `declare const` instead of `export const`. See: {{url}}',
+        'Exporting the brand symbol "{{name}}" enables accidental brand field construction and cross-library brand collisions. Use `declare const` instead of `export const`. See: {{url}}',
     },
     schema: [],
     fixable: undefined,

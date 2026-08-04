@@ -73,12 +73,19 @@ export default createRule({
     messages: {
       effectBoundaryBypass:
         "Using `as {{assertedType}}` to extract inner value from effect type `{{effectType}}`. Use pattern matching (e.g., _tag check) instead of type assertion. See: {{url}}",
+      unknownEscapeHatch:
+        "Assertion `as unknown` on effect type `{{effectType}}` — this is the first step of a double-assertion escape hatch (`as unknown as T`). Use pattern matching instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
   },
   defaultOptions: [],
-  create(context: TSESLint.RuleContext<"effectBoundaryBypass", []>) {
+  create(
+    context: TSESLint.RuleContext<
+      "effectBoundaryBypass" | "unknownEscapeHatch",
+      []
+    >,
+  ) {
     const parserServices = ESLintUtils.getParserServices(context, true);
     const program = parserServices.program;
     if (!program) return {};
@@ -123,13 +130,24 @@ export default createRule({
           typeNodeTs as ts.TypeNode,
         );
 
+        const assertedTypeStr = checker.typeToString(assertedType);
         if (checker.isTypeAssignableTo(assertedType, successType)) {
           context.report({
             node,
             messageId: "effectBoundaryBypass",
             data: {
               effectType: checker.typeToString(innerType),
-              assertedType: checker.typeToString(assertedType),
+              assertedType: assertedTypeStr,
+              url: URL,
+            },
+          });
+        } else if (assertedTypeStr === "unknown") {
+          context.report({
+            node,
+            messageId: "unknownEscapeHatch",
+            data: {
+              effectType: checker.typeToString(innerType),
+              assertedType: assertedTypeStr,
               url: URL,
             },
           });

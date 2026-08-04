@@ -14,11 +14,11 @@ export default createRule({
     type: "suggestion",
     docs: {
       description:
-        "Disallow type aliases that are unions of other union type aliases, which create nested union structure obscuring the full set of variants.",
+        "Disallow type aliases that compose union aliases whose sub-union members lack a common discriminant field, preventing narrowing with a single check.",
     },
     messages: {
       composed:
-        "Type alias '{{name}}' is a union of other union aliases, creating nested union structure that obscures the full set of variants. Flatten into a single union instead. See: {{url}}",
+        "Type alias '{{name}}' composes union aliases whose members lack a common discriminant field{{discriminants}}. Use a shared discriminant so a single check can narrow the whole union. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -29,35 +29,57 @@ export default createRule({
     const program = parserServices.program;
     if (!program) return {};
     const checker = program.getTypeChecker();
-    function analyzeUnionMember(member: TSESTree.TypeNode): {
-      isUnion: boolean;
-      refName: string;
-    } {
-      let current = member;
 
-      // If the unwrapped node is itself a union (e.g. (A | B)), recurse into its members
-      if (current.type === "TSUnionType") {
-        for (const inner of current.types) {
-          const result = analyzeUnionMember(inner);
-          if (result.isUnion) return result;
+    function isStringLiteral(type: ts.Type): boolean {
+      return (
+        (type.flags & ts.TypeFlags.StringLiteral) !== 0 &&
+        typeof (type as unknown as ts.LiteralType).value === "string"
+      );
+    }
+
+    function getStringLiteralProps(t: ts.Type): string[] {
+      const props = t.getProperties();
+      const result: string[] = [];
+      for (const prop of props) {
+        const propName = prop.getName();
+        const propType = checker.getTypeOfSymbol(prop);
+        if (isStringLiteral(propType)) {
+          result.push(propName);
         }
-        return { isUnion: false, refName: "" };
       }
+      return result;
+    }
 
-      if (current.type !== "TSTypeReference")
-        return { isUnion: false, refName: "" };
+    function findCommonDiscriminants(types: ts.Type[]): string[] {
+      if (types.length === 0) return [];
+      const objectTypes = types.filter(
+        (t) => (t.flags & ts.TypeFlags.Object) !== 0,
+      );
+      if (objectTypes.length === 0) return [];
+      let common = getStringLiteralProps(objectTypes[0]);
+      for (let i = 1; i < objectTypes.length; i++) {
+        const props = getStringLiteralProps(objectTypes[i]);
+        common = common.filter((p) => props.includes(p));
+        if (common.length === 0) break;
+      }
+      return common;
+    }
 
-      const tsNode = parserServices.esTreeNodeToTSNodeMap.get(current);
-      if (!tsNode) return { isUnion: false, refName: "" };
+    function isUnionAlias(
+      member: TSESTree.TypeNode,
+      precomputedType?: ts.Type,
+    ): boolean {
+      if (member.type === "TSUnionType") {
+        return member.types.some((inner) => isUnionAlias(inner));
+      }
+      if (member.type !== "TSTypeReference") return false;
+      if (precomputedType) {
+        return (precomputedType.flags & ts.TypeFlags.Union) !== 0;
+      }
+      const tsNode = parserServices.esTreeNodeToTSNodeMap.get(member);
+      if (!tsNode) return false;
       const memberTsType = checker.getTypeAtLocation(tsNode);
-      const isUnion = (memberTsType.flags & ts.TypeFlags.Union) !== 0;
-
-      if (!isUnion) return { isUnion: false, refName: "" };
-
-      const refName =
-        current.typeName.type === "Identifier" ? current.typeName.name : "";
-
-      return { isUnion: true, refName };
+      return (memberTsType.flags & ts.TypeFlags.Union) !== 0;
     }
 
     return {
@@ -70,25 +92,32 @@ export default createRule({
         if (members.length < 2) return;
 
         let hasUnionAlias = false;
-
+        const allSubTypes: ts.Type[] = [];
         for (const member of members) {
-          const { isUnion } = analyzeUnionMember(member);
-          if (isUnion) {
-            hasUnionAlias = true;
-            break;
+          const tsNode = parserServices.esTreeNodeToTSNodeMap.get(member);
+          if (!tsNode) continue;
+          const memberTsType = checker.getTypeAtLocation(tsNode);
+          if (isUnionAlias(member, memberTsType)) hasUnionAlias = true;
+          if ((memberTsType.flags & ts.TypeFlags.Union) !== 0) {
+            allSubTypes.push(...(memberTsType as ts.UnionType).types);
+          } else {
+            allSubTypes.push(memberTsType);
           }
         }
+        if (!hasUnionAlias) return;
 
-        if (hasUnionAlias) {
-          context.report({
-            node,
-            messageId: "composed",
-            data: {
-              name: node.id.name,
-              url: URL,
-            },
-          });
-        }
+        const commonDiscriminants = findCommonDiscriminants(allSubTypes);
+        if (commonDiscriminants.length > 0) return;
+
+        context.report({
+          node,
+          messageId: "composed",
+          data: {
+            name: node.id.name,
+            url: URL,
+            discriminants: "",
+          },
+        });
       },
     };
   },

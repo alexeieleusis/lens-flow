@@ -1,4 +1,4 @@
-const COMMIT = "7891def9e1b66bebd95a393b42f3401eba697cd5";
+export const COMMIT = "14bfcdade611502a5c6a032f6e2cabd731ad599b";
 const BASE = `https://raw.githubusercontent.com/jpablo/vibe-types/${COMMIT}/plugin/skills/typescript/`;
 
 export function knowledgeUrl(path: string, section: string): string {

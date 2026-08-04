@@ -106,13 +106,28 @@ function isDiscriminatedUnionSwitch(
 ): boolean {
   const { discriminant, cases } = switchStmt;
 
-  if (discriminant.type !== "MemberExpression") return false;
+  if (
+    discriminant.type !== "MemberExpression" &&
+    discriminant.type !== "Identifier"
+  )
+    return false;
 
-  const hasStringCases = cases.some(
-    (c) => c.test?.type === "Literal" && typeof c.test.value === "string",
+  const isLiteralCase = (c: TSESTree.SwitchCase) =>
+    c.test?.type === "Literal" &&
+    (c.test.value === null ||
+      typeof c.test.value === "string" ||
+      typeof c.test.value === "number" ||
+      typeof c.test.value === "boolean");
+
+  const isEnumMemberCase = (c: TSESTree.SwitchCase) =>
+    c.test?.type === "MemberExpression";
+
+  const isUndefinedCase = (c: TSESTree.SwitchCase) =>
+    c.test?.type === "Identifier" && c.test.name === "undefined";
+
+  return cases.some(
+    (c) => isLiteralCase(c) || isEnumMemberCase(c) || isUndefinedCase(c),
   );
-
-  return hasStringCases;
 }
 
 export default createRule({
@@ -121,7 +136,7 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow silent default branches in switch statements with string-literal cases.",
+        "Disallow silent default branches in switch statements with literal-typed cases.",
     },
     messages: {
       silentDefault:

@@ -3,8 +3,8 @@ import rule from "../../src/rules/no-empty-object-phantom-type.js";
 
 ruleTester.run("no-empty-object-phantom-type", rule, {
   valid: [
-    `type Closed = { readonly _state: unique symbol };`,
-    `type Open = { readonly _state: unique symbol };`,
+    `type Closed = Brand<"closed">;`,
+    `type Open = Brand<"open">;`,
     `interface State { status: string; }`,
     `type Config = { host: string; port: number; }`,
   ],

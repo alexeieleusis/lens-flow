@@ -50,7 +50,10 @@ export default createRule({
         const isLiteral =
           (propType.flags & ts.TypeFlags.StringLiteral) !== 0 ||
           (propType.flags & ts.TypeFlags.NumberLiteral) !== 0 ||
-          (propType.flags & ts.TypeFlags.BooleanLiteral) !== 0;
+          (propType.flags & ts.TypeFlags.BooleanLiteral) !== 0 ||
+          (propType.flags & ts.TypeFlags.EnumLiteral) !== 0 ||
+          (propType.flags & ts.TypeFlags.Null) !== 0 ||
+          (propType.flags & ts.TypeFlags.Undefined) !== 0;
         if (isLiteral) return true;
       }
       return false;

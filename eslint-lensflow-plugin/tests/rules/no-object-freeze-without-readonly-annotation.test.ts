@@ -3,6 +3,7 @@ import rule from "../../src/rules/no-object-freeze-without-readonly-annotation.j
 
 ruleTester.run("no-object-freeze-without-readonly-annotation", rule, {
   valid: [
+    // Direct init: Object.freeze() retypes its return value as Readonly<T>
     `const config = Object.freeze({ host: "localhost", port: 8080 }) as const;`,
     `const config: Readonly<{ host: string; port: number }> = Object.freeze({ host: "localhost", port: 8080 });`,
     `const x = Object.freeze({ a: 1 }) as Readonly<{ a: number }>;`,
@@ -12,43 +13,25 @@ ruleTester.run("no-object-freeze-without-readonly-annotation", rule, {
     `const x: Readonly<{ a: number }> = wrap(Object.freeze({ a: 1 }));`,
     `const x = Object.freeze({ a: 1 }) as Utils.Readonly<{ a: number }>;`,
     `const y: Utils.Readonly<{ a: number }> = Object.freeze({ a: 1 });`,
-  ],
-  invalid: [
-    {
-      code: `const config = Object.freeze({ host: "localhost", port: 8080 });`,
-      errors: [{ messageId: "missingReadonly" }],
-    },
-    {
-      code: `const settings = Object.freeze({ debug: true, verbose: false });`,
-      errors: [{ messageId: "missingReadonly" }],
-    },
-    {
-      code: `const x = wrap(Object.freeze({ a: 1 }));`,
-      errors: [{ messageId: "missingReadonly" }],
-    },
-    {
-      code: `
+    // Direct init without annotation — freeze already provides Readonly<T> return type
+    `const config = Object.freeze({ host: "localhost", port: 8080 });`,
+    `const settings = Object.freeze({ debug: true, verbose: false });`,
+    `const fn = () => Object.freeze({ a: 1 });`,
+    `let config = Object.freeze({ a: 1 });`,
+    `var config = Object.freeze({ a: 1 });`,
+    `const { config } = Object.freeze({ config: { a: 1 } });`,
+    // Direct init inside arrow function — freeze return is Readonly<T>
+    `
         const handler = (): Readonly<{ a: number }> => {
           const inner = Object.freeze({ a: 1 });
           return inner as Readonly<{ a: number }>;
         };
       `,
-      errors: [{ messageId: "missingReadonly" }],
-    },
+  ],
+  invalid: [
+    // Indirect init: wrapper may discard the Readonly<T> from freeze's return
     {
-      code: `const fn = () => Object.freeze({ a: 1 });`,
-      errors: [{ messageId: "missingReadonly" }],
-    },
-    {
-      code: `let config = Object.freeze({ a: 1 });`,
-      errors: [{ messageId: "missingReadonly" }],
-    },
-    {
-      code: `var config = Object.freeze({ a: 1 });`,
-      errors: [{ messageId: "missingReadonly" }],
-    },
-    {
-      code: `const { config } = Object.freeze({ config: { a: 1 } });`,
+      code: `const x = wrap(Object.freeze({ a: 1 }));`,
       errors: [{ messageId: "missingReadonly" }],
     },
   ],
