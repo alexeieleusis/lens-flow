@@ -38,6 +38,9 @@ ruleTester.run("no-duplicate-discriminant-values", rule, {
     `type UndefinedValid =
       | { kind: undefined; x: number }
       | { kind: null; y: string };`,
+    `type SharedTypeRef =
+      | { kind: "a"; payload: Foo }
+      | { kind: "b"; payload: Foo };`,
     `enum Kind { A, B }
 type EnumValid =
   | { kind: Kind.A; x: number }

@@ -30,7 +30,9 @@ function extractDiscriminantValue(
   if (typeNode.type === "TSUndefinedKeyword") return "undefined";
 
   if (typeNode.type === "TSTypeReference") {
-    return extractTypeRefName(typeNode.typeName);
+    if (typeNode.typeName.type === "TSQualifiedName") {
+      return extractTypeRefName(typeNode.typeName);
+    }
   }
 
   return null;
