@@ -13,11 +13,11 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow intersecting function or constructor types, which creates overloaded signatures that are rarely intended",
+        "Disallow intersecting function or constructor types, which creates overloaded signatures whose call-order resolution is surprising",
     },
     messages: {
       intersectedFunctions:
-        "Intersecting {{count}} function types creates an overloaded function that is rarely intended. Use function overloads instead. See: {{url}}",
+        "Intersecting {{count}} function types creates an overloaded function whose call resolution order is surprising. Calls satisfy any one signature in order. Use function overloads instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,

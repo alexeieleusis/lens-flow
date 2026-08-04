@@ -32,6 +32,16 @@ ruleTester.run("no-duplicate-discriminant-values", rule, {
     `type WithSubstitution =
       | { kind: \`init_\${string}\`; x: number }
       | { kind: \`init_\${string}\`; y: string };`,
+    `type NullValid =
+      | { kind: null; x: number }
+      | { kind: undefined; y: string };`,
+    `type UndefinedValid =
+      | { kind: undefined; x: number }
+      | { kind: null; y: string };`,
+    `enum Kind { A, B }
+type EnumValid =
+  | { kind: Kind.A; x: number }
+  | { kind: Kind.B; y: string };`,
   ],
   invalid: [
     {
@@ -122,6 +132,44 @@ ruleTester.run("no-duplicate-discriminant-values", rule, {
     },
     {
       code: `interface I { field: { kind: "a" } | { kind: "a" }; }`,
+      errors: [
+        { messageId: "duplicateDiscriminant" },
+        { messageId: "duplicateDiscriminant" },
+      ],
+    },
+    {
+      code: `type NullDup =
+      | { kind: null; x: number }
+      | { kind: null; y: string };`,
+      errors: [
+        { messageId: "duplicateDiscriminant" },
+        { messageId: "duplicateDiscriminant" },
+      ],
+    },
+    {
+      code: `type UndefinedDup =
+      | { kind: undefined; x: number }
+      | { kind: undefined; y: string };`,
+      errors: [
+        { messageId: "duplicateDiscriminant" },
+        { messageId: "duplicateDiscriminant" },
+      ],
+    },
+    {
+      code: `enum Kind { A, B }
+type EnumDup =
+  | { kind: Kind.A; x: number }
+  | { kind: Kind.A; y: string };`,
+      errors: [
+        { messageId: "duplicateDiscriminant" },
+        { messageId: "duplicateDiscriminant" },
+      ],
+    },
+    {
+      code: `enum Kind { A, B }
+type EnumDupPlain =
+  | { kind: Kind.B; x: number }
+  | { kind: Kind.B; y: string };`,
       errors: [
         { messageId: "duplicateDiscriminant" },
         { messageId: "duplicateDiscriminant" },

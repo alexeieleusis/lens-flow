@@ -52,6 +52,80 @@ ruleTester.run("no-this-method-reference-assignment", rule, {
       filename: TEST_FILENAME,
       code: `const fn = Math.random;`,
     },
+    {
+      filename: TEST_FILENAME,
+      code: `class BaseBuilder {
+        setFlag(value: string): this {
+          return this;
+        }
+      }
+      class ExtendedBuilder extends BaseBuilder {
+        extended(): this {
+          return this;
+        }
+      }
+      const b = new ExtendedBuilder();
+      const fn = b.setFlag;`,
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `class FluentApi {
+        chain(): this {
+          return this;
+        }
+      }
+      const instance = new FluentApi();
+      let ref = instance.chain;`,
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `
+        const Builder = class {
+          setFlag(v: string): this { return this; }
+        };
+        const b = new Builder();
+        const fn = b.setFlag;
+      `,
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `
+        abstract class Base {
+          abstract build(): this;
+        }
+        class Derived extends Base {
+          build(): this { return this; }
+        }
+        const b = new Derived();
+        const fn = b.build;
+      `,
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `
+        class C { m(): this | undefined { return this; } }
+        const c = new C();
+        const fn = c.m;
+      `,
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `
+        interface Extra { extra(): void; }
+        class C { m(): this & Extra { return this as any; } }
+        const c = new C();
+        const fn = c.m;
+      `,
+    },
+    {
+      filename: TEST_FILENAME,
+      code: `
+        class C { m(): this { return this; } }
+        const c = new C();
+        let fn;
+        fn = c.m;
+      `,
+    },
   ],
   invalid: [
     {
@@ -67,7 +141,7 @@ ruleTester.run("no-this-method-reference-assignment", rule, {
         }
       }
       const b = new ExtendedBuilder();
-      const fn = b.setFlag;`,
+      const fn: (v: string) => BaseBuilder = b.setFlag;`,
       errors: [{ messageId: "methodRefAssignment" }],
     },
     {
@@ -78,31 +152,16 @@ ruleTester.run("no-this-method-reference-assignment", rule, {
         }
       }
       const instance = new FluentApi();
-      let ref = instance.chain;`,
+      let ref: () => FluentApi = instance.chain;`,
       errors: [{ messageId: "methodRefAssignment" }],
     },
     {
       filename: TEST_FILENAME,
       code: `
-        const Builder = class {
-          setFlag(v: string): this { return this; }
-        };
-        const b = new Builder();
-        const fn = b.setFlag;
-      `,
-      errors: [{ messageId: "methodRefAssignment" }],
-    },
-    {
-      filename: TEST_FILENAME,
-      code: `
-        abstract class Base {
-          abstract build(): this;
-        }
-        class Derived extends Base {
-          build(): this { return this; }
-        }
-        const b = new Derived();
-        const fn = b.build;
+        class C { m(): this { return this; } }
+        const c = new C();
+        let fn: () => C;
+        fn = c.m;
       `,
       errors: [{ messageId: "methodRefAssignment" }],
     },
@@ -111,7 +170,7 @@ ruleTester.run("no-this-method-reference-assignment", rule, {
       code: `
         class C { m(): this | undefined { return this; } }
         const c = new C();
-        const fn = c.m;
+        const fn: () => C | undefined = c.m;
       `,
       errors: [{ messageId: "methodRefAssignment" }],
     },
@@ -121,17 +180,7 @@ ruleTester.run("no-this-method-reference-assignment", rule, {
         interface Extra { extra(): void; }
         class C { m(): this & Extra { return this as any; } }
         const c = new C();
-        const fn = c.m;
-      `,
-      errors: [{ messageId: "methodRefAssignment" }],
-    },
-    {
-      filename: TEST_FILENAME,
-      code: `
-        class C { m(): this { return this; } }
-        const c = new C();
-        let fn;
-        fn = c.m;
+        const fn: () => C & Extra = c.m;
       `,
       errors: [{ messageId: "methodRefAssignment" }],
     },

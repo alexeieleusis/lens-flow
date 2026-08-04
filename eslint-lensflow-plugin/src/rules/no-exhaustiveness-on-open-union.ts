@@ -9,20 +9,36 @@ const DOCS_URL = knowledgeUrl(
   "When Not to Use It",
 );
 
-function hasNeverCast(stmt: TSESTree.Statement): boolean {
-  return walkNodes(
-    stmt,
-    (node) =>
-      node.type === "TSAsExpression" &&
-      node.typeAnnotation.type === "TSNeverKeyword",
+function isNeverCastNode(node: TSESTree.Node): boolean {
+  return (
+    node.type === "TSAsExpression" &&
+    node.typeAnnotation.type === "TSNeverKeyword"
   );
+}
+
+function isAssertNeverCallNode(node: TSESTree.Node): boolean {
+  if (node.type !== "CallExpression") return false;
+  const { callee } = node;
+  const isIdent =
+    callee.type === "Identifier" && /\bassert.*[Nn]ever\b/.test(callee.name);
+  const isMember =
+    callee.type === "MemberExpression" &&
+    callee.property.type === "Identifier" &&
+    /\bassert.*[Nn]ever\b/.test(callee.property.name);
+  return isIdent || isMember;
 }
 
 function hasExhaustivenessCheck(consequent: TSESTree.Statement[]): boolean {
   for (const stmt of consequent) {
     if (stmt.type === "EmptyStatement") continue;
-    if (walkNodes(stmt, (node) => node.type === "ThrowStatement")) return true;
-    if (hasNeverCast(stmt)) return true;
+    const found = walkNodes(
+      stmt,
+      (node) =>
+        node.type === "ThrowStatement" ||
+        isNeverCastNode(node) ||
+        isAssertNeverCallNode(node),
+    );
+    if (found) return true;
   }
   return false;
 }
@@ -130,11 +146,11 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow exhaustiveness checks (throw / as never) in the default branch when the discriminant type is an open union that includes a broad base type like string",
+        "Disallow exhaustiveness checks (throw, as never, assertNever) in the default branch when the discriminant type is an open union that includes a broad base type like string",
     },
     messages: {
       openUnion:
-        "This switch discriminant type is an open union (contains both literals and a broad type like string). The default branch will receive valid arbitrary values — do not use an exhaustiveness check (throw or as never) here. Use a fallback instead. See: {{url}}",
+        "This switch discriminant type is an open union (contains both literals and a broad type like string). The default branch will receive valid arbitrary values — do not use an exhaustiveness check (throw, as never, or assertNever) here. Use a fallback instead. See: {{url}}",
     },
     schema: [],
     fixable: undefined,

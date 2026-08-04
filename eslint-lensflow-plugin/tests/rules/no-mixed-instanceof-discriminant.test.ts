@@ -99,5 +99,27 @@ type Event = ClickEvent | ScrollShape;`,
 type Event = ClickEvent | ({ kind: "scroll"; top: number });`,
       errors: [{ messageId: "mixed" }],
     },
+    // Class + enum member discriminant — mixed narrowing strategy
+    {
+      filename: TEST_FILENAME,
+      code: `class ClickEvent {}
+enum Kind { Click = "click", Scroll = "scroll" }
+type Event = ClickEvent | { kind: Kind.Scroll; top: number };`,
+      errors: [{ messageId: "mixed" }],
+    },
+    // Class + null discriminant — mixed narrowing strategy
+    {
+      filename: TEST_FILENAME,
+      code: `class ClickEvent {}
+type Event = ClickEvent | { kind: null; top: number };`,
+      errors: [{ messageId: "mixed" }],
+    },
+    // Class + undefined discriminant — mixed narrowing strategy
+    {
+      filename: TEST_FILENAME,
+      code: `class ClickEvent {}
+type Event = ClickEvent | { kind: undefined; top: number };`,
+      errors: [{ messageId: "mixed" }],
+    },
   ],
 });

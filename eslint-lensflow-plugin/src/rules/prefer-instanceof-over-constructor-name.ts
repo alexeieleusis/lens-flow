@@ -29,7 +29,7 @@ export default createRule({
     },
     messages: {
       preferInstanceof:
-        'Use `this instanceof {{className}}` instead of `this.constructor.name === "{{className}}"`. The constructor name is fragile across bundlers and minifiers. See: {{url}}',
+        'Use `this instanceof {{className}}` instead of `this.constructor.name === "{{className}}"`. Constructor name comparisons miss subclasses and break under minification. `instanceof` follows the prototype chain. See: {{url}}',
     },
     schema: [],
     fixable: undefined,

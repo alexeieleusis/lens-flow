@@ -4,7 +4,7 @@ import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 const URL = knowledgeUrl(
   "catalog/T03-newtypes-opaque.md",
-  "Antipattern 1: Exposing the brand symbol",
+  "Antipattern 1: Scattering `as` casts instead of routing through the constructor",
 );
 
 const checkDeclarator = (

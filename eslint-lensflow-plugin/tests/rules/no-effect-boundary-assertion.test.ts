@@ -107,16 +107,6 @@ declare const task: TaskEither<AppError, User>;
 task.match({ Left: (e) => console.error(e), Right: (u) => console.log(u.name) });
       `,
     },
-    // Assertion to non-inner type is not this antipattern
-    {
-      filename: TEST_FILENAME,
-      code:
-        EITHER_DEF +
-        `
-declare const e: Either<string, number>;
-const x = e as unknown;
-      `,
-    },
     // Non-effect type assertion is fine
     {
       filename: TEST_FILENAME,
@@ -238,6 +228,30 @@ declare const e: Either<string, { id: number; name: string }>;
 const data = e as { id: number; name: string };
       `,
       errors: [{ messageId: "effectBoundaryBypass" }],
+    },
+    // Assertion to unknown — first step of double-assertion escape hatch
+    {
+      filename: TEST_FILENAME,
+      code:
+        EITHER_DEF +
+        `
+declare const e: Either<string, number>;
+const x = e as unknown;
+      `,
+      errors: [{ messageId: "unknownEscapeHatch" }],
+    },
+    // Double assertion escape hatch: as unknown as T
+    {
+      filename: TEST_FILENAME,
+      code:
+        EITHER_DEF +
+        USER_DEF +
+        ERROR_DEF +
+        `
+declare const either: Either<AppError, User>;
+const data = either as unknown as User;
+      `,
+      errors: [{ messageId: "unknownEscapeHatch" }],
     },
   ],
 });

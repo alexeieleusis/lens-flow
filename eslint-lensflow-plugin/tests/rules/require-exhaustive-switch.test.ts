@@ -38,16 +38,17 @@ function handle(msg: Message) {
   }
 }`,
     },
-    // All variants handled + default with assertNever
+    // All variants handled + default with assertNever helper
     {
       filename: TEST_FILENAME,
       code: `type Message = { type: "a" } | { type: "b" } | { type: "c" };
+function assertNever(x: never): never { throw new Error(\`Unreachable: \${String(x)}\`); }
 function handle(msg: Message) {
   switch (msg.type) {
     case "a": break;
     case "b": break;
     case "c": break;
-    default: throw new Error(\`Unreachable: \${msg as never}\`);
+    default: assertNever(msg);
   }
 }`,
     },

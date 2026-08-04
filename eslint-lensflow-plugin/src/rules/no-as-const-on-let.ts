@@ -53,11 +53,11 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow `as const` on `let` bindings, as the narrowed type is lost on reassignment",
+        "Disallow `as const` on `let` bindings — the assertion is not weakened by `let`, so the type stays pinned",
     },
     messages: {
       asConstOnLet:
-        "`as const` on a `let` binding is pointless — the literal type is lost on any reassignment. Use `const` instead, or a regular `let` with an explicit type. See: {{url}}",
+        '`as const` on a `let` binding pins the literal type — the assertion is not weakened by `let`. Use `const` instead, annotate an explicit union (e.g. `let x: "a" | "b" = "a"`), or use a regular `let` with a wider type. See: {{url}}',
     },
     schema: [],
     fixable: undefined,

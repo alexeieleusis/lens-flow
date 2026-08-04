@@ -5,7 +5,7 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const URL = knowledgeUrl(
   "catalog/T33-self-type.md",
-  "Losing `this` in detached methods",
+  "Annotating with a base-class function type discards `this`",
 );
 
 function typeNodeHasThisReturnType(typeNode: TSESTree.TypeNode): boolean {
@@ -61,11 +61,11 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow assigning a method reference that returns `this` to a standalone variable or property, which collapses the polymorphic `this` to the base class type and breaks fluent chains on subclasses.",
+        "Disallow assigning a method reference that returns `this` to a variable with an explicit base-class function type annotation, which collapses the polymorphic `this` to the base class type and breaks fluent chains on subclasses.",
     },
     messages: {
       methodRefAssignment:
-        "Assigning method reference `{{methodName}}` that returns `this` to `{{varName}}` collapses the polymorphic `this` to the base class type. Call the method directly instead of storing a reference to it. See: {{url}}",
+        "Method reference `{{methodName}}` that returns `this` is being stored with a base-class function type annotation on `{{varName}}`, collapsing the polymorphic `this`. Let the type infer, or call the method directly. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -174,6 +174,29 @@ export default createRule({
       return null;
     }
 
+    function hasExplicitTypeAnnotation(
+      node: TSESTree.VariableDeclarator | TSESTree.AssignmentExpression,
+    ): boolean {
+      if (node.type === "VariableDeclarator") {
+        return node.id.typeAnnotation !== undefined;
+      }
+      if (
+        node.type === "AssignmentExpression" &&
+        node.left.type === "Identifier"
+      ) {
+        const leftTsNode = esTreeNodeToTSNodeMap.get(node.left);
+        if (!leftTsNode || !ts.isIdentifier(leftTsNode)) return false;
+        const decls = checker.getSymbolAtLocation(leftTsNode)?.declarations;
+        if (!decls) return false;
+        for (const decl of decls) {
+          if (ts.isVariableDeclaration(decl) && decl.type !== undefined) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
     function checkAssignment(
       node: TSESTree.VariableDeclarator | TSESTree.AssignmentExpression,
     ) {
@@ -195,6 +218,8 @@ export default createRule({
       if (!className) return;
 
       if (!classHasMethodWithThisReturn(className, methodName)) return;
+
+      if (!hasExplicitTypeAnnotation(node)) return;
 
       let varName: string;
       if (node.type === "VariableDeclarator" && node.id.type === "Identifier") {
