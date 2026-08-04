@@ -3,7 +3,22 @@ import { TSESTree } from "@typescript-eslint/utils";
 import type { ParserServices } from "@typescript-eslint/utils";
 import { visitorKeys as KEYS } from "@typescript-eslint/visitor-keys";
 
-const ASSERT_NEVER_PATTERN = /^assertNever$/;
+export const ASSERT_NEVER_PATTERN = /^assertNever$/;
+
+export function isAssertNeverCall(node: TSESTree.Node): boolean {
+  if (node.type !== "CallExpression") return false;
+  const { callee } = node;
+  if (callee.type === "Identifier") {
+    return ASSERT_NEVER_PATTERN.test(callee.name);
+  }
+  if (
+    callee.type === "MemberExpression" &&
+    callee.property.type === "Identifier"
+  ) {
+    return ASSERT_NEVER_PATTERN.test(callee.property.name);
+  }
+  return false;
+}
 
 function isNodeLike(val: unknown): val is TSESTree.Node {
   return val != null && typeof val === "object" && "type" in val;
@@ -113,14 +128,7 @@ export function walkNodes(
 }
 
 export function hasAssertNever(stmt: TSESTree.Statement): boolean {
-  return walkNodes(stmt, (node) => {
-    if (node.type !== "CallExpression") return false;
-    const ce = node;
-    return (
-      ce.callee.type === "Identifier" &&
-      ASSERT_NEVER_PATTERN.test(ce.callee.name)
-    );
-  });
+  return walkNodes(stmt, (node) => isAssertNeverCall(node));
 }
 
 export function hasThrow(stmt: TSESTree.Statement): boolean {
@@ -130,12 +138,7 @@ export function hasThrow(stmt: TSESTree.Statement): boolean {
 export function nodeHasAssertNeverOrThrow(stmt: TSESTree.Statement): boolean {
   return walkNodes(stmt, (node) => {
     if (node.type === "ThrowStatement") return true;
-    if (node.type !== "CallExpression") return false;
-    const ce = node;
-    return (
-      ce.callee.type === "Identifier" &&
-      ASSERT_NEVER_PATTERN.test(ce.callee.name)
-    );
+    return isAssertNeverCall(node);
   });
 }
 
