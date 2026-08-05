@@ -180,16 +180,37 @@ export default createRule({
       if (node.type === "VariableDeclarator") {
         return node.id.typeAnnotation !== undefined;
       }
-      if (
-        node.type === "AssignmentExpression" &&
-        node.left.type === "Identifier"
-      ) {
+      if (node.type === "AssignmentExpression" && node.left.type === "Identifier") {
         const leftTsNode = esTreeNodeToTSNodeMap.get(node.left);
         if (!leftTsNode || !ts.isIdentifier(leftTsNode)) return false;
         const decls = checker.getSymbolAtLocation(leftTsNode)?.declarations;
         if (!decls) return false;
         for (const decl of decls) {
           if (ts.isVariableDeclaration(decl) && decl.type !== undefined) {
+            return true;
+          }
+        }
+      }
+      if (
+        node.type === "AssignmentExpression" &&
+        node.left.type === "MemberExpression"
+      ) {
+        const leftTsNode = esTreeNodeToTSNodeMap.get(node.left);
+        if (
+          !leftTsNode ||
+          !ts.isPropertyAccessExpression(leftTsNode) ||
+          !leftTsNode.name
+        )
+          return false;
+        const propSym = checker.getSymbolAtLocation(leftTsNode.name);
+        const decls = propSym?.declarations;
+        if (!decls) return false;
+        for (const decl of decls) {
+          if (
+            (ts.isPropertyDeclaration(decl) || ts.isPropertySignature(decl)) &&
+            (decl as ts.PropertyDeclaration | ts.PropertySignature).type !==
+              undefined
+          ) {
             return true;
           }
         }
@@ -229,6 +250,22 @@ export default createRule({
         node.left.type === "Identifier"
       ) {
         varName = node.left.name;
+      } else if (
+        node.type === "AssignmentExpression" &&
+        node.left.type === "MemberExpression"
+      ) {
+        const parts: string[] = [];
+        let current: TSESTree.Node = node.left;
+        while (current.type === "MemberExpression") {
+          if (current.property.type === "Identifier") {
+            parts.unshift(current.property.name);
+          }
+          current = current.object;
+        }
+        if (current.type === "Identifier") {
+          parts.unshift(current.name);
+        }
+        varName = parts.join(".");
       } else {
         varName = "?";
       }
