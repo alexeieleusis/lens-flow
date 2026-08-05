@@ -141,7 +141,10 @@ export default createRule({
               url: URL,
             },
           });
-        } else if (assertedTypeStr === "unknown") {
+        } else if (
+          assertedTypeStr === "unknown" &&
+          node.parent?.type === "TSAsExpression"
+        ) {
           context.report({
             node,
             messageId: "unknownEscapeHatch",
