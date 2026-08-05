@@ -162,6 +162,16 @@ export default createRule({
         if (!declarator) return;
 
         if (isDirectInit(declarator, node)) {
+          // Destructuring from Object.freeze() does NOT grant readonly to
+          // extracted bindings — freeze only affects the outer object.
+          if (declarator.id.type === AST_NODE_TYPES.ObjectPattern) {
+            context.report({
+              node,
+              messageId: "missingReadonly",
+              data: { url: URL },
+            });
+            return;
+          }
           // Object.freeze() retypes its return value as Readonly<T>,
           // so direct assignment already has a readonly type.
           return;

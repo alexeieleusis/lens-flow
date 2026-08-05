@@ -19,7 +19,6 @@ ruleTester.run("no-object-freeze-without-readonly-annotation", rule, {
     `const fn = () => Object.freeze({ a: 1 });`,
     `let config = Object.freeze({ a: 1 });`,
     `var config = Object.freeze({ a: 1 });`,
-    `const { config } = Object.freeze({ config: { a: 1 } });`,
     // Freeze in nested function should NOT bind to outer declarator
     `
       const x = Object.freeze({ b: 2 });
@@ -40,6 +39,11 @@ ruleTester.run("no-object-freeze-without-readonly-annotation", rule, {
     // Indirect init: wrapper may discard the Readonly<T> from freeze's return
     {
       code: `const x = wrap(Object.freeze({ a: 1 }));`,
+      errors: [{ messageId: "missingReadonly" }],
+    },
+    // Destructuring: freeze only affects the outer object, not extracted bindings
+    {
+      code: `const { config } = Object.freeze({ config: { a: 1 } });`,
       errors: [{ messageId: "missingReadonly" }],
     },
   ],
