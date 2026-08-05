@@ -61,11 +61,11 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow assigning a method reference that returns `this` to a variable with an explicit base-class function type annotation, which collapses the polymorphic `this` to the base class type and breaks fluent chains on subclasses.",
+        "Disallow assigning a method reference that returns `this` to a variable with an explicit type annotation, which collapses the polymorphic `this` to the base class type and breaks fluent chains on subclasses.",
     },
     messages: {
       methodRefAssignment:
-        "Method reference `{{methodName}}` that returns `this` is being stored with a base-class function type annotation on `{{varName}}`, collapsing the polymorphic `this`. Let the type infer, or call the method directly. See: {{url}}",
+        "Method reference `{{methodName}}` that returns `this` is being stored with an explicit type annotation on `{{varName}}`, collapsing the polymorphic `this`. Let the type infer, or call the method directly. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
