@@ -25,7 +25,7 @@ export default createRule({
       outInInputPosition:
         "Type parameter '{{paramName}}' is marked 'out' (covariant) but is used in an input/parameter position of a function-property signature. Note: method syntax (`set(v: T): void`) is silently accepted by TypeScript because methods are bivariant; only property syntax (`set: (v: T) => void`) is checked. Add 'in' or split into separate read/write interfaces. See: {{url}}",
       inInOutputPosition:
-        "Type parameter '{{paramName}}' is marked 'in' (contravariant) but is used in a return/output position. Add 'out' or split into separate read/write interfaces. See: {{url}}",
+        "Type parameter '{{paramName}}' is marked 'in' (contravariant) but is used in a return/output position of a function-property signature. Note: method syntax is silently accepted by TypeScript because methods are bivariant; only property syntax is checked. Add 'out' or split into separate read/write interfaces. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
