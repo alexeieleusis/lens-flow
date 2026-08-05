@@ -20,6 +20,14 @@ ruleTester.run("no-object-freeze-without-readonly-annotation", rule, {
     `let config = Object.freeze({ a: 1 });`,
     `var config = Object.freeze({ a: 1 });`,
     `const { config } = Object.freeze({ config: { a: 1 } });`,
+    // Freeze in nested function should NOT bind to outer declarator
+    `
+      const x = Object.freeze({ b: 2 });
+      const fn = () => {
+        const inner = () => Object.freeze({ a: 1 });
+        return inner;
+      };
+    `,
     // Direct init inside arrow function — freeze return is Readonly<T>
     `
         const handler = (): Readonly<{ a: number }> => {
