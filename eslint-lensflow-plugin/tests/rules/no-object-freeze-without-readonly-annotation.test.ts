@@ -13,6 +13,7 @@ ruleTester.run("no-object-freeze-without-readonly-annotation", rule, {
     `const x: Readonly<{ a: number }> = wrap(Object.freeze({ a: 1 }));`,
     `const x = Object.freeze({ a: 1 }) as Utils.Readonly<{ a: number }>;`,
     `const y: Utils.Readonly<{ a: number }> = Object.freeze({ a: 1 });`,
+    `const x = wrap(Object.freeze({ a: 1 })) satisfies Readonly<{ a: number }>;`,
     // Direct init without annotation — freeze already provides Readonly<T> return type
     `const config = Object.freeze({ host: "localhost", port: 8080 });`,
     `const settings = Object.freeze({ debug: true, verbose: false });`,

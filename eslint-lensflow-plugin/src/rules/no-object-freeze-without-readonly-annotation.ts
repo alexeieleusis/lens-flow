@@ -44,7 +44,8 @@ function hasReadonlyAnnotation(
   if (declarator.init) {
     const init = declarator.init;
     if (
-      init.type === AST_NODE_TYPES.TSAsExpression &&
+      (init.type === AST_NODE_TYPES.TSAsExpression ||
+        init.type === AST_NODE_TYPES.TSSatisfiesExpression) &&
       init.typeAnnotation?.type === AST_NODE_TYPES.TSTypeReference &&
       getTypeNameIdentifier(init.typeAnnotation.typeName) === "Readonly"
     ) {
