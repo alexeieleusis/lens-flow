@@ -19,7 +19,7 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow type parameters annotated with `out` that are used in input positions of function-property signatures (not methods, which are bivariant), or `in` used in output positions",
+        "Disallow type parameters annotated with `out` that are used in input positions of function-property signatures, or `in` used in output positions — note that method syntax is excluded from both checks because TypeScript methods are bivariant",
     },
     messages: {
       outInInputPosition:
