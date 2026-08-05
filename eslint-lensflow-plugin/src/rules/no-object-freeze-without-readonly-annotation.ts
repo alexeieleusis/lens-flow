@@ -100,6 +100,7 @@ export default createRule({
   name: "no-object-freeze-without-readonly-annotation",
   meta: {
     type: "problem",
+    fixable: undefined,
     docs: {
       description:
         "Flag Object.freeze() behind a wrapper function without Readonly<T> type annotation or as const on the outer binding",
