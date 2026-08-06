@@ -240,11 +240,11 @@ export default createRule({
               ) {
                 const rt =
                   member.type === "TSAbstractMethodDefinition"
-                    ? ((
+                    ? (
                         member as TSESTree.TSAbstractMethodDefinition & {
                           returnType?: TSESTree.TSTypeAnnotation;
                         }
-                      ).returnType as TSESTree.TSTypeAnnotation | undefined)
+                      ).returnType
                     : member.value?.returnType;
                 if (rt) return true;
               }
