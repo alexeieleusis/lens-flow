@@ -8,6 +8,13 @@ const URL = knowledgeUrl(
   "Antipatterns When Using It > Union: Union of Unions Without Discriminant",
 );
 
+function isStringLiteral(type: ts.Type): boolean {
+  return (
+    (type.flags & ts.TypeFlags.StringLiteral) !== 0 &&
+    typeof (type as unknown as ts.LiteralType).value === "string"
+  );
+}
+
 export default createRule({
   name: "no-composed-union-aliases",
   meta: {
@@ -29,13 +36,6 @@ export default createRule({
     const program = parserServices.program;
     if (!program) return {};
     const checker = program.getTypeChecker();
-
-    function isStringLiteral(type: ts.Type): boolean {
-      return (
-        (type.flags & ts.TypeFlags.StringLiteral) !== 0 &&
-        typeof (type as unknown as ts.LiteralType).value === "string"
-      );
-    }
 
     function getStringLiteralProps(t: ts.Type): string[] {
       const props = t.getProperties();
