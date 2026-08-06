@@ -92,6 +92,31 @@ type B = { kind: "c" };
 type D = { kind: "d" };
 type C = (A | B) | D;`,
     },
+    // Composed union with shared discriminant + primitive non-object member
+    // findCommonDiscriminants filters to only object types, so `string` is ignored
+    {
+      filename: TEST_FILENAME,
+      code: `type A = { kind: "a" } | { kind: "b" };
+type C = A | string;`,
+    },
+    // Composed union with shared discriminant + null
+    {
+      filename: TEST_FILENAME,
+      code: `type A = { kind: "a" } | { kind: "b" };
+type C = A | null;`,
+    },
+    // Composed union with shared discriminant + undefined
+    {
+      filename: TEST_FILENAME,
+      code: `type A = { kind: "a" } | { kind: "b" };
+type C = A | undefined;`,
+    },
+    // Composed union with shared discriminant + nullable primitive
+    {
+      filename: TEST_FILENAME,
+      code: `type A = { kind: "a" } | { kind: "b" };
+type C = A | string | null;`,
+    },
   ],
   invalid: [
     // Composed union with different discriminant fields — no single check narrows the whole union
