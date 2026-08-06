@@ -20,11 +20,11 @@ function isAssertNeverCallNode(node: TSESTree.Node): boolean {
   if (node.type !== "CallExpression") return false;
   const { callee } = node;
   const isIdent =
-    callee.type === "Identifier" && /\bassert.*[Nn]ever\b/.test(callee.name);
+    callee.type === "Identifier" && /^assertNever$/i.test(callee.name);
   const isMember =
     callee.type === "MemberExpression" &&
     callee.property.type === "Identifier" &&
-    /\bassert.*[Nn]ever\b/.test(callee.property.name);
+    /^assertNever$/i.test(callee.property.name);
   return isIdent || isMember;
 }
 
