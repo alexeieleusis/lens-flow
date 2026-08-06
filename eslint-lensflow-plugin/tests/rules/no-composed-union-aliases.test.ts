@@ -119,5 +119,13 @@ type Z = { kind: "z1" } | { kind: "z2" };
 type All = X | Y | Z;`,
       errors: [{ messageId: "composed" }],
     },
+    // Transitive union alias with different discriminants
+    {
+      filename: TEST_FILENAME,
+      code: `type A = { kind: "a" } | { kind: "b" };
+type AliasA = A;
+type C = AliasA | { tag: "c" };`,
+      errors: [{ messageId: "composed" }],
+    },
   ],
 });
