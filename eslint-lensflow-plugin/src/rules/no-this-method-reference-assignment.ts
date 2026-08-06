@@ -180,10 +180,7 @@ export default createRule({
       if (node.type === "VariableDeclarator") {
         return node.id.typeAnnotation !== undefined;
       }
-      if (
-        node.type === "AssignmentExpression" &&
-        node.left.type === "Identifier"
-      ) {
+      if (node.type === "AssignmentExpression" && node.left.type === "Identifier") {
         const leftTsNode = esTreeNodeToTSNodeMap.get(node.left);
         if (!leftTsNode || !ts.isIdentifier(leftTsNode)) return false;
         const decls = checker.getSymbolAtLocation(leftTsNode)?.declarations;
@@ -193,6 +190,58 @@ export default createRule({
             return true;
           }
         }
+      }
+      if (node.type === "AssignmentExpression" && node.left.type === "MemberExpression") {
+        if (node.left.object.type !== "Identifier" || node.left.object.name !== "this") {
+          return false;
+        }
+        const propName =
+          node.left.property.type === "Identifier"
+            ? node.left.property.name
+            : null;
+        if (!propName) return false;
+
+        const ancestors = context.sourceCode.getAncestors(node);
+        for (const anc of ancestors) {
+          if (
+            anc.type === "ClassBody" ||
+            anc.type === "ClassDeclaration" ||
+            anc.type === "ClassExpression"
+          ) {
+            const classBody =
+              anc.type === "ClassBody"
+                ? anc
+                : (anc as TSESTree.ClassDeclaration | TSESTree.ClassExpression).body;
+            for (const member of classBody.body) {
+              if (
+                (member.type === "PropertyDefinition" ||
+                  member.type === "TSAbstractPropertyDefinition") &&
+                member.key.type === "Identifier" &&
+                member.key.name === propName &&
+                member.typeAnnotation !== undefined
+              ) {
+                return true;
+              }
+              if (
+                (member.type === "MethodDefinition" ||
+                  member.type === "TSAbstractMethodDefinition") &&
+                member.key.type === "Identifier" &&
+                member.key.name === propName
+              ) {
+                const rt =
+                  member.type === "TSAbstractMethodDefinition"
+                    ? ((member as TSESTree.TSAbstractMethodDefinition & {
+                        returnType?: TSESTree.TSTypeAnnotation;
+                      }).returnType as TSESTree.TSTypeAnnotation | undefined)
+                    : member.value?.returnType;
+                if (rt) return true;
+              }
+            }
+            break;
+          }
+          if (anc.type === "Program") break;
+        }
+        return false;
       }
       return false;
     }
