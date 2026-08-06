@@ -17,7 +17,7 @@ export default createRule({
     },
     messages: {
       emptyObjectPhantomType:
-        "Type alias '{{name}}' is an empty object literal ({}), providing no structural distinction between states. Brand the state marker (e.g., type {{name}} = Brand<\"{{name}}\">) AND ensure the generic type references its parameter in a member (e.g., declare private readonly _state: S). See: {{url}}",
+        "Type alias '{{name}}' is an empty object literal ({}), providing no structural distinction between states. Brand the state marker (e.g., type {{name}} = Brand<\"{{name}}\">). See: {{url}}",
     },
     schema: [],
     fixable: undefined,
