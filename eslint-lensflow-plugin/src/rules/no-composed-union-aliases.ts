@@ -8,11 +8,12 @@ const URL = knowledgeUrl(
   "Antipatterns When Using It > Union: Union of Unions Without Discriminant",
 );
 
-function isStringLiteral(type: ts.Type): boolean {
-  return (
-    (type.flags & ts.TypeFlags.StringLiteral) !== 0 &&
-    typeof (type as unknown as ts.LiteralType).value === "string"
-  );
+function isLiteralDiscriminant(type: ts.Type): boolean {
+  const literalFlags =
+    ts.TypeFlags.StringLiteral |
+    ts.TypeFlags.NumberLiteral |
+    ts.TypeFlags.BooleanLiteral;
+  return (type.flags & literalFlags) !== 0;
 }
 
 export default createRule({
@@ -37,13 +38,13 @@ export default createRule({
     if (!program) return {};
     const checker = program.getTypeChecker();
 
-    function getStringLiteralProps(t: ts.Type): string[] {
+    function getLiteralDiscriminantProps(t: ts.Type): string[] {
       const props = t.getProperties();
       const result: string[] = [];
       for (const prop of props) {
         const propName = prop.getName();
         const propType = checker.getTypeOfSymbol(prop);
-        if (isStringLiteral(propType)) {
+        if (isLiteralDiscriminant(propType)) {
           result.push(propName);
         }
       }
@@ -56,9 +57,9 @@ export default createRule({
         (t) => (t.flags & ts.TypeFlags.Object) !== 0,
       );
       if (objectTypes.length === 0) return [];
-      let common = getStringLiteralProps(objectTypes[0]);
+      let common = getLiteralDiscriminantProps(objectTypes[0]);
       for (let i = 1; i < objectTypes.length; i++) {
-        const props = getStringLiteralProps(objectTypes[i]);
+        const props = getLiteralDiscriminantProps(objectTypes[i]);
         common = common.filter((p) => props.includes(p));
         if (common.length === 0) break;
       }
