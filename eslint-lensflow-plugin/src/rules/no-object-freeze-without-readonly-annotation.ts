@@ -102,7 +102,7 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow Object.freeze() without Readonly<T> type annotation or as const",
+        "Disallow indirect Object.freeze() without Readonly<T> type annotation or as const — where a wrapper function may discard the Readonly<T> return type",
     },
     messages: {
       missingReadonly:
