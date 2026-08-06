@@ -184,78 +184,92 @@ export default createRule({
         node.type === "AssignmentExpression" &&
         node.left.type === "Identifier"
       ) {
-        const leftTsNode = esTreeNodeToTSNodeMap.get(node.left);
-        if (!leftTsNode || !ts.isIdentifier(leftTsNode)) return false;
-        const decls = checker.getSymbolAtLocation(leftTsNode)?.declarations;
-        if (!decls) return false;
-        for (const decl of decls) {
-          if (ts.isVariableDeclaration(decl) && decl.type !== undefined) {
-            return true;
-          }
-        }
+        return isVariableTyped(node.left);
       }
       if (
         node.type === "AssignmentExpression" &&
         node.left.type === "MemberExpression"
       ) {
-        if (
-          node.left.object.type !== "Identifier" ||
-          node.left.object.name !== "this"
-        ) {
-          return false;
-        }
-        const propName =
-          node.left.property.type === "Identifier"
-            ? node.left.property.name
-            : null;
-        if (!propName) return false;
-
-        const ancestors = context.sourceCode.getAncestors(node);
-        for (const anc of ancestors) {
-          if (
-            anc.type === "ClassBody" ||
-            anc.type === "ClassDeclaration" ||
-            anc.type === "ClassExpression"
-          ) {
-            const classBody =
-              anc.type === "ClassBody"
-                ? anc
-                : (anc as TSESTree.ClassDeclaration | TSESTree.ClassExpression)
-                    .body;
-            for (const member of classBody.body) {
-              if (
-                (member.type === "PropertyDefinition" ||
-                  member.type === "TSAbstractPropertyDefinition") &&
-                member.key.type === "Identifier" &&
-                member.key.name === propName &&
-                member.typeAnnotation !== undefined
-              ) {
-                return true;
-              }
-              if (
-                (member.type === "MethodDefinition" ||
-                  member.type === "TSAbstractMethodDefinition") &&
-                member.key.type === "Identifier" &&
-                member.key.name === propName
-              ) {
-                const rt =
-                  member.type === "TSAbstractMethodDefinition"
-                    ? (
-                        member as TSESTree.TSAbstractMethodDefinition & {
-                          returnType?: TSESTree.TSTypeAnnotation;
-                        }
-                      ).returnType
-                    : member.value?.returnType;
-                if (rt) return true;
-              }
-            }
-            break;
-          }
-          if (anc.type === "Program") break;
-        }
-        return false;
+        return isThisPropertyTyped(node);
       }
       return false;
+    }
+
+    function isVariableTyped(
+      ident: TSESTree.Identifier,
+    ): boolean {
+      const leftTsNode = esTreeNodeToTSNodeMap.get(ident);
+      if (!leftTsNode || !ts.isIdentifier(leftTsNode)) return false;
+      const decls = checker.getSymbolAtLocation(leftTsNode)?.declarations;
+      if (!decls) return false;
+      for (const decl of decls) {
+        if (ts.isVariableDeclaration(decl) && decl.type !== undefined) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function isThisPropertyTyped(
+      node: TSESTree.AssignmentExpression,
+    ): boolean {
+      if (node.left.type !== "MemberExpression") return false;
+      if (
+        node.left.object.type !== "Identifier" ||
+        node.left.object.name !== "this"
+      ) {
+        return false;
+      }
+      const propName =
+        node.left.property.type === "Identifier"
+          ? node.left.property.name
+          : null;
+      if (!propName) return false;
+
+      const enclosingClass = findEnclosingClass(node);
+      if (!enclosingClass) return false;
+
+      for (const member of enclosingClass.body.body) {
+        if (
+          (member.type === "PropertyDefinition" ||
+            member.type === "TSAbstractPropertyDefinition") &&
+          member.key.type === "Identifier" &&
+          member.key.name === propName &&
+          member.typeAnnotation !== undefined
+        ) {
+          return true;
+        }
+        if (
+          (member.type === "MethodDefinition" ||
+            member.type === "TSAbstractMethodDefinition") &&
+          member.key.type === "Identifier" &&
+          member.key.name === propName
+        ) {
+          const rt =
+            member.type === "TSAbstractMethodDefinition"
+              ? (
+                  member as TSESTree.TSAbstractMethodDefinition & {
+                    returnType?: TSESTree.TSTypeAnnotation;
+                  }
+                ).returnType
+              : member.value?.returnType;
+          if (rt) return true;
+        }
+      }
+      return false;
+    }
+
+    function findEnclosingClass(
+      node: TSESTree.Node,
+    ): TSESTree.ClassDeclaration | TSESTree.ClassExpression | null {
+      const ancestors = context.sourceCode.getAncestors(node);
+      for (const anc of ancestors) {
+        if (anc.type === "Program") break;
+        if (anc.type === "ClassDeclaration" || anc.type === "ClassExpression") {
+          return anc;
+        }
+      }
+      return null;
     }
 
     function checkAssignment(
