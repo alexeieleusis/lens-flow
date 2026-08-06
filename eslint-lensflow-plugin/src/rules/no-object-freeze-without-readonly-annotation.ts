@@ -137,6 +137,8 @@ export default createRule({
         if (ancestor === declarator) break;
         if (isPerAncestor(ancestor)) return;
         if (isFunctionAncestor(ancestor)) {
+          if (hasAsConst(declarator) || hasReadonlyAnnotation(declarator))
+            return;
           context.report({
             node,
             messageId: "missingReadonly",
