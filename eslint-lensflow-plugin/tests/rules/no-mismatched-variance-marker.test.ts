@@ -115,7 +115,7 @@ ruleTester.run("no-mismatched-variance-marker", rule, {
       setData(v: T): void;
     }`,
     // Type alias: out T with method param — silently accepted by TS
-    `type BadContainer<out T> = {
+    `type BivariantContainer<out T> = {
       setValue(t: T): void;
     };`,
     // out T with method param (array type) — silently accepted by TS
@@ -139,7 +139,7 @@ ruleTester.run("no-mismatched-variance-marker", rule, {
       getValue(): T;
     }`,
     // Type alias: in T used as method return — silently accepted by TS
-    `type BadSource<in T> = {
+    `type BivariantSource<in T> = {
       getValue(): T;
     };`,
     // in T in parenthesized method return type — silently accepted by TS
