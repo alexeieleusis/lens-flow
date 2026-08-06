@@ -40,7 +40,7 @@ function extractTypeRefName(
   typeName:
     TSESTree.Identifier | TSESTree.ThisExpression | TSESTree.TSQualifiedName,
 ): string | null {
-  if (typeName.type === "Identifier") return null;
+  if (typeName.type === "Identifier") return typeName.name;
   if (typeName.type === "ThisExpression") return "this";
   if (typeName.type === "TSQualifiedName") {
     const left = extractTypeRefName(typeName.left);
