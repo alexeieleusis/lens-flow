@@ -98,10 +98,10 @@ export default createRule({
           if (!tsNode) continue;
           const memberTsType = checker.getTypeAtLocation(tsNode);
           if (isUnionAlias(member, memberTsType)) hasUnionAlias = true;
-          if ((memberTsType.flags & ts.TypeFlags.Union) !== 0) {
-            allSubTypes.push(...(memberTsType as ts.UnionType).types);
-          } else {
+          if ((memberTsType.flags & ts.TypeFlags.Union) === 0) {
             allSubTypes.push(memberTsType);
+          } else {
+            allSubTypes.push(...(memberTsType as ts.UnionType).types);
           }
         }
         if (!hasUnionAlias) return;
