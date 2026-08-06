@@ -123,7 +123,11 @@ function isDiscriminatedUnionSwitch(
     c.test?.type === "MemberExpression";
 
   const isUndefinedCase = (c: TSESTree.SwitchCase) =>
-    c.test?.type === "Identifier" && c.test.name === "undefined";
+    (c.test?.type === "Identifier" && c.test.name === "undefined") ||
+    (c.test?.type === "UnaryExpression" &&
+      c.test.operator === "void" &&
+      c.test.argument.type === "Literal" &&
+      c.test.argument.value === 0);
 
   return cases.some(
     (c) => isLiteralCase(c) || isEnumMemberCase(c) || isUndefinedCase(c),

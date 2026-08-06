@@ -127,6 +127,16 @@ function handle(d: Direction) {
 }`,
       errors: [{ messageId: "silentDefault" }],
     },
+    // void 0 case with silent default — common JS idiom for undefined
+    {
+      code: `function handle(v: string | undefined) {
+  switch (v) {
+    case void 0: console.log("undefined"); break;
+    default:
+  }
+}`,
+      errors: [{ messageId: "silentDefault" }],
+    },
     // empty default — the canonical antipattern
     {
       code: `type Event = { kind: "click"; x: number } | { kind: "scroll"; top: number };
