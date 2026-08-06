@@ -119,19 +119,19 @@ ruleTester.run("no-mismatched-variance-marker", rule, {
       setValue(t: T): void;
     };`,
     // out T with method param (array type) — silently accepted by TS
-    `interface Bad<out T> {
+    `interface BadArrayMethodParam<out T> {
       setItems(items: T[]): void;
     }`,
     // out T with parenthesized method param — silently accepted by TS
-    `interface Bad<out T> {
+    `interface BadParenMethodParam<out T> {
       setValue(t: (T)): void;
     }`,
     // out T in method param with conditional type — silently accepted by TS
-    `interface Bad<out T> {
+    `interface BadConditionalMethodParam<out T> {
       fn(x: string extends number ? T : never): void;
     }`,
     // out T in method param with mapped type — silently accepted by TS
-    `interface Bad<out T> {
+    `interface BadMappedMethodParam<out T> {
       fn(x: { [K in string]: T }): void;
     }`,
     // in T used as method return type — silently accepted by TS (methods are bivariant)
@@ -143,15 +143,15 @@ ruleTester.run("no-mismatched-variance-marker", rule, {
       getValue(): T;
     };`,
     // in T in parenthesized method return type — silently accepted by TS
-    `interface Bad<in T> {
+    `interface BadParenMethodReturn<in T> {
       getValue(): (T);
     }`,
     // in T in conditional type in method return — silently accepted by TS
-    `interface Bad<in T> {
+    `interface BadConditionalMethodReturn<in T> {
       getValue(): string extends number ? T : never;
     }`,
     // in T in mapped type in method return — silently accepted by TS
-    `interface Bad<in T> {
+    `interface BadMappedMethodReturn<in T> {
       getValue(): { [K in string]: T };
     }`,
   ],
