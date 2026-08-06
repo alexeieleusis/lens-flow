@@ -26,7 +26,7 @@ export default createRule({
     },
     messages: {
       composed:
-        "Type alias '{{name}}' composes union aliases whose members lack a common discriminant field{{discriminants}}. Use a shared discriminant so a single check can narrow the whole union. See: {{url}}",
+        "Type alias '{{name}}' composes union aliases whose members lack a common discriminant field. Use a shared discriminant so a single check can narrow the whole union. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -116,7 +116,6 @@ export default createRule({
           data: {
             name: node.id.name,
             url: URL,
-            discriminants: "",
           },
         });
       },
