@@ -180,7 +180,10 @@ export default createRule({
       if (node.type === "VariableDeclarator") {
         return node.id.typeAnnotation !== undefined;
       }
-      if (node.type === "AssignmentExpression" && node.left.type === "Identifier") {
+      if (
+        node.type === "AssignmentExpression" &&
+        node.left.type === "Identifier"
+      ) {
         const leftTsNode = esTreeNodeToTSNodeMap.get(node.left);
         if (!leftTsNode || !ts.isIdentifier(leftTsNode)) return false;
         const decls = checker.getSymbolAtLocation(leftTsNode)?.declarations;
@@ -191,8 +194,14 @@ export default createRule({
           }
         }
       }
-      if (node.type === "AssignmentExpression" && node.left.type === "MemberExpression") {
-        if (node.left.object.type !== "Identifier" || node.left.object.name !== "this") {
+      if (
+        node.type === "AssignmentExpression" &&
+        node.left.type === "MemberExpression"
+      ) {
+        if (
+          node.left.object.type !== "Identifier" ||
+          node.left.object.name !== "this"
+        ) {
           return false;
         }
         const propName =
@@ -211,7 +220,8 @@ export default createRule({
             const classBody =
               anc.type === "ClassBody"
                 ? anc
-                : (anc as TSESTree.ClassDeclaration | TSESTree.ClassExpression).body;
+                : (anc as TSESTree.ClassDeclaration | TSESTree.ClassExpression)
+                    .body;
             for (const member of classBody.body) {
               if (
                 (member.type === "PropertyDefinition" ||
@@ -230,9 +240,11 @@ export default createRule({
               ) {
                 const rt =
                   member.type === "TSAbstractMethodDefinition"
-                    ? ((member as TSESTree.TSAbstractMethodDefinition & {
-                        returnType?: TSESTree.TSTypeAnnotation;
-                      }).returnType as TSESTree.TSTypeAnnotation | undefined)
+                    ? ((
+                        member as TSESTree.TSAbstractMethodDefinition & {
+                          returnType?: TSESTree.TSTypeAnnotation;
+                        }
+                      ).returnType as TSESTree.TSTypeAnnotation | undefined)
                     : member.value?.returnType;
                 if (rt) return true;
               }
