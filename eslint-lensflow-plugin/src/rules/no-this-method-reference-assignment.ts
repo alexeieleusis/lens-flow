@@ -55,6 +55,46 @@ function extractClassMethods(
   return { className, methodsWithThis, superClassName };
 }
 
+function memberHasExplicitType(
+  member:
+    | TSESTree.PropertyDefinition
+    | TSESTree.TSAbstractPropertyDefinition
+    | TSESTree.MethodDefinition
+    | TSESTree.TSAbstractMethodDefinition,
+  propName: string,
+): boolean {
+  if (
+    member.key.type !== "Identifier" ||
+    member.key.name !== propName
+  ) {
+    return false;
+  }
+
+  if (
+    member.type === "PropertyDefinition" ||
+    member.type === "TSAbstractPropertyDefinition"
+  ) {
+    return member.typeAnnotation !== undefined;
+  }
+
+  if (
+    member.type === "MethodDefinition" ||
+    member.type === "TSAbstractMethodDefinition"
+  ) {
+    const rt =
+      member.type === "TSAbstractMethodDefinition"
+        ? (
+            member as TSESTree.TSAbstractMethodDefinition & {
+              returnType?: TSESTree.TSTypeAnnotation;
+            }
+          ).returnType
+        : member.value?.returnType;
+    return rt !== undefined;
+  }
+
+  return false;
+}
+
 export default createRule({
   name: "no-this-method-reference-assignment",
   meta: {
@@ -207,46 +247,6 @@ export default createRule({
           return true;
         }
       }
-      return false;
-    }
-
-    function memberHasExplicitType(
-      member:
-        | TSESTree.PropertyDefinition
-        | TSESTree.TSAbstractPropertyDefinition
-        | TSESTree.MethodDefinition
-        | TSESTree.TSAbstractMethodDefinition,
-      propName: string,
-    ): boolean {
-      if (
-        member.key.type !== "Identifier" ||
-        member.key.name !== propName
-      ) {
-        return false;
-      }
-
-      if (
-        member.type === "PropertyDefinition" ||
-        member.type === "TSAbstractPropertyDefinition"
-      ) {
-        return member.typeAnnotation !== undefined;
-      }
-
-      if (
-        member.type === "MethodDefinition" ||
-        member.type === "TSAbstractMethodDefinition"
-      ) {
-        const rt =
-          member.type === "TSAbstractMethodDefinition"
-            ? (
-                member as TSESTree.TSAbstractMethodDefinition & {
-                  returnType?: TSESTree.TSTypeAnnotation;
-                }
-              ).returnType
-            : member.value?.returnType;
-        return rt !== undefined;
-      }
-
       return false;
     }
 
