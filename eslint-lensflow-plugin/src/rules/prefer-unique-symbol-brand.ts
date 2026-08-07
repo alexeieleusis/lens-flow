@@ -42,11 +42,11 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Prefer `unique symbol` brands over string-literal brands to prevent forgery via `as` cast. Detects brand properties named `brand`, `_brand`, `__brand`, `Branded`, `_Branded`, `__Branded`, or any name ending in `Brand` (e.g. `orderBrand`, `MoneyBrand`).",
+        'Prefer `unique symbol` brands over string-literal brands to prevent accidental forgery. String-literal brands allow `"anything" as Email` to compile silently, whereas a `unique symbol` brand requires access to the symbol declaration. Detects brand properties named `brand`, `_brand`, `__brand`, `Branded`, `_Branded`, `__Branded`, or any name ending in `Brand` (e.g. `orderBrand`, `MoneyBrand`).',
     },
     messages: {
       stringBrandForgery:
-        "String-literal brand '{{brandName}}' can be forged via `as` cast. Use a `unique symbol` brand instead. See: {{url}}",
+        "String-literal brand '{{brandName}}' can be forged via `as` cast — the cast needs only the exported type, never the symbol. Use a `unique symbol` brand to prevent accidental forgery. See: {{url}}",
     },
     schema: [],
     fixable: undefined,

@@ -102,11 +102,11 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow Object.freeze() without Readonly<T> type annotation or as const",
+        "Disallow indirect Object.freeze() without Readonly<T> type annotation or as const — where a wrapper function may discard the Readonly<T> return type",
     },
     messages: {
       missingReadonly:
-        "Object.freeze() provides runtime immutability but TypeScript does not infer readonly from it. Add `as const` or a `Readonly<T>` type annotation. See: {{url}}",
+        "Object.freeze() retypes its return value as Readonly<T>, but the wrapper function may discard that type. Add `as const` or a `Readonly<T>` type annotation to the outer binding. See: {{url}}",
     },
     schema: [],
   },
@@ -116,7 +116,11 @@ export default createRule({
       node: TSESTree.Node,
     ): TSESTree.VariableDeclarator | null {
       const ancestors = context.sourceCode.getAncestors(node);
-      for (const ancestor of ancestors) {
+      // Ancestors are outermost-first. Iterate innermost-first to stop at
+      // the nearest function boundary before reaching an outer declarator.
+      for (let i = ancestors.length - 1; i >= 0; i--) {
+        const ancestor = ancestors[i];
+        if (isFunctionAncestor(ancestor)) break;
         if (ancestor.type === AST_NODE_TYPES.VariableDeclarator)
           return ancestor;
       }
@@ -133,6 +137,8 @@ export default createRule({
         if (ancestor === declarator) break;
         if (isPerAncestor(ancestor)) return;
         if (isFunctionAncestor(ancestor)) {
+          if (hasAsConst(declarator) || hasReadonlyAnnotation(declarator))
+            return;
           context.report({
             node,
             messageId: "missingReadonly",
@@ -157,16 +163,11 @@ export default createRule({
         if (!declarator) return;
 
         if (isDirectInit(declarator, node)) {
-          if (hasAsConst(declarator) || hasReadonlyAnnotation(declarator))
-            return;
-          context.report({
-            node,
-            messageId: "missingReadonly",
-            data: { url: URL },
-          });
-        } else {
-          handleIndirectInit(declarator, node);
+          // Object.freeze() retypes its return value as Readonly<T>,
+          // so direct assignment already has a readonly type.
+          return;
         }
+        handleIndirectInit(declarator, node);
       },
     };
   },

@@ -4,7 +4,7 @@ import type { TSESLint } from "@typescript-eslint/utils";
 
 const URL = knowledgeUrl(
   "catalog/T34-never-bottom.md",
-  "Type 'never[]' is not assignable to type 'string[]' (or similar)",
+  "Argument of type 'string' is not assignable to parameter of type 'never' (on push)",
 );
 
 export default createRule({

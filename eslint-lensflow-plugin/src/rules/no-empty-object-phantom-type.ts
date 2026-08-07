@@ -13,11 +13,11 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow empty object type literals ({}), which provide no structural distinction.",
+        "Disallow empty object type literals ({}), which provide no structural distinction between phantom state markers.",
     },
     messages: {
       emptyObjectPhantomType:
-        "Type alias '{{name}}' is an empty object literal ({}), providing no structural distinction between states. Use a unique symbol brand instead (e.g., {{name}} = { readonly _state: unique symbol }). See: {{url}}",
+        "Type alias '{{name}}' is an empty object literal ({}), providing no structural distinction between states. Brand the state marker (e.g., type {{name}} = Brand<\"{{name}}\">). See: {{url}}",
     },
     schema: [],
     fixable: undefined,

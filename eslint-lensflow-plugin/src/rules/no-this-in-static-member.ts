@@ -30,7 +30,7 @@ export default createRule({
     },
     messages: {
       staticThisReturn:
-        "Using `this` as a return type in a static member. In static contexts, `this` refers to the constructor function, not an instance type. Use `InstanceType<typeof this>` or a generic `T extends typeof ThisClass` pattern instead. See: {{url}}",
+        "Using `this` as a return type in a static member. TypeScript rejects this outright with TS2526. Use a generic `this: T` parameter pattern instead — avoid `InstanceType<typeof this>`, which resolves to the declaring class and loses polymorphism. See: {{url}}",
     },
     schema: [],
   },

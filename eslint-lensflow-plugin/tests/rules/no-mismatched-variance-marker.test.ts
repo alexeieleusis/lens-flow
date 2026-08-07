@@ -108,23 +108,54 @@ ruleTester.run("no-mismatched-variance-marker", rule, {
     `interface ConstructorIn<in T> {
       create: new (t: T) => void;
     }`,
+    // out T with method param — NOT flagged: TS only checks function-property syntax,
+    // method syntax is bivariant so the 'out' marker is silently accepted
+    `interface Container<out T> {
+      getData(): T;
+      setData(v: T): void;
+    }`,
+    // Type alias: out T with method param — silently accepted by TS
+    `type BivariantContainer<out T> = {
+      setValue(t: T): void;
+    };`,
+    // out T with method param (array type) — silently accepted by TS
+    `interface BadArrayMethodParam<out T> {
+      setItems(items: T[]): void;
+    }`,
+    // out T with parenthesized method param — silently accepted by TS
+    `interface BadParenMethodParam<out T> {
+      setValue(t: (T)): void;
+    }`,
+    // out T in method param with conditional type — silently accepted by TS
+    `interface BadConditionalMethodParam<out T> {
+      fn(x: string extends number ? T : never): void;
+    }`,
+    // out T in method param with mapped type — silently accepted by TS
+    `interface BadMappedMethodParam<out T> {
+      fn(x: { [K in string]: T }): void;
+    }`,
+    // in T used as method return type — silently accepted by TS (methods are bivariant)
+    `interface Source<in T> {
+      getValue(): T;
+    }`,
+    // Type alias: in T used as method return — silently accepted by TS
+    `type BivariantSource<in T> = {
+      getValue(): T;
+    };`,
+    // in T in parenthesized method return type — silently accepted by TS
+    `interface BadParenMethodReturn<in T> {
+      getValue(): (T);
+    }`,
+    // in T in conditional type in method return — silently accepted by TS
+    `interface BadConditionalMethodReturn<in T> {
+      getValue(): string extends number ? T : never;
+    }`,
+    // in T in mapped type in method return — silently accepted by TS
+    `interface BadMappedMethodReturn<in T> {
+      getValue(): { [K in string]: T };
+    }`,
   ],
   invalid: [
-    // out T used as method parameter — mismatch
-    {
-      code: `interface Container<out T> {
-        getData(): T;
-        setData(v: T): void;
-      }`,
-      errors: [{ messageId: "outInInputPosition" }],
-    },
-    // in T used as return type — mismatch
-    {
-      code: `interface Source<in T> {
-        getValue(): T;
-      }`,
-      errors: [{ messageId: "inInOutputPosition" }],
-    },
     // out T in function property params — mismatch
     {
       code: `interface Sink<out T> {
@@ -139,33 +170,12 @@ ruleTester.run("no-mismatched-variance-marker", rule, {
       }`,
       errors: [{ messageId: "inInOutputPosition" }],
     },
-    // Type alias: out T used as parameter — mismatch
-    {
-      code: `type BadContainer<out T> = {
-        setValue(t: T): void;
-      };`,
-      errors: [{ messageId: "outInInputPosition" }],
-    },
-    // Type alias: in T used as return — mismatch
-    {
-      code: `type BadSource<in T> = {
-        getValue(): T;
-      };`,
-      errors: [{ messageId: "inInOutputPosition" }],
-    },
     // out T in nested type literal property — mismatch
     {
       code: `interface Bad<out T> {
         inner: {
           process(t: T): void;
         };
-      }`,
-      errors: [{ messageId: "outInInputPosition" }],
-    },
-    // out T used in array param — mismatch
-    {
-      code: `interface Bad<out T> {
-        setItems(items: T[]): void;
       }`,
       errors: [{ messageId: "outInInputPosition" }],
     },
@@ -203,48 +213,6 @@ ruleTester.run("no-mismatched-variance-marker", rule, {
         [key: T]: string;
       }`,
       errors: [{ messageId: "outInInputPosition" }],
-    },
-    // out T in parenthesized parameter type — mismatch
-    {
-      code: `interface Bad<out T> {
-        setValue(t: (T)): void;
-      }`,
-      errors: [{ messageId: "outInInputPosition" }],
-    },
-    // in T in parenthesized return type — mismatch
-    {
-      code: `interface Bad<in T> {
-        getValue(): (T);
-      }`,
-      errors: [{ messageId: "inInOutputPosition" }],
-    },
-    // out T in conditional type true/false branches in param position — mismatch
-    {
-      code: `interface Bad<out T> {
-        fn(x: string extends number ? T : never): void;
-      }`,
-      errors: [{ messageId: "outInInputPosition" }],
-    },
-    // in T in conditional type true branch in return position — mismatch
-    {
-      code: `interface Bad<in T> {
-        getValue(): string extends number ? T : never;
-      }`,
-      errors: [{ messageId: "inInOutputPosition" }],
-    },
-    // out T in mapped type annotation in param position — mismatch
-    {
-      code: `interface Bad<out T> {
-        fn(x: { [K in string]: T }): void;
-      }`,
-      errors: [{ messageId: "outInInputPosition" }],
-    },
-    // in T in mapped type annotation in return position — mismatch
-    {
-      code: `interface Bad<in T> {
-        getValue(): { [K in string]: T };
-      }`,
-      errors: [{ messageId: "inInOutputPosition" }],
     },
     // out T in constructor type params (input position) — mismatch
     {

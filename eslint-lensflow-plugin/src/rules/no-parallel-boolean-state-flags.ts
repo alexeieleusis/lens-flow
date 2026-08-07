@@ -1,6 +1,9 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
-import { getInterfaceMembers } from "../utils/visitor-helpers.js";
+import {
+  createBooleanFlagChecker,
+  BooleanFlagMember,
+} from "../utils/visitor-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const URL = knowledgeUrl(
@@ -47,62 +50,18 @@ export default createRule({
 
     const isBooleanFlag = (
       member: TSESTree.TypeElement,
-    ): member is TSESTree.TSPropertySignature & {
-      key: TSESTree.Identifier | TSESTree.Literal;
-      typeAnnotation: { typeAnnotation: TSESTree.TypeNode };
-    } =>
+    ): member is BooleanFlagMember =>
       member.type === "TSPropertySignature" &&
       (member.key.type === "Identifier" ||
         (member.key.type === "Literal" &&
           typeof member.key.value === "string")) &&
       member.typeAnnotation?.typeAnnotation.type === "TSBooleanKeyword";
 
-    function checkNode(
-      node: TSESTree.TSInterfaceBody | TSESTree.TSTypeLiteral,
-    ) {
-      const members = getInterfaceMembers(node);
-      const boolFlags = members.filter(isBooleanFlag);
-
-      if (boolFlags.length >= minCount) {
-        const flagNames = boolFlags
-          .map((m) => {
-            if (m.key.type === "Identifier") return m.key.name;
-            if (m.key.type === "Literal" && typeof m.key.value === "string")
-              return m.key.value;
-            return String(m.key?.value ?? "?");
-          })
-          .join(", ");
-
-        const parent = node.parent;
-        let kind: string;
-        if (parent?.type === "TSInterfaceDeclaration") {
-          kind = `interface \`${parent.id?.name ?? "anonymous"}\``;
-        } else if (parent?.type === "TSTypeAliasDeclaration") {
-          kind = `type \`${parent.id?.name ?? "anonymous"}\``;
-        } else {
-          kind = "type";
-        }
-
-        context.report({
-          node: parent ?? node,
-          messageId: "tooManyBooleanFlags",
-          data: {
-            count: String(boolFlags.length),
-            flags: flagNames,
-            kind,
-            url: URL,
-          },
-        });
-      }
-    }
-
-    return {
-      TSInterfaceBody(node: TSESTree.TSInterfaceBody) {
-        checkNode(node);
-      },
-      TSTypeLiteral(node: TSESTree.TSTypeLiteral) {
-        checkNode(node);
-      },
-    };
+    return createBooleanFlagChecker(
+      minCount,
+      isBooleanFlag,
+      "tooManyBooleanFlags",
+      URL,
+    )(context);
   },
 });

@@ -27,11 +27,11 @@ export default createRule({
     type: "problem",
     docs: {
       description:
-        "Disallow applying intrinsic string transform types to the wide `string` type, which has no effect",
+        "Disallow applying intrinsic string transform types to the wide `string` type, which defers without resolving",
     },
     messages: {
       noEffect:
-        "{{transform}} has no effect on the wide `string` type — it produces `string` unchanged. Use a string literal type or constrain the generic with `extends string`. See: {{url}}",
+        "{{transform}}<string> does not resolve — it stays a deferred intrinsic that is a strict subtype of `string`. Use a string literal type or constrain the generic with `extends string`. See: {{url}}",
     },
     schema: [],
     fixable: undefined,

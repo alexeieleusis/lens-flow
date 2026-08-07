@@ -61,6 +61,17 @@ ruleTester.run("no-exhaustiveness-on-open-union", rule, {
   }
 }`,
     },
+    // Closed union with assertNever — proper exhaustiveness, not an open union
+    {
+      code: `function assertNever(x: never): never { throw new Error(String(x)); }
+function handle(s: "a" | "b") {
+  switch (s) {
+    case "a": break;
+    case "b": break;
+    default: assertNever(s);
+  }
+}`,
+    },
   ],
   invalid: [
     // Open string union with throw in default — the antipattern
@@ -124,6 +135,18 @@ ruleTester.run("no-exhaustiveness-on-open-union", rule, {
   switch (c) {
     case "red": return "#f00";
     default: { throw new Error(\`Unreachable: \${c as never}\`); }
+  }
+}`,
+      errors: [{ messageId: "openUnion" }],
+    },
+    // Open union with assertNever call — proper exhaustiveness pattern but wrong for open union
+    {
+      code: `function assertNever(x: never): never { throw new Error(String(x)); }
+function handle(c: "red" | "blue" | string): string {
+  switch (c) {
+    case "red": return "#f00";
+    case "blue": return "#00f";
+    default: return assertNever(c);
   }
 }`,
       errors: [{ messageId: "openUnion" }],

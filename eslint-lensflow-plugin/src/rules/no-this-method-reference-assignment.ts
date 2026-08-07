@@ -5,7 +5,7 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const URL = knowledgeUrl(
   "catalog/T33-self-type.md",
-  "Losing `this` in detached methods",
+  "Annotating with a base-class function type discards `this`",
 );
 
 function typeNodeHasThisReturnType(typeNode: TSESTree.TypeNode): boolean {
@@ -55,17 +55,54 @@ function extractClassMethods(
   return { className, methodsWithThis, superClassName };
 }
 
+function memberHasExplicitType(
+  member:
+    | TSESTree.PropertyDefinition
+    | TSESTree.TSAbstractPropertyDefinition
+    | TSESTree.MethodDefinition
+    | TSESTree.TSAbstractMethodDefinition,
+  propName: string,
+): boolean {
+  if (member.key.type !== "Identifier" || member.key.name !== propName) {
+    return false;
+  }
+
+  if (
+    member.type === "PropertyDefinition" ||
+    member.type === "TSAbstractPropertyDefinition"
+  ) {
+    return member.typeAnnotation !== undefined;
+  }
+
+  if (
+    member.type === "MethodDefinition" ||
+    member.type === "TSAbstractMethodDefinition"
+  ) {
+    const rt =
+      member.type === "TSAbstractMethodDefinition"
+        ? (
+            member as TSESTree.TSAbstractMethodDefinition & {
+              returnType?: TSESTree.TSTypeAnnotation;
+            }
+          ).returnType
+        : member.value?.returnType;
+    return rt !== undefined;
+  }
+
+  return false;
+}
+
 export default createRule({
   name: "no-this-method-reference-assignment",
   meta: {
     type: "problem",
     docs: {
       description:
-        "Disallow assigning a method reference that returns `this` to a standalone variable or property, which collapses the polymorphic `this` to the base class type and breaks fluent chains on subclasses.",
+        "Disallow assigning a method reference that returns `this` to a variable with an explicit type annotation, which collapses the polymorphic `this` to the class's own type and breaks fluent chains on subclasses.",
     },
     messages: {
       methodRefAssignment:
-        "Assigning method reference `{{methodName}}` that returns `this` to `{{varName}}` collapses the polymorphic `this` to the base class type. Call the method directly instead of storing a reference to it. See: {{url}}",
+        "Method reference `{{methodName}}` that returns `this` is being stored with an explicit type annotation on `{{varName}}`, collapsing the polymorphic `this`. Let the type infer, or call the method directly. See: {{url}}",
     },
     schema: [],
     fixable: undefined,
@@ -174,6 +211,83 @@ export default createRule({
       return null;
     }
 
+    function hasExplicitTypeAnnotation(
+      node: TSESTree.VariableDeclarator | TSESTree.AssignmentExpression,
+    ): boolean {
+      if (node.type === "VariableDeclarator") {
+        return node.id.typeAnnotation !== undefined;
+      }
+      if (
+        node.type === "AssignmentExpression" &&
+        node.left.type === "Identifier"
+      ) {
+        return isVariableTyped(node.left);
+      }
+      if (
+        node.type === "AssignmentExpression" &&
+        node.left.type === "MemberExpression"
+      ) {
+        return isThisPropertyTyped(node);
+      }
+      return false;
+    }
+
+    function isVariableTyped(ident: TSESTree.Identifier): boolean {
+      const leftTsNode = esTreeNodeToTSNodeMap.get(ident);
+      if (!leftTsNode || !ts.isIdentifier(leftTsNode)) return false;
+      const decls = checker.getSymbolAtLocation(leftTsNode)?.declarations;
+      if (!decls) return false;
+      for (const decl of decls) {
+        if (ts.isVariableDeclaration(decl) && decl.type !== undefined) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function isThisPropertyTyped(node: TSESTree.AssignmentExpression): boolean {
+      if (node.left.type !== "MemberExpression") return false;
+      if (
+        node.left.object.type !== "Identifier" ||
+        node.left.object.name !== "this"
+      ) {
+        return false;
+      }
+      const propName =
+        node.left.property.type === "Identifier"
+          ? node.left.property.name
+          : null;
+      if (!propName) return false;
+
+      const enclosingClass = findEnclosingClass(node);
+      if (!enclosingClass) return false;
+
+      return enclosingClass.body.body.some((member) => {
+        if (
+          member.type === "PropertyDefinition" ||
+          member.type === "TSAbstractPropertyDefinition" ||
+          member.type === "MethodDefinition" ||
+          member.type === "TSAbstractMethodDefinition"
+        ) {
+          return memberHasExplicitType(member, propName);
+        }
+        return false;
+      });
+    }
+
+    function findEnclosingClass(
+      node: TSESTree.Node,
+    ): TSESTree.ClassDeclaration | TSESTree.ClassExpression | null {
+      const ancestors = context.sourceCode.getAncestors(node);
+      for (const anc of ancestors) {
+        if (anc.type === "Program") break;
+        if (anc.type === "ClassDeclaration" || anc.type === "ClassExpression") {
+          return anc;
+        }
+      }
+      return null;
+    }
+
     function checkAssignment(
       node: TSESTree.VariableDeclarator | TSESTree.AssignmentExpression,
     ) {
@@ -195,6 +309,8 @@ export default createRule({
       if (!className) return;
 
       if (!classHasMethodWithThisReturn(className, methodName)) return;
+
+      if (!hasExplicitTypeAnnotation(node)) return;
 
       let varName: string;
       if (node.type === "VariableDeclarator" && node.id.type === "Identifier") {

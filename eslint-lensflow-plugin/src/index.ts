@@ -167,7 +167,6 @@ import noRedundantNullReturnType from "./rules/no-redundant-null-return-type.js"
 import noRedundantNullableInputGuard from "./rules/no-redundant-nullable-input-guard.js";
 import noRedundantOverloadSignature from "./rules/no-redundant-overload-signature.js";
 import noRepeatedRuntimeGuards from "./rules/no-repeated-runtime-guards.js";
-import noRestAnyImplementation from "./rules/no-rest-any-implementation.js";
 import noReuseGenerator from "./rules/no-reuse-generator.js";
 import noRevalidateBrandedParam from "./rules/no-revalidate-branded-param.js";
 import noRuntimeFilterAsT from "./rules/no-runtime-filter-as-t.js";
@@ -206,7 +205,6 @@ import noTruthinessNullNarrowing from "./rules/no-truthiness-null-narrowing.js";
 import noTsIgnore from "./rules/no-ts-ignore.js";
 import noTypeAssertionAfterParse from "./rules/no-type-assertion-after-parse.js";
 import noTypeofInTypeAlias from "./rules/no-typeof-in-type-alias.js";
-import noTypeofLooseEquality from "./rules/no-typeof-loose-equality.js";
 import noTypeofMutable from "./rules/no-typeof-mutable.js";
 import noTypestateAnyBypass from "./rules/no-typestate-any-bypass.js";
 import noUnboundedPluginRegistration from "./rules/no-unbounded-plugin-registration.js";
@@ -254,7 +252,6 @@ import requireAssertNeverDefaultUc03 from "./rules/require-assert-never-default-
 import requireAssertionThrow from "./rules/require-assertion-throw.js";
 import requireAssertneverNeverParameter from "./rules/require-assertnever-never-parameter.js";
 import requireAssertneverNeverReturn from "./rules/require-assertnever-never-return.js";
-import requireAwaitTryCatchInGenerator from "./rules/require-await-try-catch-in-generator.js";
 import requireDeclareBrandSymbol from "./rules/require-declare-brand-symbol.js";
 import requireDecoratorAccessorKeyword from "./rules/require-decorator-accessor-keyword.js";
 import requireExhaustiveIfChainUc03 from "./rules/require-exhaustive-if-chain-uc03.js";
@@ -268,8 +265,6 @@ import requireLiteralSwitchDefault from "./rules/require-literal-switch-default.
 import requireReadonlyDomainPropsUc02 from "./rules/require-readonly-domain-props-uc02.js";
 import requireReadonlyOnArrayType from "./rules/require-readonly-on-array-type.js";
 import requireSmartConstructorValidation from "./rules/require-smart-constructor-validation.js";
-import requireTypePredicateSubtype from "./rules/require-type-predicate-subtype.js";
-import requireTypestateRebinding from "./rules/require-typestate-rebinding.js";
 import requireUndefinedHandlingAfterOptionalChain from "./rules/require-undefined-handling-after-optional-chain.js";
 import requireUnionDiscriminant from "./rules/require-union-discriminant.js";
 import requireUnknownAfterJsonParse from "./rules/require-unknown-after-json-parse.js";
@@ -457,7 +452,6 @@ const plugin: {
     "no-redundant-nullable-input-guard": noRedundantNullableInputGuard,
     "no-redundant-overload-signature": noRedundantOverloadSignature,
     "no-repeated-runtime-guards": noRepeatedRuntimeGuards,
-    "no-rest-any-implementation": noRestAnyImplementation,
     "no-reuse-generator": noReuseGenerator,
     "no-revalidate-branded-param": noRevalidateBrandedParam,
     "no-runtime-filter-as-t": noRuntimeFilterAsT,
@@ -501,7 +495,6 @@ const plugin: {
     "no-ts-ignore": noTsIgnore,
     "no-type-assertion-after-parse": noTypeAssertionAfterParse,
     "no-typeof-in-type-alias": noTypeofInTypeAlias,
-    "no-typeof-loose-equality": noTypeofLooseEquality,
     "no-typeof-mutable": noTypeofMutable,
     "no-typestate-any-bypass": noTypestateAnyBypass,
     "no-unbounded-plugin-registration": noUnboundedPluginRegistration,
@@ -554,7 +547,6 @@ const plugin: {
     "require-assertion-throw": requireAssertionThrow,
     "require-assertnever-never-parameter": requireAssertneverNeverParameter,
     "require-assertnever-never-return": requireAssertneverNeverReturn,
-    "require-await-try-catch-in-generator": requireAwaitTryCatchInGenerator,
     "require-declare-brand-symbol": requireDeclareBrandSymbol,
     "require-decorator-accessor-keyword": requireDecoratorAccessorKeyword,
     "require-exhaustive-if-chain-uc03": requireExhaustiveIfChainUc03,
@@ -570,8 +562,6 @@ const plugin: {
     "require-readonly-domain-props-uc02": requireReadonlyDomainPropsUc02,
     "require-readonly-on-array-type": requireReadonlyOnArrayType,
     "require-smart-constructor-validation": requireSmartConstructorValidation,
-    "require-type-predicate-subtype": requireTypePredicateSubtype,
-    "require-typestate-rebinding": requireTypestateRebinding,
     "require-undefined-handling-after-optional-chain":
       requireUndefinedHandlingAfterOptionalChain,
     "require-union-discriminant": requireUnionDiscriminant,

@@ -60,11 +60,11 @@ export default createRule({
     type: "suggestion",
     docs: {
       description:
-        "Disallow switch statements on plain string parameters with namespaced case values — use a template literal discriminated union type instead",
+        "Disallow switch statements on plain string parameters with namespaced case values — use a template literal discriminated union type with a never guard for exhaustiveness",
     },
     messages: {
       magicStringSwitch:
-        "Switch on plain string parameter with namespaced case values ({{values}}). Define a template literal discriminated union type for the parameter instead. See: {{url}}",
+        "Switch on plain string parameter with namespaced case values ({{values}}). Define a template literal discriminated union type for the parameter, add an explicit return type, and include a never guard in the default case for exhaustiveness. See: {{url}}",
     },
     schema: [],
     fixable: undefined,

@@ -71,7 +71,7 @@ export default createRule({
     },
     messages: {
       anyTypeGuardParam:
-        "Type guard parameter should be `unknown` not `any`. Using `any` bypasses narrowing even after the guard passes. See: {{url}}",
+        "Type guard parameter should be `unknown` not `any`. An `any` parameter accepts arguments that cannot possibly match the guarded type, making the guard silently useless at those call sites. See: {{url}}",
     },
     schema: [],
     fixable: undefined,

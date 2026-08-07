@@ -60,7 +60,7 @@ export default createRule({
         "Disallow arithmetic operations on branded numbers that silently drop the brand.",
     },
     messages: {
-      leak: "Arithmetic operation on branded number produces plain `number`, dropping the brand. Re-wrap the result with `as {{brandType}}` or use a dedicated function that preserves the brand. See: {{url}}",
+      leak: "Arithmetic operation on branded number produces plain `number`, dropping the brand. Wrap the result inside a dedicated function that validates the operation and re-applies the brand with `as {{brandType}}`. See: {{url}}",
     },
     schema: [],
     fixable: undefined,

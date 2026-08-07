@@ -27,14 +27,7 @@ function handle(e: Event): void {
     default: return assertNever(e);
   }
 }`,
-    // non-discriminated-union switch (numeric discriminant) — heuristic skip
-    `function handle(status: number) {
-  switch (status) {
-    case 200: console.log("ok"); break;
-    default:
-  }
-}`,
-    // switch without any string-literal cases — heuristic skip
+    // switch without any literal cases — heuristic skip
     `const x = "hello";
 function handle(e: { kind: string }) {
   switch (e.kind) {
@@ -83,6 +76,67 @@ function handle(e: Event) {
 }`,
   ],
   invalid: [
+    // numeric-literal cases with silent default — discriminants include number literals
+    {
+      code: `function handle(status: number) {
+  switch (status) {
+    case 200: console.log("ok"); break;
+    default:
+  }
+}`,
+      errors: [{ messageId: "silentDefault" }],
+    },
+    // boolean-literal cases with silent default — discriminants include boolean literals
+    {
+      code: `function handle(res: { ok: boolean; value: string }) {
+  switch (res.ok) {
+    case true: console.log(res.value); break;
+    default:
+  }
+}`,
+      errors: [{ messageId: "silentDefault" }],
+    },
+    // enum member cases with silent default — discriminants include enum members
+    {
+      code: `enum Direction { North = "N", South = "S" }
+function handle(d: Direction) {
+  switch (d) {
+    case Direction.North: console.log("north"); break;
+    default:
+  }
+}`,
+      errors: [{ messageId: "silentDefault" }],
+    },
+    // null/undefined literal cases with silent default
+    {
+      code: `function handle(v: string | null) {
+  switch (v) {
+    case null: console.log("null"); break;
+    default:
+  }
+}`,
+      errors: [{ messageId: "silentDefault" }],
+    },
+    // undefined literal case with silent default
+    {
+      code: `function handle(v: string | undefined) {
+  switch (v) {
+    case undefined: console.log("undefined"); break;
+    default:
+  }
+}`,
+      errors: [{ messageId: "silentDefault" }],
+    },
+    // void 0 case with silent default — common JS idiom for undefined
+    {
+      code: `function handle(v: string | undefined) {
+  switch (v) {
+    case void 0: console.log("undefined"); break;
+    default:
+  }
+}`,
+      errors: [{ messageId: "silentDefault" }],
+    },
     // empty default — the canonical antipattern
     {
       code: `type Event = { kind: "click"; x: number } | { kind: "scroll"; top: number };

@@ -13,16 +13,39 @@ function extractPropName(key: TSESTree.Property["key"]): string | null {
   return null;
 }
 
-function extractLiteralValue(
-  literal: TSESTree.TypeNode | undefined,
+function extractDiscriminantValue(
+  typeNode: TSESTree.TypeNode | undefined,
 ): string | null {
-  if (!literal) return null;
-  if (literal.type !== "TSLiteralType") return null;
+  if (!typeNode) return null;
 
-  const lit = literal.literal;
-  if (lit.type === "Literal") return String(lit.value);
-  if (lit.type === "TemplateLiteral" && lit.quasis.length === 1) {
-    return lit.quasis[0].value.cooked ?? null;
+  if (typeNode.type === "TSLiteralType") {
+    const lit = typeNode.literal;
+    if (lit.type === "Literal") return String(lit.value);
+    if (lit.type === "TemplateLiteral" && lit.quasis.length === 1) {
+      return lit.quasis[0].value.cooked ?? null;
+    }
+  }
+
+  if (typeNode.type === "TSNullKeyword") return "null";
+  if (typeNode.type === "TSUndefinedKeyword") return "undefined";
+
+  if (typeNode.type === "TSTypeReference") {
+    return extractTypeRefName(typeNode.typeName);
+  }
+
+  return null;
+}
+
+function extractTypeRefName(
+  typeName:
+    TSESTree.Identifier | TSESTree.ThisExpression | TSESTree.TSQualifiedName,
+): string | null {
+  if (typeName.type === "Identifier") return typeName.name;
+  if (typeName.type === "ThisExpression") return "this";
+  if (typeName.type === "TSQualifiedName") {
+    const left = extractTypeRefName(typeName.left);
+    if (left === null) return null;
+    return `${left}.${typeName.right.name}`;
   }
   return null;
 }
@@ -30,11 +53,11 @@ function extractLiteralValue(
 function isDiscriminantCandidate(
   member: TSESTree.TypeElement,
 ): member is TSESTree.TSPropertySignature & {
-  typeAnnotation: { typeAnnotation: TSESTree.TSLiteralType };
+  typeAnnotation: TSESTree.TSTypeAnnotation;
 } {
   if (member.type !== "TSPropertySignature") return false;
   if (!member.typeAnnotation) return false;
-  return member.typeAnnotation.typeAnnotation.type === "TSLiteralType";
+  return true;
 }
 
 function addDiscriminant(
@@ -46,7 +69,7 @@ function addDiscriminant(
   const propName = extractPropName(member.key);
   if (propName === null) return;
 
-  const value = extractLiteralValue(member.typeAnnotation.typeAnnotation);
+  const value = extractDiscriminantValue(member.typeAnnotation.typeAnnotation);
   if (value === null) return;
 
   const key = JSON.stringify([propName, value]);
@@ -77,7 +100,8 @@ function reportDuplicate(
   sig: TSESTree.TSPropertySignature,
 ) {
   const propName = extractPropName(sig.key) ?? "?";
-  const value = extractLiteralValue(sig.typeAnnotation?.typeAnnotation) ?? "?";
+  const value =
+    extractDiscriminantValue(sig.typeAnnotation?.typeAnnotation) ?? "?";
 
   context.report({
     node: sig,

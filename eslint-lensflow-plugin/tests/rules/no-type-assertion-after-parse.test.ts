@@ -3,10 +3,10 @@ import rule from "../../src/rules/no-type-assertion-after-parse.js";
 
 ruleTester.run("no-type-assertion-after-parse", rule, {
   valid: [
-    // Runtime validation instead of type assertion
-    `function parseUser(json: unknown): string {
-      const raw = JSON.parse(json);
-      if (typeof raw !== "object" || raw === null || typeof raw.id !== "string") {
+    // Runtime validation instead of type assertion — annotate as unknown so guards actually narrow
+    `function parseUser(json: string): string {
+      const raw: unknown = JSON.parse(json);
+      if (typeof raw !== "object" || raw === null || !("id" in raw) || typeof raw.id !== "string") {
         throw new TypeError("invalid user");
       }
       return raw.id;

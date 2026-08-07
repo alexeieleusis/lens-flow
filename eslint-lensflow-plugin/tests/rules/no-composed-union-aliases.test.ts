@@ -55,48 +55,101 @@ type C = A | B;`,
       filename: TEST_FILENAME,
       code: `type Simple = string | number;`,
     },
-  ],
-  invalid: [
-    // Composed union: A is a union, B is a union, C = A | B
+    // Composed union BUT shared discriminant — TypeScript flattens, nesting costs nothing
     {
       filename: TEST_FILENAME,
       code: `type A = { kind: "a"; x: number } | { kind: "b"; y: string };
 type B = { kind: "c"; z: boolean } | { kind: "d"; w: object };
 type C = A | B;`,
-      errors: [{ messageId: "composed" }],
     },
-    // One member is a union, the other is not
+    // One member is a union, the other is not — but shared discriminant
     {
       filename: TEST_FILENAME,
       code: `type A = { kind: "a"; x: number } | { kind: "b"; y: string };
 type B = { kind: "c"; z: boolean };
 type C = A | B;`,
-      errors: [{ messageId: "composed" }],
     },
-    // Three aliases, two are unions
+    // Three aliases, two are unions — shared discriminant
     {
       filename: TEST_FILENAME,
       code: `type X = { kind: "x1" } | { kind: "x2" };
 type Y = { kind: "y1" };
 type Z = { kind: "z1" } | { kind: "z2" };
 type All = X | Y | Z;`,
-      errors: [{ messageId: "composed" }],
     },
-    // Transitive union alias: AliasA references A (a union), C composes AliasA
+    // Transitive union alias with shared discriminant
     {
       filename: TEST_FILENAME,
       code: `type A = { kind: "a" } | { kind: "b" };
 type AliasA = A;
 type C = AliasA | { kind: "c" };`,
-      errors: [{ messageId: "composed" }],
     },
-    // Parenthesized union wrapper: (A | B) | D
+    // Parenthesized union wrapper with shared discriminant
     {
       filename: TEST_FILENAME,
       code: `type A = { kind: "a" } | { kind: "b" };
 type B = { kind: "c" };
 type D = { kind: "d" };
 type C = (A | B) | D;`,
+    },
+    // Composed union with shared discriminant + primitive non-object member
+    // findCommonDiscriminants filters to only object types, so `string` is ignored
+    {
+      filename: TEST_FILENAME,
+      code: `type A = { kind: "a" } | { kind: "b" };
+type C = A | string;`,
+    },
+    // Composed union with shared discriminant + null
+    {
+      filename: TEST_FILENAME,
+      code: `type A = { kind: "a" } | { kind: "b" };
+type C = A | null;`,
+    },
+    // Composed union with shared discriminant + undefined
+    {
+      filename: TEST_FILENAME,
+      code: `type A = { kind: "a" } | { kind: "b" };
+type C = A | undefined;`,
+    },
+    // Composed union with shared discriminant + nullable primitive
+    {
+      filename: TEST_FILENAME,
+      code: `type A = { kind: "a" } | { kind: "b" };
+type C = A | string | null;`,
+    },
+  ],
+  invalid: [
+    // Composed union with different discriminant fields — no single check narrows the whole union
+    {
+      filename: TEST_FILENAME,
+      code: `type A = { kind: "a"; x: number } | { kind: "b"; y: string };
+type B = { tag: "c"; z: boolean } | { tag: "d"; w: object };
+type C = A | B;`,
+      errors: [{ messageId: "composed" }],
+    },
+    // Union alias + inline type with different discriminant
+    {
+      filename: TEST_FILENAME,
+      code: `type A = { kind: "a" } | { kind: "b" };
+type D = { status: "ready" };
+type C = A | D;`,
+      errors: [{ messageId: "composed" }],
+    },
+    // Three aliases, mixed discriminants
+    {
+      filename: TEST_FILENAME,
+      code: `type X = { kind: "x1" } | { kind: "x2" };
+type Y = { id: "y1" };
+type Z = { kind: "z1" } | { kind: "z2" };
+type All = X | Y | Z;`,
+      errors: [{ messageId: "composed" }],
+    },
+    // Transitive union alias with different discriminants
+    {
+      filename: TEST_FILENAME,
+      code: `type A = { kind: "a" } | { kind: "b" };
+type AliasA = A;
+type C = AliasA | { tag: "c" };`,
       errors: [{ messageId: "composed" }],
     },
   ],
