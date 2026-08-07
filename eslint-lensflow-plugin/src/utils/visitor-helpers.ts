@@ -188,7 +188,7 @@ export function getInterfaceMembers(
   return node.members;
 }
 
-type BooleanFlagMember = TSESTree.TSPropertySignature & {
+export type BooleanFlagMember = TSESTree.TSPropertySignature & {
   key: TSESTree.Identifier | TSESTree.Literal;
   typeAnnotation: { typeAnnotation: TSESTree.TypeNode };
 };
@@ -197,12 +197,14 @@ type FlagCheckReportData = {
   count: string;
   flags: string;
   kind: string;
+  url?: string;
 };
 
 export function createBooleanFlagChecker(
   minCount: number,
   memberFilter: (member: TSESTree.TypeElement) => member is BooleanFlagMember,
   messageId: string,
+  url?: string,
 ): (
   context: TSESLint.RuleContext<string, unknown[]>,
 ) => Record<string, (node: TSESTree.Node) => void> {
@@ -233,14 +235,17 @@ export function createBooleanFlagChecker(
           kind = "type";
         }
 
+        const data: FlagCheckReportData = {
+          count: String(boolFlags.length),
+          flags: flagNames,
+          kind,
+        };
+        if (url) data.url = url;
+
         context.report({
           node: parent ?? node,
           messageId,
-          data: {
-            count: String(boolFlags.length),
-            flags: flagNames,
-            kind,
-          } as FlagCheckReportData,
+          data,
         });
       }
     }
