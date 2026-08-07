@@ -5,8 +5,51 @@ import type {
   TSESLint,
 } from "@typescript-eslint/utils";
 import type ts from "typescript";
+import { createRule } from "./rule-creator.js";
 
 type ParameterCheckCallback = (param: TSESTree.Parameter) => void;
+
+type MutableArrayParamRuleOptions = {
+  name: string;
+  description: string;
+  messageId: string;
+  messageTemplate: string;
+  url: string;
+  reportData: (result: MutableArrayParam) => Record<string, string>;
+};
+
+export function createMutableArrayParamRule(
+  opts: MutableArrayParamRuleOptions,
+) {
+  return createRule({
+    name: opts.name,
+    meta: {
+      type: "problem",
+      docs: {
+        description: opts.description,
+      },
+      messages: {
+        [opts.messageId]: opts.messageTemplate,
+      },
+      schema: [],
+      fixable: undefined,
+    },
+    defaultOptions: [],
+    create(context) {
+      function checkParameter(param: TSESTree.Parameter) {
+        const result = checkMutableArrayParam(param, context.sourceCode);
+        if (!result) return;
+        context.report({
+          node: param,
+          messageId: opts.messageId,
+          data: opts.reportData(result),
+        });
+      }
+
+      return createFunctionParamVisitor(checkParameter);
+    },
+  });
+}
 
 export type MutableArrayParam = {
   paramName: string;
