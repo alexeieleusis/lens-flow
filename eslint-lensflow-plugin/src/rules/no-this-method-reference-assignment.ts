@@ -63,10 +63,7 @@ function memberHasExplicitType(
     | TSESTree.TSAbstractMethodDefinition,
   propName: string,
 ): boolean {
-  if (
-    member.key.type !== "Identifier" ||
-    member.key.name !== propName
-  ) {
+  if (member.key.type !== "Identifier" || member.key.name !== propName) {
     return false;
   }
 
@@ -235,9 +232,7 @@ export default createRule({
       return false;
     }
 
-    function isVariableTyped(
-      ident: TSESTree.Identifier,
-    ): boolean {
+    function isVariableTyped(ident: TSESTree.Identifier): boolean {
       const leftTsNode = esTreeNodeToTSNodeMap.get(ident);
       if (!leftTsNode || !ts.isIdentifier(leftTsNode)) return false;
       const decls = checker.getSymbolAtLocation(leftTsNode)?.declarations;
@@ -250,9 +245,7 @@ export default createRule({
       return false;
     }
 
-    function isThisPropertyTyped(
-      node: TSESTree.AssignmentExpression,
-    ): boolean {
+    function isThisPropertyTyped(node: TSESTree.AssignmentExpression): boolean {
       if (node.left.type !== "MemberExpression") return false;
       if (
         node.left.object.type !== "Identifier" ||
