@@ -210,6 +210,46 @@ export default createRule({
       return false;
     }
 
+    function memberHasExplicitType(
+      member:
+        | TSESTree.PropertyDefinition
+        | TSESTree.TSAbstractPropertyDefinition
+        | TSESTree.MethodDefinition
+        | TSESTree.TSAbstractMethodDefinition,
+      propName: string,
+    ): boolean {
+      if (
+        member.key.type !== "Identifier" ||
+        member.key.name !== propName
+      ) {
+        return false;
+      }
+
+      if (
+        member.type === "PropertyDefinition" ||
+        member.type === "TSAbstractPropertyDefinition"
+      ) {
+        return member.typeAnnotation !== undefined;
+      }
+
+      if (
+        member.type === "MethodDefinition" ||
+        member.type === "TSAbstractMethodDefinition"
+      ) {
+        const rt =
+          member.type === "TSAbstractMethodDefinition"
+            ? (
+                member as TSESTree.TSAbstractMethodDefinition & {
+                  returnType?: TSESTree.TSTypeAnnotation;
+                }
+              ).returnType
+            : member.value?.returnType;
+        return rt !== undefined;
+      }
+
+      return false;
+    }
+
     function isThisPropertyTyped(
       node: TSESTree.AssignmentExpression,
     ): boolean {
@@ -229,34 +269,17 @@ export default createRule({
       const enclosingClass = findEnclosingClass(node);
       if (!enclosingClass) return false;
 
-      for (const member of enclosingClass.body.body) {
+      return enclosingClass.body.body.some((member) => {
         if (
-          (member.type === "PropertyDefinition" ||
-            member.type === "TSAbstractPropertyDefinition") &&
-          member.key.type === "Identifier" &&
-          member.key.name === propName &&
-          member.typeAnnotation !== undefined
+          member.type === "PropertyDefinition" ||
+          member.type === "TSAbstractPropertyDefinition" ||
+          member.type === "MethodDefinition" ||
+          member.type === "TSAbstractMethodDefinition"
         ) {
-          return true;
+          return memberHasExplicitType(member, propName);
         }
-        if (
-          (member.type === "MethodDefinition" ||
-            member.type === "TSAbstractMethodDefinition") &&
-          member.key.type === "Identifier" &&
-          member.key.name === propName
-        ) {
-          const rt =
-            member.type === "TSAbstractMethodDefinition"
-              ? (
-                  member as TSESTree.TSAbstractMethodDefinition & {
-                    returnType?: TSESTree.TSTypeAnnotation;
-                  }
-                ).returnType
-              : member.value?.returnType;
-          if (rt) return true;
-        }
-      }
-      return false;
+        return false;
+      });
     }
 
     function findEnclosingClass(
