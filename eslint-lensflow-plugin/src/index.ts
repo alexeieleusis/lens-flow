@@ -127,7 +127,6 @@ import noNestedEffectTypes from "./rules/no-nested-effect-types.js";
 import noNestedGenericsWithoutExtractionUc14 from "./rules/no-nested-generics-without-extraction-uc14.js";
 import noNestedInfer from "./rules/no-nested-infer.js";
 import noNeverAsCatchall from "./rules/no-never-as-catchall.js";
-import noNeverReachableEndpoint from "./rules/no-never-reachable-endpoint.js";
 import noNonDiscriminativeTypeGuard from "./rules/no-non-discriminative-type-guard.js";
 import noNonLiteralDiscriminant from "./rules/no-non-literal-discriminant.js";
 import noNoopBrandConstructor from "./rules/no-noop-brand-constructor.js";
@@ -409,7 +408,6 @@ const plugin: {
       noNestedGenericsWithoutExtractionUc14,
     "no-nested-infer": noNestedInfer,
     "no-never-as-catchall": noNeverAsCatchall,
-    "no-never-reachable-endpoint": noNeverReachableEndpoint,
     "no-non-discriminative-type-guard": noNonDiscriminativeTypeGuard,
     "no-non-literal-discriminant": noNonLiteralDiscriminant,
     "no-noop-brand-constructor": noNoopBrandConstructor,
