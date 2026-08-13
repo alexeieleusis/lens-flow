@@ -8,7 +8,7 @@ const URL = knowledgeUrl(
 );
 
 function returnTypeReferencesInterface(
-  returnType: import("@typescript-eslint/types").TSESTree.TypeNode | null,
+  returnType: import("@typescript-eslint/utils").TSESTree.TypeNode | null,
   interfaceName: string,
 ): boolean {
   if (!returnType) return false;
@@ -36,10 +36,10 @@ function returnTypeReferencesInterface(
 
 function getReturnType(
   node:
-    | import("@typescript-eslint/types").TSESTree.TSMethodSignature
-    | import("@typescript-eslint/types").TSESTree.TSFunctionType
-    | import("@typescript-eslint/types").TSESTree.TSConstructorType,
-): import("@typescript-eslint/types").TSESTree.TypeNode | null {
+    | import("@typescript-eslint/utils").TSESTree.TSMethodSignature
+    | import("@typescript-eslint/utils").TSESTree.TSFunctionType
+    | import("@typescript-eslint/utils").TSESTree.TSConstructorType,
+): import("@typescript-eslint/utils").TSESTree.TypeNode | null {
   if (node.type === "TSMethodSignature") {
     return node.returnType?.typeAnnotation ?? null;
   }

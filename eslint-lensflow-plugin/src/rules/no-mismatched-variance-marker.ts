@@ -1,12 +1,11 @@
 import { createRule } from "../utils/rule-creator.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import {
   createVarianceDeclarationVisitor,
   isUsedAsInputInBodyFunctionPropertyOnly,
   isUsedAsOutputInBodyFunctionPropertyOnly,
 } from "../utils/variance-checker.js";
-import type { TSESTree } from "@typescript-eslint/types";
 
 const URL = knowledgeUrl(
   "catalog/T08-variance-subtyping.md",
