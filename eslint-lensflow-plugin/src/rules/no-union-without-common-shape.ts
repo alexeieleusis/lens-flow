@@ -21,7 +21,7 @@ const PRIMITIVE_TYPE_FLAGS =
   ts.TypeFlags.Void;
 
 function extractPropsFromLiteral(
-  literal: import("@typescript-eslint/types").TSESTree.TSTypeLiteral,
+  literal: import("@typescript-eslint/utils").TSESTree.TSTypeLiteral,
 ): Set<string> {
   const names = new Set<string>();
   for (const m of literal.members) {
@@ -37,7 +37,7 @@ function extractPropsFromLiteral(
 }
 
 function gatherPropertySets(
-  unionNode: import("@typescript-eslint/types").TSESTree.TSUnionType,
+  unionNode: import("@typescript-eslint/utils").TSESTree.TSUnionType,
   checker: ts.TypeChecker,
   parserServices: ReturnType<typeof ESLintUtils.getParserServices>,
 ): Set<string>[] {
@@ -105,7 +105,7 @@ export default createRule({
                 .filter(
                   (
                     m,
-                  ): m is import("@typescript-eslint/types").TSESTree.TSTypeLiteral =>
+                  ): m is import("@typescript-eslint/utils").TSESTree.TSTypeLiteral =>
                     m.type === "TSTypeLiteral",
                 )
                 .map(extractPropsFromLiteral);

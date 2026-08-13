@@ -1,7 +1,6 @@
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
-import type { TSESLint } from "@typescript-eslint/utils";
-import type { TSESTree } from "@typescript-eslint/types";
+import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 
 const URL = knowledgeUrl(
   "usecases/UC07-callable-contracts.md",
