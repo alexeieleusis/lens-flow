@@ -27,6 +27,8 @@ interface B { b: string }
 const x = { a: 1, b: "two" } satisfies A | B;`,
     `interface Config { a: number; [key: string]: unknown }
 const x = { a: 1, b: "extra" } satisfies Config;`,
+    `type Shape = { kind: "a"; a: number } | { kind: "b"; b: string };
+const x = { kind: "a", a: 1 } satisfies Shape;`,
   ],
   invalid: [
     {
