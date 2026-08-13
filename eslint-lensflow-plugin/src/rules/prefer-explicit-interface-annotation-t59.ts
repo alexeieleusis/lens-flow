@@ -1,4 +1,5 @@
 import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
+import ts from "typescript";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import { getObjectKeys } from "../utils/ast-helpers.js";
@@ -7,6 +8,14 @@ const URL = knowledgeUrl(
   "catalog/T59-existential-types.md",
   "5. Gotchas and Limitations",
 );
+
+function typeAllowsKey(tsType: ts.Type, key: string): boolean {
+  if (tsType.getStringIndexType() || tsType.getNumberIndexType()) return true;
+  if (tsType.isUnion()) {
+    return tsType.types.some((constituent) => typeAllowsKey(constituent, key));
+  }
+  return !!tsType.getProperty(key);
+}
 
 export default createRule({
   name: "prefer-explicit-interface-annotation-t59",
@@ -47,7 +56,7 @@ export default createRule({
         const tsType = checker.getTypeFromTypeNode(tsTypeNode);
 
         const hasExcessProperty = objKeys.some(
-          (key) => !tsType.getProperty(key),
+          (key) => !typeAllowsKey(tsType, key),
         );
         if (!hasExcessProperty) return;
 

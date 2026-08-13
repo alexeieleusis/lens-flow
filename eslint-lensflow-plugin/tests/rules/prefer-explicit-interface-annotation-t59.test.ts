@@ -21,6 +21,10 @@ const x = { a: 1, b: "two" } satisfies Derived;`,
     `interface Config { a: number; b: string }
 declare const base: { a: number };
 const x = { ...base, b: "two" } satisfies Config;`,
+    `const x = { a: 1, b: "two" } satisfies Record<string, number | string>;`,
+    `interface A { a: number }
+interface B { b: string }
+const x = { a: 1, b: "two" } satisfies A | B;`,
   ],
   invalid: [
     {
