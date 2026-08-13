@@ -1,11 +1,21 @@
+import { ESLintUtils, TSESLint } from "@typescript-eslint/utils";
+import ts from "typescript";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
-import type { TSESLint } from "@typescript-eslint/utils";
+import { getObjectKeys } from "../utils/ast-helpers.js";
 
 const URL = knowledgeUrl(
   "catalog/T59-existential-types.md",
   "5. Gotchas and Limitations",
 );
+
+function typeAllowsKey(tsType: ts.Type, key: string): boolean {
+  if (tsType.getStringIndexType() || tsType.getNumberIndexType()) return true;
+  if (tsType.isUnion()) {
+    return tsType.types.some((constituent) => typeAllowsKey(constituent, key));
+  }
+  return !!tsType.getProperty(key);
+}
 
 export default createRule({
   name: "prefer-explicit-interface-annotation-t59",
@@ -13,7 +23,7 @@ export default createRule({
     type: "suggestion",
     docs: {
       description:
-        "Prefer explicit type annotation over `satisfies` when satisfying a named type reference.",
+        "Prefer explicit type annotation over `satisfies` when satisfying a named type reference (a plain identifier, not a qualified name like `Foo.Bar`) with an object literal that has excess properties.",
     },
     messages: {
       preferAnnotation:
@@ -24,19 +34,37 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"preferAnnotation", []>) {
+    const parserServices = ESLintUtils.getParserServices(context, true);
+    if (!parserServices.program) return {};
+    const checker = parserServices.program.getTypeChecker();
+
     return {
       TSSatisfiesExpression(node) {
         const typeAnnotation = node.typeAnnotation;
 
-        if (typeAnnotation.type === "TSTypeReference") {
-          const typeNameNode = typeAnnotation.typeName;
-          if (typeNameNode.type !== "Identifier") return;
-          context.report({
-            node,
-            messageId: "preferAnnotation",
-            data: { typeName: typeNameNode.name, url: URL },
-          });
-        }
+        if (typeAnnotation.type !== "TSTypeReference") return;
+        const typeNameNode = typeAnnotation.typeName;
+        if (typeNameNode.type !== "Identifier") return;
+
+        if (node.expression.type !== "ObjectExpression") return;
+        const objKeys = getObjectKeys(node.expression);
+        if (objKeys.length === 0) return;
+
+        const tsTypeNode =
+          parserServices.esTreeNodeToTSNodeMap.get(typeAnnotation);
+        if (!tsTypeNode) return;
+        const tsType = checker.getTypeFromTypeNode(tsTypeNode);
+
+        const hasExcessProperty = objKeys.some(
+          (key) => !typeAllowsKey(tsType, key),
+        );
+        if (!hasExcessProperty) return;
+
+        context.report({
+          node,
+          messageId: "preferAnnotation",
+          data: { typeName: typeNameNode.name, url: URL },
+        });
       },
     };
   },

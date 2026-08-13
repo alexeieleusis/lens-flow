@@ -148,6 +148,20 @@ export function defaultHasNeverAssertion(
   return nonEmpty.some((s) => nodeHasAssertNeverOrThrow(s));
 }
 
+export function getObjectKeys(objExpr: TSESTree.ObjectExpression): string[] {
+  const keys: string[] = [];
+  for (const p of objExpr.properties) {
+    if (p.type === "SpreadElement") continue;
+    if (p.computed) continue;
+    if (p.key.type === "Identifier") {
+      keys.push(p.key.name);
+    } else if (p.key.type === "Literal") {
+      keys.push(String(p.key.value));
+    }
+  }
+  return keys;
+}
+
 export function getLiteralFromExpr(
   expr: TSESTree.Node | null | undefined,
 ): string | number | boolean | null {
