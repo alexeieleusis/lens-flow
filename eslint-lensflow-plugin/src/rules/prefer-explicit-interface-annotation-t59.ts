@@ -23,7 +23,7 @@ export default createRule({
     type: "suggestion",
     docs: {
       description:
-        "Prefer explicit type annotation over `satisfies` when satisfying a named type reference with an object literal that has excess properties.",
+        "Prefer explicit type annotation over `satisfies` when satisfying a named type reference (a plain identifier, not a qualified name like `Foo.Bar`) with an object literal that has excess properties.",
     },
     messages: {
       preferAnnotation:
