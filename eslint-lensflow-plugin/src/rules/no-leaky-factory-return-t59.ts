@@ -1,6 +1,6 @@
 import { createRule } from "../utils/rule-creator.js";
 import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
-import { walk } from "../utils/ast-helpers.js";
+import { getObjectKeys, walk } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const URL = knowledgeUrl(
@@ -12,23 +12,6 @@ type FunctionNode =
   | TSESTree.FunctionDeclaration
   | TSESTree.FunctionExpression
   | TSESTree.ArrowFunctionExpression;
-
-function getObjectKeys(objExpr: TSESTree.ObjectExpression): string[] {
-  const keys: string[] = [];
-  for (const p of objExpr.properties) {
-    if (p.type === "SpreadElement") continue;
-    if (p.type !== "Property") continue;
-    if (p.computed) continue;
-    if (p.key.type === "Identifier") {
-      keys.push(p.key.name);
-    } else if (p.key.type === "Literal" && typeof p.key.value === "string") {
-      keys.push(p.key.value);
-    } else if (p.key.type === "Literal" && p.key.value != null) {
-      keys.push(String(p.key.value));
-    }
-  }
-  return keys;
-}
 
 function unwrapSatisfies(expr: TSESTree.Expression): TSESTree.Expression {
   return expr.type === "TSSatisfiesExpression" ? expr.expression : expr;
