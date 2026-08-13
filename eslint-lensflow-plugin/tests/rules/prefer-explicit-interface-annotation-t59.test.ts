@@ -25,6 +25,8 @@ const x = { ...base, b: "two" } satisfies Config;`,
     `interface A { a: number }
 interface B { b: string }
 const x = { a: 1, b: "two" } satisfies A | B;`,
+    `interface Config { a: number; [key: string]: unknown }
+const x = { a: 1, b: "extra" } satisfies Config;`,
   ],
   invalid: [
     {
