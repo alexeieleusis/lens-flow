@@ -32,13 +32,14 @@ function getFunctionName(node: NamedFunction): string | undefined {
   return undefined;
 }
 
-const REACT_ELEMENT_TYPE_NAMES = new Set([
+// A bare "Element" identifier is ambiguous with the DOM `Element` type, so
+// it's only recognized when qualified (e.g. `JSX.Element`, `React.Element`).
+// FC/FunctionComponent/VFC type the *component itself*, not what it returns,
+// so they never belong here, qualified or not.
+const REACT_ELEMENT_TYPE_NAMES = new Set(["ReactElement", "ReactNode"]);
+const QUALIFIED_REACT_ELEMENT_TYPE_NAMES = new Set([
+  ...REACT_ELEMENT_TYPE_NAMES,
   "Element",
-  "ReactElement",
-  "ReactNode",
-  "FC",
-  "FunctionComponent",
-  "VFC",
 ]);
 
 function isReactElementReturnType(
@@ -55,7 +56,7 @@ function isReactElementReturnType(
     typeName.type === "TSQualifiedName" &&
     typeName.right.type === "Identifier"
   ) {
-    return REACT_ELEMENT_TYPE_NAMES.has(typeName.right.name);
+    return QUALIFIED_REACT_ELEMENT_TYPE_NAMES.has(typeName.right.name);
   }
   return false;
 }
