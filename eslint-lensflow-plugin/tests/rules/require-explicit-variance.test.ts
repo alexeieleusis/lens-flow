@@ -30,8 +30,9 @@ ruleTester.run("require-explicit-variance", rule, {
     `interface Cloneable<T> {
       new (source: T): T;
     }`,
-    // T only appears as a type argument to another generic whose own variance is
-    // unknown to the rule (Box<U> is actually invariant in U) — must not suggest `out`
+    // T appears directly (`readonly state: T`) and as a type argument to another
+    // generic whose own variance is unknown to the rule (Box<U> is actually invariant
+    // in U) — must not suggest `out`
     `interface Box<U> {
       value: U;
       update(v: U): void;
