@@ -236,12 +236,12 @@ function handleImportType(
   covariant: boolean,
   result: { covariant: boolean; contravariant: boolean },
 ): void {
-  // import("mod").Foo<T> — check type arguments
-  if (node.typeArguments) {
-    node.typeArguments.params.forEach((arg) =>
-      findTypeParamUsage(arg, paramName, covariant, result),
-    );
-  }
+  // import("mod").Foo<T> — the referenced generic's own variance is unknown to
+  // this rule, so treat any occurrence of the parameter there as invariant,
+  // same as handleTypeReference does for type arguments to another generic.
+  node.typeArguments?.params.forEach((arg) =>
+    markInvariant(arg, paramName, result),
+  );
   // qualName may also reference the parameter
   findTypeParamUsage(node.qualifier, paramName, covariant, result);
 }
