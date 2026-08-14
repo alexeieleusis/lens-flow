@@ -200,6 +200,11 @@ function handleTypeQuery(
   // typeof X<T> — variance depends on how the queried type uses its parameters.
   // Treating as invariant to avoid silent false negatives.
   markInvariant(node.exprName, paramName, result);
+  // The type parameter can only actually appear in the `<T>` part (exprName is
+  // an EntityName and can't reference it), so this is the traversal that matters.
+  node.typeArguments?.params.forEach((arg) =>
+    markInvariant(arg, paramName, result),
+  );
 }
 
 function handleTypeOperator(

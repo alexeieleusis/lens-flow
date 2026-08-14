@@ -50,6 +50,15 @@ ruleTester.run("require-explicit-variance", rule, {
     interface Wrapper<T> {
       readonly items: ReadonlyArray<Box<T>>;
     }`,
+    // T only appears nested in a `typeof X<T>` query's type arguments — the
+    // queried generic's own variance is unknown to the rule, so this must be
+    // treated as invariant alongside the covariant `produce(): T` and must not
+    // collapse to a suggestion of `out T`
+    `declare function identity<X>(x: X): X;
+    interface Wrapper<T> {
+      produce(): T;
+      fn: typeof identity<T>;
+    }`,
   ],
   invalid: [
     // T only in return position — covariant, suggest `out`
