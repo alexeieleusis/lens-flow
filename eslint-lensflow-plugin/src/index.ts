@@ -115,7 +115,6 @@ import noMutableArrayInReadonlyContext from "./rules/no-mutable-array-in-readonl
 import noMutableArrayParameter from "./rules/no-mutable-array-parameter.js";
 import noMutableArrayParameterUc17 from "./rules/no-mutable-array-parameter-uc17.js";
 import noMutableGetterReturn from "./rules/no-mutable-getter-return.js";
-import noMutableItemsInReadonlyCollection from "./rules/no-mutable-items-in-readonly-collection.js";
 import noMutableStateRuntimeGuards from "./rules/no-mutable-state-runtime-guards.js";
 import noMutateIterationCallbackArgument from "./rules/no-mutate-iteration-callback-argument.js";
 import noMutateNullableWithoutCheck from "./rules/no-mutate-nullable-without-check.js";
@@ -394,8 +393,6 @@ const plugin: {
     "no-mutable-array-parameter": noMutableArrayParameter,
     "no-mutable-array-parameter-uc17": noMutableArrayParameterUc17,
     "no-mutable-getter-return": noMutableGetterReturn,
-    "no-mutable-items-in-readonly-collection":
-      noMutableItemsInReadonlyCollection,
     "no-mutable-state-runtime-guards": noMutableStateRuntimeGuards,
     "no-mutate-iteration-callback-argument": noMutateIterationCallbackArgument,
     "no-mutate-nullable-without-check": noMutateNullableWithoutCheck,
