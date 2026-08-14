@@ -39,6 +39,10 @@ ruleTester.run("prefer-primitive-method-params", rule, {
     `function extractName(info: { readonly name: string }) {
       return info.name;
     }`,
+    // Readonly property declared with a quoted string-literal key
+    `function extractName(info: { readonly "name": string }) {
+      return info["name"];
+    }`,
     // React function component (function declaration), detected via return type —
     // props must stay an object even though only one prop is read
     `function CounterDisplayHost(props: { initialCount: number }): React.ReactElement {

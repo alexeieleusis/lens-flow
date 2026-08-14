@@ -150,8 +150,10 @@ function analyzeFunction(
       (m): m is TSESTree.TSPropertySignature =>
         m.type === "TSPropertySignature" &&
         !m.computed &&
-        m.key.type === "Identifier" &&
-        m.key.name === propertyName,
+        ((m.key.type === "Identifier" && m.key.name === propertyName) ||
+          (m.key.type === "Literal" &&
+            typeof m.key.value === "string" &&
+            m.key.value === propertyName)),
     );
     if (member?.readonly) continue;
 
