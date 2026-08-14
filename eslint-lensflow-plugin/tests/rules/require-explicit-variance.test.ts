@@ -41,13 +41,17 @@ ruleTester.run("require-explicit-variance", rule, {
       readonly state: T;
       readonly box: Box<T>;
     }`,
-    // T nested two levels deep inside type arguments (ReadonlyArray<Box<T>>) — still
-    // treated as invariant, no suggestion
+    // T appears directly (`readonly state: T`) and nested two levels deep inside
+    // type arguments (ReadonlyArray<Box<T>>) — the "no suggestion" outcome only
+    // holds if the depth-2 invariant marking from items actually cancels out the
+    // covariant state usage, so this exercises that recursion instead of passing
+    // vacuously
     `interface Box<U> {
       value: U;
       update(v: U): void;
     }
     interface Wrapper<T> {
+      readonly state: T;
       readonly items: ReadonlyArray<Box<T>>;
     }`,
     // T only appears nested in a `typeof X<T>` query's type arguments — the
