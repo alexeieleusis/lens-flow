@@ -35,6 +35,41 @@ ruleTester.run("prefer-primitive-method-params", rule, {
         fn();
       }
     }`,
+    // Readonly property — caller can't mutate through this reference
+    `function extractName(info: { readonly name: string }) {
+      return info.name;
+    }`,
+    // Readonly property declared with a quoted string-literal key
+    `function extractName(info: { readonly "name": string }) {
+      return info["name"];
+    }`,
+    // React function component (function declaration), detected via return type —
+    // props must stay an object even though only one prop is read
+    `function CounterDisplayHost(props: { initialCount: number }): React.ReactElement {
+      return renderCounter(props.initialCount);
+    }`,
+    // React function component (JSX.Element return type, no JSX detected in body)
+    `function Icon(props: { name: string }): JSX.Element {
+      return render(props.name);
+    }`,
+    // React function component (arrow function, implicit JSX return)
+    {
+      code: `const Greeting = (props: { name: string }) => <div>{props.name}</div>;`,
+      languageOptions: {
+        parserOptions: { ecmaFeatures: { jsx: true } },
+      },
+    },
+    // SonarQube-recommended `Readonly<Props>` form — a type reference, not an
+    // inline object literal, so it's outside this rule's scope regardless of
+    // how many properties are read
+    `interface PropsType { initialCount: number }
+    function Component(props: Readonly<PropsType>): React.ReactElement {
+      return renderCounter(props.initialCount);
+    }`,
+    // Same but with the object literal wrapped inline in `Readonly<...>`
+    `function Component(props: Readonly<{ initialCount: number }>): React.ReactElement {
+      return renderCounter(props.initialCount);
+    }`,
   ],
   invalid: [
     {
@@ -65,6 +100,20 @@ ruleTester.run("prefer-primitive-method-params", rule, {
     },
     {
       code: `function f(data: { name: string }) { return data["name"]; }`,
+      errors: [{ messageId: "preferPrimitive" }],
+    },
+    // Mutable property still flags even when the parameter also has a readonly sibling
+    {
+      code: `function extractName(info: { readonly id: string; name: string }) {
+      return info.name;
+    }`,
+      errors: [{ messageId: "preferPrimitive" }],
+    },
+    // PascalCase name alone isn't enough to be treated as a component — must return JSX
+    {
+      code: `function Factory(config: { size: number }) {
+      return config.size * 2;
+    }`,
       errors: [{ messageId: "preferPrimitive" }],
     },
   ],
