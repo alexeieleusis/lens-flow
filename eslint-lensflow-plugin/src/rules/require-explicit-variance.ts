@@ -24,6 +24,23 @@ function extractTypeName(node: TSESTree.TSTypeReference): string | null {
   return null;
 }
 
+// Marks `paramName` as invariant if it occurs anywhere in `node`, regardless of
+// position — used where the surrounding type's own variance is unknown to the
+// rule (e.g. type arguments to another generic, or a `typeof` query), so any
+// occurrence must conservatively count as both covariant and contravariant.
+function markInvariant(
+  node: TSESTree.Node | null | undefined,
+  paramName: string,
+  result: { covariant: boolean; contravariant: boolean },
+): void {
+  const probe = { covariant: false, contravariant: false };
+  findTypeParamUsage(node, paramName, true, probe);
+  if (probe.covariant || probe.contravariant) {
+    result.covariant = true;
+    result.contravariant = true;
+  }
+}
+
 function handleTypeReference(
   node: TSESTree.TSTypeReference,
   paramName: string,
@@ -35,6 +52,13 @@ function handleTypeReference(
     if (covariant) result.covariant = true;
     else result.contravariant = true;
   }
+
+  // Type arguments to another generic (e.g. Telescope<T>) have unknown variance
+  // without resolving that generic's own declaration, so treat any occurrence of
+  // the parameter there as invariant to avoid silent false positives.
+  node.typeArguments?.params.forEach((arg) =>
+    markInvariant(arg, paramName, result),
+  );
 }
 
 // TSParenthesizedType isn't in AST_NODE_TYPES enum in this version of @typescript-eslint,
@@ -175,8 +199,12 @@ function handleTypeQuery(
 ): void {
   // typeof X<T> — variance depends on how the queried type uses its parameters.
   // Treating as invariant to avoid silent false negatives.
-  findTypeParamUsage(node.exprName, paramName, true, result);
-  findTypeParamUsage(node.exprName, paramName, false, result);
+  markInvariant(node.exprName, paramName, result);
+  // The type parameter can only actually appear in the `<T>` part (exprName is
+  // an EntityName and can't reference it), so this is the traversal that matters.
+  node.typeArguments?.params.forEach((arg) =>
+    markInvariant(arg, paramName, result),
+  );
 }
 
 function handleTypeOperator(
@@ -213,12 +241,12 @@ function handleImportType(
   covariant: boolean,
   result: { covariant: boolean; contravariant: boolean },
 ): void {
-  // import("mod").Foo<T> — check type arguments
-  if (node.typeArguments) {
-    node.typeArguments.params.forEach((arg) =>
-      findTypeParamUsage(arg, paramName, covariant, result),
-    );
-  }
+  // import("mod").Foo<T> — the referenced generic's own variance is unknown to
+  // this rule, so treat any occurrence of the parameter there as invariant,
+  // same as handleTypeReference does for type arguments to another generic.
+  node.typeArguments?.params.forEach((arg) =>
+    markInvariant(arg, paramName, result),
+  );
   // qualName may also reference the parameter
   findTypeParamUsage(node.qualifier, paramName, covariant, result);
 }

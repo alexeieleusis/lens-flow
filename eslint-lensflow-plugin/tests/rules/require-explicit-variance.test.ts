@@ -30,6 +30,39 @@ ruleTester.run("require-explicit-variance", rule, {
     `interface Cloneable<T> {
       new (source: T): T;
     }`,
+    // T appears directly (`readonly state: T`) and as a type argument to another
+    // generic whose own variance is unknown to the rule (Box<U> is actually invariant
+    // in U) — must not suggest `out`
+    `interface Box<U> {
+      value: U;
+      update(v: U): void;
+    }
+    interface Wrapper<T> {
+      readonly state: T;
+      readonly box: Box<T>;
+    }`,
+    // T appears directly (`readonly state: T`) and nested two levels deep inside
+    // type arguments (ReadonlyArray<Box<T>>) — the "no suggestion" outcome only
+    // holds if the depth-2 invariant marking from items actually cancels out the
+    // covariant state usage, so this exercises that recursion instead of passing
+    // vacuously
+    `interface Box<U> {
+      value: U;
+      update(v: U): void;
+    }
+    interface Wrapper<T> {
+      readonly state: T;
+      readonly items: ReadonlyArray<Box<T>>;
+    }`,
+    // T only appears nested in a `typeof X<T>` query's type arguments — the
+    // queried generic's own variance is unknown to the rule, so this must be
+    // treated as invariant alongside the covariant `produce(): T` and must not
+    // collapse to a suggestion of `out T`
+    `declare function identity<X>(x: X): X;
+    interface Wrapper<T> {
+      produce(): T;
+      fn: typeof identity<T>;
+    }`,
   ],
   invalid: [
     // T only in return position — covariant, suggest `out`
