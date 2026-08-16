@@ -20,7 +20,7 @@ type MutableArrayParamRuleOptions = {
 
 export function createMutableArrayParamRule(
   opts: MutableArrayParamRuleOptions,
-) {
+): TSESLint.RuleModule<string, []> {
   return createRule({
     name: opts.name,
     meta: {

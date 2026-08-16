@@ -12,7 +12,7 @@ export interface SwitchExhaustivenessRuleOptions {
 
 export function createSwitchExhaustivenessRule(
   options: SwitchExhaustivenessRuleOptions,
-) {
+): TSESLint.RuleModule<string, readonly unknown[]> {
   return createRule({
     name: options.name,
     meta: {

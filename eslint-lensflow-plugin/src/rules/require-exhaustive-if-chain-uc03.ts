@@ -1,5 +1,5 @@
 import ts from "typescript";
-import { TSESTree } from "@typescript-eslint/utils";
+import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import type { ParserServices } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { reportMissingValues } from "../utils/ts-helpers.js";
@@ -23,9 +23,7 @@ function reportIfMissing(
   comparedValues: Set<string>,
   fallbackNode: TSESTree.Node,
   checker: ts.TypeChecker,
-  context: Parameters<
-    NonNullable<Parameters<typeof createRule>[0]["create"]>
-  >[0],
+  context: TSESLint.RuleContext<string, readonly unknown[]>,
 ): void {
   reportMissingValues(
     context,
@@ -59,9 +57,7 @@ function reportFallbackIfMissing(
   tsVarNode: ts.Node,
   handled: Set<string>,
   checker: ts.TypeChecker,
-  context: Parameters<
-    NonNullable<Parameters<typeof createRule>[0]["create"]>
-  >[0],
+  context: TSESLint.RuleContext<string, readonly unknown[]>,
 ): void {
   if (!fallback) return;
 
