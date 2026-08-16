@@ -33,20 +33,22 @@ export function createBivariantMethodVisitor(
   };
 
   return {
-    TSInterfaceBody(node: TSESTree.TSInterfaceBody) {
-      for (const member of node.body) {
+    TSInterfaceBody(node) {
+      const n = node as TSESTree.TSInterfaceBody;
+      for (const member of n.body) {
         if (member.type === "TSMethodSignature" && member.kind === "method") {
           reportMethod(member);
         }
       }
     },
 
-    TSTypeLiteral(node: TSESTree.TSTypeLiteral) {
-      for (const member of node.members) {
+    TSTypeLiteral(node) {
+      const n = node as TSESTree.TSTypeLiteral;
+      for (const member of n.members) {
         if (member.type === "TSMethodSignature" && member.kind === "method") {
           reportMethod(member);
         }
       }
     },
-  } as Record<string, (node: TSESTree.Node) => void>;
+  };
 }
