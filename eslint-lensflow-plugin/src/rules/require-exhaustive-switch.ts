@@ -1,3 +1,4 @@
+import type { TSESLint } from "@typescript-eslint/utils";
 import { createSwitchExhaustivenessRule } from "../utils/switch-exhaustiveness-rule.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
@@ -6,7 +7,7 @@ const DOCS_URL = knowledgeUrl(
   "4. Partial switch without exhaustiveness",
 );
 
-export default createSwitchExhaustivenessRule({
+const rule: TSESLint.RuleModule<string, []> = createSwitchExhaustivenessRule({
   name: "require-exhaustive-switch",
   description:
     "Require exhaustive switch statements on discriminated unions with a never-assertion or throw in the default branch",
@@ -15,3 +16,5 @@ export default createSwitchExhaustivenessRule({
     "Switch statement is not exhaustive. Missing variants: {{missing}}. Handle all variants or add a default branch with assertNever or a throw statement. See: {{url}}",
   url: DOCS_URL,
 });
+
+export default rule;

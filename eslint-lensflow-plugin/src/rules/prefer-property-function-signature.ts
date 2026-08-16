@@ -1,3 +1,4 @@
+import type { TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { createBivariantMethodVisitor } from "../utils/bivariant-method-checker.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
@@ -7,7 +8,7 @@ const URL = knowledgeUrl(
   "Bivariant method vs. contravariant function property",
 );
 
-export default createRule({
+const rule: TSESLint.RuleModule<"methodSyntax", []> = createRule({
   name: "prefer-property-function-signature",
   meta: {
     type: "suggestion",
@@ -29,3 +30,5 @@ export default createRule({
     return createBivariantMethodVisitor(context, { url: URL });
   },
 });
+
+export default rule;

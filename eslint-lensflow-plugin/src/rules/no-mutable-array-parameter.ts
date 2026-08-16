@@ -1,3 +1,4 @@
+import type { TSESLint } from "@typescript-eslint/utils";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import { createMutableArrayParamRule } from "../utils/visitor-helpers.js";
 
@@ -6,7 +7,7 @@ const URL = knowledgeUrl(
   "Example A — Read-only vs mutable container",
 );
 
-export default createMutableArrayParamRule({
+const rule: TSESLint.RuleModule<string, []> = createMutableArrayParamRule({
   name: "no-mutable-array-parameter",
   description:
     "Disallow mutable array types (`T[]` or `Array<T>`) in function parameters",
@@ -20,3 +21,5 @@ export default createMutableArrayParamRule({
     url: URL,
   }),
 });
+
+export default rule;
