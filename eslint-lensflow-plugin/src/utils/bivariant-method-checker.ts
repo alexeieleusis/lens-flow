@@ -3,10 +3,7 @@ import type { TSESLint, TSESTree } from "@typescript-eslint/utils";
 export function createBivariantMethodVisitor(
   context: TSESLint.RuleContext<string, unknown[]>,
   options: { url?: string } = {},
-): {
-  TSInterfaceBody: (node: TSESTree.TSInterfaceBody) => void;
-  TSTypeLiteral: (node: TSESTree.TSTypeLiteral) => void;
-} {
+): Record<string, (node: TSESTree.Node) => void> {
   const reportMethod = (member: TSESTree.TSMethodSignature) => {
     let name: string;
     if (member.key.type === "Identifier") {
@@ -37,7 +34,8 @@ export function createBivariantMethodVisitor(
 
   return {
     TSInterfaceBody(node) {
-      for (const member of node.body) {
+      const n = node as TSESTree.TSInterfaceBody;
+      for (const member of n.body) {
         if (member.type === "TSMethodSignature" && member.kind === "method") {
           reportMethod(member);
         }
@@ -45,7 +43,8 @@ export function createBivariantMethodVisitor(
     },
 
     TSTypeLiteral(node) {
-      for (const member of node.members) {
+      const n = node as TSESTree.TSTypeLiteral;
+      for (const member of n.members) {
         if (member.type === "TSMethodSignature" && member.kind === "method") {
           reportMethod(member);
         }

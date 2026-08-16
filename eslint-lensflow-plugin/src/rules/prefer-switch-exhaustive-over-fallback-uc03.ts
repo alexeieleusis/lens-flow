@@ -1,5 +1,5 @@
 import ts from "typescript";
-import { TSESTree } from "@typescript-eslint/utils";
+import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { createFunctionBodyVisitor } from "../utils/visitor-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
@@ -20,9 +20,7 @@ function reportIfMissing(
   comparedValues: Set<string>,
   fallbackNode: TSESTree.Node,
   checker: ts.TypeChecker,
-  context: Parameters<
-    NonNullable<Parameters<typeof createRule>[0]["create"]>
-  >[0],
+  context: TSESLint.RuleContext<string, readonly unknown[]>,
 ): void {
   if (comparedValues.size < 2) return;
 
@@ -83,9 +81,7 @@ export default createRule({
         ifStmt: TSESTree.IfStatement,
         firstInfo: ComparisonInfo,
         checker: ts.TypeChecker,
-        context: Parameters<
-          NonNullable<Parameters<typeof createRule>[0]["create"]>
-        >[0],
+        context: TSESLint.RuleContext<string, readonly unknown[]>,
       ): void {
         const comparedValues = new Set<string>();
         comparedValues.add(firstInfo.value);

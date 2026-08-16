@@ -12,7 +12,7 @@ export interface SwitchExhaustivenessRuleOptions {
 
 export function createSwitchExhaustivenessRule(
   options: SwitchExhaustivenessRuleOptions,
-) {
+): TSESLint.RuleModule<string, []> {
   return createRule({
     name: options.name,
     meta: {
@@ -27,7 +27,7 @@ export function createSwitchExhaustivenessRule(
       fixable: undefined,
     },
     defaultOptions: [],
-    create(context: TSESLint.RuleContext<string, readonly unknown[]>) {
+    create(context: TSESLint.RuleContext<string, []>) {
       const parserServices = ESLintUtils.getParserServices(context, true);
       const program = parserServices.program;
       if (!program) return {};
