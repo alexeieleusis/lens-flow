@@ -1,3 +1,4 @@
+import type { TSESLint } from "@typescript-eslint/utils";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import { createMutableArrayParamRule } from "../utils/visitor-helpers.js";
 
@@ -6,7 +7,7 @@ const URL = knowledgeUrl(
   "Antipatterns with Other Techniques > Using mutable arrays instead of `readonly` + covariance",
 );
 
-export default createMutableArrayParamRule({
+const rule: TSESLint.RuleModule<string, []> = createMutableArrayParamRule({
   name: "no-mutable-array-parameter-uc17",
   description:
     "Disallow mutable array types in function parameters — use `readonly T[]` or `ReadonlyArray<T>` to prevent unsound covariant mutation.",
@@ -21,3 +22,5 @@ export default createMutableArrayParamRule({
     url: URL,
   }),
 });
+
+export default rule;
