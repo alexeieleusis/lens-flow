@@ -33,6 +33,12 @@ ruleTester.run("require-readonly-domain-props-uc02", rule, {
       };`,
       options: [{ minProperties: 3 }],
     },
+    // Type literal wrapped in `Readonly<...>` — properties are immutable
+    // at the type level even without the explicit `readonly` keyword.
+    `const cache: Readonly<{
+      a: number;
+      b: string;
+    }> = compute();`,
   ],
   invalid: [
     // Mutable type literal with 3+ properties

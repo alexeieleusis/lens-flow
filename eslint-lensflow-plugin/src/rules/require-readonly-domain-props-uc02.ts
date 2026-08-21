@@ -16,6 +16,18 @@ function getMembers(
   return node.members;
 }
 
+// `Readonly<{ ... }>` makes every property immutable at the type level,
+// regardless of whether the `readonly` keyword is written on each member.
+function isReadonlyUtilityArgument(node: TSESTree.TSTypeLiteral): boolean {
+  const parent: TSESTree.Node | undefined = node.parent;
+  return (
+    parent?.type === "TSTypeParameterInstantiation" &&
+    parent.parent.type === "TSTypeReference" &&
+    parent.parent.typeName.type === "Identifier" &&
+    parent.parent.typeName.name === "Readonly"
+  );
+}
+
 export default createRule({
   name: "require-readonly-domain-props-uc02",
   meta: {
@@ -85,6 +97,7 @@ export default createRule({
         checkParent(node);
       },
       TSTypeLiteral(node) {
+        if (isReadonlyUtilityArgument(node)) return;
         checkParent(node);
       },
     };
