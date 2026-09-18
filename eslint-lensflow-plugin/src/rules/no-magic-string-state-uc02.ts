@@ -1,6 +1,8 @@
-import { TSESTree, TSESLint } from "@typescript-eslint/utils";
+import ts from "typescript";
+import { TSESTree, TSESLint, ESLintUtils } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
+import { getStringLiteralUnionValues } from "../utils/ts-helpers.js";
 
 const URL = knowledgeUrl(
   "usecases/UC02-domain-modeling.md",
@@ -16,7 +18,23 @@ type Comparison = {
 type Scope = {
   comparisons: Comparison[];
   switches: TSESTree.SwitchStatement[];
+  guard: GuardInfo | null;
+  literalUnionCache: Map<string, boolean>;
 };
+
+// A user-defined type guard (`function f(x: unknown): x is T`) whose asserted
+// type `T` is a string-literal union. Comparisons of `x` against `T`'s own
+// literals inside such a function are the validation itself, not a magic-string
+// antipattern.
+type GuardInfo = {
+  paramName: string;
+  values: Set<string>;
+};
+
+type FunctionLike =
+  | TSESTree.FunctionDeclaration
+  | TSESTree.FunctionExpression
+  | TSESTree.ArrowFunctionExpression;
 
 function normalizeVariable(
   node: TSESTree.Identifier | TSESTree.MemberExpression,
@@ -80,14 +98,117 @@ export default createRule({
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"magicComparison" | "magicSwitch", []>) {
+    const parserServices = ESLintUtils.getParserServices(context, true);
+    const checker = parserServices.program?.getTypeChecker();
+
     const scopeStack: Scope[] = [];
 
     function getCurrentScope(): Scope | null {
       return scopeStack.length > 0 ? scopeStack[scopeStack.length - 1] : null;
     }
 
-    function enterScope(): void {
-      scopeStack.push({ comparisons: [], switches: [] });
+    // If `node` is `function f(x: unknown): x is T` and `T` resolves to a
+    // string-literal union, returns that guard's parameter name and literals.
+    function getGuardInfo(node: FunctionLike): GuardInfo | null {
+      if (!checker) return null;
+
+      const returnAnn = node.returnType?.typeAnnotation;
+      if (returnAnn?.type !== "TSTypePredicate" || !returnAnn.typeAnnotation) {
+        return null;
+      }
+      if (returnAnn.parameterName.type !== "Identifier") return null;
+
+      const tsTypeNode = parserServices.esTreeNodeToTSNodeMap.get(
+        returnAnn.typeAnnotation.typeAnnotation,
+      );
+      if (!tsTypeNode) return null;
+
+      const assertedType = checker.getTypeFromTypeNode(
+        tsTypeNode as ts.TypeNode,
+      );
+      const values = getStringLiteralUnionValues(assertedType, checker);
+      if (values.length < 2) return null;
+
+      return {
+        paramName: returnAnn.parameterName.name,
+        values: new Set(values),
+      };
+    }
+
+    // True when `variableName`'s TypeScript type is already a string-literal
+    // union (e.g. a declared `type OrderState = "pending" | "shipped"`), in
+    // which case the comparisons are consuming an existing union type, not a
+    // magic-string antipattern that needs one introduced. Cached per variable
+    // per scope since a variable's type doesn't change between the many
+    // comparisons/switches a scope can hold against it.
+    function computeIsLiteralUnionType(
+      node: TSESTree.Identifier | TSESTree.MemberExpression,
+    ): boolean {
+      if (!checker) return false;
+
+      const tsNode = parserServices.esTreeNodeToTSNodeMap.get(node);
+      if (!tsNode) return false;
+
+      return (
+        getStringLiteralUnionValues(
+          checker.getTypeAtLocation(tsNode),
+          checker,
+        ).length >= 2
+      );
+    }
+
+    function isAlreadyLiteralUnionType(
+      scope: Scope,
+      variableName: string,
+      node: TSESTree.Identifier | TSESTree.MemberExpression,
+    ): boolean {
+      const cached = scope.literalUnionCache.get(variableName);
+      if (cached !== undefined) return cached;
+
+      const result = computeIsLiteralUnionType(node);
+      scope.literalUnionCache.set(variableName, result);
+      return result;
+    }
+
+    // True for `x === "a" || x === "b" ? x : fallback` — the comparisons
+    // narrow `x` and the ternary then returns that same `x`. This is a
+    // validate-and-pass-through idiom, not state-branching on magic strings.
+    function isValuePreservingTernary(
+      node: TSESTree.BinaryExpression,
+      variableName: string,
+    ): boolean {
+      let current: TSESTree.Node = node;
+      while (
+        current.parent?.type === "LogicalExpression" &&
+        current.parent.operator === "||"
+      ) {
+        current = current.parent;
+      }
+
+      const parent = current.parent;
+      if (
+        !parent ||
+        parent.type !== "ConditionalExpression" ||
+        parent.test !== current
+      ) {
+        return false;
+      }
+
+      const consequent = parent.consequent;
+      return (
+        (consequent.type === "Identifier" ||
+          consequent.type === "MemberExpression") &&
+        normalizeVariable(consequent) === variableName
+      );
+    }
+
+    function enterScope(node: FunctionLike): void {
+      scopeStack.push({
+        comparisons: [],
+        switches: [],
+        guard: getGuardInfo(node),
+        literalUnionCache: new Map(),
+      });
     }
 
     function reportMagicComparisons(groups: Map<string, Comparison[]>): void {
@@ -189,11 +310,23 @@ export default createRule({
             TSESTree.Identifier | TSESTree.MemberExpression;
         }
 
-        scope.comparisons.push({
-          node,
-          variableName: normalizeVariable(nonLiteral),
-          value: String(literal.value),
-        });
+        const variableName = normalizeVariable(nonLiteral);
+        const value = String(literal.value);
+
+        if (
+          scope.guard?.paramName === variableName &&
+          scope.guard.values.has(value)
+        ) {
+          return;
+        }
+        if (isValuePreservingTernary(node, variableName)) {
+          return;
+        }
+        if (isAlreadyLiteralUnionType(scope, variableName, nonLiteral)) {
+          return;
+        }
+
+        scope.comparisons.push({ node, variableName, value });
       },
 
       SwitchStatement(node) {
@@ -204,6 +337,14 @@ export default createRule({
           node.discriminant.type === "Identifier" ||
           node.discriminant.type === "MemberExpression";
         if (!isVarDiscriminant) return;
+
+        const discriminant = node.discriminant as
+          TSESTree.Identifier | TSESTree.MemberExpression;
+        const variableName = getSwitchVariable(node);
+
+        if (scope.guard?.paramName === variableName) return;
+        if (isAlreadyLiteralUnionType(scope, variableName, discriminant))
+          return;
 
         scope.switches.push(node);
       },

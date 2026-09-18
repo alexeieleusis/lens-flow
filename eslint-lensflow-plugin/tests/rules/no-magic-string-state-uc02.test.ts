@@ -28,6 +28,48 @@ function isShipped(o: { state: OrderState }) {
     `function isShipped(o: { state: string }) {
       return o.state == "shipped";
     }`,
+    // Type-guard narrowing an `unknown` value against a literal union type:
+    // the comparisons ARE the exhaustiveness check, not a magic-string antipattern.
+    // See https://github.com/alexeieleusis/agentic-neighboku-lensflow/pull/16#discussion_r3873407050
+    `type PieceType = "Shapes" | "Faces";
+function pieceTypeOr(fallback: PieceType, value: unknown): PieceType {
+  return value === "Shapes" || value === "Faces" ? value : fallback;
+}`,
+    // User-defined type predicate validating `unknown` against a literal
+    // union: the comparisons are the runtime check backing `value is PieceType`.
+    `type PieceType = "Shapes" | "Faces";
+function isPieceType(value: unknown): value is PieceType {
+  return value === "Shapes" || value === "Faces";
+}`,
+    // Same idiom, expressed as a switch instead of ||.
+    `type PieceType = "Shapes" | "Faces";
+function isPieceType(value: unknown): value is PieceType {
+  switch (value) {
+    case "Shapes":
+    case "Faces":
+      return true;
+    default:
+      return false;
+  }
+}`,
+    // Variable already typed as a string-literal union: the comparisons are
+    // consuming an existing union type, not asking for one to be introduced.
+    `type OrderState = "pending" | "shipped" | "cancelled";
+function isPendingOrShipped(o: { state: OrderState }) {
+  return o.state === "pending" || o.state === "shipped";
+}`,
+    // Same idiom, expressed as a switch instead of ||.
+    `type OrderState = "pending" | "shipped" | "cancelled";
+function process(order: { state: OrderState }) {
+  switch (order.state) {
+    case "pending":
+      break;
+    case "shipped":
+      break;
+    case "cancelled":
+      break;
+  }
+}`,
   ],
   invalid: [
     {
