@@ -160,11 +160,7 @@ function isValuePreservingTernary(
   }
 
   const parent = current.parent;
-  if (
-    !parent ||
-    parent.type !== "ConditionalExpression" ||
-    parent.test !== current
-  ) {
+  if (parent?.type !== "ConditionalExpression" || parent.test !== current) {
     return false;
   }
 
