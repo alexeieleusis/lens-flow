@@ -155,5 +155,22 @@ function process(order: { state: OrderState }) {
         { messageId: "magicComparison" },
       ],
     },
+    // A switch inside a type guard whose case literals are unrelated to the
+    // guard's asserted union must not be exempted: the guard-parameter
+    // shortcut only makes sense when the cases are actually checking the
+    // guard's values, mirroring the per-value check already done for
+    // BinaryExpression comparisons.
+    // See https://github.com/alexeieleusis/lens-flow/pull/342#discussion_r4047600549
+    {
+      code: `function isKind(x: unknown): x is "a" | "b" {
+        switch (x) {
+          case "totally-unrelated-1":
+          case "totally-unrelated-2":
+            break;
+        }
+        return x === "a" || x === "b";
+      }`,
+      errors: [{ messageId: "magicSwitch" }],
+    },
   ],
 });

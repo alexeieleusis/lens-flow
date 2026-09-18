@@ -412,7 +412,17 @@ export default createRule({
           TSESTree.Identifier | TSESTree.MemberExpression;
         const variableName = getSwitchVariable(node);
 
-        if (scope.guard?.paramName === variableName) return;
+        if (scope.guard?.paramName === variableName) {
+          const stringCaseValues = node.cases
+            .filter(
+              (c) =>
+                c.test?.type === "Literal" &&
+                typeof (c.test as TSESTree.Literal).value === "string",
+            )
+            .map((c) => String((c.test as TSESTree.Literal).value));
+          if (stringCaseValues.every((v) => scope.guard!.values.has(v)))
+            return;
+        }
         if (isAlreadyLiteralUnionType(scope, variableName, discriminant))
           return;
 
