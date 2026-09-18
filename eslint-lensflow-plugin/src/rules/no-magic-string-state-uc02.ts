@@ -257,9 +257,8 @@ export default createRule({
       // than by name. Nodes the checker can't resolve to a symbol (e.g. a
       // dynamically-computed member `o[x]`) skip the cache entirely.
       const tsNode = parserServices.esTreeNodeToTSNodeMap.get(node);
-      const symbol = tsNode && checker
-        ? checker.getSymbolAtLocation(tsNode)
-        : undefined;
+      const symbol =
+        tsNode && checker ? checker.getSymbolAtLocation(tsNode) : undefined;
 
       if (!symbol) {
         return computeIsLiteralUnionType(node);
@@ -421,8 +420,7 @@ export default createRule({
                 typeof (c.test as TSESTree.Literal).value === "string",
             )
             .map((c) => String((c.test as TSESTree.Literal).value));
-          if (stringCaseValues.every((v) => scope.guard!.values.has(v)))
-            return;
+          if (stringCaseValues.every((v) => scope.guard!.values.has(v))) return;
         }
         if (isAlreadyLiteralUnionType(scope, discriminant)) return;
 
