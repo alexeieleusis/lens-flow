@@ -127,6 +127,20 @@ function process(order: { state: OrderState }) {
         { messageId: "magicComparison" },
       ],
     },
+    // A disjunction where a DIFFERENT variable can satisfy the `||` on its
+    // own must not be exempted as value-preserving: `y === "b"` can make the
+    // condition true without validating `x`, so `x`'s own two-literal check
+    // is still a real magic-string antipattern.
+    // See https://github.com/alexeieleusis/lens-flow/pull/342#discussion_r4047502242
+    {
+      code: `function pick(fallback: string, x: string, y: string): string {
+        return x === "a" || y === "b" || x === "c" ? x : fallback;
+      }`,
+      errors: [
+        { messageId: "magicComparison" },
+        { messageId: "magicComparison" },
+      ],
+    },
     // Two distinct computed properties on the same object (`o["kind"]`,
     // `o["state"]`) must not share a cache key. `kind` is an existing
     // literal union (exempt), but `state` is a plain string compared

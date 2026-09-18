@@ -183,9 +183,67 @@ export default createRule({
       return result;
     }
 
-    // True for `x === "a" || x === "b" ? x : fallback` — the comparisons
-    // narrow `x` and the ternary then returns that same `x`. This is a
-    // validate-and-pass-through idiom, not state-branching on magic strings.
+    // True when every leaf of an `||` tree is an equality comparison of
+    // `variableName` against a string literal — i.e. the whole disjunction is
+    // "is variableName one of these literals", not something a different
+    // variable could satisfy on its own.
+    function everyDisjunctComparesVariable(
+      node: TSESTree.Node,
+      variableName: string,
+    ): boolean {
+      if (node.type === "LogicalExpression" && node.operator === "||") {
+        return (
+          everyDisjunctComparesVariable(node.left, variableName) &&
+          everyDisjunctComparesVariable(node.right, variableName)
+        );
+      }
+
+      if (node.type !== "BinaryExpression") return false;
+      if (
+        node.operator !== "===" &&
+        node.operator !== "==" &&
+        node.operator !== "!==" &&
+        node.operator !== "!="
+      ) {
+        return false;
+      }
+
+      const leftIsVar =
+        node.left.type === "Identifier" || node.left.type === "MemberExpression";
+      const rightIsVar =
+        node.right.type === "Identifier" ||
+        node.right.type === "MemberExpression";
+      const leftIsStringLiteral =
+        node.left.type === "Literal" &&
+        typeof (node.left as TSESTree.Literal).value === "string";
+      const rightIsStringLiteral =
+        node.right.type === "Literal" &&
+        typeof (node.right as TSESTree.Literal).value === "string";
+
+      if (leftIsStringLiteral && rightIsVar) {
+        return (
+          normalizeVariable(
+            node.right as TSESTree.Identifier | TSESTree.MemberExpression,
+          ) === variableName
+        );
+      }
+      if (rightIsStringLiteral && leftIsVar) {
+        return (
+          normalizeVariable(
+            node.left as TSESTree.Identifier | TSESTree.MemberExpression,
+          ) === variableName
+        );
+      }
+      return false;
+    }
+
+    // True for `x === "a" || x === "b" ? x : fallback` — every comparison in
+    // the disjunction narrows `x` and the ternary then returns that same `x`.
+    // This is a validate-and-pass-through idiom, not state-branching on magic
+    // strings. A disjunction where some operand compares a different variable
+    // (`x === "a" || y === "b" ? x : fallback`) does NOT qualify: `y` alone
+    // can satisfy the condition without validating `x`, so `x` can still be a
+    // magic-string state check.
     function isValuePreservingTernary(
       node: TSESTree.BinaryExpression,
       variableName: string,
@@ -204,6 +262,10 @@ export default createRule({
         parent.type !== "ConditionalExpression" ||
         parent.test !== current
       ) {
+        return false;
+      }
+
+      if (!everyDisjunctComparesVariable(current, variableName)) {
         return false;
       }
 
