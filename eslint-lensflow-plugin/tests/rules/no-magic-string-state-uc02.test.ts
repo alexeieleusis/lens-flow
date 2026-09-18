@@ -127,5 +127,19 @@ function process(order: { state: OrderState }) {
         { messageId: "magicComparison" },
       ],
     },
+    // Two distinct computed properties on the same object (`o["kind"]`,
+    // `o["state"]`) must not share a cache key. `kind` is an existing
+    // literal union (exempt), but `state` is a plain string compared
+    // against magic strings and must still be flagged.
+    {
+      code: `type Kind = "a" | "b";
+      function process(o: { kind: Kind; state: string }) {
+        return o["kind"] === "a" || o["state"] === "x" || o["state"] === "y";
+      }`,
+      errors: [
+        { messageId: "magicComparison" },
+        { messageId: "magicComparison" },
+      ],
+    },
   ],
 });

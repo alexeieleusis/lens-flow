@@ -49,7 +49,14 @@ function normalizeVariable(
         )
       : undefined;
   if (!objName) return "?";
-  const prop = node.property.type === "Identifier" ? node.property.name : "?";
+  const prop =
+    !node.computed && node.property.type === "Identifier"
+      ? node.property.name
+      : node.computed &&
+          node.property.type === "Literal" &&
+          typeof node.property.value === "string"
+        ? node.property.value
+        : "?";
   return objName + "." + prop;
 }
 
@@ -160,6 +167,14 @@ export default createRule({
       variableName: string,
       node: TSESTree.Identifier | TSESTree.MemberExpression,
     ): boolean {
+      // "?" marks a segment normalizeVariable couldn't resolve statically
+      // (e.g. a dynamically-computed member `o[x]`) — distinct members can
+      // collapse to the same ambiguous name, so caching by that name would
+      // let one member's result leak onto another's.
+      if (variableName === "?" || variableName.endsWith(".?")) {
+        return computeIsLiteralUnionType(node);
+      }
+
       const cached = scope.literalUnionCache.get(variableName);
       if (cached !== undefined) return cached;
 
