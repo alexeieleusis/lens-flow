@@ -42,6 +42,11 @@ export function getChildren(
   return children;
 }
 
+export type FunctionLikeNode =
+  | TSESTree.FunctionDeclaration
+  | TSESTree.FunctionExpression
+  | TSESTree.ArrowFunctionExpression;
+
 const FUNCTION_BOUNDARY_TYPES = new Set([
   "FunctionDeclaration",
   "FunctionExpression",

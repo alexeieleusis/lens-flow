@@ -3,6 +3,7 @@ import { TSESTree, TSESLint, ESLintUtils } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import { getStringLiteralUnionValues } from "../utils/ts-helpers.js";
+import type { FunctionLikeNode } from "../utils/ast-helpers.js";
 
 const URL = knowledgeUrl(
   "usecases/UC02-domain-modeling.md",
@@ -30,11 +31,6 @@ type GuardInfo = {
   paramName: string;
   values: Set<string>;
 };
-
-type FunctionLike =
-  | TSESTree.FunctionDeclaration
-  | TSESTree.FunctionExpression
-  | TSESTree.ArrowFunctionExpression;
 
 function normalizeVariable(
   node: TSESTree.Identifier | TSESTree.MemberExpression,
@@ -205,7 +201,7 @@ export default createRule({
 
     // If `node` is `function f(x: unknown): x is T` and `T` resolves to a
     // string-literal union, returns that guard's parameter name and literals.
-    function getGuardInfo(node: FunctionLike): GuardInfo | null {
+    function getGuardInfo(node: FunctionLikeNode): GuardInfo | null {
       if (!checker) return null;
 
       const returnAnn = node.returnType?.typeAnnotation;
@@ -277,7 +273,7 @@ export default createRule({
       return result;
     }
 
-    function enterScope(node: FunctionLike): void {
+    function enterScope(node: FunctionLikeNode): void {
       scopeStack.push({
         comparisons: [],
         switches: [],
