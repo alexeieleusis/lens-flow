@@ -150,10 +150,8 @@ export default createRule({
       if (!tsNode) return false;
 
       return (
-        getStringLiteralUnionValues(
-          checker.getTypeAtLocation(tsNode),
-          checker,
-        ).length >= 2
+        getStringLiteralUnionValues(checker.getTypeAtLocation(tsNode), checker)
+          .length >= 2
       );
     }
 
