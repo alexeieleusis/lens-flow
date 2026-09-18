@@ -172,5 +172,24 @@ function process(order: { state: OrderState }) {
       }`,
       errors: [{ messageId: "magicSwitch" }],
     },
+    // Two distinct block-scoped `x` bindings sharing the same name must not
+    // share a literal-union cache entry: the first `x` is a real literal
+    // union (exempt), the second is a plain string and must still be flagged.
+    // See https://github.com/alexeieleusis/lens-flow/pull/342#discussion_r4047602002
+    {
+      code: `function f(cond: boolean, getX: () => "a" | "b", getY: () => string): void {
+        if (cond) {
+          const x: "a" | "b" = getX();
+          if (x === "a" || x === "b") { /* noop */ }
+        } else {
+          const x: string = getY();
+          if (x === "c" || x === "d") { /* noop */ }
+        }
+      }`,
+      errors: [
+        { messageId: "magicComparison" },
+        { messageId: "magicComparison" },
+      ],
+    },
   ],
 });

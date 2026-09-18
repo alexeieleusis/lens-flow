@@ -19,7 +19,7 @@ type Scope = {
   comparisons: Comparison[];
   switches: TSESTree.SwitchStatement[];
   guard: GuardInfo | null;
-  literalUnionCache: Map<string, boolean>;
+  literalUnionCache: Map<ts.Symbol, boolean>;
 };
 
 // A user-defined type guard (`function f(x: unknown): x is T`) whose asserted
@@ -234,9 +234,9 @@ export default createRule({
     // True when `variableName`'s TypeScript type is already a string-literal
     // union (e.g. a declared `type OrderState = "pending" | "shipped"`), in
     // which case the comparisons are consuming an existing union type, not a
-    // magic-string antipattern that needs one introduced. Cached per variable
-    // per scope since a variable's type doesn't change between the many
-    // comparisons/switches a scope can hold against it.
+    // magic-string antipattern that needs one introduced. Cached per resolved
+    // binding per scope since a variable's type doesn't change between the
+    // many comparisons/switches a scope can hold against it.
     function computeIsLiteralUnionType(
       node: TSESTree.Identifier | TSESTree.MemberExpression,
     ): boolean {
@@ -253,22 +253,27 @@ export default createRule({
 
     function isAlreadyLiteralUnionType(
       scope: Scope,
-      variableName: string,
       node: TSESTree.Identifier | TSESTree.MemberExpression,
     ): boolean {
-      // "?" marks a segment normalizeVariable couldn't resolve statically
-      // (e.g. a dynamically-computed member `o[x]`) — distinct members can
-      // collapse to the same ambiguous name, so caching by that name would
-      // let one member's result leak onto another's.
-      if (variableName === "?" || variableName.endsWith(".?")) {
+      // Two distinct bindings can share the same name string (e.g. two
+      // block-scoped `x` declarations in different branches of the same
+      // function), so the cache is keyed by the resolved TS symbol rather
+      // than by name. Nodes the checker can't resolve to a symbol (e.g. a
+      // dynamically-computed member `o[x]`) skip the cache entirely.
+      const tsNode = parserServices.esTreeNodeToTSNodeMap.get(node);
+      const symbol = tsNode && checker
+        ? checker.getSymbolAtLocation(tsNode)
+        : undefined;
+
+      if (!symbol) {
         return computeIsLiteralUnionType(node);
       }
 
-      const cached = scope.literalUnionCache.get(variableName);
+      const cached = scope.literalUnionCache.get(symbol);
       if (cached !== undefined) return cached;
 
       const result = computeIsLiteralUnionType(node);
-      scope.literalUnionCache.set(variableName, result);
+      scope.literalUnionCache.set(symbol, result);
       return result;
     }
 
@@ -392,7 +397,7 @@ export default createRule({
         if (isValuePreservingTernary(node, variableName)) {
           return;
         }
-        if (isAlreadyLiteralUnionType(scope, variableName, nonLiteral)) {
+        if (isAlreadyLiteralUnionType(scope, nonLiteral)) {
           return;
         }
 
@@ -423,8 +428,7 @@ export default createRule({
           if (stringCaseValues.every((v) => scope.guard!.values.has(v)))
             return;
         }
-        if (isAlreadyLiteralUnionType(scope, variableName, discriminant))
-          return;
+        if (isAlreadyLiteralUnionType(scope, discriminant)) return;
 
         scope.switches.push(node);
       },
