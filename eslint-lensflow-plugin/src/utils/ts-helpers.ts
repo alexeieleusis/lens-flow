@@ -22,16 +22,22 @@ export function containsUnknown(typeNode: TSESTree.TypeNode): boolean {
 }
 import { defaultHasNeverAssertion, getLiteralFromExpr } from "./ast-helpers.js";
 
+export function getStringLiteralUnionValues(
+  type: ts.Type,
+  checker?: ts.TypeChecker,
+): string[] {
+  return extractLiteralValues(type, checker).filter(
+    (v): v is string => typeof v === "string",
+  );
+}
+
 export function getMissingLiteralValues(
   checker: ts.TypeChecker,
   tsNode: ts.Node,
   comparedValues: Set<string>,
 ): string[] {
   const varType = checker.getTypeAtLocation(tsNode);
-  const literalValues = extractLiteralValues(varType);
-  const stringLiterals = literalValues.filter(
-    (v): v is string => typeof v === "string",
-  );
+  const stringLiterals = getStringLiteralUnionValues(varType);
 
   if (stringLiterals.length < 2) return [];
 
