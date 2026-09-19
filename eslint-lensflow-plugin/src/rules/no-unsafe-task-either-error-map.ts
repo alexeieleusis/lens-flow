@@ -9,7 +9,7 @@ interface ESTreeToTSNodeMap {
 }
 
 const DOCS_URL = knowledgeUrl(
-  "usecases/UC21-async-concurrency.md",
+  "usecases/UC21-concurrency.md",
   "A3 — Throwing inside `TaskEither` without proper error mapping",
 );
 

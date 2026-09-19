@@ -4,7 +4,7 @@ import { walkNodes } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const URL = knowledgeUrl(
-  "usecases/UC21-async-concurrency.md",
+  "usecases/UC21-concurrency.md",
   "A4 — Memory leak with uncanceled `AbortSignal`",
 );
 
