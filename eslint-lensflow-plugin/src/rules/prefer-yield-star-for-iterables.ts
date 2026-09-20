@@ -4,7 +4,7 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 
 const RULE_URL = knowledgeUrl(
-  "usecases/UC21-async-concurrency.md",
+  "usecases/UC21-concurrency.md",
   "A5 — Nested async generators without `yield*`",
 );
 
