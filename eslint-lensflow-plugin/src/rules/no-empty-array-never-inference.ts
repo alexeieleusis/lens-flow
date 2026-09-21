@@ -78,8 +78,7 @@ function isCallArgumentGoverned(
 }
 
 type GoverningStep =
-  | { done: true; result: boolean }
-  | { done: false; next: TSESTree.Node };
+  { done: true; result: boolean } | { done: false; next: TSESTree.Node };
 
 /**
  * Single step of the upward walk `isGovernedByExplicitType` performs: either
