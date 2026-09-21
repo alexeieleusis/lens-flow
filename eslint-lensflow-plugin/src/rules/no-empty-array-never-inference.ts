@@ -170,6 +170,7 @@ export default createRule({
         "Empty array literal without type annotation is inferred as never[]. Add an explicit type annotation (e.g. string[]) to avoid cryptic errors on push(). See: {{url}}",
     },
     schema: [],
+    fixable: undefined,
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"emptyArrayNoType", []>) {
