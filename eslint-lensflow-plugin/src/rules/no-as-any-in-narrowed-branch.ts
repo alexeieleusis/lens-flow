@@ -1,6 +1,7 @@
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
+import { isFunctionBoundary } from "../utils/ast-helpers.js";
 
 const URL = knowledgeUrl(
   "catalog/T34-never-bottom.md",
@@ -212,14 +213,6 @@ function extractGuardFromSwitch(
   const narrowed = handleSwitchCase(ancestors, sc);
   if (!narrowed) return null;
   return { id: narrowed, guard: sc };
-}
-
-function isFunctionBoundary(node: TSESTree.Node): boolean {
-  return (
-    node.type === "ArrowFunctionExpression" ||
-    node.type === "FunctionExpression" ||
-    node.type === "FunctionDeclaration"
-  );
 }
 
 function findNarrowedVariable(
