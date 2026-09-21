@@ -42,6 +42,7 @@ function destructuredBindingHasInferredType(
   identifier: TSESTree.Identifier,
 ): boolean {
   const tsIdentifier = parserServices.esTreeNodeToTSNodeMap.get(identifier);
+  if (!tsIdentifier) return false;
   const type = checker.getTypeAtLocation(tsIdentifier);
   if (!checker.isArrayType(type)) return false;
   const [elementType] = checker.getTypeArguments(type as ts.TypeReference);
@@ -55,6 +56,7 @@ function callArgumentHasExplicitParamType(
   argIndex: number,
 ): boolean {
   const tsCallNode = parserServices.esTreeNodeToTSNodeMap.get(callNode);
+  if (!tsCallNode) return false;
   const signature = checker.getResolvedSignature(
     tsCallNode as ts.CallExpression | ts.NewExpression,
   );
