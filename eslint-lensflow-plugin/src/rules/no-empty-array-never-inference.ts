@@ -3,10 +3,7 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import { ESLintUtils, TSESLint, TSESTree } from "@typescript-eslint/utils";
 import type { ParserServices } from "@typescript-eslint/utils";
-import {
-  isFunctionBoundary,
-  type FunctionLikeNode,
-} from "../utils/ast-helpers.js";
+import { getEnclosingFunction } from "../utils/ast-helpers.js";
 
 const URL = knowledgeUrl(
   "catalog/T34-never-bottom.md",
@@ -17,17 +14,6 @@ function isEmptyArrayExpression(
   node: TSESTree.Node | null | undefined,
 ): node is TSESTree.ArrayExpression {
   return node?.type === "ArrayExpression" && node.elements.length === 0;
-}
-
-function findEnclosingFunction(
-  node: TSESTree.Node,
-): FunctionLikeNode | undefined {
-  let current: TSESTree.Node | undefined = node.parent;
-  while (current) {
-    if (isFunctionBoundary(current)) return current as FunctionLikeNode;
-    current = current.parent;
-  }
-  return undefined;
 }
 
 /**
@@ -126,7 +112,7 @@ function nextGoverningStep(
     case "ReturnStatement":
       return {
         done: true,
-        result: !!findEnclosingFunction(parent)?.returnType,
+        result: !!getEnclosingFunction(parent)?.returnType,
       };
     case "ArrowFunctionExpression":
       return {
