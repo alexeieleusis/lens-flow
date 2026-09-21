@@ -3,27 +3,28 @@ import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import { ESLintUtils, TSESLint, TSESTree } from "@typescript-eslint/utils";
 import type { ParserServices } from "@typescript-eslint/utils";
+import {
+  isFunctionBoundary,
+  type FunctionLikeNode,
+} from "../utils/ast-helpers.js";
 
 const URL = knowledgeUrl(
   "catalog/T34-never-bottom.md",
   "Argument of type 'string' is not assignable to parameter of type 'never' (on push)",
 );
 
-type FunctionLike =
-  | TSESTree.FunctionDeclaration
-  | TSESTree.FunctionExpression
-  | TSESTree.ArrowFunctionExpression;
+function isEmptyArrayExpression(
+  node: TSESTree.Node | null | undefined,
+): node is TSESTree.ArrayExpression {
+  return node?.type === "ArrayExpression" && node.elements.length === 0;
+}
 
-function findEnclosingFunction(node: TSESTree.Node): FunctionLike | undefined {
+function findEnclosingFunction(
+  node: TSESTree.Node,
+): FunctionLikeNode | undefined {
   let current: TSESTree.Node | undefined = node.parent;
   while (current) {
-    if (
-      current.type === "FunctionDeclaration" ||
-      current.type === "FunctionExpression" ||
-      current.type === "ArrowFunctionExpression"
-    ) {
-      return current;
-    }
+    if (isFunctionBoundary(current)) return current as FunctionLikeNode;
     current = current.parent;
   }
   return undefined;
@@ -75,7 +76,7 @@ function callArgumentHasExplicitParamType(
 function isGovernedByExplicitType(
   startNode: TSESTree.Expression,
   checker: ts.TypeChecker | undefined,
-  parserServices: ParserServices | undefined,
+  parserServices: ParserServices,
 ): boolean {
   let current: TSESTree.Node = startNode;
   for (;;) {
@@ -104,7 +105,7 @@ function isGovernedByExplicitType(
       return parent.body === current && !!parent.returnType;
     }
     if (parent.type === "CallExpression" || parent.type === "NewExpression") {
-      if (!checker || !parserServices) return false;
+      if (!checker) return false;
       const argIndex = parent.arguments.indexOf(
         current as TSESTree.CallExpressionArgument,
       );
@@ -133,7 +134,6 @@ export default createRule({
         "Empty array literal without type annotation is inferred as never[]. Add an explicit type annotation (e.g. string[]) to avoid cryptic errors on push(). See: {{url}}",
     },
     schema: [],
-    fixable: undefined,
   },
   defaultOptions: [],
   create(context: TSESLint.RuleContext<"emptyArrayNoType", []>) {
@@ -145,11 +145,7 @@ export default createRule({
         const decl = node.parent;
         if (decl.type === "VariableDeclaration" && decl.kind !== "const")
           return;
-        if (
-          node.init?.type === "ArrayExpression" &&
-          node.init.elements.length === 0 &&
-          !node.id.typeAnnotation
-        ) {
+        if (isEmptyArrayExpression(node.init) && !node.id.typeAnnotation) {
           context.report({
             node: node.init,
             messageId: "emptyArrayNoType",
@@ -158,11 +154,7 @@ export default createRule({
         }
       },
       PropertyDefinition(node) {
-        if (
-          node.value?.type === "ArrayExpression" &&
-          node.value.elements.length === 0 &&
-          !node.typeAnnotation
-        ) {
+        if (isEmptyArrayExpression(node.value) && !node.typeAnnotation) {
           context.report({
             node,
             messageId: "emptyArrayNoType",
@@ -173,8 +165,7 @@ export default createRule({
       Property(node) {
         if (node.method) return;
         if (
-          node.value?.type === "ArrayExpression" &&
-          node.value.elements.length === 0 &&
+          isEmptyArrayExpression(node.value) &&
           !isGovernedByExplicitType(node.value, checker, parserServices)
         ) {
           context.report({
@@ -188,8 +179,7 @@ export default createRule({
         if (node.left.type !== "Identifier") return;
         if (
           !node.left.typeAnnotation &&
-          node.right.type === "ArrayExpression" &&
-          node.right.elements.length === 0 &&
+          isEmptyArrayExpression(node.right) &&
           !(
             checker &&
             destructuredBindingHasInferredType(

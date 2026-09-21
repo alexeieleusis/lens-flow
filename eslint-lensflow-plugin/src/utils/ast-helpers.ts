@@ -53,7 +53,7 @@ const FUNCTION_BOUNDARY_TYPES = new Set([
   "ArrowFunctionExpression",
 ]);
 
-function isFunctionBoundary(node: TSESTree.Node): boolean {
+export function isFunctionBoundary(node: TSESTree.Node): boolean {
   return FUNCTION_BOUNDARY_TYPES.has(node.type);
 }
 
