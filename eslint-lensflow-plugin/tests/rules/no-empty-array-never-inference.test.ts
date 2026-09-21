@@ -103,6 +103,13 @@ x.push(1);`,
 const config = { items: [] } satisfies Config;`,
       errors: [{ messageId: "emptyArrayNoType" }],
     },
+    // `as` doesn't contextually type the literal either — the value keeps
+    // its own (never[]) inferred type regardless of the asserted type.
+    {
+      code: `type Config = { items: string[] };
+const config = { items: [] } as Config;`,
+      errors: [{ messageId: "emptyArrayNoType" }],
+    },
     // A plain, unannotated object literal is still unsafe regardless of
     // nesting.
     {
