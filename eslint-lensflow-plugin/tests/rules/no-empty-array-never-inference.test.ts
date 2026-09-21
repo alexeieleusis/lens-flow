@@ -34,6 +34,13 @@ items.push(1);`,
   const [items = []] = pairs;
   return items;
 }`,
+    // A destructured binding whose contextual type is a tuple (not an
+    // Array<T> reference) still has its element type fixed by that tuple,
+    // not by the `[]` default.
+    `function f(data: { pair?: [string?, string?] }) {
+  const { pair = [] } = data;
+  return pair;
+}`,
     // Object-literal property already governed by an explicit type: the
     // property itself carries no annotation, but the position it's checked
     // against does.

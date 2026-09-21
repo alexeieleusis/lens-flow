@@ -44,6 +44,7 @@ function destructuredBindingHasInferredType(
   const tsIdentifier = parserServices.esTreeNodeToTSNodeMap.get(identifier);
   if (!tsIdentifier) return false;
   const type = checker.getTypeAtLocation(tsIdentifier);
+  if (checker.isTupleType(type)) return true;
   if (!checker.isArrayType(type)) return false;
   const [elementType] = checker.getTypeArguments(type as ts.TypeReference);
   return !!elementType && !(elementType.flags & ts.TypeFlags.Never);
