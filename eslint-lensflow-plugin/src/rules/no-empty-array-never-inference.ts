@@ -60,9 +60,14 @@ function callArgumentHasExplicitParamType(
   const signature = checker.getResolvedSignature(
     tsCallNode as ts.CallExpression | ts.NewExpression,
   );
-  const paramDecl = signature?.parameters[argIndex]?.valueDeclaration;
+  const params = signature?.parameters ?? [];
+  const param = params[argIndex] ?? params[params.length - 1];
+  const paramDecl = param?.valueDeclaration;
   return (
-    !!paramDecl && ts.isParameter(paramDecl) && paramDecl.type !== undefined
+    !!paramDecl &&
+    ts.isParameter(paramDecl) &&
+    paramDecl.type !== undefined &&
+    (argIndex < params.length || paramDecl.dotDotDotToken !== undefined)
   );
 }
 

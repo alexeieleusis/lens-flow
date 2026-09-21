@@ -60,6 +60,11 @@ createRule({
   defaultOptions: [{ ignorePatterns: [] }],
   create(context: [{ ignorePatterns: string[] }]) {},
 });`,
+    // A rest parameter collapses to a single entry in `signature.parameters`,
+    // so call arguments landing past that entry's index must still resolve
+    // back to the rest parameter's explicit type.
+    `declare function combine(label: string, ...configs: { tags: string[] }[]): void;
+combine("x", { tags: [] }, { tags: [] });`,
   ],
   invalid: [
     {
