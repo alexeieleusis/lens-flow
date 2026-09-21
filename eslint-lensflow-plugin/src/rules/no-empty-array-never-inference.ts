@@ -66,6 +66,83 @@ function callArgumentHasExplicitParamType(
   );
 }
 
+function isCallArgumentGoverned(
+  checker: ts.TypeChecker | undefined,
+  parserServices: ParserServices,
+  callNode: TSESTree.CallExpression | TSESTree.NewExpression,
+  current: TSESTree.Node,
+): boolean {
+  if (!checker) return false;
+  const argIndex = callNode.arguments.indexOf(
+    current as TSESTree.CallExpressionArgument,
+  );
+  if (argIndex === -1) return false;
+  return callArgumentHasExplicitParamType(
+    checker,
+    parserServices,
+    callNode,
+    argIndex,
+  );
+}
+
+type GoverningStep =
+  | { done: true; result: boolean }
+  | { done: false; next: TSESTree.Node };
+
+/**
+ * Single step of the upward walk `isGovernedByExplicitType` performs: either
+ * the current parent settles the answer (`done: true`), or it's a
+ * transparent object/array literal shell to keep climbing through
+ * (`done: false`).
+ */
+function nextGoverningStep(
+  current: TSESTree.Node,
+  checker: ts.TypeChecker | undefined,
+  parserServices: ParserServices,
+): GoverningStep {
+  const parent = current.parent;
+  if (!parent) return { done: true, result: false };
+
+  switch (parent.type) {
+    case "Property":
+      return parent.value === current
+        ? { done: false, next: parent.parent }
+        : { done: true, result: false };
+    case "ArrayExpression":
+      return { done: false, next: parent };
+    case "VariableDeclarator":
+      return {
+        done: true,
+        result: parent.id.type === "Identifier" && !!parent.id.typeAnnotation,
+      };
+    case "PropertyDefinition":
+      return { done: true, result: !!parent.typeAnnotation };
+    case "ReturnStatement":
+      return {
+        done: true,
+        result: !!findEnclosingFunction(parent)?.returnType,
+      };
+    case "ArrowFunctionExpression":
+      return {
+        done: true,
+        result: parent.body === current && !!parent.returnType,
+      };
+    case "CallExpression":
+    case "NewExpression":
+      return {
+        done: true,
+        result: isCallArgumentGoverned(
+          checker,
+          parserServices,
+          parent,
+          current,
+        ),
+      };
+    default:
+      return { done: true, result: false };
+  }
+}
+
 /**
  * Walks up through the object/array literal shell an empty array is nested
  * in to find the nearest position that already carries (or is checked
@@ -82,44 +159,9 @@ function isGovernedByExplicitType(
 ): boolean {
   let current: TSESTree.Node = startNode;
   for (;;) {
-    const parent: TSESTree.Node | undefined = current.parent;
-    if (!parent) return false;
-
-    if (parent.type === "Property" && parent.value === current) {
-      current = parent.parent;
-      continue;
-    }
-    if (parent.type === "ArrayExpression") {
-      current = parent;
-      continue;
-    }
-    if (parent.type === "VariableDeclarator") {
-      return parent.id.type === "Identifier" && !!parent.id.typeAnnotation;
-    }
-    if (parent.type === "PropertyDefinition") {
-      return !!parent.typeAnnotation;
-    }
-    if (parent.type === "ReturnStatement") {
-      const fn = findEnclosingFunction(parent);
-      return !!fn?.returnType;
-    }
-    if (parent.type === "ArrowFunctionExpression") {
-      return parent.body === current && !!parent.returnType;
-    }
-    if (parent.type === "CallExpression" || parent.type === "NewExpression") {
-      if (!checker) return false;
-      const argIndex = parent.arguments.indexOf(
-        current as TSESTree.CallExpressionArgument,
-      );
-      if (argIndex === -1) return false;
-      return callArgumentHasExplicitParamType(
-        checker,
-        parserServices,
-        parent,
-        argIndex,
-      );
-    }
-    return false;
+    const step = nextGoverningStep(current, checker, parserServices);
+    if (step.done) return step.result;
+    current = step.next;
   }
 }
 
