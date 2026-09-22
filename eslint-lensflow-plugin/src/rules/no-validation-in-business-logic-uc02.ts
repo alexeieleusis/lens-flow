@@ -1,5 +1,5 @@
 import { createRule } from "../utils/rule-creator.js";
-import { getChildren } from "../utils/ast-helpers.js";
+import { getChildren, isFunctionBoundary } from "../utils/ast-helpers.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
 import type { TSESTree, TSESLint } from "@typescript-eslint/utils";
 
@@ -74,16 +74,6 @@ function involvesParam(expr: TSESTree.Node, params: Set<string>): boolean {
     return involvesParam((expr as TSESTree.MemberExpression).object, params);
   }
   return false;
-}
-
-const FUNCTION_BOUNDARY_TYPES = new Set([
-  "FunctionDeclaration",
-  "FunctionExpression",
-  "ArrowFunctionExpression",
-]);
-
-function isFunctionBoundary(node: TSESTree.Node): boolean {
-  return FUNCTION_BOUNDARY_TYPES.has(node.type);
 }
 
 function findThrow(node: TSESTree.Node): TSESTree.ThrowStatement | null {

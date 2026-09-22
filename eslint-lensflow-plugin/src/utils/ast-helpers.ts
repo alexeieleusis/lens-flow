@@ -53,8 +53,19 @@ const FUNCTION_BOUNDARY_TYPES = new Set([
   "ArrowFunctionExpression",
 ]);
 
-function isFunctionBoundary(node: TSESTree.Node): boolean {
+export function isFunctionBoundary(node: TSESTree.Node): boolean {
   return FUNCTION_BOUNDARY_TYPES.has(node.type);
+}
+
+export function getEnclosingFunction(
+  node: TSESTree.Node,
+): FunctionLikeNode | undefined {
+  let current: TSESTree.Node | undefined = node.parent;
+  while (current) {
+    if (isFunctionBoundary(current)) return current as FunctionLikeNode;
+    current = current.parent;
+  }
+  return undefined;
 }
 
 export interface WalkOptions {

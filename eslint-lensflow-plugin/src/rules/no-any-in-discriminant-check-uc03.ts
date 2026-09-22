@@ -1,6 +1,7 @@
 import { TSESTree, TSESLint } from "@typescript-eslint/utils";
 import { createRule } from "../utils/rule-creator.js";
 import { knowledgeUrl } from "../utils/knowledge-url.js";
+import { isFunctionBoundary } from "../utils/ast-helpers.js";
 
 const URL = knowledgeUrl(
   "usecases/UC03-exhaustiveness.md",
@@ -29,14 +30,6 @@ function getBaseIdentifier(node: TSESTree.Node): TSESTree.Identifier | null {
 
 function isDiscriminantProperty(name: string): boolean {
   return DISCRIMINANT_NAMES.has(name);
-}
-
-function isFunctionBoundary(node: TSESTree.Node): boolean {
-  return (
-    node.type === "FunctionExpression" ||
-    node.type === "ArrowFunctionExpression" ||
-    node.type === "FunctionDeclaration"
-  );
 }
 
 function findEnclosingIf(
