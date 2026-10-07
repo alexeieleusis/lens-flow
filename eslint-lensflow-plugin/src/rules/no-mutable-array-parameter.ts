@@ -3,21 +3,22 @@ import { knowledgeUrl } from "../utils/knowledge-url.js";
 import { createMutableArrayParamRule } from "../utils/visitor-helpers.js";
 
 const URL = knowledgeUrl(
-  "catalog/T08-variance-subtyping.md",
-  "Example A — Read-only vs mutable container",
+  "usecases/UC17-variance.md",
+  "Antipatterns with Other Techniques > Using mutable arrays instead of `readonly` + covariance",
 );
 
 const rule: TSESLint.RuleModule<string, []> = createMutableArrayParamRule({
   name: "no-mutable-array-parameter",
   description:
-    "Disallow mutable array types (`T[]` or `Array<T>`) in function parameters",
+    "Disallow mutable array types in function parameters — use `readonly T[]` or `ReadonlyArray<T>` to prevent unsound covariant mutation.",
   messageId: "mutableArrayParam",
   messageTemplate:
-    'Parameter "{{name}}" uses mutable array type "{{type}}". Use "readonly T[]" or "ReadonlyArray<T>" to prevent unsound covariant assignment. See: {{url}}',
+    'Parameter "{{name}}" uses mutable array type "{{type}}". Use `readonly {{elem}}[]` or `ReadonlyArray<{{elem}}>`. See: {{url}}',
   url: URL,
   reportData: (result) => ({
     name: result.paramName,
     type: result.typeText,
+    elem: result.elemText,
     url: URL,
   }),
 });
