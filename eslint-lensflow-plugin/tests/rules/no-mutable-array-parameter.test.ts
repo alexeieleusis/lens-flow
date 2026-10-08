@@ -1,5 +1,11 @@
 import { ruleTester } from "../helpers/rule-tester.js";
 import rule from "../../src/rules/no-mutable-array-parameter.js";
+import { knowledgeUrl } from "../../src/utils/knowledge-url.js";
+
+const URL = knowledgeUrl(
+  "usecases/UC17-variance.md",
+  "Antipatterns with Other Techniques > Using mutable arrays instead of `readonly` + covariance",
+);
 
 ruleTester.run("no-mutable-array-parameter", rule, {
   valid: [
@@ -107,7 +113,14 @@ ruleTester.run("no-mutable-array-parameter", rule, {
       code: `function f(xs: (string | number)[]): void {}`,
       errors: [
         {
-          message: /`readonly \(string \| number\)\[\]`/,
+          messageId: "mutableArrayParam",
+          data: {
+            name: "xs",
+            type: "(string | number)[]",
+            elem: "string | number",
+            elemGrouped: "(string | number)",
+            url: URL,
+          },
         },
       ],
     },
@@ -115,7 +128,14 @@ ruleTester.run("no-mutable-array-parameter", rule, {
       code: `function f(xs: Array<Item>): void {}`,
       errors: [
         {
-          message: /`readonly Item\[\]`/,
+          messageId: "mutableArrayParam",
+          data: {
+            name: "xs",
+            type: "Array<Item>",
+            elem: "Item",
+            elemGrouped: "Item",
+            url: URL,
+          },
         },
       ],
     },
