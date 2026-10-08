@@ -102,5 +102,22 @@ ruleTester.run("no-mutable-array-parameter", rule, {
       code: `type Fn = (arr: Array<string>) => void;`,
       errors: [{ messageId: "mutableArrayParam" }],
     },
+    // Non-simple element types are parenthesized in the suggestion.
+    {
+      code: `function f(xs: (string | number)[]): void {}`,
+      errors: [
+        {
+          message: /`readonly \(string \| number\)\[\]`/,
+        },
+      ],
+    },
+    {
+      code: `function f(xs: Array<Item>): void {}`,
+      errors: [
+        {
+          message: /`readonly Item\[\]`/,
+        },
+      ],
+    },
   ],
 });
