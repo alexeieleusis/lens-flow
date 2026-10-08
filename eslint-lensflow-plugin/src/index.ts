@@ -113,7 +113,6 @@ import noModuleLevelMutableExport from "./rules/no-module-level-mutable-export.j
 import noMonolithicInterfaceT59 from "./rules/no-monolithic-interface-t59.js";
 import noMutableArrayInReadonlyContext from "./rules/no-mutable-array-in-readonly-context.js";
 import noMutableArrayParameter from "./rules/no-mutable-array-parameter.js";
-import noMutableArrayParameterUc17 from "./rules/no-mutable-array-parameter-uc17.js";
 import noMutableGetterReturn from "./rules/no-mutable-getter-return.js";
 import noMutableStateRuntimeGuards from "./rules/no-mutable-state-runtime-guards.js";
 import noMutateIterationCallbackArgument from "./rules/no-mutate-iteration-callback-argument.js";
@@ -391,7 +390,6 @@ const plugin: {
     "no-monolithic-interface-t59": noMonolithicInterfaceT59,
     "no-mutable-array-in-readonly-context": noMutableArrayInReadonlyContext,
     "no-mutable-array-parameter": noMutableArrayParameter,
-    "no-mutable-array-parameter-uc17": noMutableArrayParameterUc17,
     "no-mutable-getter-return": noMutableGetterReturn,
     "no-mutable-state-runtime-guards": noMutableStateRuntimeGuards,
     "no-mutate-iteration-callback-argument": noMutateIterationCallbackArgument,
